@@ -35,7 +35,7 @@ public struct BinaryGraphEdges<Node, Edge>: Container {
     }
 
     /// An array of elements contained in the container.
-    @inlinable public var elements: [Element] { [lhs, rhs].compactMap(\.self) }
+    @inlinable var elements: [Element] { [lhs, rhs].compactMap(\.self) }
 }
 
 extension GraphProtocol where Self: BinaryGraphProtocol {
