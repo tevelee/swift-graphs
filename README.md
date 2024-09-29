@@ -19,6 +19,7 @@ While some features are still in early development stages, the project is active
 - **Minimum Spanning Tree Algorithms**: Kruskal's, Prim's, and Borůvka's algorithms for constructing minimum spanning trees.
 - **Strongly Connected Components**: Kosaraju’s and Tarjan’s algorithms for identifying strongly connected components.
 - **Graph Coloring**: Greedy algorithm for efficient node coloring.
+- **Isomorphism**: Determine if two graphs are isomorphic using VF2 or Weisfeiler-Lehman algorithm
 - **Maximum Bipartite Matching**: Hopcroft-Karp algorithm for bipartite matching.
 
 ### Example Usage
@@ -43,6 +44,7 @@ graph.minimumSpanningTree(using: .kruskal()) // or .prim() or .boruvka()
 graph.maximumFlow(using: .fordFulkerson()) // or .edmondsKarp() or .dinic()
 graph.stronglyConnectedComponents(using: .kosaraju()) // or .tarjan()
 graph.colorNodes(using: .greedy()) // or .dsatur() or .welshPowell()
+graph.isIsomorphoc(to: graph2, using: .vf2()) // or .weisfeilerLehman()
 
 graph.isCyclic()
 graph.isTree()

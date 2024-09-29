@@ -258,6 +258,23 @@ struct GraphStrategy {
 
         #expect(graph.maximumMatching(using: .hopcroftKarp()) == ["u1": "v2", "u2": "v1", "u3": "v3"])
     }
+
+    @Test func isomorphism() {
+        let graph1 = Graph(edges: [
+            "A": ["B"],
+            "B": ["A", "C"],
+            "C": ["B"]
+        ])
+
+        let graph2 = Graph(edges: [
+            "X": ["Y"],
+            "Y": ["X", "Z"],
+            "Z": ["Y"]
+        ])
+
+        #expect(graph1.isIsomorphic(to: graph2, using: .vf2()))
+//        #expect(graph1.isIsomorphic(to: graph2, using: .weisfeilerLehman()))
+    }
 }
 
 extension Sequence {

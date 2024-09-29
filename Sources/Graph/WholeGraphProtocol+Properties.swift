@@ -87,6 +87,13 @@ extension WholeGraphProtocol where Node: Hashable {
         return (hasEulerianPath, hasEulerianCycle)
     }
 
+    /// Returns the degree of the specified node.
+    /// - Parameter node: The node for which to calculate the degree.
+    /// - Returns: The degree of the specified node.
+    public func degree(of node: Node) -> Int {
+        edges(connectedTo: node).count
+    }
+
     /// Returns the out-degree of the specified node.
     /// - Parameter node: The node for which to calculate the out-degree.
     /// - Returns: The out-degree of the specified node.
