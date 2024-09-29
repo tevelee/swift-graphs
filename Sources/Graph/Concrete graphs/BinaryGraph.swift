@@ -8,10 +8,10 @@ public struct BinaryGraph<Node, Edge> {
 
     /// Initializes a new binary graph with the given edges and equality function.
     /// - Parameters:
-    ///   - edges: An array of `BinaryGraphEdges` representing the edges of the graph.
+    ///   - edges: A list of `BinaryGraphEdges` representing the edges of the graph.
     ///   - isEqual: A closure that takes two nodes and returns a Boolean value indicating whether they are equal.
-    @inlinable public init(edges: [BinaryGraphEdges<Node, Edge>], isEqual: @escaping (Node, Node) -> Bool) {
-        self._edges = edges
+    @inlinable public init(edges: some Sequence<BinaryGraphEdges<Node, Edge>>, isEqual: @escaping (Node, Node) -> Bool) {
+        self._edges = Array(edges)
         self.isEqual = isEqual
     }
 }
@@ -49,8 +49,8 @@ extension BinaryGraph: WholeGraphProtocol where Node: Hashable {
 
 extension BinaryGraph where Node: Equatable {
     /// Initializes a new binary graph with the given edges.
-    /// - Parameter edges: An array of `BinaryGraphEdges` representing the edges of the graph.
-    @inlinable public init(edges: [BinaryGraphEdges<Node, Edge>]) {
+    /// - Parameter edges: A list of `BinaryGraphEdges` representing the edges of the graph.
+    @inlinable public init(edges: some Sequence<BinaryGraphEdges<Node, Edge>>) {
         self.init(edges: edges, isEqual: ==)
     }
 

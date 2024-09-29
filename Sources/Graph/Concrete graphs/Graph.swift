@@ -8,10 +8,10 @@ public struct Graph<Node, Edge> {
 
     /// Initializes a new graph with the given edges and equality function.
     /// - Parameters:
-    ///   - edges: An array of `GraphEdge` representing the edges of the graph.
+    ///   - edges: A list of `GraphEdge` representing the edges of the graph.
     ///   - isEqual: A closure that takes two nodes and returns a Boolean value indicating whether they are equal.
-    @inlinable public init(edges: [GraphEdge<Node, Edge>], isEqual: @escaping (Node, Node) -> Bool) {
-        self._edges = edges
+    @inlinable public init(edges: some Sequence<GraphEdge<Node, Edge>>, isEqual: @escaping (Node, Node) -> Bool) {
+        self._edges = Array(edges)
         self.isEqual = isEqual
     }
 }
@@ -44,14 +44,14 @@ extension Graph: WholeGraphProtocol where Node: Hashable {
 
 extension Graph where Node: Equatable {
     /// Initializes a new graph with the given edges.
-    /// - Parameter edges: An array of `GraphEdge` representing the edges of the graph.
-    @inlinable public init(edges: [GraphEdge<Node, Edge>]) {
+    /// - Parameter edges: A list of `GraphEdge` representing the edges of the graph.
+    @inlinable public init(edges: some Sequence<GraphEdge<Node, Edge>>) {
         self.init(edges: edges, isEqual: ==)
     }
 
     /// Initializes a new graph with the given edges.
-    /// - Parameter edges: A dictionary where the key is a node and the value is an array of destination nodes.
-    @inlinable public init(edges: [Node: [Node]]) where Edge == Void {
+    /// - Parameter edges: A dictionary where the key is a node and the value is a list of destination nodes.
+    @inlinable public init(edges: [Node: some Sequence<Node>]) where Edge == Void {
         self.init(edges: edges.flatMap { source, destinations in
             destinations.map { GraphEdge(source: source, destination: $0) }
         }, isEqual: ==)
