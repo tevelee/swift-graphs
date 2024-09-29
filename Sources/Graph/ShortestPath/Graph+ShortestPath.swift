@@ -1,4 +1,4 @@
-extension GraphProtocol where Node: Hashable, Edge: Weighted {
+extension GraphProtocol where Edge: Weighted {
     /// Finds the shortest path from the source node to the destination node using the specified algorithm.
     /// - Parameters:
     ///   - source: The starting node.
@@ -9,8 +9,24 @@ extension GraphProtocol where Node: Hashable, Edge: Weighted {
         from source: Node,
         to destination: Node,
         using algorithm: some ShortestPathAlgorithm<Node, Edge>
-    ) -> Path<Node, Edge>? {
+    ) -> Path<Node, Edge>? where Node: Equatable {
         algorithm.shortestPath(from: source, to: destination, in: self)
+    }
+
+    /// Finds the shortest path from the source node to the destination node using the specified algorithm.
+    /// - Parameters:
+    ///   - source: The starting node.
+    ///   - destination: The target node.
+    ///   - condition: The completion criteria.
+    ///   - algorithm: The algorithm to use for finding the shortest path.
+    /// - Returns: A `Path` instance representing the shortest path, or `nil` if no path is found.
+    @inlinable public func shortestPath(
+        from source: Node,
+        to destination: Node,
+        satisfying condition: (Node) -> Bool,
+        using algorithm: some ShortestPathAlgorithm<Node, Edge>
+    ) -> Path<Node, Edge>? {
+        algorithm.shortestPath(from: source, to: destination, satisfying: condition, in: self)
     }
 }
 
@@ -25,13 +41,31 @@ public protocol ShortestPathAlgorithm<Node, Edge> {
     /// - Parameters:
     ///   - source: The starting node.
     ///   - destination: The target node.
+    ///   - condition: The completion criteria.
+    ///   - graph: The graph in which to find the shortest path.
+    /// - Returns: A `Path` instance representing the shortest path, or `nil` if no path is found.
+    @inlinable func shortestPath(
+        from source: Node,
+        to destination: Node,
+        satisfying condition: (Node) -> Bool,
+        in graph: some GraphProtocol<Node, Edge>
+    ) -> Path<Node, Edge>?
+}
+
+extension ShortestPathAlgorithm where Node: Equatable {
+    /// Finds the shortest path in the graph from the start node to the goal node.
+    /// - Parameters:
+    ///   - source: The starting node.
+    ///   - destination: The target node.
     ///   - graph: The graph in which to find the shortest path.
     /// - Returns: A `Path` instance representing the shortest path, or `nil` if no path is found.
     @inlinable func shortestPath(
         from source: Node,
         to destination: Node,
         in graph: some GraphProtocol<Node, Edge>
-    ) -> Path<Node, Edge>?
+    ) -> Path<Node, Edge>? {
+        shortestPath(from: source, to: destination, satisfying: { $0 == destination }, in: graph)
+    }
 }
 
 /// A structure representing a path in a graph.

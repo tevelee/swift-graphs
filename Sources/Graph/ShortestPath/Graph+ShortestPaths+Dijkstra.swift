@@ -27,7 +27,7 @@ extension DijkstraAlgorithm: ShortestPathsAlgorithm {
         from source: Node,
         in graph: some GraphProtocol<Node, Edge>
     ) -> [Node: Path<Node, Edge>] {
-        let result = computeShortestPaths(from: source, stopAt: nil, in: graph)
+        let result = computeShortestPaths(from: source, in: graph)
 
         var paths: [Node: Path<Node, Edge>] = [:]
         for node in result.connectingEdges.keys {

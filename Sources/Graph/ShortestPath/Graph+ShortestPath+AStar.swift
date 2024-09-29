@@ -101,6 +101,7 @@ public struct AStarAlgorithm<Node: Hashable, Edge: Weighted, HScore, FScore: Com
     @inlinable public func shortestPath(
         from source: Node,
         to destination: Node,
+        satisfying condition: (Node) -> Bool,
         in graph: some GraphProtocol<Node, Edge>
     ) -> Path<Node, Edge>? {
         var openSet = Heap<State>()
@@ -119,8 +120,8 @@ public struct AStarAlgorithm<Node: Hashable, Edge: Weighted, HScore, FScore: Com
         while let currentState = openSet.popMin() {
             let currentNode = currentState.node
 
-            if currentNode == destination {
-                return Path(connectingEdges: connectingEdges, source: source, destination: destination)
+            if condition(currentNode) {
+                return Path(connectingEdges: connectingEdges, source: source, destination: currentNode)
             }
 
             if !closedSet.insert(currentNode).inserted {

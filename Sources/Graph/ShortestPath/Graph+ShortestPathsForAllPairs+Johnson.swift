@@ -80,7 +80,7 @@ public struct JohnsonAlgorithm<Node: Hashable & Comparable, Edge: Weighted>: Sho
         let dijkstra = DijkstraAlgorithm<JohnsonNode, Edge>()
 
         for node in originalNodes {
-            let result = dijkstra.computeShortestPaths(from: node, stopAt: nil, in: reweightedGraph)
+            let result = dijkstra.computeShortestPaths(from: node, in: reweightedGraph)
             var nodeDistances: [Node: Edge.Weight] = [:]
             for (dest, dist) in result.costs {
                 // Exclude paths involving 'q'

@@ -60,9 +60,10 @@ public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlg
     @inlinable public func shortestPath(
         from source: Node,
         to destination: Node,
+        satisfying condition: (Node) -> Bool,
         in graph: some GraphProtocol<Node, Edge>
     ) -> Path<Node, Edge>? {
-        let result = computeShortestPaths(from: source, stopAt: destination, in: graph)
+        let result = computeShortestPaths(from: source, condition: condition, in: graph)
         return result.connectingEdges[destination].flatMap { _ in
             Path(connectingEdges: result.connectingEdges, source: source, destination: destination)
         }
@@ -76,7 +77,7 @@ public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlg
     /// - Returns: A tuple containing the costs and connecting edges for the shortest paths.
     @usableFromInline func computeShortestPaths(
         from source: Node,
-        stopAt destination: Node?,
+        condition: (Node) -> Bool = { _ in false },
         in graph: some GraphProtocol<Node, Edge>
     ) -> (costs: [Node: Edge.Weight], connectingEdges: [Node: GraphEdge<Node, Edge>]) {
         var openSet = Heap<State>()
@@ -94,7 +95,7 @@ public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlg
         while let currentState = openSet.popMin() {
             let currentNode = currentState.node
 
-            if let destination = destination, currentNode == destination {
+            if condition(currentNode) {
                 break
             }
 
