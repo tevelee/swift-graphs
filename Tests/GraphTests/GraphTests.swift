@@ -228,6 +228,25 @@ struct GraphStrategy {
         #expect(graph.eulerianPath(from: "S", to: "D")?.path == ["S", "A", "B", "C", "D"])
     }
 
+    @Test func coloring() {
+        let graph = Graph(edges: [
+            "Root": ["A", "B", "C"],
+            "B": ["X", "Y", "Z"]
+        ])
+        let coloring = [
+            "Root": 1,
+            "A": 0,
+            "B": 0,
+            "C": 0,
+            "Z": 1,
+            "X": 1,
+            "Y": 1
+        ]
+        #expect(graph.colorNodes(using: .greedy()) == coloring)
+        #expect(graph.colorNodes(using: .welshPowell()) == coloring)
+        #expect(graph.colorNodes(using: .dsatur()) == coloring)
+    }
+
     @Test func bipartite() {
         let graph = Graph(edges: [
             GraphEdge(source: "u1", destination: "v1"),

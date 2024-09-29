@@ -110,6 +110,20 @@ extension WholeGraphProtocol where Node: Hashable {
         allEdges.contains { ($0.source == node1 && $0.destination == node2) || ($0.source == node2 && $0.destination == node1) }
     }
 
+    /// Returns all edges connected to the specified node.
+    /// - Parameter node: The node for which to get the connected edges.
+    /// - Returns: An array of `GraphEdge` instances containing the edges connected to the specified node.
+    public func edges(connectedTo node: Node) -> [GraphEdge<Node, Edge>] {
+        allEdges.filter { $0.source == node || $0.destination == node }
+    }
+
+    /// Returns all nodes adjacent to the specified node.
+    /// - Parameter node: The node for which to get adjacent nodes.
+    /// - Returns: An array of nodes adjacent to the specified node.
+    public func adjacentNodes(to node: Node) -> [Node] {
+        edges(connectedTo: node).map { $0.source == node ? $0.destination : $0.source }
+    }
+
     /// Checks if the graph satisfies Dirac's theorem.
     /// - Returns: `true` if the graph satisfies Dirac's theorem, `false` otherwise.
     @inlinable public func satisfiesDirac() -> Bool {

@@ -22,15 +22,14 @@ public struct GreedyColoringAlgorithm<Node: Hashable, Edge>: GraphColoringAlgori
         of graph: some WholeGraphProtocol<Node, Edge>
     ) -> [Node: Int] {
         var result: [Node: Int] = [:]
-        let nodes = graph.allNodes.sorted { graph.edges(from: $0).count > graph.edges(from: $1).count }
+        let nodes = graph.allNodes.sorted { graph.edges(connectedTo: $0).count > graph.edges(connectedTo: $1).count }
         for node in nodes {
             var usedColors: Set<Int> = []
-            for edge in graph.edges(from: node) {
-                if let color = result[edge.destination] {
+            for neighbor in graph.adjacentNodes(to: node) {
+                if let color = result[neighbor] {
                     usedColors.insert(color)
                 }
             }
-            // Find the smallest available color
             var color = 0
             while usedColors.contains(color) {
                 color += 1

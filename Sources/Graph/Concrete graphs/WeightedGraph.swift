@@ -20,6 +20,7 @@ public struct WeightedGraph<Graph: GraphProtocol, Edge: Weighted> {
         self.weight = weight
     }
 
+    /// Subscript that accesses members on the underlying graph instance
     @inlinable public subscript<Member>(dynamicMember keyPath: KeyPath<Graph, Member>) -> Member {
         graph[keyPath: keyPath]
     }
