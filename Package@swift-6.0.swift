@@ -1,4 +1,4 @@
-// swift-tools-version: 5.8
+// swift-tools-version: 6.0
 
 import PackageDescription
 
@@ -20,11 +20,13 @@ let package = Package(
             dependencies: [
                 .product(name: "Collections", package: "swift-collections"),
                 .product(name: "Algorithms", package: "swift-algorithms")
-            ]
+            ],
+            swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(
             name: "GraphsTests",
-            dependencies: ["Graphs"]
+            dependencies: ["Graphs"],
+            swiftSettings: [.swiftLanguageMode(.v6)]
         )
     ]
 )
