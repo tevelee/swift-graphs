@@ -2,8 +2,8 @@
 public protocol BinaryGraph<Node, Edge>: ConnectedGraph {
     /// The type of nodes in the graph.
     associatedtype Node
-    /// The type of edges in the graph. Defaults to `Void`.
-    associatedtype Edge = Void
+    /// The type of edges in the graph. Defaults to `Empty`.
+    associatedtype Edge = Empty
 
     /// Returns the binary edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.

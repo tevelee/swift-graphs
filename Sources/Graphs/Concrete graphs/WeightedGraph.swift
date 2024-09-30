@@ -75,7 +75,7 @@ extension WeightedGraph {
     }
 }
 
-extension ConnectedGraph where Edge == Void {
+extension ConnectedGraph where Edge == Empty {
     /// Returns a `WeightedGraph` with the given weight function.
     /// - Parameter weight: A closure that calculates the weight of an edge given the source and destination nodes.
     /// - Returns: A `WeightedGraph` with the specified weight function.
@@ -91,7 +91,7 @@ extension ConnectedGraph where Edge == Void {
     }
 }
 
-extension GridGraph where Edge == Void {
+extension GridGraph where Edge == Empty {
     /// Returns a `WeightedGraph` with weights calculated by the specified distance algorithm.
     /// - Parameter distanceAlgorithm: The algorithm to use for calculating distances. Defaults to Euclidean distance.
     /// - Returns: A `WeightedGraph` with weights calculated by the specified distance algorithm.

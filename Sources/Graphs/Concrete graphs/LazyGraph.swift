@@ -5,13 +5,13 @@ public struct LazyGraph<Node, Edge> {
 
     /// Initializes a new lazy graph with a closure that provides neighbor nodes.
     /// - Parameter neighborNodes: A closure that takes a node and returns a sequence of neighbor nodes.
-    @inlinable public init<Nodes: Sequence<Node>>(neighborNodes: @escaping (Node) -> Nodes) where Edge == Void {
+    @inlinable public init<Nodes: Sequence<Node>>(neighborNodes: @escaping (Node) -> Nodes) where Edge == Empty {
         _edges = { node in neighborNodes(node).lazy.map { GraphEdge(source: node, destination: $0) } }
     }
 
     /// Initializes a new lazy graph with a closure that provides a single neighbor node.
     /// - Parameter neighbor: A closure that takes a node and returns its single neighbor node.
-    @inlinable public init(neighbor: @escaping (Node) -> Node) where Edge == Void {
+    @inlinable public init(neighbor: @escaping (Node) -> Node) where Edge == Empty {
         self.init(neighborNodes: { CollectionOfOne(neighbor($0)) })
     }
 

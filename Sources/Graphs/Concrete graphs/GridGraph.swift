@@ -34,8 +34,8 @@ public struct GridGraph<Value, Edge> {
     @inlinable public init(
         grid: [some Sequence<Value>],
         availableDirections: OrderedSet<GridDirection> = .orthogonal + .diagonal
-    ) where Edge == Void {
-        self.init(grid: grid, availableDirections: availableDirections) { _, _ in () }
+    ) where Edge == Empty {
+        self.init(grid: grid, availableDirections: availableDirections) { _, _ in Empty() }
     }
 
     /// Accesses the value at the specified position in the grid.

@@ -25,8 +25,8 @@ extension RandomGraphGeneration {
         numberOfNodes n: Int,
         probabilityOfEdge p: Double = 0.5,
         node: @escaping (Int) -> Node
-    ) -> Self where Self == ErdosRenyiRandomGraphGenerator<Node, Void> {
-        .init(numberOfNodes: n, probabilityOfEdge: p, node: node) { _, _ in () }
+    ) -> Self where Self == ErdosRenyiRandomGraphGenerator<Node, Empty> {
+        .init(numberOfNodes: n, probabilityOfEdge: p, node: node) { _, _ in Empty() }
     }
 
     /// Generates a random graph using the Erdős-Rényi model.
@@ -37,8 +37,8 @@ extension RandomGraphGeneration {
     @inlinable public static func erdosRenyi(
         numberOfNodes n: Int,
         probabilityOfEdge p: Double = 0.5
-    ) -> Self where Self == ErdosRenyiRandomGraphGenerator<Int, Void> {
-        .init(numberOfNodes: n, probabilityOfEdge: p, node: \.self) { _, _ in () }
+    ) -> Self where Self == ErdosRenyiRandomGraphGenerator<Int, Empty> {
+        .init(numberOfNodes: n, probabilityOfEdge: p, node: \.self) { _, _ in Empty() }
     }
 }
 

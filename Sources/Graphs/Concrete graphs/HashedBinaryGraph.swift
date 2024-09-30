@@ -33,7 +33,7 @@ extension HashedBinaryGraph where Node: Hashable, HashValue == Node {
 
     /// Initializes a new hashed binary graph with the given edges.
     /// - Parameter edges: A dictionary where the key is a node and the value is a tuple containing the left-hand side and right-hand side nodes.
-    @inlinable public init(edges: [Node: (lhs: Node?, rhs: Node?)?]) where Node: Hashable, Edge == Void {
+    @inlinable public init(edges: [Node: (lhs: Node?, rhs: Node?)?]) where Node: Hashable, Edge == Empty {
         self.init(
             edges: edges.map { source, destinations in
                 BinaryGraphEdges(

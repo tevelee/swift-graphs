@@ -2,13 +2,19 @@
 public protocol ConnectedGraph<Node, Edge> {
     /// The type of nodes in the graph.
     associatedtype Node
-    /// The type of edges in the graph. Defaults to `Void`.
-    associatedtype Edge = Void
+    /// The type of edges in the graph. Defaults to `Empty`.
+    associatedtype Edge = Empty
 
     /// Returns the edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.
     /// - Returns: An array of `GraphEdge` instances containing the edges from the specified node.
     @inlinable func edges(from node: Node) -> [GraphEdge<Node, Edge>]
+}
+
+/// A type that represents an empty value, but – unlike Void – allows to conform it to protocols.
+public struct Empty: Equatable, Hashable {
+    /// Creates an empty instance
+    @inlinable public init() {}
 }
 
 /// A structure representing an edge in a graph.
@@ -25,7 +31,7 @@ public struct GraphEdge<Node, Value> {
     ///   - source: The source node of the edge.
     ///   - destination: The destination node of the edge.
     ///   - value: The value associated with the edge. Defaults to `()`.
-    @inlinable public init(source: Node, destination: Node, value: Value = ()) {
+    @inlinable public init(source: Node, destination: Node, value: Value = Empty()) {
         self.source = source
         self.destination = destination
         self.value = value

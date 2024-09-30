@@ -51,7 +51,7 @@ extension AdjacencyListGraph where Node: Equatable {
 
     /// Initializes a new graph with the given edges.
     /// - Parameter edges: A dictionary where the key is a node and the value is a list of destination nodes.
-    @inlinable public init(edges: [Node: some Sequence<Node>]) where Edge == Void {
+    @inlinable public init(edges: [Node: some Sequence<Node>]) where Edge == Empty {
         self.init(edges: edges.flatMap { source, destinations in
             destinations.map { GraphEdge(source: source, destination: $0) }
         }, isEqual: ==)

@@ -56,7 +56,7 @@ extension AdjacencyListBinaryGraph where Node: Equatable {
 
     /// Initializes a new binary graph with the given edges.
     /// - Parameter edges: A dictionary where the key is a node and the value is a tuple containing the left-hand side and right-hand side nodes.
-    @inlinable public init(edges: [Node: (lhs: Node?, rhs: Node?)?]) where Edge == Void {
+    @inlinable public init(edges: [Node: (lhs: Node?, rhs: Node?)?]) where Edge == Empty {
         self.init(
             edges: edges.map { source, destinations in
                 BinaryGraphEdges(

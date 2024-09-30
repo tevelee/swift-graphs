@@ -5,7 +5,7 @@ public struct LazyBinaryGraph<Node, Edge> {
 
     /// Initializes a new lazy binary graph with a closure that provides neighbor nodes.
     /// - Parameter neighborNodes: A closure that takes a node and returns an optional tuple containing the left-hand side and right-hand side neighbor nodes.
-    @inlinable public init(neighborNodes: @escaping (Node) -> (lhs: Node?, rhs: Node?)?) where Edge == Void {
+    @inlinable public init(neighborNodes: @escaping (Node) -> (lhs: Node?, rhs: Node?)?) where Edge == Empty {
         _edges = { node in
             let destinations = neighborNodes(node)
             return BinaryGraphEdges(

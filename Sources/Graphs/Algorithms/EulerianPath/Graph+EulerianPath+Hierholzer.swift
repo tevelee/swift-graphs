@@ -5,10 +5,10 @@ extension EulerianPathAlgorithm {
         .init(defaultEdgeValue: .zero)
     }
 
-    /// Creates a Hierholzer algorithm instance for graphs with void edge values.
+    /// Creates a Hierholzer algorithm instance for graphs with empty edge values.
     /// - Returns: An instance of `HierholzerEulerianPathAlgorithm`.
-    @inlinable public static func hierholzer<Node>() -> Self where Self == HierholzerEulerianPathAlgorithm<Node, Void> {
-        .init(defaultEdgeValue: ())
+    @inlinable public static func hierholzer<Node>() -> Self where Self == HierholzerEulerianPathAlgorithm<Node, Empty> {
+        .init(defaultEdgeValue: Empty())
     }
 }
 
