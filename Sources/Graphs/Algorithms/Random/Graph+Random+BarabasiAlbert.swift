@@ -19,13 +19,13 @@ extension RandomGraphGeneration {
 /// A random graph generator that uses the Barabási-Albert model.
 public struct BarabasiAlbertRandomGraphGenerator<Node: Hashable, Edge>: RandomGraphGeneration {
     /// The number of nodes in the graph.
-    @usableFromInline let n: Int
+    public let n: Int
     /// The number of edges to attach from a new node to existing nodes.
-    @usableFromInline let m: Int
+    public let m: Int
     /// A closure that creates a node given an index.
-    @usableFromInline let node: (Int) -> Node
+    public let node: (Int) -> Node
     /// A closure that creates an edge given two nodes.
-    @usableFromInline let edge: (Node, Node) -> Edge
+    public let edge: (Node, Node) -> Edge
 
     /// Creates a new Barabási-Albert random graph generator.
     @inlinable public init(

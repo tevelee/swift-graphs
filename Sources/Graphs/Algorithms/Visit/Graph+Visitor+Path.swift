@@ -44,7 +44,7 @@ public struct PathTrackingVisitor<Base: VisitorProtocol>: VisitorProtocol {
     }
 
     /// The base visitor used during traversal.
-    @usableFromInline let base: Base
+    public let base: Base
 
     /// Initializes a new `PathTrackingVisitor` with the given base visitor.
     /// - Parameter base: The base visitor to wrap.

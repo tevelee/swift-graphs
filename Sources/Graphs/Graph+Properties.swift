@@ -90,7 +90,7 @@ extension Graph where Node: Hashable {
     /// Returns the degree of the specified node.
     /// - Parameter node: The node for which to calculate the degree.
     /// - Returns: The degree of the specified node.
-    public func degree(of node: Node) -> Int {
+    @inlinable public func degree(of node: Node) -> Int {
         edges(connectedTo: node).count
     }
 
@@ -120,14 +120,14 @@ extension Graph where Node: Hashable {
     /// Returns all edges connected to the specified node.
     /// - Parameter node: The node for which to get the connected edges.
     /// - Returns: An array of `GraphEdge` instances containing the edges connected to the specified node.
-    public func edges(connectedTo node: Node) -> [GraphEdge<Node, Edge>] {
+    @inlinable public func edges(connectedTo node: Node) -> [GraphEdge<Node, Edge>] {
         allEdges.filter { $0.source == node || $0.destination == node }
     }
 
     /// Returns all nodes adjacent to the specified node.
     /// - Parameter node: The node for which to get adjacent nodes.
     /// - Returns: An array of nodes adjacent to the specified node.
-    public func adjacentNodes(to node: Node) -> [Node] {
+    @inlinable public func adjacentNodes(to node: Node) -> [Node] {
         edges(connectedTo: node).map { $0.source == node ? $0.destination : $0.source }
     }
 

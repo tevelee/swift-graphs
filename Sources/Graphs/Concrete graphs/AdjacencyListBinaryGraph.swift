@@ -4,7 +4,7 @@ public struct AdjacencyListBinaryGraph<Node, Edge> {
     @usableFromInline let _edges: [BinaryGraphEdges<Node, Edge>]
     
     /// A closure to determine if two nodes are equal.
-    @usableFromInline let isEqual: (Node, Node) -> Bool
+    public let isEqual: (Node, Node) -> Bool
 
     /// Initializes a new binary graph with the given edges and equality function.
     /// - Parameters:
@@ -27,7 +27,7 @@ extension AdjacencyListBinaryGraph: BinaryGraph {
 
 extension AdjacencyListBinaryGraph: Graph where Node: Hashable {
     /// All nodes in the binary graph.
-    public var allNodes: [Node] {
+    @inlinable public var allNodes: [Node] {
         var nodes = Set<Node>()
         for edge in _edges {
             nodes.insert(edge.source)
@@ -42,7 +42,7 @@ extension AdjacencyListBinaryGraph: Graph where Node: Hashable {
     }
 
     /// All edges in the binary graph.
-    public var allEdges: [GraphEdge<Node, Edge>] {
+    @inlinable public var allEdges: [GraphEdge<Node, Edge>] {
         _edges.compactMap(\.lhs) + _edges.compactMap(\.rhs)
     }
 }

@@ -21,15 +21,15 @@ extension RandomGraphGeneration {
 /// A random graph generator that uses the Watts-Strogatz model.
 public struct WattsStrogatzRandomGraphGenerator<Node: Equatable, Edge>: RandomGraphGeneration {
     /// The number of nodes in the graph.
-    @usableFromInline let n: Int
+    public let n: Int
     /// The number of edges to attach from a new node to existing nodes.
-    @usableFromInline let k: Int
+    public let k: Int
     /// The probability of rewiring an edge.
-    @usableFromInline let p: Double
+    public let p: Double
     /// A closure that creates a node given an index.
-    @usableFromInline let node: (Int) -> Node
+    public let node: (Int) -> Node
     /// A closure that creates an edge given two nodes.
-    @usableFromInline let edge: (Node, Node) -> Edge
+    public let edge: (Node, Node) -> Edge
 
     /// Creates a new Watts-Strogatz random graph generator.
     /// - Parameters:

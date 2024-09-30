@@ -19,7 +19,7 @@ public struct DepthTrackingVisitor<Base: VisitorProtocol>: VisitorProtocol {
     public typealias Visit = (base: Base.Visit, node: Node, depth: Int)
 
     /// The base visitor used during traversal.
-    @usableFromInline let base: Base
+    public let base: Base
 
     /// Initializes a new `DepthVisitor` with the given base visitor.
     /// - Parameter base: The base visitor to wrap.

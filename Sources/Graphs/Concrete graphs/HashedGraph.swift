@@ -5,7 +5,7 @@ public struct HashedGraph<Node, Edge, HashValue: Hashable> {
     /// A dictionary mapping hashed values to the edges of the graph.
     @usableFromInline let _edges: [HashValue: [GraphEdge<Node, Edge>]]
     /// A closure to compute the hash value of a node.
-    @usableFromInline let hashValue: (Node) -> HashValue
+    public let hashValue: (Node) -> HashValue
 
     /// Initializes a new hashed graph with the given edges and hash function.
     /// - Parameters:
@@ -37,7 +37,7 @@ extension HashedGraph: ConnectedGraph {
 
 extension HashedGraph: Graph {
     /// All nodes in the graph.
-    public var allNodes: [Node] {
+    @inlinable public var allNodes: [Node] {
         var map: [HashValue: Node] = [:]
         for edge in allEdges {
             map[hashValue(edge.source)] = edge.source
@@ -47,7 +47,7 @@ extension HashedGraph: Graph {
     }
 
     /// All edges in the graph.
-    public var allEdges: [GraphEdge<Node, Edge>] {
+    @inlinable public var allEdges: [GraphEdge<Node, Edge>] {
         _edges.values.flatMap(\.self)
     }
 }

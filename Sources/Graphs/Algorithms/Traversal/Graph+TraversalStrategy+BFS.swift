@@ -25,7 +25,7 @@ public struct BreadthFirstSearch<Visitor: VisitorProtocol>: GraphTraversalStrate
     public typealias Visit = Visitor.Visit
 
     /// The visitor used during traversal.
-    @usableFromInline let visitor: Visitor
+    public let visitor: Visitor
 
     /// Initializes a new breadth-first search traversal strategy with the specified visitor.
     /// - Parameter visitor: The visitor to use during traversal.

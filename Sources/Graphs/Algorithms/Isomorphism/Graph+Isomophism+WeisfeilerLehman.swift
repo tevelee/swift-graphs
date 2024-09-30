@@ -10,7 +10,7 @@ extension GraphIsomorphismAlgorithm {
 /// An implementation of the Weisfeiler-Lehman algorithm for graph isomorphism.
 public struct WeisfeilerLehmanAlgorithm<Node: Hashable, Edge>: GraphIsomorphismAlgorithm {
     /// The number of iterations to run the algorithm.
-    @usableFromInline let iterations: Int
+    public let iterations: Int
 
     /// Creates a new Weisfeiler-Lehman algorithm instance with the specified number of iterations.
     /// - Parameter iterations: The number of iterations to run the algorithm.

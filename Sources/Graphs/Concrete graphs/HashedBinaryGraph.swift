@@ -3,7 +3,7 @@ public struct HashedBinaryGraph<Node, Edge, HashValue: Hashable> {
     /// A dictionary mapping hashed values to the edges of the binary graph.
     @usableFromInline let _edges: [HashValue: BinaryGraphEdges<Node, Edge>]
     /// A closure to compute the hash value of a node.
-    @usableFromInline let hashValue: (Node) -> HashValue
+    public let hashValue: (Node) -> HashValue
 
     /// Initializes a new hashed binary graph with the given edges and hash function.
     /// - Parameters:

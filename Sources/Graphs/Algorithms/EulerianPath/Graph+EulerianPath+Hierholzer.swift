@@ -15,7 +15,7 @@ extension EulerianPathAlgorithm {
 /// An implementation of the Hierholzer algorithm for finding Eulerian paths and cycles in a graph.
 public struct HierholzerEulerianPathAlgorithm<Node: Hashable, Edge>: EulerianPathAlgorithm {
     /// The default edge value used for temporary edges.
-    @usableFromInline let defaultEdgeValue: Edge
+    public let defaultEdgeValue: Edge
 
     /// Initializes a new `HierholzerEulerianPathAlgorithm` instance with the given default edge value.
     /// - Parameter defaultEdgeValue: The default edge value used for temporary edges.

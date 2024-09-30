@@ -5,7 +5,7 @@ public struct ResidualGraph<Base: Graph>: ConnectedGraph where Base.Node: Hashab
     public typealias Edge = Base.Edge.Weight
 
     /// The base graph representing the original flow network.
-    @usableFromInline var base: Base
+    public let base: Base
     /// A dictionary representing the flow values between nodes.
     @usableFromInline var flows: [Node: [Node: Edge]]
 

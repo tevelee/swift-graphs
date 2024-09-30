@@ -5,7 +5,7 @@ public struct UndirectedGraph<Base: Graph>: Graph where Base.Node: Hashable {
     public typealias Edge = Base.Edge
 
     /// The base graph from which the undirected graph is derived.
-    @usableFromInline let base: Base
+    public let base: Base
     /// An adjacency list representing the edges in the undirected graph.
     @usableFromInline var adjacencyList: [Node: [GraphEdge<Node, Edge>]] = [:]
 
@@ -21,18 +21,18 @@ public struct UndirectedGraph<Base: Graph>: Graph where Base.Node: Hashable {
     /// Returns the edges originating from the specified node in the undirected graph.
     /// - Parameter node: The node from which to get the edges.
     /// - Returns: An array of `GraphEdge` instances containing the edges from the specified node in the undirected graph.
-    public func edges(from node: Node) -> [GraphEdge<Node, Edge>] {
+    @inlinable public func edges(from node: Node) -> [GraphEdge<Node, Edge>] {
         base.edges(from: node) + (adjacencyList[node] ?? [])
     }
 
     /// All edges in the undirected graph.
     /// - Note: This includes both the original and reversed edges from the base graph.
-    public var allEdges: [GraphEdge<Node, Edge>] {
+    @inlinable public var allEdges: [GraphEdge<Node, Edge>] {
         base.allEdges + base.allEdges.map(\.reversed)
     }
 
     /// All nodes in the undirected graph.
-    public var allNodes: [Base.Node] {
+    @inlinable public var allNodes: [Base.Node] {
         base.allNodes
     }
 

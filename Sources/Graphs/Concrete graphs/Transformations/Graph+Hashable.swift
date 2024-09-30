@@ -6,9 +6,9 @@ public struct HashableNodesGraph<Base: ConnectedGraph, HashValue: Hashable>: Con
     /// A node in the `HashableNodesGraph` that is hashable based on a custom hash value.
     public struct Node: Hashable {
         /// The base node.
-        @usableFromInline let base: Base.Node
+        public let base: Base.Node
         /// The custom hash value for the node.
-        @usableFromInline let hashValue: HashValue
+        public let hashValue: HashValue
 
         /// Initializes a new node with a base node and a custom hash value.
         /// - Parameters:
@@ -27,9 +27,9 @@ public struct HashableNodesGraph<Base: ConnectedGraph, HashValue: Hashable>: Con
     }
 
     /// A graph wrapper that makes the nodes hashable based on a custom hash value.
-    @usableFromInline let base: Base
+    public let base: Base
     /// A closure that defines the hash value function for the nodes.
-    @usableFromInline let hashValue: (Base.Node) -> HashValue
+    public let hashValue: (Base.Node) -> HashValue
 
     /// Initializes a new `HashableNodesGraph` with a base graph and a custom hash value function for the nodes.
     /// - Parameters:
@@ -74,9 +74,9 @@ public struct HashableEdgesGraph<Base: ConnectedGraph, HashValue: Hashable>: Con
     /// An edge in the `HashableEdgesGraph` that is hashable based on a custom hash value.
     public struct Edge: Hashable {
         /// The base edge.
-        @usableFromInline let base: Base.Edge
+        public let base: Base.Edge
         /// The custom hash value for the edge.
-        @usableFromInline let hashValue: HashValue
+        public let hashValue: HashValue
 
         /// Initializes a new edge with a base edge and a custom hash value.
         /// - Parameters:
@@ -95,9 +95,9 @@ public struct HashableEdgesGraph<Base: ConnectedGraph, HashValue: Hashable>: Con
     }
 
     /// A graph wrapper that makes the edges hashable based on a custom hash value.
-    @usableFromInline let base: Base
+    public let base: Base
     /// A closure that defines the hash value function for the edges.
-    @usableFromInline let hashValue: (Base.Edge) -> HashValue
+    public let hashValue: (Base.Edge) -> HashValue
 
     /// Initializes a new `HashableEdgesGraph` with a base graph and a custom hash value function for the edges.
     /// - Parameters:

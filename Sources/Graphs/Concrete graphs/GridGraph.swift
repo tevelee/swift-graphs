@@ -59,7 +59,7 @@ extension GridGraph: ConnectedGraph {
 
 extension GridGraph: Graph {
     /// Returns all nodes in the grid.
-    public var allNodes: [Node] {
+    @inlinable public var allNodes: [Node] {
         grid.positions.compactMap(\.self)
     }
 }
@@ -161,7 +161,7 @@ extension OrderedSet<GridDirection> {
     ///   - lhs: The first set of directions.
     ///   - rhs: The second set of directions.
     /// - Returns: A new set containing all directions from both sets.
-    public static func + (lhs: Self, rhs: Self) -> Self {
+    @inlinable public static func + (lhs: Self, rhs: Self) -> Self {
         lhs.union(rhs)
     }
 
@@ -170,7 +170,7 @@ extension OrderedSet<GridDirection> {
     ///   - lhs: The first set of directions.
     ///   - rhs: The second set of directions.
     /// - Returns: A new set containing the directions from the first set that are not in the second set.
-    public static func - (lhs: Self, rhs: Self) -> Self {
+    @inlinable public static func - (lhs: Self, rhs: Self) -> Self {
         lhs.subtracting(rhs)
     }
 }

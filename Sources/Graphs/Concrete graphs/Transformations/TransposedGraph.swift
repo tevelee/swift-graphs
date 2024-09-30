@@ -5,7 +5,7 @@ public struct TransposedGraph<Base: Graph>: Graph where Base.Node: Hashable {
     public typealias Edge = Base.Edge
 
     /// The base graph from which the transpose is derived.
-    @usableFromInline var base: Base
+    public let base: Base
     /// An adjacency list representing the transposed edges.
     @usableFromInline var adjacencyList: [Node: [GraphEdge<Node, Edge>]] = [:]
 

@@ -23,7 +23,7 @@ extension Graph where Node: Hashable, Edge: Weighted, Edge.Weight: FixedWidthInt
 /// An implementation of the Floyd-Warshall algorithm for finding the shortest paths between all pairs of nodes in a graph.
 public struct FloydWarshallAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathsForAllPairsAlgorithm where Edge.Weight: Numeric {
     /// The maximum value possible for weight.
-    @usableFromInline let max: Edge.Weight
+    public let max: Edge.Weight
 
     /// Initializes a new `FloydWarshallAlgorithm` instance.
     @inlinable public init(max: Edge.Weight) {

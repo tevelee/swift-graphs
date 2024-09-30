@@ -4,7 +4,7 @@ public struct AdjacencyListGraph<Node, Edge> {
     @usableFromInline let _edges: [GraphEdge<Node, Edge>]
     
     /// A closure to determine if two nodes are equal.
-    @usableFromInline let isEqual: (Node, Node) -> Bool
+    public let isEqual: (Node, Node) -> Bool
 
     /// Initializes a new graph with the given edges and equality function.
     /// - Parameters:
@@ -27,7 +27,7 @@ extension AdjacencyListGraph: ConnectedGraph {
 
 extension AdjacencyListGraph: Graph where Node: Hashable {
     /// All nodes in the graph.
-    public var allNodes: [Node] {
+    @inlinable public var allNodes: [Node] {
         var nodes = Set<Node>()
         for edge in _edges {
             nodes.insert(edge.source)
@@ -37,7 +37,7 @@ extension AdjacencyListGraph: Graph where Node: Hashable {
     }
 
     /// All edges in the graph.
-    public var allEdges: [GraphEdge<Node, Edge>] {
+    @inlinable public var allEdges: [GraphEdge<Node, Edge>] {
         _edges
     }
 }

@@ -45,13 +45,13 @@ extension RandomGraphGeneration {
 /// A random graph generator that uses the Erdős-Rényi model.
 public struct ErdosRenyiRandomGraphGenerator<Node: Equatable, Edge>: RandomGraphGeneration {
     /// The number of nodes in the graph.
-    @usableFromInline let n: Int
+    public let n: Int
     /// The probability of an edge between two nodes.
-    @usableFromInline let p: Double
+    public let p: Double
     /// A closure that creates a node given an index.
-    @usableFromInline let node: (Int) -> Node
+    public let node: (Int) -> Node
     /// A closure that creates an edge given two nodes.
-    @usableFromInline let edge: (Node, Node) -> Edge
+    public let edge: (Node, Node) -> Edge
 
     /// Creates a new Erdős-Rényi random graph generator.
     /// - Parameters:

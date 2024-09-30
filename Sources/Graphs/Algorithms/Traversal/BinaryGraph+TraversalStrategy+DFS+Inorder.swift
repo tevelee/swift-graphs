@@ -39,7 +39,7 @@ public struct DepthFirstSearchInorder<Visitor: VisitorProtocol>: BinaryGraphTrav
     public typealias Storage = Deque<(isFirst: Bool, visit: Visit)>
 
     /// The visitor used during traversal.
-    @usableFromInline let visitor: Visitor
+    public let visitor: Visitor
 
     /// Initializes a new inorder depth-first search strategy with the specified visitor.
     /// - Parameter visitor: The visitor to use during traversal.

@@ -16,7 +16,7 @@ extension ShortestPathOnWholeGraphAlgorithm {
 /// An implementation of the Bellman-Ford algorithm for finding the shortest path in a graph.
 public struct BellmanFordAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathOnWholeGraphAlgorithm where Edge.Weight: Numeric {
     /// The maximum value possible for weight.
-    @usableFromInline let max: Edge.Weight
+    public let max: Edge.Weight
 
     /// Initializes a new `BellmanFordAlgorithm` instance.
     /// - Parameter max: The maximum value possible for weight.

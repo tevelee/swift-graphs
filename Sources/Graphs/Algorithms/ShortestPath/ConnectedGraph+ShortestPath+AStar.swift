@@ -76,9 +76,9 @@ public struct AStarAlgorithm<Node: Hashable, Edge: Weighted, HScore, FScore: Com
     public typealias GScore = Edge.Weight
 
     /// An implementation of the A* algorithm for finding the shortest path in a graph.
-    @usableFromInline let heuristic: Heuristic
+    public let heuristic: Heuristic
     /// A closure to calculate the total cost given the edge weight and distance.
-    @usableFromInline let calculateTotalCost: (GScore, HScore) -> FScore
+    public let calculateTotalCost: (GScore, HScore) -> FScore
 
     /// Initializes a new A* algorithm instance with a custom heuristic and cost calculation.
     /// - Parameters:

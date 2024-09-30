@@ -10,7 +10,7 @@ extension ShortestPathsForAllPairsAlgorithm {
 /// An implementation of Johnson's algorithm for finding the shortest paths between all pairs of nodes in a graph.
 public struct JohnsonAlgorithm<Node: Hashable & Comparable, Edge: Weighted>: ShortestPathsForAllPairsAlgorithm where Edge.Weight: FixedWidthInteger, Edge.Weight.Magnitude == Edge.Weight {
     /// A function that returns an edge with the specified weight.
-    @usableFromInline let edge: (Edge.Weight) -> Edge
+    public let edge: (Edge.Weight) -> Edge
 
     /// Initializes a new `JohnsonAlgorithm` instance with the specified edge weight function.
     @inlinable public init(edge: @escaping (Edge.Weight) -> Edge) {

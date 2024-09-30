@@ -6,9 +6,9 @@ public struct EquatableNodesGraph<Base: ConnectedGraph>: ConnectedGraph {
     /// A node in the `EquatableNodesGraph` that is equatable based on a custom equality function.
     public struct Node: Equatable {
         /// The base node.
-        @usableFromInline let base: Base.Node
+        public let base: Base.Node
         /// The custom equality function for the node.
-        @usableFromInline let isEqual: (Base.Node, Base.Node) -> Bool
+        public let isEqual: (Base.Node, Base.Node) -> Bool
 
         /// Initializes a new node with a base node and a custom equality function.
         /// - Parameters:
@@ -30,9 +30,9 @@ public struct EquatableNodesGraph<Base: ConnectedGraph>: ConnectedGraph {
     }
 
     /// The base graph.
-    @usableFromInline let base: Base
+    public let base: Base
     /// The custom equality function for the nodes.
-    @usableFromInline let isEqual: (Base.Node, Base.Node) -> Bool
+    public let isEqual: (Base.Node, Base.Node) -> Bool
 
     /// Initializes a new `EquatableNodesGraph` with a base graph and a custom equality function for the nodes.
     /// - Parameters:
@@ -77,9 +77,9 @@ public struct EquatableEdgesGraph<Base: ConnectedGraph>: ConnectedGraph {
     /// An edge in the `EquatableEdgesGraph` that is equatable based on a custom equality function.
     public struct Edge: Equatable {
         /// The base edge.
-        @usableFromInline let base: Base.Edge
+        public let base: Base.Edge
         /// The custom equality function for the edge.
-        @usableFromInline let isEqual: (Base.Edge, Base.Edge) -> Bool
+        public let isEqual: (Base.Edge, Base.Edge) -> Bool
 
         /// Initializes a new edge with a base edge and a custom equality function.
         /// - Parameters:
@@ -101,9 +101,9 @@ public struct EquatableEdgesGraph<Base: ConnectedGraph>: ConnectedGraph {
     }
 
     /// The base graph.
-    @usableFromInline let base: Base
+    public let base: Base
     /// The custom equality function for the edges.
-    @usableFromInline let isEqual: (Base.Edge, Base.Edge) -> Bool
+    public let isEqual: (Base.Edge, Base.Edge) -> Bool
 
     /// Initializes a new `EquatableEdgesGraph` with a base graph and a custom equality function for the edges.
     /// - Parameters:

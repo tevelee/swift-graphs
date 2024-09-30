@@ -5,9 +5,9 @@ public struct ComplementGraph<Base: Graph>: ConnectedGraph where Base.Node: Hash
     public typealias Edge = Base.Edge
 
     /// The base graph from which the complement is derived.
-    @usableFromInline let base: Base
+    public let base: Base
     /// The default value for edges in the complement graph.
-    @usableFromInline let defaultEdgeValue: Edge
+    public let defaultEdgeValue: Edge
 
     /// Initializes a new complement graph with the given base graph and default edge value.
     /// - Parameters:

@@ -24,11 +24,11 @@ public struct BinaryGraphTraversal<Graph: BinaryGraph, Strategy: BinaryGraphTrav
     typealias Edge = Graph.Edge
 
     /// The graph being traversed.
-    @usableFromInline let graph: Graph
+    public let graph: Graph
     /// The starting node for the traversal.
-    @usableFromInline let startNode: Graph.Node
+    public let startNode: Graph.Node
     /// The strategy used for the traversal.
-    @usableFromInline var strategy: Strategy
+    public var strategy: Strategy
 
     /// Initializes a new traversal sequence.
     /// - Parameters:
@@ -44,11 +44,11 @@ public struct BinaryGraphTraversal<Graph: BinaryGraph, Strategy: BinaryGraphTrav
     /// An iterator for the traversal sequence.
     public struct Iterator: IteratorProtocol {
         /// The graph being traversed.
-        @usableFromInline let graph: Graph
+        public let graph: Graph
         /// The storage used by the strategy during traversal.
-        @usableFromInline var storage: Strategy.Storage
+        public var storage: Strategy.Storage
         /// The strategy used for the traversal.
-        @usableFromInline var strategy: Strategy
+        public var strategy: Strategy
 
         /// Initializes a new iterator for the traversal sequence.
         /// - Parameters:
