@@ -126,10 +126,10 @@ For example, while Kruskal's and Prim's algorithms are provided for finding mini
 
 ### Flexible Graph Declarations
 
-The foundation of the library is the `GraphProtocol`, which requires only one method: defining the outgoing edges from a node. 
+The foundation of the library is the `Graph` protocol, which requires only one method: defining the outgoing edges from a node. 
 This minimalist design enables a wide range of algorithms – such as traversals, shortest paths, and minimum spanning trees – without requiring a complex interface.
 
-Multiple concrete graph types conform to this protocol, including eager representations (`Graph`, `BinaryGraph`) and optimized lazy evaluations (`LazyGraph`, `LazyBinaryGraph`). 
+Multiple concrete graph types conform to this protocol, including eager representations (`AdjacencyListGraph`, `AdjacencyListBinaryGraph`) and optimized lazy evaluations (`LazyGraph`, `LazyBinaryGraph`). 
 Specialized types like `WeightedGraph` manage weighted edges, while `GridGraph` provides a convenient structure for 2D grid-based graphs.
 
 ## Contributions
