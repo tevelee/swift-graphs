@@ -1,7 +1,7 @@
 import Algorithms
 
 /// A graph structure that uses hashed values for nodes to efficiently store and retrieve edges.
-public struct HashedGraph<Node, Edge, HashValue: Hashable> {
+public struct ConnectedHashGraph<Node, Edge, HashValue: Hashable> {
     /// A dictionary mapping hashed values to the edges of the graph.
     @usableFromInline let _edges: [HashValue: [GraphEdge<Node, Edge>]]
     /// A closure to compute the hash value of a node.
@@ -26,7 +26,7 @@ public struct HashedGraph<Node, Edge, HashValue: Hashable> {
     }
 }
 
-extension HashedGraph: ConnectedGraph {
+extension ConnectedHashGraph: GraphComponent {
     /// Returns the edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.
     /// - Returns: An array of `GraphEdge` instances containing the edges from the specified node.
@@ -35,7 +35,7 @@ extension HashedGraph: ConnectedGraph {
     }
 }
 
-extension HashedGraph: Graph {
+extension ConnectedHashGraph: Graph {
     /// All nodes in the graph.
     @inlinable public var allNodes: [Node] {
         var map: [HashValue: Node] = [:]
@@ -52,7 +52,7 @@ extension HashedGraph: Graph {
     }
 }
 
-extension HashedGraph where Node: Hashable, HashValue == Node {
+extension ConnectedHashGraph where Node: Hashable, HashValue == Node {
     /// Initializes a new hashed graph with the given edges.
     /// - Parameter edges: An array of `GraphEdge` instances.
     @inlinable public init(edges: [GraphEdge<Node, Edge>]) {

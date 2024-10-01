@@ -77,7 +77,7 @@ public struct DinicAlgorithm<Node: Hashable, Edge: Hashable & Weighted>: MaxFlow
     /// Builds a level graph for the given residual graph.
     @usableFromInline
     func buildLevelGraph(
-        residualGraph: inout ResidualGraph<some ConnectedGraph<Node, Edge>>,
+        residualGraph: inout ResidualGraph<some GraphComponent<Node, Edge>>,
         source: Node,
         sink: Node
     ) -> [Node: Int]? {
@@ -101,7 +101,7 @@ public struct DinicAlgorithm<Node: Hashable, Edge: Hashable & Weighted>: MaxFlow
     /// Sends flow through the graph using a depth-first search.
     @usableFromInline
     func sendFlowDFS(
-        residualGraph: inout ResidualGraph<some ConnectedGraph<Node, Edge>>,
+        residualGraph: inout ResidualGraph<some GraphComponent<Node, Edge>>,
         current: Node,
         sink: Node,
         flow currentFlow: Edge.Weight,

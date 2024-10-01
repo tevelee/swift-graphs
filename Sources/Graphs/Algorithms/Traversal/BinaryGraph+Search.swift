@@ -1,4 +1,4 @@
-extension BinaryGraph {
+extension BinaryGraphComponent {
     /// Searches for the first visit that meets the goal criteria using the specified traversal strategy.
     /// - Parameters:
     ///   - node: The starting node for the search.

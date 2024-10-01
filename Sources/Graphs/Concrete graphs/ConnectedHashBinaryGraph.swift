@@ -1,5 +1,5 @@
 /// A binary graph structure that uses hashed values for nodes to efficiently store and retrieve edges.
-public struct HashedBinaryGraph<Node, Edge, HashValue: Hashable> {
+public struct ConnectedHashBinaryGraph<Node, Edge, HashValue: Hashable> {
     /// A dictionary mapping hashed values to the edges of the binary graph.
     @usableFromInline let _edges: [HashValue: BinaryGraphEdges<Node, Edge>]
     /// A closure to compute the hash value of a node.
@@ -15,7 +15,7 @@ public struct HashedBinaryGraph<Node, Edge, HashValue: Hashable> {
     }
 }
 
-extension HashedBinaryGraph: BinaryGraph {
+extension ConnectedHashBinaryGraph: BinaryGraphComponent {
     /// Returns the edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.
     /// - Returns: A `BinaryGraphEdges` instance containing the edges from the specified node.
@@ -24,7 +24,7 @@ extension HashedBinaryGraph: BinaryGraph {
     }
 }
 
-extension HashedBinaryGraph where Node: Hashable, HashValue == Node {
+extension ConnectedHashBinaryGraph where Node: Hashable, HashValue == Node {
     /// Initializes a new hashed binary graph with the given edges.
     /// - Parameter edges: An array of `BinaryGraphEdges` representing the edges of the graph.
     @inlinable public init(edges: [BinaryGraphEdges<Node, Edge>]) {

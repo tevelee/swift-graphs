@@ -1,6 +1,6 @@
 /// A graph wrapper that makes the nodes equatable based on a custom equality function.
 @dynamicMemberLookup
-public struct EquatableNodesGraph<Base: ConnectedGraph>: ConnectedGraph {
+public struct EquatableNodesGraph<Base: GraphComponent>: GraphComponent {
     public typealias Edge = Base.Edge
 
     /// A node in the `EquatableNodesGraph` that is equatable based on a custom equality function.
@@ -60,7 +60,7 @@ public struct EquatableNodesGraph<Base: ConnectedGraph>: ConnectedGraph {
     }
 }
 
-extension ConnectedGraph {
+extension GraphComponent {
     /// Creates a new `EquatableNodesGraph` with a custom equality function for the nodes.
     /// - Parameter isEqual: A closure that defines the equality function for the nodes.
     /// - Returns: An `EquatableNodesGraph` instance.
@@ -71,7 +71,7 @@ extension ConnectedGraph {
 
 /// A graph wrapper that makes the edges equatable based on a custom equality function.
 @dynamicMemberLookup
-public struct EquatableEdgesGraph<Base: ConnectedGraph>: ConnectedGraph {
+public struct EquatableEdgesGraph<Base: GraphComponent>: GraphComponent {
     public typealias Node = Base.Node
 
     /// An edge in the `EquatableEdgesGraph` that is equatable based on a custom equality function.
@@ -131,7 +131,7 @@ public struct EquatableEdgesGraph<Base: ConnectedGraph>: ConnectedGraph {
     }
 }
 
-extension ConnectedGraph {
+extension GraphComponent {
     /// Creates a new `EquatableEdgesGraph` with a custom equality function for the edges.
     /// - Parameter isEqual: A closure that defines the equality function for the edges.
     /// - Returns: An `EquatableEdgesGraph` instance.

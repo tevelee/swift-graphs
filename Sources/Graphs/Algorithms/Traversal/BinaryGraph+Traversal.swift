@@ -1,4 +1,4 @@
-extension BinaryGraph {
+extension BinaryGraphComponent {
     /// Creates a traversal sequence from the specified node using the given traversal strategy.
     /// - Parameters:
     ///   - node: The starting node for the traversal.
@@ -19,7 +19,7 @@ extension BinaryGraph {
 }
 
 /// A sequence representing the traversal of a binary graph using a specified strategy.
-public struct BinaryGraphTraversal<Graph: BinaryGraph, Strategy: BinaryGraphTraversalStrategy>: Sequence where Graph.Node == Strategy.Node, Graph.Edge == Strategy.Edge {
+public struct BinaryGraphTraversal<Graph: BinaryGraphComponent, Strategy: BinaryGraphTraversalStrategy>: Sequence where Graph.Node == Strategy.Node, Graph.Edge == Strategy.Edge {
     typealias Node = Graph.Node
     typealias Edge = Graph.Edge
 

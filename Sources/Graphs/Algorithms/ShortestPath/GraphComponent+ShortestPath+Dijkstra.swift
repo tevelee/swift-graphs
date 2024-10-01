@@ -8,7 +8,7 @@ extension ShortestPathAlgorithm {
     }
 }
 
-extension ConnectedGraph where Node: Hashable, Edge: Weighted, Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {
+extension GraphComponent where Node: Hashable, Edge: Weighted, Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {
     /// Finds the shortest path from the source node to the destination node using the Dijkstra algorithm.
     /// - Parameters:
     ///   - source: The starting node.
@@ -61,7 +61,7 @@ public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlg
         from source: Node,
         to destination: Node,
         satisfying condition: (Node) -> Bool,
-        in graph: some ConnectedGraph<Node, Edge>
+        in graph: some GraphComponent<Node, Edge>
     ) -> Path<Node, Edge>? {
         let result = computeShortestPaths(from: source, condition: condition, in: graph)
         return result.connectingEdges[destination].flatMap { _ in
@@ -78,7 +78,7 @@ public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlg
     @usableFromInline func computeShortestPaths(
         from source: Node,
         condition: (Node) -> Bool = { _ in false },
-        in graph: some ConnectedGraph<Node, Edge>
+        in graph: some GraphComponent<Node, Edge>
     ) -> (costs: [Node: Edge.Weight], connectingEdges: [Node: GraphEdge<Node, Edge>]) {
         var openSet = Heap<State>()
         var costs: [Node: Edge.Weight] = [source: .zero]

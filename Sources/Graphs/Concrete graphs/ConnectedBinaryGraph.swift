@@ -1,5 +1,5 @@
 /// A binary graph structure that holds nodes and edges.
-public struct AdjacencyListBinaryGraph<Node, Edge> {
+public struct ConnectedBinaryGraph<Node, Edge> {
     /// The edges of the binary graph.
     @usableFromInline let _edges: [BinaryGraphEdges<Node, Edge>]
     
@@ -16,7 +16,7 @@ public struct AdjacencyListBinaryGraph<Node, Edge> {
     }
 }
 
-extension AdjacencyListBinaryGraph: BinaryGraph {
+extension ConnectedBinaryGraph: BinaryGraphComponent {
     /// Returns the edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.
     /// - Returns: A `BinaryGraphEdges` instance containing the edges from the specified node.
@@ -25,8 +25,29 @@ extension AdjacencyListBinaryGraph: BinaryGraph {
     }
 }
 
-extension AdjacencyListBinaryGraph: Graph where Node: Hashable {
-    /// All nodes in the binary graph.
+extension ConnectedBinaryGraph: Graph {
+    /// All nodes in the graph. O(n^2)
+    @inlinable public var allNodes: [Node] {
+        var nodes: [Node] = []
+        for edge in _edges {
+            if let node = edge.lhs?.destination, !nodes.contains(where: { isEqual($0, node) }) {
+                nodes.append(node)
+            }
+            if let node = edge.rhs?.destination, !nodes.contains(where: { isEqual($0, node) }) {
+                nodes.append(node)
+            }
+        }
+        return nodes
+    }
+
+    /// All edges in the binary graph.
+    @inlinable public var allEdges: [GraphEdge<Node, Edge>] {
+        _edges.compactMap(\.lhs) + _edges.compactMap(\.rhs)
+    }
+}
+
+extension ConnectedBinaryGraph where Node: Hashable {
+    /// All nodes in the binary graph. O(n)
     @inlinable public var allNodes: [Node] {
         var nodes = Set<Node>()
         for edge in _edges {
@@ -40,14 +61,9 @@ extension AdjacencyListBinaryGraph: Graph where Node: Hashable {
         }
         return Array(nodes)
     }
-
-    /// All edges in the binary graph.
-    @inlinable public var allEdges: [GraphEdge<Node, Edge>] {
-        _edges.compactMap(\.lhs) + _edges.compactMap(\.rhs)
-    }
 }
 
-extension AdjacencyListBinaryGraph where Node: Equatable {
+extension ConnectedBinaryGraph where Node: Equatable {
     /// Initializes a new binary graph with the given edges.
     /// - Parameter edges: A list of `BinaryGraphEdges` representing the edges of the graph.
     @inlinable public init(edges: some Sequence<BinaryGraphEdges<Node, Edge>>) {

@@ -1,6 +1,6 @@
 /// A graph structure that represents the complement of a given base graph.
 @dynamicMemberLookup
-public struct ComplementGraph<Base: Graph>: ConnectedGraph where Base.Node: Hashable {
+public struct ComplementGraph<Base: Graph>: GraphComponent where Base.Node: Hashable {
     public typealias Node = Base.Node
     public typealias Edge = Base.Edge
 

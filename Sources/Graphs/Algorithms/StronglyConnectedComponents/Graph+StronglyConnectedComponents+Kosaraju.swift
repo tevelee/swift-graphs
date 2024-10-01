@@ -53,8 +53,8 @@ public struct KosarajuSCCAlgorithm<Node: Hashable, Edge>: StronglyConnectedCompo
     /// Reverses the edges of the graph.
     /// - Parameter graph: The graph to reverse.
     /// - Returns: A new graph with all edges reversed.
-    @usableFromInline func reverseGraph(_ graph: some Graph<Node, Edge>) -> AdjacencyListGraph<Node, Edge> {
+    @usableFromInline func reverseGraph(_ graph: some Graph<Node, Edge>) -> ConnectedGraph<Node, Edge> {
         let reversedEdges = graph.allEdges.map { GraphEdge(source: $0.destination, destination: $0.source, value: $0.value) }
-        return AdjacencyListGraph(edges: reversedEdges)
+        return ConnectedGraph(edges: reversedEdges)
     }
 }

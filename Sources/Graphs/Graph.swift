@@ -1,5 +1,5 @@
 /// A protocol that extends `GraphProtocol` to include methods for accessing all nodes and edges in the graph.
-public protocol Graph<Node, Edge>: ConnectedGraph {
+public protocol Graph<Node, Edge>: GraphComponent {
     /// An array containing all nodes in the graph.
     var allNodes: [Node] { get }
     /// An array containing all edges in the graph.
@@ -13,7 +13,7 @@ extension Graph {
     }
 }
 
-extension ConnectedGraph where Self: Graph, Node: Equatable {
+extension GraphComponent where Self: Graph, Node: Equatable {
     /// Returns the edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.
     /// - Returns: An array of `GraphEdge` instances containing the edges from the specified node.

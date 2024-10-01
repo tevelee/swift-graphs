@@ -1,4 +1,4 @@
-extension ConnectedGraph {
+extension GraphComponent {
     /// Finds the shortest paths from the source node to all other nodes using the specified algorithm.
     /// - Parameters:
     ///   - source: The starting node.
@@ -26,6 +26,6 @@ public protocol ShortestPathsAlgorithm<Node, Edge> {
     /// - Returns: A dictionary where the keys are the nodes and the values are the paths from the source node to the respective nodes.
     @inlinable func shortestPaths(
         from source: Node,
-        in graph: some ConnectedGraph<Node, Edge>
+        in graph: some GraphComponent<Node, Edge>
     ) -> [Node: Path<Node, Edge>]
 }

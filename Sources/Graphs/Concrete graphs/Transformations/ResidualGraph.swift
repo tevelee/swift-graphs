@@ -1,6 +1,6 @@
 /// A graph that represents the residual capacities of a flow network.
 @dynamicMemberLookup
-public struct ResidualGraph<Base: Graph>: ConnectedGraph where Base.Node: Hashable, Base.Edge: Weighted, Base.Edge.Weight: Numeric {
+public struct ResidualGraph<Base: Graph>: GraphComponent where Base.Node: Hashable, Base.Edge: Weighted, Base.Edge.Weight: Numeric {
     public typealias Node = Base.Node
     public typealias Edge = Base.Edge.Weight
 

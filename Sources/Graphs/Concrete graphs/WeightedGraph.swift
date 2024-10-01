@@ -1,6 +1,6 @@
 /// A graph structure that adds weights to the edges of an existing graph.
 @dynamicMemberLookup
-public struct WeightedGraph<Base: ConnectedGraph, Edge: Weighted> {
+public struct WeightedGraph<Base: GraphComponent, Edge: Weighted> {
     public typealias Node = Base.Node
 
     /// The underlying graph.
@@ -26,7 +26,7 @@ public struct WeightedGraph<Base: ConnectedGraph, Edge: Weighted> {
     }
 }
 
-extension WeightedGraph: ConnectedGraph {
+extension WeightedGraph: GraphComponent {
     /// Returns the edges originating from the specified node, with weights added.
     /// - Parameter node: The node from which to get the edges.
     /// - Returns: An array of `GraphEdge` instances containing the edges from the specified node, with weights added.
@@ -75,7 +75,7 @@ extension WeightedGraph {
     }
 }
 
-extension ConnectedGraph where Edge == Empty {
+extension GraphComponent where Edge == Empty {
     /// Returns a `WeightedGraph` with the given weight function.
     /// - Parameter weight: A closure that calculates the weight of an edge given the source and destination nodes.
     /// - Returns: A `WeightedGraph` with the specified weight function.

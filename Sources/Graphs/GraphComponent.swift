@@ -1,5 +1,5 @@
 /// A protocol that defines the basic requirements for a graph structure.
-public protocol ConnectedGraph<Node, Edge> {
+public protocol GraphComponent<Node, Edge> {
     /// The type of nodes in the graph.
     associatedtype Node
     /// The type of edges in the graph. Defaults to `Empty`.

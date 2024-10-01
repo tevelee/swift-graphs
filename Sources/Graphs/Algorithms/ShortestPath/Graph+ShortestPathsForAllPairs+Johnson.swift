@@ -55,7 +55,7 @@ public struct JohnsonAlgorithm<Node: Hashable & Comparable, Edge: Weighted>: Sho
         }
 
         // Step 3: Run Bellman-Ford from 'q'
-        let extendedGraph = AdjacencyListGraph(edges: extendedEdges)
+        let extendedGraph = ConnectedGraph(edges: extendedEdges)
         let bellmanFord = BellmanFordAlgorithm<JohnsonNode, Edge>(max: Edge.Weight.max)
         let bellmanFordResult = bellmanFord.computeShortestPaths(from: q, in: extendedGraph)
 
@@ -73,7 +73,7 @@ public struct JohnsonAlgorithm<Node: Hashable & Comparable, Edge: Weighted>: Sho
             reweightedEdges.append(GraphEdge(source: edge.source, destination: edge.destination, value: self.edge(newWeight)))
         }
 
-        let reweightedGraph = AdjacencyListGraph(edges: reweightedEdges)
+        let reweightedGraph = ConnectedGraph(edges: reweightedEdges)
 
         // Step 5: Run Dijkstra's algorithm from each node
         var distances: [Node: [Node: Edge.Weight]] = [:]

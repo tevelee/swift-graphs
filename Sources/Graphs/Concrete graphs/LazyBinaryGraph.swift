@@ -24,7 +24,7 @@ public struct LazyBinaryGraph<Node, Edge> {
     }
 }
 
-extension LazyBinaryGraph: BinaryGraph {
+extension LazyBinaryGraph: BinaryGraphComponent {
     /// Returns the edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.
     /// - Returns: A `BinaryGraphEdges` instance containing the edges from the specified node.

@@ -1,4 +1,4 @@
-extension ConnectedGraph {
+extension GraphComponent {
     /// Creates a traversal sequence from the specified node using the given traversal strategy.
     /// - Parameters:
     ///   - node: The starting node for the traversal.
@@ -19,7 +19,7 @@ extension ConnectedGraph {
 }
 
 /// A sequence representing the traversal of a graph using a specified strategy.
-public struct GraphTraversal<Graph: ConnectedGraph, Strategy: GraphTraversalStrategy>: Sequence where Graph.Node == Strategy.Node, Graph.Edge == Strategy.Edge {
+public struct GraphTraversal<Graph: GraphComponent, Strategy: GraphTraversalStrategy>: Sequence where Graph.Node == Strategy.Node, Graph.Edge == Strategy.Edge {
     typealias Node = Graph.Node
     typealias Edge = Graph.Edge
 

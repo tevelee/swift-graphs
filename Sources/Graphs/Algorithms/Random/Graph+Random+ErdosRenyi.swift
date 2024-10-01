@@ -67,7 +67,7 @@ public struct ErdosRenyiRandomGraphGenerator<Node: Equatable, Edge>: RandomGraph
     }
 
     /// Generates a random graph using the Erdős-Rényi model.
-    @inlinable public func generateRandomGraph() -> AdjacencyListGraph<Node, Edge> {
+    @inlinable public func generateRandomGraph() -> ConnectedGraph<Node, Edge> {
         let nodes = (0 ..< n).map(node)
         var edges: [GraphEdge<Node, Edge>] = []
         for i in 0 ..< n {
@@ -83,6 +83,6 @@ public struct ErdosRenyiRandomGraphGenerator<Node: Equatable, Edge>: RandomGraph
             }
         }
 
-        return AdjacencyListGraph(edges: edges)
+        return ConnectedGraph(edges: edges)
     }
 }

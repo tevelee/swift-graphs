@@ -59,7 +59,7 @@ public struct DepthFirstSearchInorder<Visitor: VisitorProtocol>: BinaryGraphTrav
     ///   - stack: The storage used by the strategy during traversal.
     ///   - graph: The graph being traversed.
     /// - Returns: The next visit in the traversal sequence, or `nil` if there are no more visits.
-    @inlinable public func next(from stack: inout Storage, graph: some BinaryGraph<Node, Edge>) -> Visitor.Visit? {
+    @inlinable public func next(from stack: inout Storage, graph: some BinaryGraphComponent<Node, Edge>) -> Visitor.Visit? {
         guard let (isFirst, visit) = stack.popLast() else { return nil }
         if isFirst {
             let edges = graph.edges(from: node(from: visit))

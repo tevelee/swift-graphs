@@ -102,7 +102,7 @@ public struct AStarAlgorithm<Node: Hashable, Edge: Weighted, HScore, FScore: Com
         from source: Node,
         to destination: Node,
         satisfying condition: (Node) -> Bool,
-        in graph: some ConnectedGraph<Node, Edge>
+        in graph: some GraphComponent<Node, Edge>
     ) -> Path<Node, Edge>? {
         var openSet = Heap<State>()
         var costs: [Node: GScore] = [source: .zero]

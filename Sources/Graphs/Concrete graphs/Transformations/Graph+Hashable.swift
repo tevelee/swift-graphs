@@ -1,6 +1,6 @@
 /// A graph wrapper that makes the nodes hashable based on a custom hash value.
 @dynamicMemberLookup
-public struct HashableNodesGraph<Base: ConnectedGraph, HashValue: Hashable>: ConnectedGraph where Base.Node: Equatable {
+public struct HashableNodesGraph<Base: GraphComponent, HashValue: Hashable>: GraphComponent where Base.Node: Equatable {
     public typealias Edge = Base.Edge
 
     /// A node in the `HashableNodesGraph` that is hashable based on a custom hash value.
@@ -57,7 +57,7 @@ public struct HashableNodesGraph<Base: ConnectedGraph, HashValue: Hashable>: Con
     }
 }
 
-extension ConnectedGraph where Node: Equatable {
+extension GraphComponent where Node: Equatable {
     /// Creates a new `HashableNodesGraph` with a custom hash value function for the nodes.
     /// - Parameter hashValue: A closure that defines the hash value function for the nodes.
     /// - Returns: A `HashableNodesGraph` instance.
@@ -68,7 +68,7 @@ extension ConnectedGraph where Node: Equatable {
 
 /// A graph wrapper that makes the edges hashable based on a custom hash value.
 @dynamicMemberLookup
-public struct HashableEdgesGraph<Base: ConnectedGraph, HashValue: Hashable>: ConnectedGraph where Base.Edge: Equatable {
+public struct HashableEdgesGraph<Base: GraphComponent, HashValue: Hashable>: GraphComponent where Base.Edge: Equatable {
     public typealias Node = Base.Node
 
     /// An edge in the `HashableEdgesGraph` that is hashable based on a custom hash value.
@@ -125,7 +125,7 @@ public struct HashableEdgesGraph<Base: ConnectedGraph, HashValue: Hashable>: Con
     }
 }
 
-extension ConnectedGraph where Edge: Equatable {
+extension GraphComponent where Edge: Equatable {
     /// Creates a new `HashableEdgesGraph` with a custom hash value function for the edges.
     /// - Parameter hashValue: A closure that defines the hash value function for the edges.
     /// - Returns: A `HashableEdgesGraph` instance.

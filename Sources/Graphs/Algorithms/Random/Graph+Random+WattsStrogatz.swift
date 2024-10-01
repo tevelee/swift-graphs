@@ -60,7 +60,7 @@ public struct WattsStrogatzRandomGraphGenerator<Node: Equatable, Edge>: RandomGr
     }
 
     /// Generates a random graph using the Watts-Strogatz model.
-    @inlinable public func generateRandomGraph() -> AdjacencyListGraph<Node, Edge> {
+    @inlinable public func generateRandomGraph() -> ConnectedGraph<Node, Edge> {
         let nodes = (0 ..< n).map(node)
         var edges: [_Edge] = []
 
@@ -94,7 +94,7 @@ public struct WattsStrogatzRandomGraphGenerator<Node: Equatable, Edge>: RandomGr
             }
         }
 
-        return AdjacencyListGraph(edges: edges.map {
+        return ConnectedGraph(edges: edges.map {
             GraphEdge(source: $0.source, destination: $0.destination, value: edge($0.source, $0.destination))
         })
     }

@@ -6,7 +6,7 @@ extension ShortestPathsAlgorithm {
     }
 }
 
-extension ConnectedGraph where Node: Hashable, Edge: Weighted, Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {
+extension GraphComponent where Node: Hashable, Edge: Weighted, Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {
     /// Finds the shortest paths from the source node to all other nodes using the Dijkstra algorithm.
     /// - Parameter source: The starting node.
     /// - Returns: A dictionary where the keys are the nodes and the values are the paths from the source node to the respective nodes.
@@ -25,7 +25,7 @@ extension DijkstraAlgorithm: ShortestPathsAlgorithm {
     /// - Returns: A dictionary where the keys are the nodes and the values are the paths from the source node to the respective nodes.
     @inlinable public func shortestPaths(
         from source: Node,
-        in graph: some ConnectedGraph<Node, Edge>
+        in graph: some GraphComponent<Node, Edge>
     ) -> [Node: Path<Node, Edge>] {
         let result = computeShortestPaths(from: source, in: graph)
 

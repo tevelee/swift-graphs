@@ -42,7 +42,7 @@ public struct BarabasiAlbertRandomGraphGenerator<Node: Hashable, Edge>: RandomGr
     }
 
     /// Generates a random graph using the Barabási-Albert model.
-    @inlinable public func generateRandomGraph() -> AdjacencyListGraph<Node, Edge> {
+    @inlinable public func generateRandomGraph() -> ConnectedGraph<Node, Edge> {
         var edges: [GraphEdge<Node, Edge>] = []
         var nodes: [Node] = []
         var degrees: [Node: Int] = [:]
@@ -77,6 +77,6 @@ public struct BarabasiAlbertRandomGraphGenerator<Node: Hashable, Edge>: RandomGr
             nodes.append(newNode)
         }
 
-        return AdjacencyListGraph(edges: edges)
+        return ConnectedGraph(edges: edges)
     }
 }

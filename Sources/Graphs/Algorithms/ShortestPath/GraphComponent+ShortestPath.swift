@@ -1,4 +1,4 @@
-extension ConnectedGraph where Edge: Weighted {
+extension GraphComponent where Edge: Weighted {
     /// Finds the shortest path from the source node to the destination node using the specified algorithm.
     /// - Parameters:
     ///   - source: The starting node.
@@ -48,7 +48,7 @@ public protocol ShortestPathAlgorithm<Node, Edge> {
         from source: Node,
         to destination: Node,
         satisfying condition: (Node) -> Bool,
-        in graph: some ConnectedGraph<Node, Edge>
+        in graph: some GraphComponent<Node, Edge>
     ) -> Path<Node, Edge>?
 }
 
@@ -62,7 +62,7 @@ extension ShortestPathAlgorithm where Node: Equatable {
     @inlinable func shortestPath(
         from source: Node,
         to destination: Node,
-        in graph: some ConnectedGraph<Node, Edge>
+        in graph: some GraphComponent<Node, Edge>
     ) -> Path<Node, Edge>? {
         shortestPath(from: source, to: destination, satisfying: { $0 == destination }, in: graph)
     }

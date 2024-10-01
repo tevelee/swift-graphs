@@ -19,5 +19,5 @@ public protocol BinaryGraphTraversalStrategy<Node, Edge, Visit> {
     ///   - storage: The storage used by the strategy during traversal.
     ///   - graph: The graph being traversed.
     /// - Returns: The next visit in the traversal sequence, or `nil` if there are no more visits.
-    @inlinable func next(from storage: inout Storage, graph: some BinaryGraph<Node, Edge>) -> Visit?
+    @inlinable func next(from storage: inout Storage, graph: some BinaryGraphComponent<Node, Edge>) -> Visit?
 }

@@ -33,7 +33,7 @@ extension GraphTraversalStrategy {
     ///   - storage: The storage used by the strategy during traversal.
     ///   - graph: The graph being traversed.
     /// - Returns: The next visit in the traversal sequence, or `nil` if there are no more visits.
-    @inlinable public func next(from storage: inout Storage, graph: some ConnectedGraph<Node, Edge>) -> Visit? {
+    @inlinable public func next(from storage: inout Storage, graph: some GraphComponent<Node, Edge>) -> Visit? {
         next(from: &storage, edges: graph.edges)
     }
 }

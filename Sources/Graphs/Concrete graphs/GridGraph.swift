@@ -46,7 +46,7 @@ public struct GridGraph<Value, Edge> {
     }
 }
 
-extension GridGraph: ConnectedGraph {
+extension GridGraph: GraphComponent {
     /// Returns the edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.
     /// - Returns: An array of `GraphEdge` instances representing the edges from the specified node.

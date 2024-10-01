@@ -1,5 +1,5 @@
 /// A bipartite graph.
-public struct PartitionedGraph<Base: ConnectedGraph>: BipartiteGraph where Base.Node: Hashable {
+public struct PartitionedGraph<Base: GraphComponent>: BipartiteGraph where Base.Node: Hashable {
     public typealias Node = Base.Node
     public typealias Edge = Base.Edge
 
@@ -37,7 +37,7 @@ public struct PartitionedGraph<Base: ConnectedGraph>: BipartiteGraph where Base.
     }
 }
 
-extension ConnectedGraph where Node: Hashable {
+extension GraphComponent where Node: Hashable {
     /// Returns a bipartite graph with the given left and right partitions.
     /// - Parameters:
     ///  - leftPartition: The left partition of the bipartite graph.

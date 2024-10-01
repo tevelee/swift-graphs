@@ -1,8 +1,8 @@
-extension AdjacencyListGraph {
+extension ConnectedGraph {
     /// Generates a random graph using the specified algorithm.
     /// - Parameter algorithm: The algorithm to use for generating the random graph.
     /// - Returns: A random graph.
-    @inlinable public static func random<Algorithm: RandomGraphGeneration<Node, Edge>>(using algorithm: Algorithm) -> AdjacencyListGraph<Node, Edge> {
+    @inlinable public static func random<Algorithm: RandomGraphGeneration<Node, Edge>>(using algorithm: Algorithm) -> ConnectedGraph<Node, Edge> {
         algorithm.generateRandomGraph()
     }
 }
@@ -15,5 +15,5 @@ public protocol RandomGraphGeneration<Node, Edge> {
     associatedtype Edge
 
     /// Generates a random graph.
-    @inlinable func generateRandomGraph() -> AdjacencyListGraph<Node, Edge>
+    @inlinable func generateRandomGraph() -> ConnectedGraph<Node, Edge>
 }

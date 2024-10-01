@@ -1,4 +1,4 @@
-extension ConnectedGraph {
+extension GraphComponent {
     /// Searches for the first visit that satisfies the given goal using the specified traversal strategy.
     /// - Parameters:
     ///   - node: The starting node for the traversal.

@@ -3,7 +3,7 @@ import Testing
 
 struct GraphStrategy {
     @Test func graph() {
-        let graph = AdjacencyListGraph(edges: [
+        let graph = ConnectedGraph(edges: [
             "Root": ["A", "B", "C"],
             "B": ["X", "Y", "Z"],
             "Y": ["N", "M"]
@@ -26,7 +26,7 @@ struct GraphStrategy {
     }
 
     @Test func binaryGraph() {
-        let graph = AdjacencyListBinaryGraph(edges: [
+        let graph = ConnectedBinaryGraph(edges: [
             "Root": (lhs: "A", rhs: "B"),
             "A": (lhs: "X", rhs: "Y"),
             "Y": (lhs: nil, rhs: "N")
@@ -53,7 +53,7 @@ struct GraphStrategy {
     }
 
     @Test func unique() {
-        let graph = AdjacencyListGraph(edges: [
+        let graph = ConnectedGraph(edges: [
             "Root": ["A", "B", "C"],
             "B": ["X", "Y", "A"]
         ])
@@ -63,7 +63,7 @@ struct GraphStrategy {
     }
 
     @Test func trace() {
-        let graph = AdjacencyListGraph(edges: [
+        let graph = ConnectedGraph(edges: [
             "Root": ["A", "B", "C"],
             "B": ["X", "Y", "A"]
         ])
@@ -82,7 +82,7 @@ struct GraphStrategy {
     }
 
     @Test func shortestPath() {
-        let graph = AdjacencyListGraph(edges: [
+        let graph = ConnectedGraph(edges: [
             "Root": ["A": 2 as UInt, "B": 2, "C": 2],
             "B": ["X": 2, "Y": 2, "Z": 20, "A": 2],
             "Y": ["N": 2, "M": 2, "Z": 2]
@@ -144,7 +144,7 @@ struct GraphStrategy {
     }
 
     @Test func minimumSpanningTree() {
-        let graph = AdjacencyListGraph(edges: [
+        let graph = ConnectedGraph(edges: [
             "A": ["B": 1, "C": 3],
             "B": ["A": 1, "C": 1, "D": 4],
             "C": ["A": 3, "B": 1, "D": 1],
@@ -156,7 +156,7 @@ struct GraphStrategy {
     }
 
     @Test func maxFlowMinCut() {
-        let graph = AdjacencyListGraph(edges: [
+        let graph = ConnectedGraph(edges: [
             "S": ["A": 10, "B": 5],
             "A": ["B": 15, "C": 10],
             "B": ["D": 10],
@@ -207,7 +207,7 @@ struct GraphStrategy {
     }
 
     @Test func eulerianPath() {
-        let triangle = AdjacencyListGraph(edges: [
+        let triangle = ConnectedGraph(edges: [
             "A": ["B", "C"],
             "B": ["A", "C"],
             "C": ["A", "B"]
@@ -216,7 +216,7 @@ struct GraphStrategy {
         #expect(triangle.eulerianCycle(from: "A")?.path == ["A", "B", "A", "C", "B", "C", "A"])
         #expect(triangle.eulerianCycle(from: "A", using: .hierholzer())?.path == ["A", "C", "B", "C", "A", "B", "A"])
 
-        let graph = AdjacencyListGraph(edges: [
+        let graph = ConnectedGraph(edges: [
             "S": ["A"],
             "A": ["B"],
             "B": ["C"],
@@ -229,7 +229,7 @@ struct GraphStrategy {
     }
 
     @Test func coloring() {
-        let graph = AdjacencyListGraph(edges: [
+        let graph = ConnectedGraph(edges: [
             "Root": ["A", "B", "C"],
             "B": ["X", "Y", "Z"]
         ])
@@ -248,7 +248,7 @@ struct GraphStrategy {
     }
 
     @Test func bipartite() {
-        let graph = AdjacencyListGraph(edges: [
+        let graph = ConnectedGraph(edges: [
             GraphEdge(source: "u1", destination: "v1"),
             GraphEdge(source: "u1", destination: "v2"),
             GraphEdge(source: "u2", destination: "v1"),
@@ -260,13 +260,13 @@ struct GraphStrategy {
     }
 
     @Test func isomorphism() {
-        let graph1 = AdjacencyListGraph(edges: [
+        let graph1 = ConnectedGraph(edges: [
             "A": ["B"],
             "B": ["A", "C"],
             "C": ["B"]
         ])
 
-        let graph2 = AdjacencyListGraph(edges: [
+        let graph2 = ConnectedGraph(edges: [
             "X": ["Y"],
             "Y": ["X", "Z"],
             "Z": ["Y"]
