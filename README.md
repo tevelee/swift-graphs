@@ -25,7 +25,7 @@ While some features are still in early development stages, the project is active
 ### Example Usage
 
 ```swift
-let graph = Graph(edges: [
+let graph = ConnectedGraph(edges: [
     "Root": ["A", "B", "C"],
     "B": ["X", "Y", "Z"]
 ])
@@ -77,14 +77,14 @@ gridGraph.hamiltonianPath()
 gridGraph.hamiltonianPath(from: GridPosition(x: 0, y: 0))
 gridGraph.hamiltonianPath(from: GridPosition(x: 0, y: 0), to: GridPosition(x: 4, y: 4))
 
-let binaryGraph = BinaryGraph(edges: [
+let binaryGraph = ConnectedBinaryGraph(edges: [
     "Root": (lhs: "A", rhs: "B"),
     "A": (lhs: "X", rhs: "Y"),
     "Y": (lhs: nil, rhs: "Z")
 ])
 binaryGraph.traverse(from: "Root", strategy: .dfs(order: .inorder()))
 
-let bipartite = Graph(edges: [
+let bipartite = ConnectedGraph(edges: [
     GraphEdge(source: "u1", destination: "v1"),
     GraphEdge(source: "u1", destination: "v2"),
     GraphEdge(source: "u2", destination: "v1"),
@@ -129,7 +129,7 @@ For example, while Kruskal's and Prim's algorithms are provided for finding mini
 The foundation of the library is the `Graph` protocol, which requires only one method: defining the outgoing edges from a node. 
 This minimalist design enables a wide range of algorithms – such as traversals, shortest paths, and minimum spanning trees – without requiring a complex interface.
 
-Multiple concrete graph types conform to this protocol, including eager representations (`AdjacencyListGraph`, `AdjacencyListBinaryGraph`) and optimized lazy evaluations (`LazyGraph`, `LazyBinaryGraph`). 
+Multiple concrete graph types conform to this protocol, including eager representations (`ConnectedGraph`, `DisjointGraph`, `ConnectedBinaryGraph`, etc.) and optimized lazy evaluations (`LazyGraph`, `LazyBinaryGraph`). 
 Specialized types like `WeightedGraph` manage weighted edges, while `GridGraph` provides a convenient structure for 2D grid-based graphs.
 
 ## Contributions

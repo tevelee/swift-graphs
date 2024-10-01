@@ -1,9 +1,9 @@
 import Collections
 
-extension DFSOrder {
+extension DepthFirstSearch {
     /// Creates a preorder depth-first search order.
     /// - Returns: An instance of `DFSOrder` configured for preorder traversal.
-    @inlinable public static func preorder<Visitor: VisitorProtocol>() -> Self where Self == DFSOrder<DepthFirstSearchPreorder<Visitor>> {
+    @inlinable public static func preorder<Visitor: VisitorProtocol>() -> Self where Self == DepthFirstSearch<DepthFirstSearchPreorder<Visitor>> {
         .init()
     }
 }
@@ -16,7 +16,7 @@ extension GraphTraversalStrategy {
     /// - Returns: An instance of `DepthFirstSearchPreorder` configured with the specified visitor and order.
     @inlinable public static func dfs<Visitor: VisitorProtocol>(
         _ visitor: Visitor,
-        order: DFSOrder<DepthFirstSearchPreorder<Visitor>>
+        order: DepthFirstSearch<DepthFirstSearchPreorder<Visitor>>
     ) -> Self where Self == DepthFirstSearchPreorder<Visitor> {
         .init(visitor: visitor)
     }
@@ -25,7 +25,7 @@ extension GraphTraversalStrategy {
     /// - Parameter order: The order in which to perform the depth-first search.
     /// - Returns: An instance of `DepthFirstSearchPreorder` configured with the specified order.
     @inlinable public static func dfs<Node, Edge>(
-        order: DFSOrder<DepthFirstSearchPreorder<NodeVisitor<Node, Edge>>>
+        order: DepthFirstSearch<DepthFirstSearchPreorder<NodeVisitor<Node, Edge>>>
     ) -> Self where Self == DepthFirstSearchPreorder<NodeVisitor<Node, Edge>> {
         .init(visitor: .onlyNodes())
     }

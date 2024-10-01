@@ -1,7 +1,7 @@
 import Algorithms
 
 /// A binary graph structure that uses hashed values for nodes and can represent multiple disconnected components.
-public struct DisjointHashBinaryGraph<Node: Hashable, Edge> {
+public struct DisjointBinaryHashGraph<Node: Hashable, Edge> {
     /// A dictionary mapping hashed values to the edges of the binary graph.
     @usableFromInline var _edges: [Node: BinaryGraphEdges<Node, Edge>]
     /// An array of nodes in the graph.
@@ -22,7 +22,7 @@ public struct DisjointHashBinaryGraph<Node: Hashable, Edge> {
     }
 }
 
-extension DisjointHashBinaryGraph: GraphComponent {
+extension DisjointBinaryHashGraph: GraphComponent {
     /// Returns the edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.
     /// - Returns: An array of `GraphEdge` instances containing the edges from the specified node.
@@ -33,7 +33,7 @@ extension DisjointHashBinaryGraph: GraphComponent {
     }
 }
 
-extension DisjointHashBinaryGraph: BinaryGraphComponent {
+extension DisjointBinaryHashGraph: BinaryGraphComponent {
     /// Returns the edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.
     /// - Returns: A `BinaryGraphEdges` instance containing the edges from the specified node.
@@ -42,7 +42,7 @@ extension DisjointHashBinaryGraph: BinaryGraphComponent {
     }
 }
 
-extension DisjointHashBinaryGraph: Graph {
+extension DisjointBinaryHashGraph: Graph {
     /// The edges of the graph.
     @inlinable public var allEdges: [GraphEdge<Node, Edge>] {
         _edges.flatMap {
@@ -56,7 +56,7 @@ extension DisjointHashBinaryGraph: Graph {
     }
 }
 
-extension DisjointHashBinaryGraph: MutableGraphComponent {
+extension DisjointBinaryHashGraph: MutableGraphComponent {
     /// Adds an edge to the graph.
     /// - Parameter edge: The edge to add.
     @inlinable public mutating func addEdge(_ edge: GraphEdge<Node, Edge>) {
@@ -87,7 +87,7 @@ extension DisjointHashBinaryGraph: MutableGraphComponent {
     }
 }
 
-extension DisjointHashBinaryGraph: MutableGraph {
+extension DisjointBinaryHashGraph: MutableGraph {
     /// Adds a node to the graph.
     @inlinable public mutating func addNode(_ node: Node) {
         _nodes.insert(node)

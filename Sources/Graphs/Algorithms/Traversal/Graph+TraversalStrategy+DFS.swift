@@ -1,7 +1,7 @@
 import Collections
 
 /// A structure representing the order of a depth-first search traversal.
-public struct DFSOrder<Concrete> {
+public struct DepthFirstSearch<Concrete> {
     /// Initializes a new `DFSOrder` instance.
     @inlinable public init() {}
 }
