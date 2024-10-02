@@ -49,7 +49,7 @@ extension DisjointHashGraph: Graph {
 
     /// All edges in the graph.
     @inlinable public var allEdges: [GraphEdge<Node, Edge>] {
-        _edges.values.flatMap(\.self)
+        _edges.values.flatMap { $0 }
     }
 }
 

@@ -17,7 +17,7 @@ public struct DisjointBinaryHashGraph<Node: Hashable, Edge> {
     ) {
         _edges = edges.keyed(by: \.source)
         _nodes = Set(edges.flatMap {
-            [$0.source, $0.lhs?.destination, $0.rhs?.destination].compactMap(\.self)
+            [$0.source, $0.lhs?.destination, $0.rhs?.destination].compactMap { $0 }
         })
     }
 }
@@ -28,7 +28,7 @@ extension DisjointBinaryHashGraph: GraphComponent {
     /// - Returns: An array of `GraphEdge` instances containing the edges from the specified node.
     @inlinable public func edges(from node: Node) -> [GraphEdge<Node, Edge>] {
         _edges[node].flatMap {
-            [$0.lhs, $0.rhs].compactMap(\.self)
+            [$0.lhs, $0.rhs].compactMap { $0 }
          } ?? []
     }
 }
@@ -46,7 +46,7 @@ extension DisjointBinaryHashGraph: Graph {
     /// The edges of the graph.
     @inlinable public var allEdges: [GraphEdge<Node, Edge>] {
         _edges.flatMap {
-            [$0.value.lhs, $0.value.rhs].compactMap(\.self)
+            [$0.value.lhs, $0.value.rhs].compactMap { $0 }
         }
     }
 

@@ -1,3 +1,4 @@
+#if canImport(Testing)
 import Graphs
 import Testing
 
@@ -282,3 +283,4 @@ extension Sequence {
         map { [$0.source.description, $0.destination.description].sorted().joined(separator: "-") }.sorted()
     }
 }
+#endif

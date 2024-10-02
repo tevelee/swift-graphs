@@ -2,7 +2,7 @@ extension GraphTraversalStrategy {
     /// Creates a traversal strategy that visits each node once.
     /// - Returns: A `UniqueTraversalStrategy` instance configured to visit each node once.
     @inlinable public func visitEachNodeOnce() -> UniqueTraversalStrategy<Self, some Hashable> where Node: Hashable {
-        visitEachNodeOnce(by: \.self)
+        visitEachNodeOnce { $0 }
     }
 
     /// Creates a traversal strategy that visits each node once, using a custom hash value.

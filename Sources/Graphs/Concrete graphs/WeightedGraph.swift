@@ -95,7 +95,7 @@ extension GridGraph where Edge == Empty {
     /// Returns a `WeightedGraph` with weights calculated by the specified distance algorithm.
     /// - Parameter distanceAlgorithm: The algorithm to use for calculating distances. Defaults to Euclidean distance.
     /// - Returns: A `WeightedGraph` with weights calculated by the specified distance algorithm.
-    @inlinable public func weightedByDistance(_ distanceAlgorithm: DistanceAlgorithm<Node, Double> = .euclideanDistance(of: \Self.Node.coordinates)) -> WeightedGraph<Self, Double> {
+    @inlinable public func weightedByDistance(_ distanceAlgorithm: DistanceAlgorithm<Node, Double> = .euclideanDistance(of: \.coordinates)) -> WeightedGraph<Self, Double> {
         WeightedGraph(base: self, weight: distanceAlgorithm.distance)
     }
 }

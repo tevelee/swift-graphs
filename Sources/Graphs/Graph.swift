@@ -1,5 +1,10 @@
 /// A protocol that extends `GraphProtocol` to include methods for accessing all nodes and edges in the graph.
 public protocol Graph<Node, Edge>: GraphComponent {
+    /// The type of nodes in the graph.
+    associatedtype Node
+    /// The type of edges in the graph. Defaults to `Empty`.
+    associatedtype Edge = Empty
+
     /// An array containing all nodes in the graph.
     var allNodes: [Node] { get }
     /// An array containing all edges in the graph.

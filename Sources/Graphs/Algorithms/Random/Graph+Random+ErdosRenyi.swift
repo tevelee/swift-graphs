@@ -38,7 +38,7 @@ extension RandomGraphGeneration {
         numberOfNodes n: Int,
         probabilityOfEdge p: Double = 0.5
     ) -> Self where Self == ErdosRenyiRandomGraphGenerator<Int, Empty> {
-        .init(numberOfNodes: n, probabilityOfEdge: p, node: \.self) { _, _ in Empty() }
+        .init(numberOfNodes: n, probabilityOfEdge: p, node: { $0 }, edge: { _, _ in Empty() })
     }
 }
 

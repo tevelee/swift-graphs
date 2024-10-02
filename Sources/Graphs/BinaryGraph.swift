@@ -1,5 +1,10 @@
 /// A protocol that defines the requirements for a binary graph structure.
 public protocol BinaryGraphComponent<Node, Edge>: GraphComponent {
+    /// The type of nodes in the graph.
+    associatedtype Node
+    /// The type of edges in the graph. Defaults to `Empty`.
+    associatedtype Edge = Empty
+
     /// Returns the binary edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.
     /// - Returns: A `BinaryGraphEdges` instance containing the edges from the specified node.
@@ -30,7 +35,7 @@ public struct BinaryGraphEdges<Node, Edge>: Container {
     }
 
     /// An array of elements contained in the container.
-    @inlinable var elements: [Element] { [lhs, rhs].compactMap(\.self) }
+    @inlinable var elements: [Element] { [lhs, rhs].compactMap { $0 } }
 }
 
 extension GraphComponent where Self: BinaryGraphComponent {

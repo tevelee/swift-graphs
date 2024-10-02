@@ -60,7 +60,7 @@ extension GridGraph: GraphComponent {
 extension GridGraph: Graph {
     /// Returns all nodes in the grid.
     @inlinable public var allNodes: [Node] {
-        grid.positions.compactMap(\.self)
+        grid.positions.compactMap { $0 }
     }
 }
 

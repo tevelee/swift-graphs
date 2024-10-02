@@ -28,7 +28,7 @@ extension ConnectedBinaryHashGraph where Node: Hashable, HashValue == Node {
     /// Initializes a new hashed binary graph with the given edges.
     /// - Parameter edges: An array of `BinaryGraphEdges` representing the edges of the graph.
     @inlinable public init(edges: [BinaryGraphEdges<Node, Edge>]) {
-        self.init(edges: edges, hashValue: \.self)
+        self.init(edges: edges, hashValue: { $0 })
     }
 
     /// Initializes a new hashed binary graph with the given edges.
@@ -42,7 +42,7 @@ extension ConnectedBinaryHashGraph where Node: Hashable, HashValue == Node {
                     rhs: destinations?.rhs.map { GraphEdge(source: source, destination: $0) }
                 )
             },
-            hashValue: \.self
+            hashValue: { $0 }
         )
     }
 }

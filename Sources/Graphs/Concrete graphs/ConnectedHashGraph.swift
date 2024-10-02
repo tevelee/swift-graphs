@@ -48,7 +48,7 @@ extension ConnectedHashGraph: Graph {
 
     /// All edges in the graph.
     @inlinable public var allEdges: [GraphEdge<Node, Edge>] {
-        _edges.values.flatMap(\.self)
+        _edges.values.flatMap { $0 }
     }
 }
 
@@ -56,7 +56,7 @@ extension ConnectedHashGraph where Node: Hashable, HashValue == Node {
     /// Initializes a new hashed graph with the given edges.
     /// - Parameter edges: An array of `GraphEdge` instances.
     @inlinable public init(edges: [GraphEdge<Node, Edge>]) {
-        self.init(edges: edges, hashValue: \.self)
+        self.init(edges: edges, hashValue: { $0 })
     }
 
     /// Initializes a new hashed graph with the given edges.
@@ -64,6 +64,6 @@ extension ConnectedHashGraph where Node: Hashable, HashValue == Node {
     @inlinable public init(edges: [Node: [Node]]) where Edge == Empty {
         self.init(edges: edges.flatMap { source, destinations in
             destinations.map { GraphEdge(source: source, destination: $0) }
-        }.grouped(by: \.source), hashValue: \.self)
+        }.grouped(by: \.source), hashValue: { $0 })
     }
 }
