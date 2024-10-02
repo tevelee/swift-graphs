@@ -10,7 +10,7 @@ public struct ResidualGraph<Base: Graph>: GraphComponent where Base.Node: Hashab
     @usableFromInline var flows: [Node: [Node: Edge]]
 
     /// Initializes a residual graph with a given graph.
-    /// - Parameter graph: The original graph.
+    /// - Parameter base: The original graph.
     @inlinable public init(base: Base) {
         self.base = base
         self.flows = [:]
@@ -43,9 +43,9 @@ public struct ResidualGraph<Base: Graph>: GraphComponent where Base.Node: Hashab
     ///   - path: An array of nodes representing the path.
     ///   - flow: The flow to be added along the path.
     @inlinable public mutating func addFlow(path: [Node], flow: Edge) {
-        for i in 0..<path.count-1 {
+        for i in 0 ..< path.count - 1 {
             let u = path[i]
-            let v = path[i+1]
+            let v = path[i + 1]
             flows[u, default: [:]][v, default: 0] += flow
             flows[v, default: [:]][u, default: 0] -= flow
         }

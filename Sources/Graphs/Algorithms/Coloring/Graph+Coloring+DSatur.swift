@@ -26,11 +26,10 @@ public struct DSaturAlgorithm<Node: Hashable, Edge>: GraphColoringAlgorithm {
 
         while !uncoloredNodes.isEmpty {
             let node = uncoloredNodes.max { lhs, rhs in
-                if saturation[lhs]! != saturation[rhs]! {
-                    return saturation[lhs]! < saturation[rhs]!
-                } else {
+                guard saturation[lhs]! != saturation[rhs]! else {
                     return graph.edges(connectedTo: lhs).count < graph.edges(connectedTo: rhs).count
                 }
+                return saturation[lhs]! < saturation[rhs]!
             }!
 
             let usedColors = adjacentColors[node]!
@@ -42,12 +41,10 @@ public struct DSaturAlgorithm<Node: Hashable, Edge>: GraphColoringAlgorithm {
             colorAssignment[node] = color
             uncoloredNodes.remove(node)
 
-            for neighbor in graph.adjacentNodes(to: node) {
-                if uncoloredNodes.contains(neighbor) {
-                    if !adjacentColors[neighbor]!.contains(color) {
-                        adjacentColors[neighbor]!.insert(color)
-                        saturation[neighbor]! += 1
-                    }
+            for neighbor in graph.adjacentNodes(to: node) where uncoloredNodes.contains(neighbor) {
+                if !adjacentColors[neighbor]!.contains(color) {
+                    adjacentColors[neighbor]!.insert(color)
+                    saturation[neighbor]! += 1
                 }
             }
         }

@@ -52,7 +52,7 @@ public struct UnionFind<Node: Hashable> {
     /// - Returns: The representative of the set containing the node.
     @inlinable public mutating func find(_ node: Node) -> Node {
         if parent[node] != node && parent[node] != nil {
-            parent[node] = find(parent[node]!) // Path compression
+            parent[node] = find(parent[node]!)  // Path compression
         } else if parent[node] == nil {
             parent[node] = node
         }

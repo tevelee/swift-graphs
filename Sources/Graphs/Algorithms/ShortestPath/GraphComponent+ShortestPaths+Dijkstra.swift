@@ -20,8 +20,8 @@ extension GraphComponent where Node: Hashable, Edge: Weighted, Edge.Weight: Nume
 extension DijkstraAlgorithm: ShortestPathsAlgorithm {
     /// Finds the shortest paths in the graph from the start node to all other nodes using the Dijkstra algorithm.
     /// - Parameters:
-    ///   - graph: The graph in which to find the shortest paths.
     ///   - source: The starting node.
+    ///   - graph: The graph in which to find the shortest paths.
     /// - Returns: A dictionary where the keys are the nodes and the values are the paths from the source node to the respective nodes.
     @inlinable public func shortestPaths(
         from source: Node,

@@ -9,9 +9,14 @@ public struct DisjointBinaryGraph<Node, Edge> {
 
     /// Initializes a new disjoint binary graph with the given edges and equality function.
     /// - Parameters:
-    ///   - edges: An array of `BinaryGraphEdges` representing the edges of the graph.
-    ///   - isEqual: A closure that takes two nodes and returns a Boolean value indicating whether they are equal.
-    @inlinable public init(nodes: some Sequence<Node>, edges: some Sequence<BinaryGraphEdges<Node, Edge>>, isEqual: @escaping (Node, Node) -> Bool) {
+    ///  - nodes: A list of `Node`s of the graph.
+    ///  - edges: A list of `BinaryGraphEdges` representing the edges of the graph.
+    ///  - isEqual: A closure that takes two nodes and returns a Boolean value indicating whether they are equal.
+    @inlinable public init(
+        nodes: some Sequence<Node>,
+        edges: some Sequence<BinaryGraphEdges<Node, Edge>>,
+        isEqual: @escaping (Node, Node) -> Bool
+    ) {
         self._nodes = Array(nodes)
         self._edges = Array(edges)
         self.isEqual = isEqual
@@ -90,14 +95,14 @@ extension DisjointBinaryGraph: MutableGraph {
             _nodes.append(node)
         }
     }
-    
+
     /// Removes nodes from the graph that satisfy the given condition.
     @inlinable public mutating func removeNode(where condition: (Node) -> Bool) {
         _nodes.removeAll(where: condition)
         _edges.removeAll {
             condition($0.source)
-            || ($0.lhs.map { condition($0.destination) } ?? false)
-            || ($0.rhs.map { condition($0.destination) } ?? false)
+                || ($0.lhs.map { condition($0.destination) } ?? false)
+                || ($0.rhs.map { condition($0.destination) } ?? false)
         }
     }
 }

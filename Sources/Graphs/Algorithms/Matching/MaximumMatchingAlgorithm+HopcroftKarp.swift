@@ -17,8 +17,8 @@ public struct HopcroftKarpAlgorithm<Node: Hashable, Edge>: MaximumMatchingAlgori
         let leftPartition = graph.leftPartition
         let rightPartition = graph.rightPartition
 
-        var pairU: [Node: Node?] = [:] // Matching for left nodes (U)
-        var pairV: [Node: Node?] = [:] // Matching for right nodes (V)
+        var pairU: [Node: Node?] = [:]  // Matching for left nodes (U)
+        var pairV: [Node: Node?] = [:]  // Matching for right nodes (V)
         var dist: [Node: Int] = [:]
 
         // Initialize pairings to nil
@@ -30,10 +30,8 @@ public struct HopcroftKarpAlgorithm<Node: Hashable, Edge>: MaximumMatchingAlgori
         }
 
         while bfs(graph: graph, pairU: &pairU, pairV: &pairV, dist: &dist) {
-            for u in leftPartition {
-                if pairU[u] == nil {
-                    _ = dfs(u: u, graph: graph, pairU: &pairU, pairV: &pairV, dist: &dist)
-                }
+            for u in leftPartition where pairU[u] == nil {
+                _ = dfs(u: u, graph: graph, pairU: &pairU, pairV: &pairV, dist: &dist)
             }
         }
 
@@ -99,20 +97,19 @@ public struct HopcroftKarpAlgorithm<Node: Hashable, Edge>: MaximumMatchingAlgori
     ) -> Bool {
         for edge in graph.edges(from: u) {
             let v = edge.destination
-            if let pairVv = pairV[v] ?? nil {
-                // v is matched
-                if dist[pairVv] == dist[u]! + 1 {
-                    if dfs(u: pairVv, graph: graph, pairU: &pairU, pairV: &pairV, dist: &dist) {
-                        pairU[u] = v
-                        pairV[v] = u
-                        return true
-                    }
-                }
-            } else {
+            guard let pairVv = pairV[v] ?? nil else {
                 // v is unmatched
                 pairU[u] = v
                 pairV[v] = u
                 return true
+            }
+            // v is matched
+            if dist[pairVv] == dist[u]! + 1 {
+                if dfs(u: pairVv, graph: graph, pairU: &pairU, pairV: &pairV, dist: &dist) {
+                    pairU[u] = v
+                    pairV[v] = u
+                    return true
+                }
             }
         }
         dist[u] = Int.max

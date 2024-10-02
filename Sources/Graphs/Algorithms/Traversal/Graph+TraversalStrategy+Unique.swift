@@ -8,7 +8,11 @@ extension GraphTraversalStrategy {
     /// Creates a traversal strategy that visits each node once, using a custom hash value.
     /// - Parameter hashValue: A closure that takes a node and returns its hash value.
     /// - Returns: A `UniqueTraversalStrategy` instance configured to visit each node once using the custom hash value.
-    @inlinable public func visitEachNodeOnce<HashValue>(by hashValue: @escaping (Node) -> HashValue) -> UniqueTraversalStrategy<Self, HashValue> {
+    @inlinable public func visitEachNodeOnce<HashValue>(
+        by hashValue: @escaping (Node) -> HashValue
+    ) -> UniqueTraversalStrategy<
+        Self, HashValue
+    > {
         .init(base: self, hashValue: hashValue)
     }
 }
@@ -47,11 +51,14 @@ public struct UniqueTraversalStrategy<Base: GraphTraversalStrategy, HashValue: H
     ///   - edges: A closure that returns the edges for a given node.
     /// - Returns: The next visit in the traversal sequence, or `nil` if there are no more visits.
     @inlinable public func next(from storage: inout Storage, edges: (Node) -> some Sequence<GraphEdge<Node, Edge>>) -> Visit? {
-        while let visit = base.next(from: &storage.base, edges: {
-            edges($0).filter {
-                !storage.visited.contains(hashValue($0.destination))
+        while let visit = base.next(
+            from: &storage.base,
+            edges: {
+                edges($0).filter {
+                    !storage.visited.contains(hashValue($0.destination))
+                }
             }
-        }) {
+        ) {
             let node = base.node(from: visit)
             if storage.visited.contains(hashValue(node)) {
                 continue

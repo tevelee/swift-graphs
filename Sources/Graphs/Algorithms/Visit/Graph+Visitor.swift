@@ -41,7 +41,7 @@ public struct NodeVisitor<Node, Edge>: VisitorProtocol {
     ///   - node: The node being visited.
     ///   - previousVisit: An optional tuple containing the previous visit and the edge leading to the current node.
     /// - Returns: The node being visited.
-    @inlinable public func visit(node: Node, from: (visit: Visit, edge: GraphEdge<Node, Edge>)?) -> Visit {
+    @inlinable public func visit(node: Node, from previousVisit: (visit: Visit, edge: GraphEdge<Node, Edge>)?) -> Visit {
         node
     }
 

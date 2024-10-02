@@ -2,7 +2,7 @@
 public struct ConnectedBinaryGraph<Node, Edge> {
     /// The edges of the binary graph.
     @usableFromInline let _edges: [BinaryGraphEdges<Node, Edge>]
-    
+
     /// A closure to determine if two nodes are equal.
     public let isEqual: (Node, Node) -> Bool
 

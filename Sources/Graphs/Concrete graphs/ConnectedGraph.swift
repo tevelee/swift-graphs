@@ -2,7 +2,7 @@
 public struct ConnectedGraph<Node, Edge> {
     /// The edges of the graph.
     @usableFromInline let _edges: [GraphEdge<Node, Edge>]
-    
+
     /// A closure to determine if two nodes are equal.
     public let isEqual: (Node, Node) -> Bool
 

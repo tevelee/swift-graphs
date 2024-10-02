@@ -8,17 +8,16 @@ public struct DisjointBinaryHashGraph<Node: Hashable, Edge> {
     @usableFromInline var _nodes: Set<Node>
 
     /// Initializes a new disjoint hashed binary graph with the given edges, hash function, and equality function.
-    /// - Parameters:
-    ///   - edges: An array of `BinaryGraphEdges` representing the edges of the graph.
-    ///   - hashValue: A closure that takes a node and returns its hash value.
-    ///   - isEqual: A closure that takes two nodes and returns a Boolean value indicating whether they are equal.
+    /// - Parameter edges: An array of `BinaryGraphEdges` representing the edges of the graph.
     @inlinable public init(
         edges: some Sequence<BinaryGraphEdges<Node, Edge>>
     ) {
         _edges = edges.keyed(by: \.source)
-        _nodes = Set(edges.flatMap {
-            [$0.source, $0.lhs?.destination, $0.rhs?.destination].compactMap { $0 }
-        })
+        _nodes = Set(
+            edges.flatMap {
+                [$0.source, $0.lhs?.destination, $0.rhs?.destination].compactMap { $0 }
+            }
+        )
     }
 }
 
@@ -29,7 +28,7 @@ extension DisjointBinaryHashGraph: GraphComponent {
     @inlinable public func edges(from node: Node) -> [GraphEdge<Node, Edge>] {
         _edges[node].flatMap {
             [$0.lhs, $0.rhs].compactMap { $0 }
-         } ?? []
+        } ?? []
     }
 }
 
@@ -92,7 +91,7 @@ extension DisjointBinaryHashGraph: MutableGraph {
     @inlinable public mutating func addNode(_ node: Node) {
         _nodes.insert(node)
     }
-    
+
     /// Removes a node from the graph.
     @inlinable public mutating func removeNode(where condition: (Node) -> Bool) {
         for node in _nodes where condition(node) {
@@ -100,5 +99,4 @@ extension DisjointBinaryHashGraph: MutableGraph {
         }
         removeEdge { condition($0.source) || condition($0.destination) }
     }
-    
 }

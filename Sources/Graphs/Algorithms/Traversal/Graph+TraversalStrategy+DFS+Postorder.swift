@@ -3,7 +3,8 @@ import Collections
 extension DepthFirstSearch {
     /// Creates a postorder depth-first search order.
     /// - Returns: An instance of `DFSOrder` configured for postorder traversal.
-    @inlinable public static func postorder<Visitor: VisitorProtocol>() -> Self where Self == DepthFirstSearch<DepthFirstSearchPostorder<Visitor>> {
+    @inlinable public static func postorder<Visitor: VisitorProtocol>() -> Self
+    where Self == DepthFirstSearch<DepthFirstSearchPostorder<Visitor>> {
         .init()
     }
 }
@@ -61,16 +62,15 @@ public struct DepthFirstSearchPostorder<Visitor: VisitorProtocol>: GraphTraversa
     /// - Returns: The next visit in the traversal sequence, or `nil` if there are no more visits.
     @inlinable public func next(from stack: inout Storage, edges: (Node) -> some Sequence<GraphEdge<Node, Edge>>) -> Visit? {
         guard let (isFirst, visit) = stack.popLast() else { return nil }
-        if isFirst {
-            stack.append((isFirst: false, visit: visit))
-            let newVisits = edges(node(from: visit)).reversed().map { edge in
-                (isFirst: true, visit: visitor.visit(node: edge.destination, from: (visit, edge)))
-            }
-            stack.append(contentsOf: newVisits)
-            return next(from: &stack, edges: edges)
-        } else {
+        guard isFirst else {
             return visit
         }
+        stack.append((isFirst: false, visit: visit))
+        let newVisits = edges(node(from: visit)).reversed().map { edge in
+            (isFirst: true, visit: visitor.visit(node: edge.destination, from: (visit, edge)))
+        }
+        stack.append(contentsOf: newVisits)
+        return next(from: &stack, edges: edges)
     }
 
     /// Extracts the node from a visit.

@@ -38,8 +38,7 @@ extension Graph {
     }
 
     /// Finds a Hamiltonian path from the source node using the default backtracking algorithm.
-    /// - Parameters:
-    ///   - source: The starting node.
+    /// - Parameter source: The starting node.
     /// - Returns: A `Path` instance representing the Hamiltonian path, or `nil` if no path is found.
     @inlinable public func hamiltonianPath(
         from source: Node
@@ -60,8 +59,7 @@ extension Graph {
     }
 
     /// Finds a Hamiltonian cycle from the source node using the default backtracking algorithm.
-    /// - Parameters:
-    ///   - source: The starting node.
+    /// - Parameter source: The starting node.
     /// - Returns: A `Path` instance representing the Hamiltonian cycle, or `nil` if no cycle is found.
     @inlinable public func hamiltonianCycle(
         from source: Node

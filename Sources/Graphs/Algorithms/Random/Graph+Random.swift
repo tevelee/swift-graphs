@@ -2,7 +2,11 @@ extension ConnectedGraph {
     /// Generates a random graph using the specified algorithm.
     /// - Parameter algorithm: The algorithm to use for generating the random graph.
     /// - Returns: A random graph.
-    @inlinable public static func random<Algorithm: RandomGraphGeneration<Node, Edge>>(using algorithm: Algorithm) -> ConnectedGraph<Node, Edge> {
+    @inlinable public static func random<Algorithm: RandomGraphGeneration<Node, Edge>>(
+        using algorithm: Algorithm
+    ) -> ConnectedGraph<
+        Node, Edge
+    > {
         algorithm.generateRandomGraph()
     }
 }

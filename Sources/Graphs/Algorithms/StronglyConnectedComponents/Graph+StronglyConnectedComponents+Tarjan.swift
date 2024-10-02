@@ -22,7 +22,16 @@ public struct TarjanSCCAlgorithm<Node: Hashable, Edge>: StronglyConnectedCompone
         var sccs: [[Node]] = []
 
         for node in graph.allNodes where indices[node] == nil {
-            dfs(graph: graph, node: node, index: &index, stack: &stack, indices: &indices, lowLinks: &lowLinks, onStack: &onStack, sccs: &sccs)
+            dfs(
+                graph: graph,
+                node: node,
+                index: &index,
+                stack: &stack,
+                indices: &indices,
+                lowLinks: &lowLinks,
+                onStack: &onStack,
+                sccs: &sccs
+            )
         }
 
         return sccs
@@ -57,7 +66,16 @@ public struct TarjanSCCAlgorithm<Node: Hashable, Edge>: StronglyConnectedCompone
         for edge in graph.edges(from: node) {
             let neighbor = edge.destination
             if indices[neighbor] == nil {
-                dfs(graph: graph, node: neighbor, index: &index, stack: &stack, indices: &indices, lowLinks: &lowLinks, onStack: &onStack, sccs: &sccs)
+                dfs(
+                    graph: graph,
+                    node: neighbor,
+                    index: &index,
+                    stack: &stack,
+                    indices: &indices,
+                    lowLinks: &lowLinks,
+                    onStack: &onStack,
+                    sccs: &sccs
+                )
                 lowLinks[node] = min(lowLinks[node]!, lowLinks[neighbor]!)
             } else if onStack.contains(neighbor) {
                 lowLinks[node] = min(lowLinks[node]!, indices[neighbor]!)

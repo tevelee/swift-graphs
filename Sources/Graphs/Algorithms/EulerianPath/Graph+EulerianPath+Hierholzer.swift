@@ -72,11 +72,10 @@ public struct HierholzerEulerianPathAlgorithm<Node: Hashable, Edge>: EulerianPat
 
         let finalPathEdges = pathEdges.filter { !($0.source == destination && $0.destination == source) }
 
-        if finalPathEdges.count == graph.allEdges.count {
-            return Path(source: source, destination: destination, edges: Array(finalPathEdges))
-        } else {
+        guard finalPathEdges.count == graph.allEdges.count else {
             return nil
         }
+        return Path(source: source, destination: destination, edges: Array(finalPathEdges))
     }
 
     /// Finds an Eulerian cycle from the source node in the graph using the Hierholzer algorithm.
@@ -115,10 +114,9 @@ public struct HierholzerEulerianPathAlgorithm<Node: Hashable, Edge>: EulerianPat
 
         let orderedCircuit = circuit.reversed()
 
-        if orderedCircuit.count == graph.allEdges.count {
-            return Path(source: source, destination: source, edges: Array(orderedCircuit))
-        } else {
+        guard orderedCircuit.count == graph.allEdges.count else {
             return nil
         }
+        return Path(source: source, destination: source, edges: Array(orderedCircuit))
     }
 }

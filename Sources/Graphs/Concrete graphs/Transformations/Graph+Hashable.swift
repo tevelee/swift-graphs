@@ -61,7 +61,11 @@ extension GraphComponent where Node: Equatable {
     /// Creates a new `HashableNodesGraph` with a custom hash value function for the nodes.
     /// - Parameter hashValue: A closure that defines the hash value function for the nodes.
     /// - Returns: A `HashableNodesGraph` instance.
-    @inlinable public func makeNodesHashable<HashValue: Hashable>(by hashValue: @escaping (Node) -> HashValue) -> HashableNodesGraph<Self, HashValue> {
+    @inlinable public func makeNodesHashable<HashValue: Hashable>(
+        by hashValue: @escaping (Node) -> HashValue
+    ) -> HashableNodesGraph<
+        Self, HashValue
+    > {
         .init(base: self, hashValue: hashValue)
     }
 }
@@ -129,7 +133,11 @@ extension GraphComponent where Edge: Equatable {
     /// Creates a new `HashableEdgesGraph` with a custom hash value function for the edges.
     /// - Parameter hashValue: A closure that defines the hash value function for the edges.
     /// - Returns: A `HashableEdgesGraph` instance.
-    @inlinable public func makeEdgesHashable<HashValue: Hashable>(by hashValue: @escaping (Edge) -> HashValue) -> HashableEdgesGraph<Self, HashValue> {
+    @inlinable public func makeEdgesHashable<HashValue: Hashable>(
+        by hashValue: @escaping (Edge) -> HashValue
+    ) -> HashableEdgesGraph<
+        Self, HashValue
+    > {
         .init(base: self, hashValue: hashValue)
     }
 }

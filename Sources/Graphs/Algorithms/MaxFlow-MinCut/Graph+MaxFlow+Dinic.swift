@@ -6,7 +6,8 @@ extension MaxFlowAlgorithm {
 }
 
 /// An implementation of Dinic's algorithm for computing the maximum flow in a graph.
-public struct DinicAlgorithm<Node: Hashable, Edge: Hashable & Weighted>: MaxFlowAlgorithm where Edge.Weight: Numeric & Comparable & FixedWidthInteger {
+public struct DinicAlgorithm<Node: Hashable, Edge: Hashable & Weighted>: MaxFlowAlgorithm
+where Edge.Weight: Numeric & Comparable & FixedWidthInteger {
     @inlinable public init() {}
 
     /// Computes the maximum flow in the graph from the source node to the sink node using Dinic's algorithm.
@@ -88,11 +89,9 @@ public struct DinicAlgorithm<Node: Hashable, Edge: Hashable & Weighted>: MaxFlow
         while !queue.isEmpty {
             let current = queue.removeFirst()
             let currentLevel = level[current]!
-            for edge in residualGraph.edges(from: current) {
-                if edge.value > .zero && level[edge.destination] == nil {
-                    level[edge.destination] = currentLevel + 1
-                    queue.append(edge.destination)
-                }
+            for edge in residualGraph.edges(from: current) where edge.value > .zero && level[edge.destination] == nil {
+                level[edge.destination] = currentLevel + 1
+                queue.append(edge.destination)
             }
         }
         return level[sink] != nil ? level : nil

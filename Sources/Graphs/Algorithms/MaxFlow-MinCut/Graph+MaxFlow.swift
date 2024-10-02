@@ -72,6 +72,6 @@ extension MaxFlowAlgorithm {
         to sink: Node,
         in graph: some Graph<Node, Edge>
     ) -> Edge.Weight {
-        minimumCut(from: source, to: sink, in: graph).cutValue // ha!
+        minimumCut(from: source, to: sink, in: graph).cutValue  // ha!
     }
 }

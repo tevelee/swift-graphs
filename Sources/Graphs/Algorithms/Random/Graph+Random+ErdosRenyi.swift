@@ -59,7 +59,12 @@ public struct ErdosRenyiRandomGraphGenerator<Node: Equatable, Edge>: RandomGraph
     ///  - probabilityOfEdge: The probability of an edge between two nodes.
     ///  - node: A closure that creates a node given an index.
     ///  - edge: A closure that creates an edge given two nodes.
-    @inlinable public init(numberOfNodes n: Int, probabilityOfEdge p: Double, node: @escaping (Int) -> Node, edge: @escaping (Node, Node) -> Edge) {
+    @inlinable public init(
+        numberOfNodes n: Int,
+        probabilityOfEdge p: Double,
+        node: @escaping (Int) -> Node,
+        edge: @escaping (Node, Node) -> Edge
+    ) {
         self.n = n
         self.p = p
         self.node = node
@@ -74,10 +79,10 @@ public struct ErdosRenyiRandomGraphGenerator<Node: Equatable, Edge>: RandomGraph
             for j in (i + 1) ..< n {
                 let source = nodes[i]
                 let destination = nodes[j]
-                if Double.random(in: 0...1) < p {
+                if Double.random(in: 0 ... 1) < p {
                     edges.append(GraphEdge(source: source, destination: destination, value: edge(source, destination)))
                 }
-                if Double.random(in: 0...1) < p {
+                if Double.random(in: 0 ... 1) < p {
                     edges.append(GraphEdge(source: destination, destination: source, value: edge(destination, source)))
                 }
             }

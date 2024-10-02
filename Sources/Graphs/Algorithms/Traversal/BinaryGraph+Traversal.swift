@@ -4,7 +4,12 @@ extension BinaryGraphComponent {
     ///   - node: The starting node for the traversal.
     ///   - strategy: The traversal strategy to use.
     /// - Returns: A `BinaryGraphTraversal` instance representing the traversal sequence.
-    @inlinable public func traversal<Visit, Strategy: BinaryGraphTraversalStrategy<Node, Edge, Visit>>(from node: Node, strategy: Strategy) -> BinaryGraphTraversal<Self, Strategy> {
+    @inlinable public func traversal<Visit, Strategy: BinaryGraphTraversalStrategy<Node, Edge, Visit>>(
+        from node: Node,
+        strategy: Strategy
+    )
+        -> BinaryGraphTraversal<Self, Strategy>
+    {
         .init(graph: self, startNode: node, strategy: strategy)
     }
 
@@ -19,7 +24,8 @@ extension BinaryGraphComponent {
 }
 
 /// A sequence representing the traversal of a binary graph using a specified strategy.
-public struct BinaryGraphTraversal<Graph: BinaryGraphComponent, Strategy: BinaryGraphTraversalStrategy>: Sequence where Graph.Node == Strategy.Node, Graph.Edge == Strategy.Edge {
+public struct BinaryGraphTraversal<Graph: BinaryGraphComponent, Strategy: BinaryGraphTraversalStrategy>: Sequence
+where Graph.Node == Strategy.Node, Graph.Edge == Strategy.Edge {
     typealias Node = Graph.Node
     typealias Edge = Graph.Edge
 

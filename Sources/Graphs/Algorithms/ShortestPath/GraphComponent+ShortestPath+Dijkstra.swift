@@ -36,8 +36,7 @@ extension WeightedGraph where Edge.Weight: Numeric, Edge.Weight.Magnitude == Edg
     }
 
     /// Finds the shortest paths from the source to all other nodes using Dijkstra's algorithm.
-    /// - Parameters:
-    ///   - source: The starting position in the grid.
+    /// - Parameter source: The starting position in the grid.
     /// - Returns: A dictionary mapping each node to its shortest path from the source.
     @inlinable public func shortestPaths<Value: Hashable, PreviousEdge>(
         from source: GridPosition
@@ -47,7 +46,8 @@ extension WeightedGraph where Edge.Weight: Numeric, Edge.Weight.Magnitude == Edg
 }
 
 /// An implementation of the Dijkstra algorithm for finding the shortest path in a graph.
-public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlgorithm where Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {
+public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlgorithm
+where Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {
     /// Initializes a new `DijkstraAlgorithm` instance.
     @inlinable public init() {}
 
@@ -55,6 +55,7 @@ public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlg
     /// - Parameters:
     ///   - source: The starting node.
     ///   - destination: The target node.
+    ///   - condition: The completion criteria.
     ///   - graph: The graph in which to find the shortest path.
     /// - Returns: A `Path` instance representing the shortest path, or `nil` if no path is found.
     @inlinable public func shortestPath(
@@ -72,7 +73,7 @@ public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlg
     /// Computes the shortest paths from the source node to all other nodes in the graph using the Dijkstra algorithm.
     /// - Parameters:
     ///   - source: The starting node.
-    ///   - destination: An optional target node to stop the computation early.
+    ///   - condition: A condition until the algorithm should run.
     ///   - graph: The graph in which to compute the shortest paths.
     /// - Returns: A tuple containing the costs and connecting edges for the shortest paths.
     @usableFromInline func computeShortestPaths(

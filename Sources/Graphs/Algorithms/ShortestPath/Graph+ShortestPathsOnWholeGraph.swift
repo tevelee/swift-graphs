@@ -21,8 +21,8 @@ public protocol ShortestPathsOnWholeGraphAlgorithm<Node, Edge> {
 
     /// Finds the shortest paths in the graph from the start node to all other nodes.
     /// - Parameters:
-    ///   - graph: The graph in which to find the shortest paths.
     ///   - source: The starting node.
+    ///   - graph: The graph in which to find the shortest paths.
     /// - Returns: A dictionary where the keys are the nodes and the values are the paths from the source node to the respective nodes.
     @inlinable func shortestPaths(
         from source: Node,

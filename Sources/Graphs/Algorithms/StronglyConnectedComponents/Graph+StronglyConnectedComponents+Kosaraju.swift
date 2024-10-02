@@ -22,12 +22,10 @@ public struct KosarajuSCCAlgorithm<Node: Hashable, Edge>: StronglyConnectedCompo
         var result: [[Node]] = []
 
         var visited: Set<Node> = []
-        for node in sorted.reversed() {
-            if !visited.contains(node) {
-                var scc: [Node] = []
-                dfsCollect(graph: reversedGraph, node: node, visited: &visited, scc: &scc)
-                result.append(scc)
-            }
+        for node in sorted.reversed() where !visited.contains(node) {
+            var scc: [Node] = []
+            dfsCollect(graph: reversedGraph, node: node, visited: &visited, scc: &scc)
+            result.append(scc)
         }
 
         return result

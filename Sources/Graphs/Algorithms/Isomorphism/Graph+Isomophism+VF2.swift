@@ -28,8 +28,7 @@ public struct VF2Algorithm<Node: Hashable, Edge>: GraphIsomorphismAlgorithm {
         _ graph1: some Graph<Node, Edge>,
         _ graph2: some Graph<Node, Edge>
     ) -> Bool {
-        if graph1.allNodes.count != graph2.allNodes.count ||
-            graph1.allEdges.count != graph2.allEdges.count {
+        if graph1.allNodes.count != graph2.allNodes.count || graph1.allEdges.count != graph2.allEdges.count {
             return false
         }
 

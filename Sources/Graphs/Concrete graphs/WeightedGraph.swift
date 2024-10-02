@@ -10,7 +10,7 @@ public struct WeightedGraph<Base: GraphComponent, Edge: Weighted> {
 
     /// Initializes a new weighted graph with the given underlying graph and weight function.
     /// - Parameters:
-    ///   - graph: The underlying graph.
+    ///   - base: The underlying graph.
     ///   - weight: A closure that takes two nodes and returns the weight of the edge between them.
     @inlinable public init(
         base: Base,
@@ -95,7 +95,11 @@ extension GridGraph where Edge == Empty {
     /// Returns a `WeightedGraph` with weights calculated by the specified distance algorithm.
     /// - Parameter distanceAlgorithm: The algorithm to use for calculating distances. Defaults to Euclidean distance.
     /// - Returns: A `WeightedGraph` with weights calculated by the specified distance algorithm.
-    @inlinable public func weightedByDistance(_ distanceAlgorithm: DistanceAlgorithm<Node, Double> = .euclideanDistance(of: \.coordinates)) -> WeightedGraph<Self, Double> {
+    @inlinable public func weightedByDistance(
+        _ distanceAlgorithm: DistanceAlgorithm<Node, Double> = .euclideanDistance(of: \.coordinates)
+    )
+        -> WeightedGraph<Self, Double>
+    {
         WeightedGraph(base: self, weight: distanceAlgorithm.distance)
     }
 }

@@ -96,6 +96,7 @@ public struct AStarAlgorithm<Node: Hashable, Edge: Weighted, HScore, FScore: Com
     /// - Parameters:
     ///   - source: The starting node.
     ///   - destination: The target node.
+    ///   - condition: The completion criteria.
     ///   - graph: The graph in which to find the shortest path.
     /// - Returns: A `Path` instance representing the shortest path, or `nil` if no path is found.
     @inlinable public func shortestPath(
@@ -180,8 +181,7 @@ public struct AStarAlgorithm<Node: Hashable, Edge: Weighted, HScore, FScore: Com
         ///   - rhs: The right-hand side state.
         /// - Returns: `true` if the node and estimated total cost of both states are equal.
         @inlinable public static func == (lhs: State, rhs: State) -> Bool {
-            lhs.node == rhs.node &&
-            lhs.estimatedTotalCost == rhs.estimatedTotalCost
+            lhs.node == rhs.node && lhs.estimatedTotalCost == rhs.estimatedTotalCost
         }
     }
 }

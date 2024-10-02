@@ -20,15 +20,16 @@ public struct DisjointHashGraph<Node: Hashable, Edge> {
     }
 
     /// Initializes a new disjoint hash graph with the given edges and hash function.
-    /// - Parameters:
-    ///   - edges: An array of `GraphEdge` instances.
+    /// - Parameter edges: An array of `GraphEdge` instances.
     @inlinable public init(
         edges: some Sequence<GraphEdge<Node, Edge>>
     ) {
         self._edges = edges.grouped(by: \.source)
-        self._nodes = Set(edges.flatMap {
-            [$0.source, $0.destination]
-        })
+        self._nodes = Set(
+            edges.flatMap {
+                [$0.source, $0.destination]
+            }
+        )
     }
 }
 

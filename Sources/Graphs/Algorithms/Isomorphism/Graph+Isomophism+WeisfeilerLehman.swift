@@ -2,7 +2,8 @@ extension GraphIsomorphismAlgorithm {
     /// Creates a Weisfeiler-Lehman algorithm instance with the specified number of iterations.
     /// - Parameter iterations: The number of iterations to run the algorithm.
     /// - Returns: A new Weisfeiler-Lehman algorithm instance.
-    @inlinable public static func weisfeilerLehman<Node, Edge>(iterations: Int = 3) -> Self where Self == WeisfeilerLehmanAlgorithm<Node, Edge> {
+    @inlinable public static func weisfeilerLehman<Node, Edge>(iterations: Int = 3) -> Self
+    where Self == WeisfeilerLehmanAlgorithm<Node, Edge> {
         WeisfeilerLehmanAlgorithm(iterations: iterations)
     }
 }
@@ -26,7 +27,7 @@ public struct WeisfeilerLehmanAlgorithm<Node: Hashable, Edge>: GraphIsomorphismA
         var labelsG1 = Dictionary(uniqueKeysWithValues: graph1.allNodes.map { ($0, "0") })
         var labelsG2 = Dictionary(uniqueKeysWithValues: graph2.allNodes.map { ($0, "0") })
 
-        for _ in 0..<iterations {
+        for _ in 0 ..< iterations {
             labelsG1 = refineLabels(graph: graph1, labels: labelsG1)
             labelsG2 = refineLabels(graph: graph2, labels: labelsG2)
 

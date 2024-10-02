@@ -11,13 +11,15 @@ public struct DistanceAlgorithm<Coordinate, Distance> where Distance: Numeric, D
 }
 
 /// A type alias for a geometric distance algorithm where the distance is a scalar value of a SIMD type.
-public typealias GeometricDistanceAlgorithm<Coordinate, Value: SIMD> = DistanceAlgorithm<Coordinate, Value.Scalar> where Value.Scalar: FloatingPoint
+public typealias GeometricDistanceAlgorithm<Coordinate, Value: SIMD> = DistanceAlgorithm<Coordinate, Value.Scalar>
+where Value.Scalar: FloatingPoint
 
 extension DistanceAlgorithm {
     /// Creates a geometric distance algorithm that calculates the Euclidean distance between coordinates.
     /// - Parameter value: A closure that takes a coordinate and returns its SIMD value.
     /// - Returns: A `GeometricDistanceAlgorithm` instance that calculates the Euclidean distance.
-    @inlinable public static func euclideanDistance<Value>(of value: @escaping (Coordinate) -> Value) -> Self where Self == GeometricDistanceAlgorithm<Coordinate, Value> {
+    @inlinable public static func euclideanDistance<Value>(of value: @escaping (Coordinate) -> Value) -> Self
+    where Self == GeometricDistanceAlgorithm<Coordinate, Value> {
         .init { source, destination in
             (value(source).squared() - value(destination).squared()).sum().squareRoot()
         }
@@ -26,7 +28,8 @@ extension DistanceAlgorithm {
     /// Creates a geometric distance algorithm that calculates the Manhattan distance between coordinates.
     /// - Parameter value: A closure that takes a coordinate and returns its SIMD value.
     /// - Returns: A `GeometricDistanceAlgorithm` instance that calculates the Manhattan distance.
-    @inlinable public static func manhattanDistance<Value>(of value: @escaping (Coordinate) -> Value) -> Self where Self == GeometricDistanceAlgorithm<Coordinate, Value> {
+    @inlinable public static func manhattanDistance<Value>(of value: @escaping (Coordinate) -> Value) -> Self
+    where Self == GeometricDistanceAlgorithm<Coordinate, Value> {
         .init { source, destination in
             (value(source) - value(destination)).absoluteValue().sum()
         }

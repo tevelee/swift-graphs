@@ -4,7 +4,12 @@ extension GraphComponent {
     ///   - node: The starting node for the traversal.
     ///   - strategy: The traversal strategy to use.
     /// - Returns: A `GraphTraversal` instance representing the traversal sequence.
-    @inlinable public func traversal<Visit, Strategy: GraphTraversalStrategy<Node, Edge, Visit>>(from node: Node, strategy: Strategy) -> GraphTraversal<Self, Strategy> {
+    @inlinable public func traversal<Visit, Strategy: GraphTraversalStrategy<Node, Edge, Visit>>(
+        from node: Node,
+        strategy: Strategy
+    )
+        -> GraphTraversal<Self, Strategy>
+    {
         .init(graph: self, startNode: node, strategy: strategy)
     }
 
@@ -19,7 +24,8 @@ extension GraphComponent {
 }
 
 /// A sequence representing the traversal of a graph using a specified strategy.
-public struct GraphTraversal<Graph: GraphComponent, Strategy: GraphTraversalStrategy>: Sequence where Graph.Node == Strategy.Node, Graph.Edge == Strategy.Edge {
+public struct GraphTraversal<Graph: GraphComponent, Strategy: GraphTraversalStrategy>: Sequence
+where Graph.Node == Strategy.Node, Graph.Edge == Strategy.Edge {
     typealias Node = Graph.Node
     typealias Edge = Graph.Edge
 

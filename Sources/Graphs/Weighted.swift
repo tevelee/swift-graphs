@@ -27,4 +27,3 @@ extension Int: Weighted {}
 extension UInt: Weighted {}
 extension Double: Weighted {}
 extension Float: Weighted {}
-

@@ -58,7 +58,7 @@ public struct BarabasiAlbertRandomGraphGenerator<Node: Hashable, Edge>: RandomGr
             let totalDegree = degrees.values.reduce(0, +)
             var targets = Set<Node>()
             while targets.count < m {
-                let randomValue = Int.random(in: 0..<totalDegree)
+                let randomValue = Int.random(in: 0 ..< totalDegree)
                 var cumulativeDegree = 0
                 for node in nodes {
                     cumulativeDegree += degrees[node]!

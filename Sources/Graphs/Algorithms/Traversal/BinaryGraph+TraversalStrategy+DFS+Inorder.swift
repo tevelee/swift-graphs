@@ -3,7 +3,8 @@ import Collections
 extension DepthFirstSearch {
     /// Creates an inorder depth-first search order.
     /// - Returns: An instance of `DFSOrder` configured for inorder traversal.
-    @inlinable public static func inorder<Visitor: VisitorProtocol>() -> Self where Self == DepthFirstSearch<DepthFirstSearchInorder<Visitor>> {
+    @inlinable public static func inorder<Visitor: VisitorProtocol>() -> Self
+    where Self == DepthFirstSearch<DepthFirstSearchInorder<Visitor>> {
         .init()
     }
 }
@@ -61,19 +62,18 @@ public struct DepthFirstSearchInorder<Visitor: VisitorProtocol>: BinaryGraphTrav
     /// - Returns: The next visit in the traversal sequence, or `nil` if there are no more visits.
     @inlinable public func next(from stack: inout Storage, graph: some BinaryGraphComponent<Node, Edge>) -> Visitor.Visit? {
         guard let (isFirst, visit) = stack.popLast() else { return nil }
-        if isFirst {
-            let edges = graph.edges(from: node(from: visit))
-            if let edge = edges.rhs {
-                stack.append((isFirst: true, visit: visitor.visit(node: edge.destination, from: (visit, edge))))
-            }
-            stack.append((isFirst: false, visit: visit))
-            if let edge = edges.lhs {
-                stack.append((isFirst: true, visit: visitor.visit(node: edge.destination, from: (visit, edge))))
-            }
-            return next(from: &stack, graph: graph)
-        } else {
+        guard isFirst else {
             return visit
         }
+        let edges = graph.edges(from: node(from: visit))
+        if let edge = edges.rhs {
+            stack.append((isFirst: true, visit: visitor.visit(node: edge.destination, from: (visit, edge))))
+        }
+        stack.append((isFirst: false, visit: visit))
+        if let edge = edges.lhs {
+            stack.append((isFirst: true, visit: visitor.visit(node: edge.destination, from: (visit, edge))))
+        }
+        return next(from: &stack, graph: graph)
     }
 
     /// Extracts the node from a visit.

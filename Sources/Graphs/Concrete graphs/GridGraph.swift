@@ -131,14 +131,14 @@ public enum GridDirection: CaseIterable, Hashable, Sendable {
     /// The movement associated with the direction.
     @inlinable public var movement: GridMovement {
         switch self {
-        case .up: GridMovement(x: 0, y: -1)
-        case .down: GridMovement(x: 0, y: 1)
-        case .left: GridMovement(x: -1, y: 0)
-        case .right: GridMovement(x: 1, y: 0)
-        case .upLeft: GridMovement(x: -1, y: -1)
-        case .upRight: GridMovement(x: 1, y: -1)
-        case .downLeft: GridMovement(x: -1, y: 1)
-        case .downRight: GridMovement(x: 1, y: 1)
+            case .up: GridMovement(x: 0, y: -1)
+            case .down: GridMovement(x: 0, y: 1)
+            case .left: GridMovement(x: -1, y: 0)
+            case .right: GridMovement(x: 1, y: 0)
+            case .upLeft: GridMovement(x: -1, y: -1)
+            case .upRight: GridMovement(x: 1, y: -1)
+            case .downLeft: GridMovement(x: -1, y: 1)
+            case .downRight: GridMovement(x: 1, y: 1)
         }
     }
 }

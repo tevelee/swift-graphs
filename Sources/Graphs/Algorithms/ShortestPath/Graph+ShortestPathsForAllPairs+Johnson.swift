@@ -2,13 +2,15 @@ extension ShortestPathsForAllPairsAlgorithm {
     /// Creates a new Johnson's algorithm instance with the specified edge weight function.
     /// - Parameter edge: A function that returns an edge with the specified weight.
     /// - Returns: An instance of `JohnsonAlgorithm`.
-    @inlinable public static func johnson<Node, Edge>(edge: @escaping (Edge.Weight) -> Edge) -> Self where Self == JohnsonAlgorithm<Node, Edge> {
+    @inlinable public static func johnson<Node, Edge>(edge: @escaping (Edge.Weight) -> Edge) -> Self
+    where Self == JohnsonAlgorithm<Node, Edge> {
         .init(edge: edge)
     }
 }
 
 /// An implementation of Johnson's algorithm for finding the shortest paths between all pairs of nodes in a graph.
-public struct JohnsonAlgorithm<Node: Hashable & Comparable, Edge: Weighted>: ShortestPathsForAllPairsAlgorithm where Edge.Weight: FixedWidthInteger, Edge.Weight.Magnitude == Edge.Weight {
+public struct JohnsonAlgorithm<Node: Hashable & Comparable, Edge: Weighted>: ShortestPathsForAllPairsAlgorithm
+where Edge.Weight: FixedWidthInteger, Edge.Weight.Magnitude == Edge.Weight {
     /// A function that returns an edge with the specified weight.
     public let edge: (Edge.Weight) -> Edge
 
@@ -24,14 +26,14 @@ public struct JohnsonAlgorithm<Node: Hashable & Comparable, Edge: Weighted>: Sho
 
         @inlinable static func < (lhs: JohnsonNode, rhs: JohnsonNode) -> Bool {
             switch (lhs, rhs) {
-            case (.original(let a), .original(let b)):
-                return a < b
-            case (.original, .q):
-                return true
-            case (.q, .original):
-                return false
-            case (.q, .q):
-                return false
+                case (.original(let a), .original(let b)):
+                    return a < b
+                case (.original, .q):
+                    return true
+                case (.q, .original):
+                    return false
+                case (.q, .q):
+                    return false
             }
         }
     }
@@ -60,7 +62,7 @@ public struct JohnsonAlgorithm<Node: Hashable & Comparable, Edge: Weighted>: Sho
         let bellmanFordResult = bellmanFord.computeShortestPaths(from: q, in: extendedGraph)
 
         if bellmanFordResult.distances.isEmpty {
-            return [:] // Negative cycle detected
+            return [:]  // Negative cycle detected
         }
         let h = bellmanFordResult.distances
 

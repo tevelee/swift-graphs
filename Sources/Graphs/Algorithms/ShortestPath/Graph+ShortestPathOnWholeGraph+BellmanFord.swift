@@ -8,7 +8,8 @@ extension ShortestPathOnWholeGraphAlgorithm {
 
     /// Creates a Bellman-Ford algorithm instance.
     /// - Returns: An instance of `BellmanFordAlgorithm`.
-    @inlinable public static func bellmanFord<Node, Edge>() -> Self where Self == BellmanFordAlgorithm<Node, Edge>, Edge.Weight: FixedWidthInteger {
+    @inlinable public static func bellmanFord<Node, Edge>() -> Self
+    where Self == BellmanFordAlgorithm<Node, Edge>, Edge.Weight: FixedWidthInteger {
         .init(max: .max)
     }
 }
@@ -52,7 +53,7 @@ public struct BellmanFordAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPath
         }
         distances[source] = .zero
 
-        for _ in 1..<graph.allNodes.count {
+        for _ in 1 ..< graph.allNodes.count {
             for edge in graph.allEdges {
                 let currentDistance = distances[edge.source] ?? max
                 let newDistance = currentDistance + edge.value.weight

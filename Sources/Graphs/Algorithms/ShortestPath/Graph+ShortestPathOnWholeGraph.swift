@@ -23,13 +23,13 @@ public protocol ShortestPathOnWholeGraphAlgorithm<Node, Edge> {
 
     /// Finds the shortest path in the graph from the start node to the goal node.
     /// - Parameters:
+    ///   - source: The starting node.
+    ///   - destination: The target node.
     ///   - graph: The graph in which to find the shortest path.
-    ///   - start: The starting node.
-    ///   - goal: The target node.
     /// - Returns: A `Path` instance representing the shortest path, or `nil` if no path is found.
     @inlinable func shortestPath(
-        from start: Node,
-        to goal: Node,
+        from source: Node,
+        to destination: Node,
         in graph: some Graph<Node, Edge>
     ) -> Path<Node, Edge>?
 }

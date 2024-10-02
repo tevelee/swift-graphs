@@ -38,8 +38,7 @@ extension Graph {
     }
 
     /// Finds an Eulerian path from the source node using the default backtracking algorithm.
-    /// - Parameters:
-    ///   - source: The starting node.
+    /// - Parameter source: The starting node.
     /// - Returns: A `Path` instance representing the Eulerian path, or `nil` if no path is found.
     @inlinable public func eulerianPath(
         from source: Node
@@ -75,8 +74,7 @@ extension Graph {
     }
 
     /// Finds an Eulerian cycle from the source node using the default backtracking algorithm.
-    /// - Parameters:
-    ///   - source: The starting node.
+    /// - Parameter source: The starting node.
     /// - Returns: A `Path` instance representing the Eulerian cycle, or `nil` if no cycle is found.
     @inlinable public func eulerianCycle(
         from source: Node
@@ -92,7 +90,6 @@ extension Graph {
     ) -> Path<Node, Edge>? {
         algorithm.findEulerianCycle(in: self)
     }
-
 
     /// Finds an Eulerian cycle using the default backtracking algorithm.
     /// - Returns: A `Path` instance representing the Eulerian cycle, or `nil` if no cycle is found.

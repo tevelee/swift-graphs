@@ -64,8 +64,8 @@ public struct WattsStrogatzRandomGraphGenerator<Node: Equatable, Edge>: RandomGr
         let nodes = (0 ..< n).map(node)
         var edges: [_Edge] = []
 
-        for i in 0..<n {
-            for j in 1...k/2 {
+        for i in 0 ..< n {
+            for j in 1 ... k / 2 {
                 let source = nodes[i]
                 let destination = nodes[(i + j) % n]
                 edges.append(_Edge(source: source, destination: destination))
@@ -75,7 +75,7 @@ public struct WattsStrogatzRandomGraphGenerator<Node: Equatable, Edge>: RandomGr
 
         // Rewire edges with probability p
         for i in 0 ..< n {
-            for j in 1 ... k/2 {
+            for j in 1 ... k / 2 {
                 if Double.random(in: 0 ... 1) < p {
                     let source = nodes[i]
                     let oldDestination = nodes[(i + j) % n]
@@ -94,8 +94,10 @@ public struct WattsStrogatzRandomGraphGenerator<Node: Equatable, Edge>: RandomGr
             }
         }
 
-        return ConnectedGraph(edges: edges.map {
-            GraphEdge(source: $0.source, destination: $0.destination, value: edge($0.source, $0.destination))
-        })
+        return ConnectedGraph(
+            edges: edges.map {
+                GraphEdge(source: $0.source, destination: $0.destination, value: edge($0.source, $0.destination))
+            }
+        )
     }
 }

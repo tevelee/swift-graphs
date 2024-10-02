@@ -1,7 +1,8 @@
 extension ShortestPathsForAllPairsAlgorithm {
     /// Creates a Floyd-Warshall algorithm instance.
     /// - Returns: An instance of `FloydWarshallAlgorithm`.
-    @inlinable public static func floydWarshall<Node, Edge>() -> Self where Self == FloydWarshallAlgorithm<Node, Edge>, Edge.Weight: FixedWidthInteger {
+    @inlinable public static func floydWarshall<Node, Edge>() -> Self
+    where Self == FloydWarshallAlgorithm<Node, Edge>, Edge.Weight: FixedWidthInteger {
         .init(max: .max)
     }
 

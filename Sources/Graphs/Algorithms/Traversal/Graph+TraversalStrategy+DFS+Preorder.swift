@@ -3,7 +3,8 @@ import Collections
 extension DepthFirstSearch {
     /// Creates a preorder depth-first search order.
     /// - Returns: An instance of `DFSOrder` configured for preorder traversal.
-    @inlinable public static func preorder<Visitor: VisitorProtocol>() -> Self where Self == DepthFirstSearch<DepthFirstSearchPreorder<Visitor>> {
+    @inlinable public static func preorder<Visitor: VisitorProtocol>() -> Self
+    where Self == DepthFirstSearch<DepthFirstSearchPreorder<Visitor>> {
         .init()
     }
 }
@@ -75,5 +76,3 @@ public struct DepthFirstSearchPreorder<Visitor: VisitorProtocol>: GraphTraversal
         visitor.node(from: visit)
     }
 }
-
-

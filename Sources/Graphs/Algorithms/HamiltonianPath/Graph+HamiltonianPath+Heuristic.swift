@@ -4,7 +4,8 @@ extension HamiltonianPathAlgorithm {
     /// Creates a heuristic algorithm instance.
     /// - Parameter heuristic: The heuristic function to use for evaluating nodes.
     /// - Returns: An instance of `HeuristicHamiltonianPathAlgorithm`.
-    @inlinable public static func heuristic<Node, Edge>(_ heuristic: Self.Heuristic) -> Self where Self == HeuristicHamiltonianPathAlgorithm<Node, Edge> {
+    @inlinable public static func heuristic<Node, Edge>(_ heuristic: Self.Heuristic) -> Self
+    where Self == HeuristicHamiltonianPathAlgorithm<Node, Edge> {
         .init(heuristic: heuristic)
     }
 }
@@ -79,14 +80,13 @@ public struct HeuristicHamiltonianPathAlgorithm<Node: Hashable, Edge>: Hamiltoni
             let currentNode = currentState.node
 
             if currentState.visited.count == graph.allNodes.count {
-                if isCycle {
-                    if graph.edges(from: currentNode).contains(where: { $0.destination == source }) {
-                        // Reconstruct the path and append the closing edge
-                        let edges = constructEdges(from: currentState.path, withCycle: true, graph: graph)
-                        return Path(source: source, destination: destination, edges: edges)
-                    }
-                } else {
+                guard isCycle else {
                     let edges = constructEdges(from: currentState.path, withCycle: false, graph: graph)
+                    return Path(source: source, destination: destination, edges: edges)
+                }
+                if graph.edges(from: currentNode).contains(where: { $0.destination == source }) {
+                    // Reconstruct the path and append the closing edge
+                    let edges = constructEdges(from: currentState.path, withCycle: true, graph: graph)
                     return Path(source: source, destination: destination, edges: edges)
                 }
                 continue
@@ -130,7 +130,7 @@ public struct HeuristicHamiltonianPathAlgorithm<Node: Hashable, Edge>: Hamiltoni
         graph: any Graph<Node, Edge>
     ) -> [GraphEdge<Node, Edge>] {
         var edges: [GraphEdge<Node, Edge>] = []
-        for i in 0..<nodes.count - 1 {
+        for i in 0 ..< nodes.count - 1 {
             let source = nodes[i]
             let destination = nodes[i + 1]
             if let edge = graph.edges(from: source).first(where: { $0.destination == destination }) {
@@ -163,12 +163,14 @@ public struct HeuristicHamiltonianPathAlgorithm<Node: Hashable, Edge>: Hamiltoni
 }
 
 extension HeuristicHamiltonianPathAlgorithm.Heuristic {
+    /// Creates a heuristic function that evaluates nodes based on the number of edges originating from them.
     @inlinable public static func degree() -> Self {
         .init { node, _, graph in
             Double(graph.edges(from: node).count)
         }
     }
 
+    /// Creates a heuristic function that evaluates nodes based on the distance to the nearest unvisited node.
     @inlinable public static func distance(distanceAlgorithm: DistanceAlgorithm<Node, Double>) -> Self {
         .init { node, path, graph in
             let visited = Set(path)

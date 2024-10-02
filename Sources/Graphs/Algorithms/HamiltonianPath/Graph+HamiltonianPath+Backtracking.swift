@@ -94,7 +94,7 @@ public struct BacktrackingHamiltonianPathAlgorithm<Node: Hashable, Edge>: Hamilt
 
         func constructEdges(from nodes: [Node], withCycle: Bool, closingEdge: GraphEdge<Node, Edge>?) -> [GraphEdge<Node, Edge>] {
             var edges: [GraphEdge<Node, Edge>] = []
-            for i in 0..<nodes.count - 1 {
+            for i in 0 ..< nodes.count - 1 {
                 let source = nodes[i]
                 let destination = nodes[i + 1]
                 if let edge = graph.edges(from: source).first(where: { $0.destination == destination }) {

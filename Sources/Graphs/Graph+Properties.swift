@@ -200,11 +200,9 @@ extension Graph where Node: Hashable {
         }
 
         var color: [Node: Int] = [:]
-        for node in allNodes {
-            if color[node] == nil {
-                if !bipartiteDFS(node: node, color: &color, currentColor: 0) {
-                    return false
-                }
+        for node in allNodes where color[node] == nil {
+            if !bipartiteDFS(node: node, color: &color, currentColor: 0) {
+                return false
             }
         }
         return true

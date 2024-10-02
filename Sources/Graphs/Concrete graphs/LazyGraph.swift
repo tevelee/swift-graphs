@@ -34,7 +34,11 @@ public struct LazyGraph<Node, Edge> {
     ///   - strategy: The traversal strategy to use.
     ///   - isEqual: A closure that takes two nodes and returns a Boolean value indicating whether they are equal.
     /// - Returns: A concrete `Graph` instance.
-    @inlinable public func materialize(starting: Node, strategy: some GraphTraversalStrategy<Node, Edge, Node>, isEqual: @escaping (Node, Node) -> Bool) -> ConnectedGraph<Node, Edge> {
+    @inlinable public func materialize(
+        starting: Node,
+        strategy: some GraphTraversalStrategy<Node, Edge, Node>,
+        isEqual: @escaping (Node, Node) -> Bool
+    ) -> ConnectedGraph<Node, Edge> {
         ConnectedGraph(edges: traverse(from: starting, strategy: strategy).flatMap(edges), isEqual: isEqual)
     }
 
@@ -43,7 +47,12 @@ public struct LazyGraph<Node, Edge> {
     ///   - starting: The starting node for the traversal.
     ///   - strategy: The traversal strategy to use.
     /// - Returns: A concrete `Graph` instance.
-    @inlinable public func materialize(starting: Node, strategy: some GraphTraversalStrategy<Node, Edge, Node>) -> ConnectedGraph<Node, Edge> where Node: Equatable {
+    @inlinable public func materialize(
+        starting: Node,
+        strategy: some GraphTraversalStrategy<Node, Edge, Node>
+    ) -> ConnectedGraph<
+        Node, Edge
+    > where Node: Equatable {
         ConnectedGraph(edges: traverse(from: starting, strategy: strategy).flatMap(edges))
     }
 
@@ -53,7 +62,11 @@ public struct LazyGraph<Node, Edge> {
     ///   - strategy: The traversal strategy to use.
     ///   - hashValue: A closure that takes a node and returns its hash value.
     /// - Returns: A concrete `HashedGraph` instance.
-    @inlinable public func materialize<HashValue: Hashable>(starting: Node, strategy: some GraphTraversalStrategy<Node, Edge, Node>, hashValue: @escaping (Node) -> HashValue) -> ConnectedHashGraph<Node, Edge, HashValue> {
+    @inlinable public func materialize<HashValue: Hashable>(
+        starting: Node,
+        strategy: some GraphTraversalStrategy<Node, Edge, Node>,
+        hashValue: @escaping (Node) -> HashValue
+    ) -> ConnectedHashGraph<Node, Edge, HashValue> {
         ConnectedHashGraph(edges: traverse(from: starting, strategy: strategy).flatMap(edges), hashValue: hashValue)
     }
 
@@ -62,7 +75,12 @@ public struct LazyGraph<Node, Edge> {
     ///   - starting: The starting node for the traversal.
     ///   - strategy: The traversal strategy to use.
     /// - Returns: A concrete `HashedGraph` instance.
-    @inlinable public func materialize(starting: Node, strategy: some GraphTraversalStrategy<Node, Edge, Node>) -> ConnectedHashGraph<Node, Edge, Node> where Node: Hashable {
+    @inlinable public func materialize(
+        starting: Node,
+        strategy: some GraphTraversalStrategy<Node, Edge, Node>
+    ) -> ConnectedHashGraph<
+        Node, Edge, Node
+    > where Node: Hashable {
         ConnectedHashGraph(edges: traverse(from: starting, strategy: strategy).flatMap(edges))
     }
 }

@@ -36,10 +36,8 @@ public struct PrimAlgorithm<Node: Hashable, Edge: Weighted & Equatable>: Minimum
                 visited.insert(destination)
                 mst.append(edge)
 
-                for nextEdge in graph.edges(from: destination) {
-                    if !visited.contains(nextEdge.destination) {
-                        heap.insert(nextEdge)
-                    }
+                for nextEdge in graph.edges(from: destination) where !visited.contains(nextEdge.destination) {
+                    heap.insert(nextEdge)
                 }
 
                 if visited.count == nodeCount {

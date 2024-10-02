@@ -19,23 +19,21 @@ public struct WelshPowellAlgorithm<Node: Hashable, Edge>: GraphColoringAlgorithm
         var colorAssignment: [Node: Int] = [:]
         var currentColor = 0
 
-        for node in nodesByDegree {
-            if colorAssignment[node] == nil {
-                colorAssignment[node] = currentColor
+        for node in nodesByDegree where colorAssignment[node] == nil {
+            colorAssignment[node] = currentColor
 
-                for otherNode in nodesByDegree {
-                    if colorAssignment[otherNode] == nil && !graph.isAdjacent(node, otherNode) {
-                        let isAdjacentToColored = graph.adjacentNodes(to: otherNode).contains { neighbor in
-                            colorAssignment[neighbor] == currentColor
-                        }
-                        if !isAdjacentToColored {
-                            colorAssignment[otherNode] = currentColor
-                        }
+            for otherNode in nodesByDegree {
+                if colorAssignment[otherNode] == nil && !graph.isAdjacent(node, otherNode) {
+                    let isAdjacentToColored = graph.adjacentNodes(to: otherNode).contains { neighbor in
+                        colorAssignment[neighbor] == currentColor
+                    }
+                    if !isAdjacentToColored {
+                        colorAssignment[otherNode] = currentColor
                     }
                 }
-
-                currentColor += 1
             }
+
+            currentColor += 1
         }
 
         return colorAssignment

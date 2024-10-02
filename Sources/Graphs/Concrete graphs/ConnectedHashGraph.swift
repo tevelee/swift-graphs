@@ -62,8 +62,11 @@ extension ConnectedHashGraph where Node: Hashable, HashValue == Node {
     /// Initializes a new hashed graph with the given edges.
     /// - Parameter edges: A dictionary mapping nodes to arrays of destination nodes.
     @inlinable public init(edges: [Node: [Node]]) where Edge == Empty {
-        self.init(edges: edges.flatMap { source, destinations in
-            destinations.map { GraphEdge(source: source, destination: $0) }
-        }.grouped(by: \.source), hashValue: { $0 })
+        self.init(
+            edges: edges.flatMap { source, destinations in
+                destinations.map { GraphEdge(source: source, destination: $0) }
+            }.grouped(by: \.source),
+            hashValue: { $0 }
+        )
     }
 }
