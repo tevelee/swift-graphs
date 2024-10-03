@@ -24,7 +24,7 @@ extension ConnectedBinaryHashGraph: BinaryGraphComponent {
     }
 }
 
-extension ConnectedBinaryHashGraph where Node: Hashable, HashValue == Node {
+extension ConnectedBinaryHashGraph where HashValue == Node {
     /// Initializes a new hashed binary graph with the given edges.
     /// - Parameter edges: An array of `BinaryGraphEdges` representing the edges of the graph.
     @inlinable public init(edges: [BinaryGraphEdges<Node, Edge>]) {

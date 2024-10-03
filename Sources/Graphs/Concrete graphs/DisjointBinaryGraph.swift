@@ -106,3 +106,13 @@ extension DisjointBinaryGraph: MutableGraph {
         }
     }
 }
+
+extension DisjointBinaryGraph where Node: Equatable {
+    /// Initializes a new binary graph with the given edges.
+    /// - Parameters:
+    ///  - nodes: A list of `Node`s of the graph.
+    ///  - edges: A list of `BinaryGraphEdges` representing the edges of the graph.
+    @inlinable public init(nodes: some Sequence<Node>, edges: some Sequence<BinaryGraphEdges<Node, Edge>>) {
+        self.init(nodes: nodes, edges: edges, isEqual: ==)
+    }
+}

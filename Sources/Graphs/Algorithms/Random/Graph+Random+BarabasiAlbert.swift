@@ -1,10 +1,10 @@
 extension RandomGraphGeneration {
     /// Generates a random graph using the Barabási-Albert model.
     /// - Parameters:
-    ///  - numberOfNodes: The number of nodes in the graph.
-    ///  - numberOfEdgesToAttach: The number of edges to attach from a new node to existing nodes.
-    ///  - node: A closure that creates a node given an index.
-    ///  - edge: A closure that creates an edge given two nodes.
+    ///   - n: The number of nodes in the graph.
+    ///   - m: The number of edges to attach from a new node to existing nodes.
+    ///   - node: A closure that creates a node given an index.
+    ///   - edge: A closure that creates an edge given two nodes.
     /// - Returns: A random graph generated using the Barabási-Albert model.
     @inlinable public static func barabasiAlbert<Node, Edge>(
         numberOfNodes n: Int,
@@ -17,7 +17,7 @@ extension RandomGraphGeneration {
 }
 
 /// A random graph generator that uses the Barabási-Albert model.
-public struct BarabasiAlbertRandomGraphGenerator<Node: Hashable, Edge>: RandomGraphGeneration {
+public struct BarabasiAlbertRandomGraphGenerator<Node, Edge>: RandomGraphGeneration {
     /// The number of nodes in the graph.
     public let n: Int
     /// The number of edges to attach from a new node to existing nodes.
@@ -42,41 +42,57 @@ public struct BarabasiAlbertRandomGraphGenerator<Node: Hashable, Edge>: RandomGr
     }
 
     /// Generates a random graph using the Barabási-Albert model.
-    @inlinable public func generateRandomGraph() -> ConnectedGraph<Node, Edge> {
+    @inlinable public func generateRandomGraph() -> (nodes: [Node], edges: [GraphEdge<Node, Edge>]) {
         var edges: [GraphEdge<Node, Edge>] = []
         var nodes: [Node] = []
-        var degrees: [Node: Int] = [:]
+        var degrees: [Int] = []  // Degrees of nodes, indexed by node index
 
+        // Initialize a fully connected network of m nodes
         for i in 0 ..< m {
-            let node = self.node(i)
-            nodes.append(node)
-            degrees[node] = m - 1
+            let newNode = self.node(i)
+            nodes.append(newNode)
+            degrees.append(m - 1)
+            for j in 0 ..< i {
+                let existingNode = nodes[j]
+                edges.append(GraphEdge(source: newNode, destination: existingNode, value: edge(newNode, existingNode)))
+                edges.append(GraphEdge(source: existingNode, destination: newNode, value: edge(existingNode, newNode)))
+            }
         }
 
+        // Preferential attachment for the remaining nodes
         for i in m ..< n {
             let newNode = self.node(i)
-            let totalDegree = degrees.values.reduce(0, +)
-            var targets = Set<Node>()
+            nodes.append(newNode)
+            degrees.append(0)
+            var targets = [Int]()
+
+            // Calculate the cumulative degrees
+            let totalDegree = degrees.reduce(0, +)
+
+            // Attach m edges preferentially
             while targets.count < m {
                 let randomValue = Int.random(in: 0 ..< totalDegree)
                 var cumulativeDegree = 0
-                for node in nodes {
-                    cumulativeDegree += degrees[node]!
+                for (index, degree) in degrees.enumerated() {
+                    cumulativeDegree += degree
                     if cumulativeDegree > randomValue {
-                        targets.insert(node)
+                        if index != i && !targets.contains(index) {
+                            targets.append(index)
+                        }
                         break
                     }
                 }
             }
-            for target in targets {
-                edges.append(GraphEdge(source: newNode, destination: target, value: edge(newNode, target)))
-                edges.append(GraphEdge(source: target, destination: newNode, value: edge(target, newNode)))
-                degrees[newNode, default: 0] += 1
-                degrees[target]! += 1
+
+            for targetIndex in targets {
+                let targetNode = nodes[targetIndex]
+                edges.append(GraphEdge(source: newNode, destination: targetNode, value: edge(newNode, targetNode)))
+                edges.append(GraphEdge(source: targetNode, destination: newNode, value: edge(targetNode, newNode)))
+                degrees[i] += 1
+                degrees[targetIndex] += 1
             }
-            nodes.append(newNode)
         }
 
-        return ConnectedGraph(edges: edges)
+        return (nodes: nodes, edges: edges)
     }
 }

@@ -45,6 +45,7 @@ graph.maximumFlow(using: .fordFulkerson()) // or .edmondsKarp() or .dinic()
 graph.stronglyConnectedComponents(using: .kosaraju()) // or .tarjan()
 graph.colorNodes(using: .greedy()) // or .dsatur() or .welshPowell()
 graph.isIsomorphoc(to: graph2, using: .vf2()) // or .weisfeilerLehman()
+ConnectedGraph.random(using: .erdosRenyi()) // or .barabasiAlbert() or .wattsStrogatz() 
 
 graph.isCyclic()
 graph.isTree()

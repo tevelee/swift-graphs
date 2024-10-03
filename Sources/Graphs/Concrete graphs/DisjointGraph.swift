@@ -12,9 +12,9 @@ public struct DisjointGraph<Node, Edge> {
     ///   - nodes: An array of nodes in the graph.
     ///   - edges: An array of `GraphEdge` representing the edges of the graph.
     ///   - isEqual: A closure that takes two nodes and returns a Boolean value indicating whether they are equal.
-    @inlinable public init(nodes: [Node], edges: [GraphEdge<Node, Edge>], isEqual: @escaping (Node, Node) -> Bool) {
-        self._nodes = nodes
-        self._edges = edges
+    @inlinable public init(nodes: some Sequence<Node>, edges: some Sequence<GraphEdge<Node, Edge>>, isEqual: @escaping (Node, Node) -> Bool) {
+        self._nodes = Array(nodes)
+        self._edges = Array(edges)
         self.isEqual = isEqual
     }
 
@@ -89,7 +89,7 @@ extension DisjointGraph where Node: Equatable {
     /// - Parameters:
     ///   - nodes: An array of nodes in the graph.
     ///   - edges: An array of `GraphEdge` representing the edges of the graph.
-    @inlinable public init(nodes: [Node], edges: [GraphEdge<Node, Edge>]) {
+    @inlinable public init(nodes: some Sequence<Node>, edges: some Sequence<GraphEdge<Node, Edge>>) {
         self.init(nodes: nodes, edges: edges, isEqual: ==)
     }
 }

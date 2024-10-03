@@ -1,16 +1,3 @@
-extension ConnectedGraph {
-    /// Generates a random graph using the specified algorithm.
-    /// - Parameter algorithm: The algorithm to use for generating the random graph.
-    /// - Returns: A random graph.
-    @inlinable public static func random<Algorithm: RandomGraphGeneration<Node, Edge>>(
-        using algorithm: Algorithm
-    ) -> ConnectedGraph<
-        Node, Edge
-    > {
-        algorithm.generateRandomGraph()
-    }
-}
-
 /// An algorithm for generating random graphs.
 public protocol RandomGraphGeneration<Node, Edge> {
     /// The type of the nodes in the graph.
@@ -19,5 +6,17 @@ public protocol RandomGraphGeneration<Node, Edge> {
     associatedtype Edge
 
     /// Generates a random graph.
-    @inlinable func generateRandomGraph() -> ConnectedGraph<Node, Edge>
+    @inlinable func generateRandomGraph() -> (nodes: [Node], edges: [GraphEdge<Node, Edge>])
+}
+
+/// An algorithm for generating random binary graphs.
+public protocol RandomBinaryGraphGeneration<Node, Edge> {
+    /// The type of the nodes in the graph.
+    associatedtype Node: Hashable
+    /// The type of the edges in the graph.
+    associatedtype Edge
+
+    /// Generates a random binary graph.
+    /// - Returns: A tuple containing the nodes and edges of the graph.
+    @inlinable func generateRandomBinaryGraph() -> (nodes: [Node], edges: [BinaryGraphEdges<Node, Edge>])
 }

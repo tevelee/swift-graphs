@@ -52,7 +52,7 @@ extension ConnectedHashGraph: Graph {
     }
 }
 
-extension ConnectedHashGraph where Node: Hashable, HashValue == Node {
+extension ConnectedHashGraph where HashValue == Node {
     /// Initializes a new hashed graph with the given edges.
     /// - Parameter edges: An array of `GraphEdge` instances.
     @inlinable public init(edges: [GraphEdge<Node, Edge>]) {
