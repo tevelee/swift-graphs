@@ -8,7 +8,7 @@ extension ShortestPathOnWholeGraphAlgorithm {
     }
 }
 
-public struct BidirectionalDijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathOnWholeGraphAlgorithm where Edge.Weight: Comparable & AdditiveArithmetic {
+public struct BidirectionalDijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathOnWholeGraphAlgorithm where Edge.Weight: FixedWidthInteger {
     @inlinable public init() {}
 
     @inlinable public func shortestPath(
@@ -28,54 +28,45 @@ public struct BidirectionalDijkstraAlgorithm<Node: Hashable, Edge: Weighted>: Sh
         var prevForward: [Node: GraphEdge<Node, Edge>] = [:]
         var prevBackward: [Node: GraphEdge<Node, Edge>] = [:]
 
-        // Initialize visited sets
-        var visitedForward: Set<Node> = []
-        var visitedBackward: Set<Node> = []
-
-        // Insert starting nodes into queues
-        forwardQueue.insert(State(node: source, totalCost: .zero))
-        backwardQueue.insert(State(node: destination, totalCost: .zero))
-
-        var mu: Edge.Weight?
-        var meetingNode: Node?
-
         // Build incoming edges map for backward search
         var incomingEdges: [Node: [GraphEdge<Node, Edge>]] = [:]
         for edge in graph.allEdges {
             incomingEdges[edge.destination, default: []].append(edge)
         }
 
-        while !forwardQueue.isEmpty && !backwardQueue.isEmpty {
+        // Insert starting nodes into queues
+        forwardQueue.insert(State(node: source, totalCost: .zero))
+        backwardQueue.insert(State(node: destination, totalCost: .zero))
+
+        var mu: Edge.Weight = .max
+        var meetingNode: Node?
+
+        while !forwardQueue.isEmpty || !backwardQueue.isEmpty {
             // Forward step
             if let currentForward = forwardQueue.popMin() {
                 let u = currentForward.node
-                if visitedForward.contains(u) {
-                    continue
-                }
-                visitedForward.insert(u)
-
-                // Check for meeting point
-                if visitedBackward.contains(u) {
-                    let totalCost = distForward[u]! + distBackward[u]!
-                    if mu == nil || totalCost < mu! {
-                        mu = totalCost
-                        meetingNode = u
-                    }
-                }
 
                 // Termination condition for forward search
-                if let muValue = mu, distForward[u]! >= muValue {
-                    continue
+                if distForward[u]! > mu {
+                    break
                 }
 
                 // Explore neighbors
                 for edge in graph.edges(from: u) {
                     let v = edge.destination
                     let alt = distForward[u]! + edge.value.weight
-                    if distForward[v] == nil || alt < distForward[v]! {
+                    if alt < (distForward[v] ?? .max) {
                         distForward[v] = alt
                         prevForward[v] = edge
                         forwardQueue.insert(State(node: v, totalCost: alt))
+                        // Check if node was visited in backward search
+                        if let distBwd = distBackward[v] {
+                            let potentialMu = alt + distBwd
+                            if potentialMu < mu {
+                                mu = potentialMu
+                                meetingNode = v
+                            }
+                        }
                     }
                 }
             }
@@ -83,42 +74,50 @@ public struct BidirectionalDijkstraAlgorithm<Node: Hashable, Edge: Weighted>: Sh
             // Backward step
             if let currentBackward = backwardQueue.popMin() {
                 let u = currentBackward.node
-                if visitedBackward.contains(u) {
-                    continue
-                }
-                visitedBackward.insert(u)
-
-                // Check for meeting point
-                if visitedForward.contains(u) {
-                    let totalCost = distForward[u]! + distBackward[u]!
-                    if mu == nil || totalCost < mu! {
-                        mu = totalCost
-                        meetingNode = u
-                    }
-                }
 
                 // Termination condition for backward search
-                if let muValue = mu, distBackward[u]! >= muValue {
-                    continue
+                if distBackward[u]! > mu {
+                    break
                 }
 
                 // Explore predecessors (incoming edges)
                 for edge in incomingEdges[u] ?? [] {
                     let v = edge.source
                     let alt = distBackward[u]! + edge.value.weight
-                    if distBackward[v] == nil || alt < distBackward[v]! {
+                    if alt < (distBackward[v] ?? .max) {
                         distBackward[v] = alt
-                        prevBackward[u] = edge
+                        prevBackward[v] = edge
                         backwardQueue.insert(State(node: v, totalCost: alt))
+                        // Check if node was visited in forward search
+                        if let distFwd = distForward[v] {
+                            let potentialMu = alt + distFwd
+                            if potentialMu < mu {
+                                mu = potentialMu
+                                meetingNode = v
+                            }
+                        }
                     }
                 }
             }
 
-            // Overall termination condition
-            if let muValue = mu,
-               let minForward = forwardQueue.min?.totalCost,
-               let minBackward = backwardQueue.min?.totalCost,
-               minForward + minBackward >= muValue {
+            // Termination condition
+            if let minForward = forwardQueue.min?.totalCost, let minBackward = backwardQueue.min?.totalCost {
+                if minForward + minBackward >= mu {
+                    break
+                }
+            } else if forwardQueue.isEmpty {
+                if let minBackward = backwardQueue.min?.totalCost {
+                    if minBackward >= mu {
+                        break
+                    }
+                }
+            } else if backwardQueue.isEmpty {
+                if let minForward = forwardQueue.min?.totalCost {
+                    if minForward >= mu {
+                        break
+                    }
+                }
+            } else {
                 break
             }
         }
@@ -135,30 +134,26 @@ public struct BidirectionalDijkstraAlgorithm<Node: Hashable, Edge: Weighted>: Sh
         var node = meeting
         var forwardPathEdges: [GraphEdge<Node, Edge>] = []
         while node != source {
-            if let edge = prevForward[node] {
-                forwardPathEdges.append(edge)
-                node = edge.source
-            } else {
+            guard let edge = prevForward[node] else {
                 // No path exists from the meeting node to the source
                 return nil
             }
+            forwardPathEdges.append(edge)
+            node = edge.source
         }
+        forwardPathEdges.reverse()
         pathEdges.append(contentsOf: forwardPathEdges)
 
-        // Backward path: from destination back to meeting node
-        node = destination
-        var backwardPathEdges: [GraphEdge<Node, Edge>] = []
-        while node != meeting {
-            if let edge = prevBackward[node] {
-                backwardPathEdges.append(edge)
-                node = edge.source
-            } else {
-                // No path exists from the destination to the meeting node
+        // Backward path: from meeting node to destination
+        node = meeting
+        while node != destination {
+            guard let edge = prevBackward[node] else {
+                // No path exists from the meeting node to the destination
                 return nil
             }
+            pathEdges.append(edge)
+            node = edge.destination
         }
-        backwardPathEdges.reverse()
-        pathEdges.append(contentsOf: backwardPathEdges)
 
         return Path(source: source, destination: destination, edges: pathEdges)
     }
@@ -173,7 +168,7 @@ public struct BidirectionalDijkstraAlgorithm<Node: Hashable, Edge: Weighted>: Sh
         }
 
         @inlinable static func < (lhs: State, rhs: State) -> Bool {
-            return lhs.totalCost < rhs.totalCost
+            lhs.totalCost < rhs.totalCost
         }
     }
 }
