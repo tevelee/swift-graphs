@@ -93,6 +93,8 @@ struct GraphStrategy {
         #expect(graph.shortestPath(from: "Root", to: "Z", using: .dijkstra())?.path == ["Root", "B", "Y", "Z"])
         #expect(graph.shortestPath(from: "Root", to: "Z", using: .dijkstra())?.cost == 6)
 
+        #expect(graph.shortestPath(from: "Root", to: "Z", using: .bidirectionalDijkstra())?.path == ["Root", "B", "Y", "Z"])
+
         #expect(graph.kShortestPaths(from: "Root", to: "Z", k: 3, using: .yen()).map(\.path) == [["Root", "B", "Y", "Z"], ["Root", "B", "Z"], ["Root", "C", "Z"]])
         #expect(graph.kShortestPaths(from: "Root", to: "Z", k: 3, using: .yen()).map(\.cost) == [6, 22, 103])
     }
