@@ -22,29 +22,6 @@ extension GraphComponent where Node: Hashable, Edge: Weighted, Edge.Weight: Nume
     }
 }
 
-extension WeightedGraph where Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {
-    /// Finds the shortest path from the source to the destination using Dijkstra's algorithm.
-    /// - Parameters:
-    ///   - source: The starting position in the grid.
-    ///   - destination: The ending position in the grid.
-    /// - Returns: The shortest path from the source to the destination, or `nil` if no path exists.
-    @inlinable public func shortestPath<Value: Hashable, PreviousEdge>(
-        from source: GridPosition,
-        to destination: GridPosition
-    ) -> Path<Node, Edge>? where Base == GridGraph<Value, PreviousEdge> {
-        self.shortestPath(from: source, to: destination, using: .dijkstra())
-    }
-
-    /// Finds the shortest paths from the source to all other nodes using Dijkstra's algorithm.
-    /// - Parameter source: The starting position in the grid.
-    /// - Returns: A dictionary mapping each node to its shortest path from the source.
-    @inlinable public func shortestPaths<Value: Hashable, PreviousEdge>(
-        from source: GridPosition
-    ) -> [Node: Path<Node, Edge>] where Base == GridGraph<Value, PreviousEdge> {
-        self.shortestPaths(from: source, using: .dijkstra())
-    }
-}
-
 /// An implementation of the Dijkstra algorithm for finding the shortest path in a graph.
 public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlgorithm
 where Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {

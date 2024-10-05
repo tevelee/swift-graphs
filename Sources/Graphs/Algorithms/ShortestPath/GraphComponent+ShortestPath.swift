@@ -104,6 +104,12 @@ extension Path where Edge: Weighted, Edge.Weight: Numeric {
     }
 }
 
+extension Path: Comparable where Node: Equatable, Edge: Equatable & Weighted, Edge.Weight: Numeric {
+    @inlinable public static func < (lhs: Self, rhs: Self) -> Bool {
+        lhs.cost < rhs.cost
+    }
+}
+
 extension Path where Node: Hashable {
     /// Initializes a path from a dictionary of connecting edges, a source node, and a destination node.
     /// - Parameters:

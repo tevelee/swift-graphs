@@ -84,13 +84,17 @@ struct GraphStrategy {
 
     @Test func shortestPath() {
         let graph = ConnectedGraph(edges: [
-            "Root": ["A": 2 as UInt, "B": 2, "C": 2],
+            "Root": ["A": 2 as UInt, "B": 2, "C": 3],
             "B": ["X": 2, "Y": 2, "Z": 20, "A": 2],
-            "Y": ["N": 2, "M": 2, "Z": 2]
+            "Y": ["N": 2, "M": 2, "Z": 2],
+            "C": ["Z": 100]
         ])
 
         #expect(graph.shortestPath(from: "Root", to: "Z", using: .dijkstra())?.path == ["Root", "B", "Y", "Z"])
         #expect(graph.shortestPath(from: "Root", to: "Z", using: .dijkstra())?.cost == 6)
+
+        #expect(graph.kShortestPaths(from: "Root", to: "Z", k: 3, using: .yen()).map(\.path) == [["Root", "B", "Y", "Z"], ["Root", "B", "Z"], ["Root", "C", "Z"]])
+        #expect(graph.kShortestPaths(from: "Root", to: "Z", k: 3, using: .yen()).map(\.cost) == [6, 22, 103])
     }
 
     @Test func shortestPathGrid() {
