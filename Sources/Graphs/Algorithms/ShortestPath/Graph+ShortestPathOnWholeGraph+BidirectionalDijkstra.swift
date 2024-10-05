@@ -8,9 +8,17 @@ extension ShortestPathOnWholeGraphAlgorithm {
     }
 }
 
+/// A bidirectional Dijkstra algorithm for finding the shortest path between two nodes in a graph.
 public struct BidirectionalDijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathOnWholeGraphAlgorithm where Edge.Weight: FixedWidthInteger {
+    /// Creates a new instance of `BidirectionalDijkstraAlgorithm`.
     @inlinable public init() {}
 
+    /// Finds the shortest path between two nodes in a graph using the bidirectional Dijkstra algorithm.
+    /// - Parameters:
+    ///  - source: The source node.
+    ///  - destination: The destination node.
+    ///  - graph: The graph in which to find the shortest path.
+    ///  - Returns: The shortest path between the source and destination nodes, or `nil` if no path exists.
     @inlinable public func shortestPath(
         from source: Node,
         to destination: Node,
@@ -158,6 +166,7 @@ public struct BidirectionalDijkstraAlgorithm<Node: Hashable, Edge: Weighted>: Sh
         return Path(source: source, destination: destination, edges: pathEdges)
     }
 
+    /// A state in the bidirectional Dijkstra algorithm.
     @usableFromInline struct State: Comparable {
         @usableFromInline let node: Node
         @usableFromInline let totalCost: Edge.Weight

@@ -105,6 +105,7 @@ extension Path where Edge: Weighted, Edge.Weight: Numeric {
 }
 
 extension Path: Comparable where Node: Equatable, Edge: Equatable & Weighted, Edge.Weight: Numeric {
+    /// Comparable conformance by comparing costs
     @inlinable public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.cost < rhs.cost
     }

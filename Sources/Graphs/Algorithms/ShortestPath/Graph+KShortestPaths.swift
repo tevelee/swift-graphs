@@ -1,4 +1,11 @@
 extension Graph {
+    /// Finds the K shortest paths from the source node to the destination node in the graph.
+    /// - Parameters:
+    ///   - source: The starting node.
+    ///   - destination: The target node.
+    ///   - k: The number of shortest paths to find.
+    ///   - algorithm: The algorithm to use to find the shortest paths.
+    /// - Returns: An array of `Path` instances representing the K shortest paths.
     @inlinable public func kShortestPaths(
         from source: Node,
         to destination: Node,
