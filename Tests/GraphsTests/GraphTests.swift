@@ -3,7 +3,7 @@ import Graphs
 import Testing
 
 struct GraphStrategy {
-    @Test func graph() {
+    @Test func traversal() {
         let graph = ConnectedGraph(edges: [
             "Root": ["A", "B", "C"],
             "B": ["X", "Y", "Z"],
@@ -24,9 +24,31 @@ struct GraphStrategy {
         let postorder = ["A", "X", "N", "M", "Y", "Z", "B", "C", "Root"]
         #expect(graph.traverse(from: "Root", strategy: .dfs(order: .postorder())) == postorder)
         #expect(graph.traverse(from: "Root", strategy: .dfs(.onlyNodes(), order: .postorder())) == postorder)
+
+        #expect(graph.traverse(from: "Root", strategy: .bestFirstSearch { $0 }).map(\.node) == ["Root", "A", "B", "C", "X", "Y", "M", "N", "Z"])
+
+        let deeperGraph = ConnectedGraph(edges: [
+            "1A": ["2A", "2B"],
+            "2A": ["3A", "3B"],
+            "2B": ["3C"],
+            "3A": ["4A", "4B"],
+            "3B": ["4C"],
+            "3C": ["4D", "4E"],
+            "4A": ["5A"],
+            "4D": ["5B"],
+            "5A": ["6A"],
+            "5B": ["6B"],
+            "6A": ["7A"],
+            "7A": ["8A", "8B"]
+        ])
+        #expect(
+            deeperGraph.traverse(from: "1A", strategy: .iterativelyDeepeningDFS(iteration: 2)).map(\.node)
+            ==
+            ["1A", "2A", "3A", "3B", "2B", "3C", "4A", "5A", "4B", "4C", "4D", "5B", "4E", "6A", "7A", "6B", "8A", "8B"]
+        )
     }
 
-    @Test func binaryGraph() {
+    @Test func binaryTraversal() {
         let graph = ConnectedBinaryGraph(edges: [
             "Root": (lhs: "A", rhs: "B"),
             "A": (lhs: "X", rhs: "Y"),

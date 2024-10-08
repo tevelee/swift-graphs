@@ -18,7 +18,7 @@ public struct PathTrackingVisitor<Base: VisitorProtocol>: VisitorProtocol {
     public typealias Edge = Base.Edge
 
     /// A structure representing a visit during traversal, including the path of edges.
-    public struct Visit {
+    public struct Visit: DepthMeasuring {
         /// The base visit.
         public let base: Base.Visit
         /// The node being visited.
@@ -40,6 +40,11 @@ public struct PathTrackingVisitor<Base: VisitorProtocol>: VisitorProtocol {
         /// The path of nodes from the start node to the current node.
         @inlinable public var path: [Node] {
             edges.map(\.source) + [node]
+        }
+
+        /// The depth of the node.
+        @inlinable public var depth: Int {
+            edges.count
         }
     }
 
@@ -79,3 +84,6 @@ extension PathTrackingVisitor.Visit where Base.Edge: Weighted, Base.Edge.Weight:
         edges.lazy.map(\.value.weight).reduce(into: .zero, +=)
     }
 }
+
+extension PathTrackingVisitor.Visit: Equatable where Base.Node: Equatable, Base.Edge: Equatable, Base.Visit: Equatable {}
+extension PathTrackingVisitor.Visit: Hashable where Base.Node: Hashable, Base.Edge: Hashable, Base.Visit: Hashable {}
