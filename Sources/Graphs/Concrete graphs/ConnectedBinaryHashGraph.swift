@@ -15,12 +15,41 @@ public struct ConnectedBinaryHashGraph<Node, Edge, HashValue: Hashable> {
     }
 }
 
+extension ConnectedBinaryHashGraph {
+    /// Initializes a disjoint graph with the same nodes and edges.
+    @inlinable public func makeDisjoint() -> DisjointBinaryHashGraph<Node, Edge, HashValue> {
+        .init(nodes: allNodes, edges: _edges.values, hashValue: hashValue)
+    }
+}
+
 extension ConnectedBinaryHashGraph: BinaryGraphComponent {
     /// Returns the edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.
     /// - Returns: A `BinaryGraphEdges` instance containing the edges from the specified node.
     @inlinable public func edges(from node: Node) -> BinaryGraphEdges<Node, Edge> {
         _edges[hashValue(node)] ?? BinaryGraphEdges(source: node, lhs: nil, rhs: nil)
+    }
+}
+
+extension ConnectedBinaryHashGraph: Graph {
+    /// All nodes in the graph.
+    @inlinable public var allNodes: [Node] {
+        var nodes: [HashValue: Node] = [:]
+        for (_, edges) in _edges {
+            nodes[hashValue(edges.source)] = edges.source
+            if let node = edges.lhs?.destination {
+                nodes[hashValue(node)] = node
+            }
+            if let node = edges.rhs?.destination {
+                nodes[hashValue(node)] = node
+            }
+        }
+        return Array(nodes.values)
+    }
+
+    /// All edges in the binary graph.
+    @inlinable public var allEdges: [GraphEdge<Node, Edge>] {
+        _edges.values.compactMap(\.lhs) + _edges.values.compactMap(\.rhs)
     }
 }
 

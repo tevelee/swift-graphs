@@ -26,6 +26,13 @@ public struct ConnectedHashGraph<Node, Edge, HashValue: Hashable> {
     }
 }
 
+extension ConnectedHashGraph {
+    /// Initializes a disjoint graph with the same nodes and edges.
+    @inlinable public func makeDisjoint() -> DisjointHashGraph<Node, Edge, HashValue> {
+        .init(nodes: allNodes, edges: allEdges, hashValue: hashValue)
+    }
+}
+
 extension ConnectedHashGraph: GraphComponent {
     /// Returns the edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.

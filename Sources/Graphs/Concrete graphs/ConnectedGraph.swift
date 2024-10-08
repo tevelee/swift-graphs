@@ -24,6 +24,13 @@ public struct ConnectedGraph<Node, Edge> {
     }
 }
 
+extension ConnectedGraph {
+    /// Initializes a disjoint graph with the same nodes and edges.
+    @inlinable public func makeDisjoint() -> DisjointGraph<Node, Edge> {
+        .init(nodes: allNodes, edges: allEdges, isEqual: isEqual)
+    }
+}
+
 extension ConnectedGraph: GraphComponent {
     /// Returns the edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.

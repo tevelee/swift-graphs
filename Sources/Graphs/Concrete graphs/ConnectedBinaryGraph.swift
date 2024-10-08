@@ -16,6 +16,13 @@ public struct ConnectedBinaryGraph<Node, Edge> {
     }
 }
 
+extension ConnectedBinaryGraph {
+    /// Initializes a disjoint graph with the same nodes and edges.
+    @inlinable public func makeDisjoint() -> DisjointBinaryGraph<Node, Edge> {
+        .init(nodes: allNodes, edges: _edges, isEqual: isEqual)
+    }
+}
+
 extension ConnectedBinaryGraph: BinaryGraphComponent {
     /// Returns the edges originating from the specified node.
     /// - Parameter node: The node from which to get the edges.
