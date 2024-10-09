@@ -1,11 +1,14 @@
 # Graph Library for Swift
 
-## Overview
+[![Supported Swift versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Ftevelee%2Fswift-graphs%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/tevelee/swift-graphs)
+[![Supported Swift platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Ftevelee%2Fswift-graphs%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/tevelee/swift-graphs)
 
-This Swift library provides a composable and extensible foundation for working with graphs. 
+Swift Graphs library provides a composable and extensible foundation for working with graphs. 
 Whether you're constructing binary trees, performing complex graph traversals, or optimizing pathfinding algorithms on weighted graphs, this library offers the dynamic flexibility needed for a wide range of graph-related use cases. 
 
 While some features are still in early development stages, the project is actively evolving, and contributions are highly encouraged.
+
+[Documentation »](https://swiftpackageindex.com/tevelee/swift-graphs/documentation/graphs)
 
 ## Key Features
 
@@ -94,6 +97,27 @@ let bipartite = ConnectedGraph(edges: [
 ]).bipartite(leftPartition: ["u1", "u2", "u3"], rightPartition: ["v1", "v2", "v3"])
 
 bipartite.maximumMatching(using: .hopcroftKarp())
+```
+
+## Installation
+
+Add `swift-graphs` as a package dependency in your project's package manifest:
+
+```swift
+// swift-tools-version:6.0
+import PackageDescription
+
+let package = Package(
+    name: "MyPackage",
+    dependencies: [
+        .package(url: "https://github.com/tevelee/swift-graphs.git", from: "0.2.0")
+    ],
+    targets: [
+        .target(name: "MyTarget", dependencies: [
+            .product(name: "Graphs", package: "swift-graphs")
+        ])
+    ]
+)
 ```
 
 ## Design Considerations
