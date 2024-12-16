@@ -87,3 +87,10 @@ extension PathTrackingVisitor.Visit where Base.Edge: Weighted, Base.Edge.Weight:
 
 extension PathTrackingVisitor.Visit: Equatable where Base.Node: Equatable, Base.Edge: Equatable, Base.Visit: Equatable {}
 extension PathTrackingVisitor.Visit: Hashable where Base.Node: Hashable, Base.Edge: Hashable, Base.Visit: Hashable {}
+
+extension PathTrackingVisitor.Visit: NodesTracking where Base.Node: Hashable {
+    /// The set of visited nodes.
+    public var visitedNodes: Set<Base.Node> {
+        Set(path)
+    }
+}

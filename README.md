@@ -101,7 +101,7 @@ bipartite.maximumMatching(using: .hopcroftKarp())
 
 ## Installation
 
-Add `swift-graphs` as a package dependency in your project's package manifest:
+Add `swift-graphs` as a package dependency in your project's `Package.swift`:
 
 ```swift
 // swift-tools-version:6.0
