@@ -23,7 +23,7 @@ extension GraphComponent where Node: Hashable, Edge: Weighted, Edge.Weight: Nume
 }
 
 /// An implementation of the Dijkstra algorithm for finding the shortest path in a graph.
-public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlgorithm
+public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlgorithm, ShortestPathUntilAlgorithm
 where Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {
     /// Initializes a new `DijkstraAlgorithm` instance.
     @inlinable public init() {}
@@ -37,13 +37,14 @@ where Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {
     /// - Returns: A `Path` instance representing the shortest path, or `nil` if no path is found.
     @inlinable public func shortestPath(
         from source: Node,
-        to destination: Node,
-        satisfying condition: (Node) -> Bool,
+        until condition: (Node) -> Bool,
         in graph: some GraphComponent<Node, Edge>
     ) -> Path<Node, Edge>? {
         let result = computeShortestPaths(from: source, condition: condition, in: graph)
-        return result.connectingEdges[destination].flatMap { _ in
-            Path(connectingEdges: result.connectingEdges, source: source, destination: destination)
+        if let destination = result.destination {
+            return Path(connectingEdges: result.connectingEdges, source: source, destination: destination)
+        } else {
+            return nil
         }
     }
 
@@ -57,7 +58,7 @@ where Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {
         from source: Node,
         condition: (Node) -> Bool = { _ in false },
         in graph: some GraphComponent<Node, Edge>
-    ) -> (costs: [Node: Edge.Weight], connectingEdges: [Node: GraphEdge<Node, Edge>]) {
+    ) -> (destination: Node?, costs: [Node: Edge.Weight], connectingEdges: [Node: GraphEdge<Node, Edge>]) {
         var openSet = Heap<State>()
         var costs: [Node: Edge.Weight] = [source: .zero]
         var connectingEdges: [Node: GraphEdge<Node, Edge>] = [:]
@@ -70,10 +71,12 @@ where Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {
             )
         )
 
+        var destination: Node?
         while let currentState = openSet.popMin() {
             let currentNode = currentState.node
 
             if condition(currentNode) {
+                destination = currentNode
                 break
             }
 
@@ -94,7 +97,7 @@ where Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {
             }
         }
 
-        return (costs, connectingEdges)
+        return (destination, costs, connectingEdges)
     }
 
     /// A structure representing the state of a node during the Dijkstra search.
