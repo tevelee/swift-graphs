@@ -43,6 +43,12 @@ public protocol ShortestPathUntilAlgorithm<Node, Edge> {
 }
 
 extension ShortestPathAlgorithm where Self: ShortestPathUntilAlgorithm {
+    /// Finds the shortest path from the source node to the destination node in the graph.
+    /// - Parameter source: The starting node.
+    /// - Parameter destination: The target node.
+    /// - Parameter condition: A closure that determines when to stop the search.
+    /// - Parameter graph: The graph in which to compute the shortest path.
+    /// - Returns: The shortest path from the source node to the destination node.
     @inlinable public func shortestPath(
         from source: Node,
         to destination: Node,
