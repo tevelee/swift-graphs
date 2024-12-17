@@ -23,30 +23,10 @@ extension GraphComponent where Node: Hashable, Edge: Weighted, Edge.Weight: Nume
 }
 
 /// An implementation of the Dijkstra algorithm for finding the shortest path in a graph.
-public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlgorithm, ShortestPathUntilAlgorithm
+public struct DijkstraAlgorithm<Node: Hashable, Edge: Weighted>: ShortestPathAlgorithm
 where Edge.Weight: Numeric, Edge.Weight.Magnitude == Edge.Weight {
     /// Initializes a new `DijkstraAlgorithm` instance.
     @inlinable public init() {}
-
-    /// Finds the shortest path in the graph from the start node to the goal node using the Dijkstra algorithm.
-    /// - Parameters:
-    ///   - source: The starting node.
-    ///   - destination: The target node.
-    ///   - condition: The completion criteria.
-    ///   - graph: The graph in which to find the shortest path.
-    /// - Returns: A `Path` instance representing the shortest path, or `nil` if no path is found.
-    @inlinable public func shortestPath(
-        from source: Node,
-        until condition: (Node) -> Bool,
-        in graph: some GraphComponent<Node, Edge>
-    ) -> Path<Node, Edge>? {
-        let result = computeShortestPaths(from: source, condition: condition, in: graph)
-        if let destination = result.destination {
-            return Path(connectingEdges: result.connectingEdges, source: source, destination: destination)
-        } else {
-            return nil
-        }
-    }
 
     /// Computes the shortest paths from the source node to all other nodes in the graph using the Dijkstra algorithm.
     /// - Parameters:

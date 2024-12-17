@@ -3,30 +3,52 @@ import Collections
 extension GraphComponent where Edge: Weighted {
     /// Computes all shortest paths from the source node to the destination node in the graph.
     /// - Parameter source: The starting node.
-    /// - Parameter destination: The target node.
     /// - Parameter condition: A closure that determines when to stop the search.
     /// - Parameter algorithm: The algorithm to use to compute the shortest paths.
     /// - Returns: A dictionary where the keys are nodes and the values are arrays of paths.
     @inlinable public func allShortestPaths(
         from source: Node,
-        to destination: Node,
         until condition: (Node) -> Bool,
-        using algorithm: some AllShortestPathsAlgorithm<Node, Edge>
+        using algorithm: some AllShortestPathsUntilAlgorithm<Node, Edge>
     ) -> [Path<Node, Edge>] {
-        algorithm.allShortestPaths(from: source, to: destination, until: condition, in: self)
+        algorithm.allShortestPaths(from: source, until: condition, in: self)
     }
 
     /// Computes all shortest paths from the source node to the destination node in the graph using Dijkstra's algorithm.
     /// - Parameter source: The starting node.
-    /// - Parameter destination: The target node.
     /// - Parameter condition: A closure that determines when to stop the search.
     /// - Returns: A dictionary where the keys are nodes and the values are arrays of paths.
     @inlinable public func allShortestPaths(
         from source: Node,
-        to destination: Node,
         until condition: (Node) -> Bool
     ) -> [Path<Node, Edge>] where Node: Hashable, Edge.Weight: Numeric, Edge.Weight == Edge.Weight.Magnitude {
-        allShortestPaths(from: source, to: destination, until: condition, using: DijkstraAlgorithm().backtracking())
+        allShortestPaths(from: source, until: condition, using: DijkstraAlgorithm().backtracking())
+    }
+}
+
+extension GraphComponent where Edge: Weighted, Node: Equatable {
+    /// Computes all shortest paths from the source node to the destination node in the graph.
+    /// - Parameter source: The starting node.
+    /// - Parameter destination: The destination node.
+    /// - Parameter algorithm: The algorithm to use to compute the shortest paths.
+    /// - Returns: A dictionary where the keys are nodes and the values are arrays of paths.
+    @inlinable public func allShortestPaths(
+        from source: Node,
+        to destiation: Node,
+        using algorithm: some AllShortestPathsUntilAlgorithm<Node, Edge>
+    ) -> [Path<Node, Edge>] {
+        algorithm.allShortestPaths(from: source, until: { $0 == destiation }, in: self)
+    }
+
+    /// Computes all shortest paths from the source node to the destination node in the graph using Dijkstra's algorithm.
+    /// - Parameter source: The starting node.
+    /// - Parameter destination: The destination node.
+    /// - Returns: A dictionary where the keys are nodes and the values are arrays of paths.
+    @inlinable public func allShortestPaths(
+        from source: Node,
+        to destiation: Node
+    ) -> [Path<Node, Edge>] where Node: Hashable, Edge.Weight: Numeric, Edge.Weight == Edge.Weight.Magnitude {
+        allShortestPaths(from: source, until: { $0 == destiation }, using: DijkstraAlgorithm().backtracking())
     }
 }
 
@@ -39,7 +61,7 @@ extension DijkstraAlgorithm {
 }
 
 /// A protocol defining the requirements for an algorithm that computes all shortest paths.
-public protocol AllShortestPathsAlgorithm<Node, Edge> {
+public protocol AllShortestPathsUntilAlgorithm<Node, Edge> {
     /// The type of the nodes in the graph.
     associatedtype Node
     /// The type of the edges in the graph.
@@ -47,20 +69,18 @@ public protocol AllShortestPathsAlgorithm<Node, Edge> {
 
     /// Computes all shortest paths from the source node to the destination node in the graph.
     /// - Parameter source: The starting node.
-    /// - Parameter destination: The target node.
     /// - Parameter condition: A closure that determines when to stop the search.
     /// - Parameter graph: The graph in which to compute the shortest paths.
     /// - Returns: An array of all shortest paths
     func allShortestPaths(
         from source: Node,
-        to destination: Node,
         until condition: (Node) -> Bool,
         in graph: some GraphComponent<Node, Edge>
     ) -> [Path<Node, Edge>]
 }
 
 /// An algorithm that computes all shortest paths using Dijkstra's algorithm with backtracking.
-public struct BacktrackingDijkstraAllShortestPathsAlgorithm<Node: Hashable, Edge: Weighted>: AllShortestPathsAlgorithm
+public struct BacktrackingDijkstraAllShortestPathsAlgorithm<Node: Hashable, Edge: Weighted>: AllShortestPathsUntilAlgorithm
 where Edge.Weight: Numeric, Edge.Weight == Edge.Weight.Magnitude {
     /// The Dijkstra algorithm instance.
     public let dijkstraAlgorithm: DijkstraAlgorithm<Node, Edge>
@@ -73,17 +93,15 @@ where Edge.Weight: Numeric, Edge.Weight == Edge.Weight.Magnitude {
 
     /// Computes all shortest paths from the source node to the destination node in the graph.
     /// - Parameter source: The starting node.
-    /// - Parameter destination: The target node.
     /// - Parameter condition: A closure that determines when to stop the search.
     /// - Parameter graph: The graph in which to compute the shortest paths.
     /// - Returns: An array of all shortest paths
     @inlinable public func allShortestPaths(
         from source: Node,
-        to destination: Node,
         until condition: (Node) -> Bool,
         in graph: some GraphComponent<Node, Edge>
     ) -> [Path<Node, Edge>] {
-        guard let shortestPath = dijkstraAlgorithm.shortestPath(from: source, to: destination, satisfying: condition, in: graph) else {
+        guard let shortestPath = dijkstraAlgorithm.shortestPath(from: source, until: condition, in: graph) else {
             return []
         }
         
@@ -92,7 +110,7 @@ where Edge.Weight: Numeric, Edge.Weight == Edge.Weight.Magnitude {
         guard let foundDestination,
               let destinationCost = costs[foundDestination],
               destinationCost == shortestPath.cost else {
-            return []
+            return [shortestPath]
         }
         
         var stack: [[Node]] = [[foundDestination]]
@@ -104,7 +122,7 @@ where Edge.Weight: Numeric, Edge.Weight == Edge.Weight.Magnitude {
                 let edges = zip(reversedNodes, reversedNodes.dropFirst()).compactMap { u, v in
                     predecessors[u]?.first { $0.source == v }
                 }
-                result.append(Path(source: source, destination: foundDestination, edges: Array(edges)))
+                result.append(Path(source: source, destination: foundDestination, edges: edges.reversed()))
             } else {
                 guard let incEdges = predecessors[currentNode], let nodeCost = costs[currentNode] else { continue }
                 

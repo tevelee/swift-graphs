@@ -155,6 +155,33 @@ struct GraphStrategy {
         )
     }
 
+    @Test func shortestPathUntil() {
+        let graph = GridGraph(grid: [
+            ["A", "B", "C", "D", "E"],
+            ["F", "G", "H", "I", "J"],
+            ["K", "L", "M", "N", "O"],
+            ["P", "Q", "R", "S", "T"],
+            ["U", "V", "W", "X", "Y"]
+        ], availableDirections: .orthogonal).weightedByDistance()
+
+        #expect(
+            graph.shortestPath(
+                from: GridPosition(x: 0, y: 0),
+                until: { $0 == GridPosition(x: 4, y: 4) },
+                using: .dijkstra()
+            )?.path.map { graph[$0] } == ["A", "B", "G", "L", "Q", "V", "W", "X", "Y"]
+        )
+
+        #expect(
+            graph.shortestPath(
+                from: GridPosition(x: 0, y: 0),
+                until: { $0 == GridPosition(x: 4, y: 4) },
+                using: .aStar(heuristic: .euclideanDistance(of: \.coordinates, towards: GridPosition(x: 4, y: 4)))
+            )?.path.map { graph[$0] } == ["A", "B", "G", "L", "Q", "V", "W", "X", "Y"]
+        )
+    }
+
+
     @Test func shortestPaths() {
         let graph = GridGraph(grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]).weightedByDistance()
         #expect(
@@ -168,6 +195,16 @@ struct GraphStrategy {
                 [1, 5, 7],
                 [1, 5, 8],
                 [1, 5, 9]
+            ]
+        )
+    }
+
+    @Test func allShortestPaths() {
+        let graph = GridGraph(grid: [[1, 1], [1, 1]], availableDirections: .orthogonal).weighted(constant: 1 as UInt)
+        #expect(
+            graph.allShortestPaths(from: GridPosition(x: 0, y: 0), to: GridPosition(x: 1, y: 1)).map(\.path) == [
+                [GridPosition(x: 0, y: 0), GridPosition(x: 0, y: 1), GridPosition(x: 1, y: 1)],
+                [GridPosition(x: 0, y: 0), GridPosition(x: 1, y: 0), GridPosition(x: 1, y: 1)]
             ]
         )
     }

@@ -14,14 +14,6 @@ extension GraphComponent where Edge: Weighted {
     }
 }
 
-extension ShortestPathUntilAlgorithm {
-    /// Creates a Dijkstra algorithm instance.
-    /// - Returns: An instance of `DijkstraAlgorithm`.
-    @inlinable public static func dijkstra<Node, Edge>() -> Self where Self == DijkstraAlgorithm<Node, Edge> {
-        .init()
-    }
-}
-
 /// A protocol that defines the requirements for a shortest path algorithm.
 public protocol ShortestPathUntilAlgorithm<Node, Edge> {
     /// The type of nodes in the graph.
@@ -42,7 +34,7 @@ public protocol ShortestPathUntilAlgorithm<Node, Edge> {
     ) -> Path<Node, Edge>?
 }
 
-extension ShortestPathAlgorithm where Self: ShortestPathUntilAlgorithm {
+extension ShortestPathAlgorithm where Self: ShortestPathUntilAlgorithm, Node: Equatable {
     /// Finds the shortest path from the source node to the destination node in the graph.
     /// - Parameter source: The starting node.
     /// - Parameter destination: The target node.
@@ -52,10 +44,9 @@ extension ShortestPathAlgorithm where Self: ShortestPathUntilAlgorithm {
     @inlinable public func shortestPath(
         from source: Node,
         to destination: Node,
-        satisfying condition: (Node) -> Bool,
         in graph: some GraphComponent<Node, Edge>
     ) -> Path<Node, Edge>? {
-        shortestPath(from: source, until: condition, in: graph)
+        shortestPath(from: source, until: { $0 == destination }, in: graph)
     }
 }
 

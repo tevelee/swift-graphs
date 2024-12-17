@@ -1,5 +1,3 @@
-import Collections
-
 extension ShortestPathAlgorithm {
     /// Creates an A* algorithm instance with a custom heuristic and cost calculation.
     /// - Parameters:
@@ -96,92 +94,19 @@ public struct AStarAlgorithm<Node: Hashable, Edge: Weighted, HScore, FScore: Com
     /// - Parameters:
     ///   - source: The starting node.
     ///   - destination: The target node.
-    ///   - condition: The completion criteria.
     ///   - graph: The graph in which to find the shortest path.
     /// - Returns: A `Path` instance representing the shortest path, or `nil` if no path is found.
-    @inlinable public func shortestPath(
+    public func shortestPath(
         from source: Node,
         to destination: Node,
-        satisfying condition: (Node) -> Bool,
         in graph: some GraphComponent<Node, Edge>
     ) -> Path<Node, Edge>? {
-        var openSet = Heap<State>()
-        var costs: [Node: GScore] = [source: .zero]
-        var connectingEdges: [Node: GraphEdge<Node, Edge>] = [:]
-        var closedSet: Set<Node> = []
-
-        openSet.insert(
-            State(
-                node: source,
-                costSoFar: .zero,
-                estimatedTotalCost: calculateTotalCost(.zero, heuristic.estimatedDistance(source, destination))
-            )
+        AStarUntilAlgorithm(
+            heuristic: .init { [heuristic] node in
+                heuristic.estimatedDistance(node, destination)
+            },
+            calculateTotalCost: calculateTotalCost
         )
-
-        while let currentState = openSet.popMin() {
-            let currentNode = currentState.node
-
-            if condition(currentNode) {
-                return Path(connectingEdges: connectingEdges, source: source, destination: currentNode)
-            }
-
-            if !closedSet.insert(currentNode).inserted {
-                continue
-            }
-
-            for edge in graph.edges(from: currentNode) {
-                let neighbor = edge.destination
-                let weight: Edge.Weight = edge.value.weight
-                let newCost: GScore = currentState.costSoFar + weight
-
-                if costs[neighbor] == nil || newCost < costs[neighbor]! {
-                    costs[neighbor] = newCost
-                    connectingEdges[neighbor] = edge
-                    let estimatedTotalCost = calculateTotalCost(newCost, heuristic.estimatedDistance(neighbor, destination))
-                    openSet.insert(State(node: neighbor, costSoFar: newCost, estimatedTotalCost: estimatedTotalCost))
-                }
-            }
-        }
-
-        return nil
-    }
-
-    /// Represents a state in the A* algorithm, including the current node, the cost so far, and the estimated total cost.
-    @usableFromInline struct State: Comparable {
-        /// The current node in the state.
-        @usableFromInline let node: Node
-        /// The cost from the start node to the current node.
-        @usableFromInline let costSoFar: GScore
-        /// The estimated total cost from the start node to the goal node through the current node.
-        @usableFromInline let estimatedTotalCost: FScore
-
-        /// Initializes a new state with the given node, cost so far, and estimated total cost.
-        /// - Parameters:
-        ///   - node: The current node.
-        ///   - costSoFar: The cost from the start node to the current node.
-        ///   - estimatedTotalCost: The estimated total cost from the start node to the goal node through the current node.
-        @inlinable init(node: Node, costSoFar: GScore, estimatedTotalCost: FScore) {
-            self.node = node
-            self.costSoFar = costSoFar
-            self.estimatedTotalCost = estimatedTotalCost
-        }
-
-        /// Compares two states based on their estimated total cost.
-        /// - Parameters:
-        ///   - lhs: The left-hand side state.
-        ///   - rhs: The right-hand side state.
-        /// - Returns: `true` if the estimated total cost of the left-hand side state is less than that of the right-hand side state.
-        @inlinable public static func < (lhs: State, rhs: State) -> Bool {
-            lhs.estimatedTotalCost < rhs.estimatedTotalCost
-        }
-
-        /// Checks if two states are equal based on their node and estimated total cost.
-        /// - Parameters:
-        ///   - lhs: The left-hand side state.
-        ///   - rhs: The right-hand side state.
-        /// - Returns: `true` if the node and estimated total cost of both states are equal.
-        @inlinable public static func == (lhs: State, rhs: State) -> Bool {
-            lhs.node == rhs.node && lhs.estimatedTotalCost == rhs.estimatedTotalCost
-        }
+        .shortestPath(from: source, until: { $0 == destination }, in: graph)
     }
 }
