@@ -211,9 +211,9 @@
             #expect(graph.vertices().count == 6)
             #expect(graph.edges().count == 5)
             #expect(graph.adjacentVertices(of: a) == [b, c, d, root])
-            #expect(graph.outEdges(of: a)?.map(graph.destination) == [b, c, d])
-            #expect(graph.inEdges(of: a)?.map(graph.source) == [root])
-            #expect(graph.inEdges(of: root) == nil)
+            #expect(graph.outEdges(of: a).map(graph.destination) == [b, c, d])
+            #expect(graph.inEdges(of: a).map(graph.source) == [root])
+            #expect(graph.inEdges(of: root).isEmpty)
         }
     }
 #endif
@@ -226,29 +226,29 @@ protocol Graph {
 protocol IncidenceGraph: Graph {
     associatedtype OutEdges: Sequence<EdgeDescriptor>
 
-    func outEdges(of vertex: VertexDescriptor) -> OutEdges?
+    func outEdges(of vertex: VertexDescriptor) -> OutEdges
     func source(of edge: EdgeDescriptor) -> VertexDescriptor
     func destination(of edge: EdgeDescriptor) -> VertexDescriptor
     func outDegree(of vertex: VertexDescriptor) -> Int
 }
 
 extension IncidenceGraph {
-    func reachableVertices(from vertex: VertexDescriptor) -> (some Sequence<VertexDescriptor>)? {
-        outEdges(of: vertex)?.map(destination)
+    func reachableVertices(from vertex: VertexDescriptor) -> some Sequence<VertexDescriptor> {
+        outEdges(of: vertex).map(destination)
     }
 }
 
 protocol BidirectionalGraph: IncidenceGraph {
     associatedtype InEdges: Sequence<EdgeDescriptor>
 
-    func inEdges(of vertex: VertexDescriptor) -> InEdges?
+    func inEdges(of vertex: VertexDescriptor) -> InEdges
     func inDegree(of vertex: VertexDescriptor) -> Int
     func degree(of vertex: VertexDescriptor) -> Int
 }
 
 extension BidirectionalGraph {
-    func orignatingVertices(to vertex: VertexDescriptor) -> (some Sequence<VertexDescriptor>)? {
-        inEdges(of: vertex)?.map(source)
+    func orignatingVertices(to vertex: VertexDescriptor) -> some Sequence<VertexDescriptor> {
+        inEdges(of: vertex).map(source)
     }
 
     func degree(of vertex: VertexDescriptor) -> Int {
@@ -259,23 +259,14 @@ extension BidirectionalGraph {
 protocol AdjacencyGraph: Graph {
     associatedtype AdjacentVertices: Sequence<VertexDescriptor>
 
-    func adjacentVertices(of vertex: VertexDescriptor) -> AdjacentVertices?
+    func adjacentVertices(of vertex: VertexDescriptor) -> AdjacentVertices
 }
 
 extension AdjacencyGraph where Self: BidirectionalGraph, VertexDescriptor: Hashable {
-    func adjacentVertices(of vertex: VertexDescriptor) -> OrderedSet<VertexDescriptor>? {
-        let outEdges = outEdges(of: vertex)?.map(destination)
-        let inEdges = inEdges(of: vertex)?.map(source)
-        if outEdges == nil, inEdges == nil {
-            return nil
-        }
+    func adjacentVertices(of vertex: VertexDescriptor) -> OrderedSet<VertexDescriptor> {
         var result: OrderedSet<VertexDescriptor> = []
-        if let outEdges {
-            result.append(contentsOf: outEdges)
-        }
-        if let inEdges {
-            result.append(contentsOf: inEdges)
-        }
+        result.append(contentsOf: outEdges(of: vertex).map(destination))
+        result.append(contentsOf: inEdges(of: vertex).map(source))
         return result
     }
 }
@@ -349,9 +340,9 @@ extension AdjacencyList: Graph {
 }
 
 extension AdjacencyList: IncidenceGraph {
-    func outEdges(of vertex: VertexDescriptor) -> OrderedSet<EdgeDescriptor>? {
+    func outEdges(of vertex: VertexDescriptor) -> OrderedSet<EdgeDescriptor> {
         precondition(_vertices.contains(vertex))
-        return _outEdges[vertex]
+        return _outEdges[vertex] ?? []
     }
 
     func source(of edge: EdgeDescriptor) -> VertexDescriptor {
@@ -371,9 +362,9 @@ extension AdjacencyList: IncidenceGraph {
 }
 
 extension AdjacencyList: BidirectionalGraph {
-    func inEdges(of vertex: VertexDescriptor) -> OrderedSet<EdgeDescriptor>? {
+    func inEdges(of vertex: VertexDescriptor) -> OrderedSet<EdgeDescriptor> {
         precondition(_vertices.contains(vertex))
-        return _inEdges[vertex]
+        return _inEdges[vertex] ?? []
     }
 
     func inDegree(of vertex: VertexDescriptor) -> Int {
@@ -429,15 +420,11 @@ extension AdjacencyList: MutableGraph {
     }
 
     mutating func remove(vertex: consuming VertexDescriptor) {
-        if let edges = outEdges(of: vertex) {
-            for edge in edges {
-                remove(edge: edge)
-            }
+        for edge in outEdges(of: vertex) {
+            remove(edge: edge)
         }
-        if let edges = inEdges(of: vertex) {
-            for edge in edges {
-                remove(edge: edge)
-            }
+        for edge in inEdges(of: vertex) {
+            remove(edge: edge)
         }
         _vertices.remove(vertex)
     }
