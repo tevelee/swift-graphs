@@ -218,6 +218,8 @@
     }
 #endif
 
+// Graph definitions/Graph.swift
+
 protocol Graph {
     associatedtype VertexDescriptor
     associatedtype EdgeDescriptor
@@ -227,14 +229,14 @@ protocol IncidenceGraph: Graph {
     associatedtype OutEdges: Sequence<EdgeDescriptor>
 
     func outEdges(of vertex: VertexDescriptor) -> OutEdges
-    func source(of edge: EdgeDescriptor) -> VertexDescriptor
-    func destination(of edge: EdgeDescriptor) -> VertexDescriptor
+    func source(of edge: EdgeDescriptor) -> VertexDescriptor?
+    func destination(of edge: EdgeDescriptor) -> VertexDescriptor?
     func outDegree(of vertex: VertexDescriptor) -> Int
 }
 
 extension IncidenceGraph {
     func reachableVertices(from vertex: VertexDescriptor) -> some Sequence<VertexDescriptor> {
-        outEdges(of: vertex).map(destination)
+        outEdges(of: vertex).compactMap(destination)
     }
 }
 
@@ -248,7 +250,7 @@ protocol BidirectionalGraph: IncidenceGraph {
 
 extension BidirectionalGraph {
     func orignatingVertices(to vertex: VertexDescriptor) -> some Sequence<VertexDescriptor> {
-        inEdges(of: vertex).map(source)
+        inEdges(of: vertex).compactMap(source)
     }
 
     func degree(of vertex: VertexDescriptor) -> Int {
@@ -265,8 +267,8 @@ protocol AdjacencyGraph: Graph {
 extension AdjacencyGraph where Self: BidirectionalGraph, VertexDescriptor: Hashable {
     func adjacentVertices(of vertex: VertexDescriptor) -> OrderedSet<VertexDescriptor> {
         var result: OrderedSet<VertexDescriptor> = []
-        result.append(contentsOf: outEdges(of: vertex).map(destination))
-        result.append(contentsOf: inEdges(of: vertex).map(source))
+        result.append(contentsOf: outEdges(of: vertex).compactMap(destination))
+        result.append(contentsOf: inEdges(of: vertex).compactMap(source))
         return result
     }
 }
@@ -298,19 +300,31 @@ protocol MutableGraph: Graph {
     mutating func remove(vertex: consuming VertexDescriptor)
 }
 
+protocol BinaryIncidenceGraph: Graph {
+    func leftEdge(of v: VertexDescriptor) -> EdgeDescriptor?
+    func rightEdge(of v: VertexDescriptor) -> EdgeDescriptor?
+
+    func leftChild(of v: VertexDescriptor) -> VertexDescriptor?
+    func rightChild(of v: VertexDescriptor) -> VertexDescriptor?
+}
+
 struct Empty: Sendable, Hashable, Codable {
     init() {}
 }
+
+// Concrete Graph Implementations/AdjacencyList.swift
 
 import Foundation
 import Collections
 
 struct AdjacencyList {
     private var _vertices: OrderedSet<VertexDescriptor> = []
-    private var _edges: OrderedSet<EdgeDescriptor> = []
 
+    private var _edges: OrderedSet<EdgeDescriptor> = []
     private var _outEdges: [VertexDescriptor: OrderedSet<EdgeDescriptor>] = [:]
     private var _inEdges: [VertexDescriptor: OrderedSet<EdgeDescriptor>] = [:]
+
+    private var _verticesOfEdges: [EdgeDescriptor: (source: VertexDescriptor, destination: VertexDescriptor)] = [:]
 }
 
 extension AdjacencyList: Graph {
@@ -326,14 +340,10 @@ extension AdjacencyList: Graph {
 
     struct EdgeDescriptor: Identifiable, Hashable {
         private let _id: UUID
-        fileprivate let source: VertexDescriptor
-        fileprivate let destination: VertexDescriptor
 
         var id: some Hashable { _id }
 
-        fileprivate init(source: VertexDescriptor, destination: VertexDescriptor) {
-            self.source = source
-            self.destination = destination
+        fileprivate init() {
             _id = UUID()
         }
     }
@@ -341,35 +351,35 @@ extension AdjacencyList: Graph {
 
 extension AdjacencyList: IncidenceGraph {
     func outEdges(of vertex: VertexDescriptor) -> OrderedSet<EdgeDescriptor> {
-        precondition(_vertices.contains(vertex))
-        return _outEdges[vertex] ?? []
+        guard _vertices.contains(vertex), let edges = _outEdges[vertex] else { return [] }
+        return edges
     }
 
-    func source(of edge: EdgeDescriptor) -> VertexDescriptor {
-        precondition(_edges.contains(edge))
+    func source(of edge: EdgeDescriptor) -> VertexDescriptor? {
+        guard _edges.contains(edge), let edge = _verticesOfEdges[edge] else { return nil }
         return edge.source
     }
     
-    func destination(of edge: EdgeDescriptor) -> VertexDescriptor {
-        precondition(_edges.contains(edge))
+    func destination(of edge: EdgeDescriptor) -> VertexDescriptor? {
+        guard _edges.contains(edge), let edge = _verticesOfEdges[edge] else { return nil }
         return edge.destination
     }
     
     func outDegree(of vertex: VertexDescriptor) -> Int {
-        precondition(_vertices.contains(vertex))
-        return _outEdges[vertex]?.count ?? 0
+        guard _vertices.contains(vertex), let edges = _outEdges[vertex] else { return 0 }
+        return edges.count
     }
 }
 
 extension AdjacencyList: BidirectionalGraph {
     func inEdges(of vertex: VertexDescriptor) -> OrderedSet<EdgeDescriptor> {
-        precondition(_vertices.contains(vertex))
-        return _inEdges[vertex] ?? []
+        guard _vertices.contains(vertex), let edges = _inEdges[vertex] else { return [] }
+        return edges
     }
 
     func inDegree(of vertex: VertexDescriptor) -> Int {
-        precondition(_vertices.contains(vertex))
-        return _inEdges[vertex]?.count ?? 0
+        guard _vertices.contains(vertex), let edges = _inEdges[vertex] else { return 0 }
+        return edges.count
     }
 }
 
@@ -398,19 +408,25 @@ extension AdjacencyList: AdjacencyGraph {}
 extension AdjacencyList: MutableGraph {
     @discardableResult
     mutating func addEdge(from source: VertexDescriptor, to destination: VertexDescriptor) -> EdgeDescriptor {
-        let edge = EdgeDescriptor(source: source, destination: destination)
+        let edge = EdgeDescriptor()
         addVertex(source)
         addVertex(destination)
         _edges.updateOrAppend(edge)
+        _verticesOfEdges[edge] = (source, destination)
         _outEdges[source, default: []].updateOrAppend(edge)
         _inEdges[destination, default: []].updateOrAppend(edge)
         return edge
     }
 
     mutating func remove(edge: consuming EdgeDescriptor) {
-        _outEdges[edge.source]?.remove(edge)
-        _inEdges[edge.destination]?.remove(edge)
+        if let vertex = source(of: edge) {
+            _outEdges[vertex]?.remove(edge)
+        }
+        if let vertex = destination(of: edge) {
+            _inEdges[vertex]?.remove(edge)
+        }
         _edges.remove(edge)
+        _verticesOfEdges[edge] = nil
     }
 
     mutating func addVertex() -> VertexDescriptor {
