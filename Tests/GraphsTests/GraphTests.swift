@@ -293,7 +293,7 @@ protocol AdjacencyMatrix: Graph {
 
 protocol MutableGraph: Graph {
     @discardableResult
-    mutating func addEdge(from source: VertexDescriptor, to destination: VertexDescriptor) -> EdgeDescriptor
+    mutating func addEdge(from source: VertexDescriptor, to destination: VertexDescriptor) -> EdgeDescriptor?
     mutating func remove(edge: consuming EdgeDescriptor)
 
     mutating func addVertex() -> VertexDescriptor
@@ -317,44 +317,59 @@ struct Empty: Sendable, Hashable, Codable {
 import Foundation
 import Collections
 
-protocol AdjacencyStorage {
+protocol VertexStorage {
     associatedtype Vertex: Hashable
-    associatedtype Edge: Hashable
-
     associatedtype Vertices: Sequence<Vertex>
-    associatedtype Edges: Sequence<Edge>
 
-    // vertices
     mutating func addVertex() -> Vertex
     mutating func remove(vertex: Vertex)
     func contains(_ vertex: Vertex) -> Bool
     func vertices() -> Vertices
     var numberOfVertices: Int { get }
+}
 
-    // edges
-    @discardableResult
+protocol EdgeStorage {
+    associatedtype Vertex: Hashable
+    associatedtype Edge: Hashable
+    associatedtype Edges: Sequence<Edge>
+
     mutating func addEdge(from source: Vertex, to destination: Vertex) -> Edge
     mutating func remove(edge: Edge)
     func endpoints(of edge: Edge) -> (source: Vertex, destination: Vertex)?
     func edges() -> Edges
     var numberOfEdges: Int { get }
 
-    // incidence
+    // Incidence operations
     func outEdges(of vertex: Vertex) -> Edges
     func outDegree(of vertex: Vertex) -> Int
     func inEdges(of vertex: Vertex) -> Edges
     func inDegree(of vertex: Vertex) -> Int
 }
 
-extension AdjacencyStorage where Self == OrderedAdjacencyStorage {
-    static var ordered: Self {
-        OrderedAdjacencyStorage()
+extension EdgeStorage {
+    static func ordered<Vertex>() -> OrderedEdgeStorage<Vertex> where Self == OrderedEdgeStorage<Vertex> {
+        OrderedEdgeStorage()
     }
 }
 
-struct OrderedAdjacencyStorage: AdjacencyStorage {
+extension VertexStorage {
+    static func ordered() -> OrderedVertexStorage where Self == OrderedVertexStorage {
+        OrderedVertexStorage()
+    }
+}
+
+struct OrderedVertexStorage: VertexStorage {
+    struct Vertex: Identifiable, Hashable {
+        private let _id: UUID
+
+        var id: some Hashable { _id }
+
+        fileprivate init() {
+            _id = UUID()
+        }
+    }
+
     private var _vertices: OrderedSet<Vertex> = []
-    private var _edges: OrderedDictionary<Edge, (source: Vertex, destination: Vertex)> = [:]
 
     var numberOfVertices: Int {
         _vertices.count
@@ -367,6 +382,30 @@ struct OrderedAdjacencyStorage: AdjacencyStorage {
     func contains(_ vertex: Vertex) -> Bool {
         _vertices.contains(vertex)
     }
+
+    mutating func addVertex() -> Vertex {
+        let vertex = Vertex()
+        _vertices.updateOrAppend(vertex)
+        return vertex
+    }
+
+    mutating func remove(vertex: Vertex) {
+        _vertices.remove(vertex)
+    }
+}
+
+struct OrderedEdgeStorage<Vertex: Hashable>: EdgeStorage {
+    struct Edge: Identifiable, Hashable {
+        private let _id: UUID
+
+        var id: some Hashable { _id }
+
+        fileprivate init() {
+            _id = UUID()
+        }
+    }
+
+    private var _edges: OrderedDictionary<Edge, (source: Vertex, destination: Vertex)> = [:]
 
     var numberOfEdges: Int {
         _edges.count
@@ -396,27 +435,8 @@ struct OrderedAdjacencyStorage: AdjacencyStorage {
         inEdges(of: vertex).count
     }
 
-    mutating func addVertex() -> Vertex {
-        let vertex = Vertex()
-        addVertex(vertex)
-        return vertex
-    }
-    
-    mutating func remove(vertex: Vertex) {
-        for edge in outEdges(of: vertex) {
-            remove(edge: edge)
-        }
-        for edge in inEdges(of: vertex) {
-            remove(edge: edge)
-        }
-        _vertices.remove(vertex)
-    }
-    
-
     mutating func addEdge(from source: Vertex, to destination: Vertex) -> Edge {
         let edge = Edge()
-        addVertex(source)
-        addVertex(destination)
         _edges[edge] = (source, destination)
         return edge
     }
@@ -424,39 +444,15 @@ struct OrderedAdjacencyStorage: AdjacencyStorage {
     mutating func remove(edge: Edge) {
         _edges[edge] = nil
     }
-
-    private mutating func addVertex(_ vertex: Vertex) {
-        _vertices.updateOrAppend(vertex)
-    }
-
-    struct Vertex: Identifiable, Hashable {
-        private let _id: UUID
-
-        var id: some Hashable { _id }
-
-        fileprivate init() {
-            _id = UUID()
-        }
-    }
-
-    struct Edge: Identifiable, Hashable {
-        private let _id: UUID
-
-        var id: some Hashable { _id }
-
-        fileprivate init() {
-            _id = UUID()
-        }
-    }
 }
 
-extension AdjacencyStorage where Edges == OrderedSet<Edge> {
-    var cacheInOutEdges: CacheInOutEdges<Self> {
+extension EdgeStorage where Edges == OrderedSet<Edge> {
+    func cacheInOutEdges() -> CacheInOutEdges<Self> {
         CacheInOutEdges(base: self)
     }
 }
 
-struct CacheInOutEdges<Base: AdjacencyStorage>: AdjacencyStorage where Base.Edges == OrderedSet<Base.Edge> {
+struct CacheInOutEdges<Base: EdgeStorage>: EdgeStorage where Base.Edges == OrderedSet<Base.Edge> {
     typealias Vertex = Base.Vertex
     typealias Edge = Base.Edge
 
@@ -470,8 +466,7 @@ struct CacheInOutEdges<Base: AdjacencyStorage>: AdjacencyStorage where Base.Edge
     private var _inEdges: OrderedDictionary<Vertex, OrderedSet<Edge>> = [:]
 
     func outEdges(of vertex: Vertex) -> OrderedSet<Edge> {
-        guard contains(vertex), let edges = _outEdges[vertex] else { return [] }
-        return edges
+        _outEdges[vertex] ?? []
     }
 
     func outDegree(of vertex: Vertex) -> Int {
@@ -479,8 +474,7 @@ struct CacheInOutEdges<Base: AdjacencyStorage>: AdjacencyStorage where Base.Edge
     }
 
     func inEdges(of vertex: Vertex) -> OrderedSet<Edge> {
-        guard contains(vertex), let edges = _inEdges[vertex] else { return [] }
-        return edges
+        _inEdges[vertex] ?? []
     }
 
     func inDegree(of vertex: Vertex) -> Int {
@@ -502,26 +496,6 @@ struct CacheInOutEdges<Base: AdjacencyStorage>: AdjacencyStorage where Base.Edge
         base.remove(edge: edge)
     }
 
-    mutating func addVertex() -> Vertex {
-        base.addVertex()
-    }
-
-    mutating func remove(vertex: Vertex) {
-        base.remove(vertex: vertex)
-    }
-
-    func vertices() -> Base.Vertices {
-        base.vertices()
-    }
-
-    var numberOfVertices: Int {
-        base.numberOfVertices
-    }
-
-    func contains(_ vertex: Vertex) -> Bool {
-        base.contains(vertex)
-    }
-
     func endpoints(of edge: Edge) -> (source: Vertex, destination: Vertex)? {
         base.endpoints(of: edge)
     }
@@ -535,64 +509,69 @@ struct CacheInOutEdges<Base: AdjacencyStorage>: AdjacencyStorage where Base.Edge
     }
 }
 
-struct AdjacencyList<Storage: AdjacencyStorage> {
-    private var storage: Storage
+struct AdjacencyList<VertexStore: VertexStorage, EdgeStore: EdgeStorage> where EdgeStore.Vertex == VertexStore.Vertex {
+    private var vertexStorage: VertexStore
+    private var edgeStorage: EdgeStore
 
-    init(storage: Storage = .ordered.cacheInOutEdges) {
-        self.storage = storage
+    init(
+        vertexStorage: VertexStore = OrderedVertexStorage(),
+        edgeStorage: EdgeStore = OrderedEdgeStorage<OrderedVertexStorage.Vertex>().cacheInOutEdges()
+    ) {
+        self.vertexStorage = vertexStorage
+        self.edgeStorage = edgeStorage
     }
 }
 
 extension AdjacencyList: Graph {
-    typealias VertexDescriptor = Storage.Vertex
-    typealias EdgeDescriptor = Storage.Edge
+    typealias VertexDescriptor = VertexStore.Vertex
+    typealias EdgeDescriptor = EdgeStore.Edge
 }
 
 extension AdjacencyList: IncidenceGraph {
-    func outEdges(of vertex: VertexDescriptor) -> Storage.Edges {
-        storage.outEdges(of: vertex)
+    func outEdges(of vertex: VertexDescriptor) -> EdgeStore.Edges {
+        edgeStorage.outEdges(of: vertex)
     }
 
     func source(of edge: EdgeDescriptor) -> VertexDescriptor? {
-        storage.endpoints(of: edge)?.source
+        edgeStorage.endpoints(of: edge)?.source
     }
     
     func destination(of edge: EdgeDescriptor) -> VertexDescriptor? {
-        storage.endpoints(of: edge)?.destination
+        edgeStorage.endpoints(of: edge)?.destination
     }
     
     func outDegree(of vertex: VertexDescriptor) -> Int {
-        storage.outDegree(of: vertex)
+        edgeStorage.outDegree(of: vertex)
     }
 }
 
 extension AdjacencyList: BidirectionalGraph {
-    func inEdges(of vertex: VertexDescriptor) -> Storage.Edges {
-        storage.inEdges(of: vertex)
+    func inEdges(of vertex: VertexDescriptor) -> EdgeStore.Edges {
+        edgeStorage.inEdges(of: vertex)
     }
 
     func inDegree(of vertex: VertexDescriptor) -> Int {
-        storage.inDegree(of: vertex)
+        edgeStorage.inDegree(of: vertex)
     }
 }
 
 extension AdjacencyList: VertexListGraph {
-    func vertices() -> Storage.Vertices {
-        storage.vertices()
+    func vertices() -> VertexStore.Vertices {
+        vertexStorage.vertices()
     }
 
     var numberOfVertices: Int {
-        storage.numberOfVertices
+        vertexStorage.numberOfVertices
     }
 }
 
 extension AdjacencyList: EdgeListGraph {
-    func edges() -> Storage.Edges {
-        storage.edges()
+    func edges() -> EdgeStore.Edges {
+        edgeStorage.edges()
     }
 
     var numberOfEdges: Int {
-        storage.numberOfEdges
+        edgeStorage.numberOfEdges
     }
 }
 
@@ -600,19 +579,26 @@ extension AdjacencyList: AdjacencyGraph {}
 
 extension AdjacencyList: MutableGraph {
     @discardableResult
-    mutating func addEdge(from source: VertexDescriptor, to destination: VertexDescriptor) -> EdgeDescriptor {
-        storage.addEdge(from: source, to: destination)
+    mutating func addEdge(from source: VertexDescriptor, to destination: VertexDescriptor) -> EdgeDescriptor? {
+        guard vertexStorage.contains(source), vertexStorage.contains(destination) else { return nil }
+        return edgeStorage.addEdge(from: source, to: destination)
     }
 
     mutating func remove(edge: consuming EdgeDescriptor) {
-        storage.remove(edge: edge)
+        edgeStorage.remove(edge: edge)
     }
 
     mutating func addVertex() -> VertexDescriptor {
-        storage.addVertex()
+        vertexStorage.addVertex()
     }
 
     mutating func remove(vertex: consuming VertexDescriptor) {
-        storage.remove(vertex: vertex)
+        for edge in outEdges(of: vertex) {
+            remove(edge: edge)
+        }
+        for edge in inEdges(of: vertex) {
+            remove(edge: edge)
+        }
+        vertexStorage.remove(vertex: vertex)
     }
 }
