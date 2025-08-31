@@ -1,13 +1,19 @@
-struct AdjacencyList<VertexStore: VertexStorage, EdgeStore: EdgeStorage> where EdgeStore.Vertex == VertexStore.Vertex {
+struct AdjacencyList<VertexStore: VertexStorage, EdgeStore: EdgeStorage, VertexPropertyMap: PropertyMap, EdgePropertyMap: PropertyMap> where EdgeStore.Vertex == VertexStore.Vertex, VertexPropertyMap.Key == VertexStore.Vertex, EdgePropertyMap.Key == EdgeStore.Edge {
     private var vertexStorage: VertexStore
     private var edgeStorage: EdgeStore
+    var vertexPropertyMap: VertexPropertyMap
+    var edgePropertyMap: EdgePropertyMap
 
     init(
         vertexStorage: VertexStore = OrderedVertexStorage(),
-        edgeStorage: EdgeStore = OrderedEdgeStorage<OrderedVertexStorage.Vertex>().cacheInOutEdges()
+        edgeStorage: EdgeStore = OrderedEdgeStorage<OrderedVertexStorage.Vertex>().cacheInOutEdges(),
+        vertexPropertyMap: VertexPropertyMap = NoProperty<OrderedVertexStorage.Vertex>(),
+        edgePropertyMap: EdgePropertyMap = NoProperty<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge>()
     ) {
         self.vertexStorage = vertexStorage
         self.edgeStorage = edgeStorage
+        self.vertexPropertyMap = vertexPropertyMap
+        self.edgePropertyMap = edgePropertyMap
     }
 }
 
@@ -91,3 +97,7 @@ extension AdjacencyList: MutableGraph {
         vertexStorage.remove(vertex: vertex)
     }
 }
+
+extension AdjacencyList: PropertyGraph {}
+extension AdjacencyList: VertexMutablePropertyGraph where VertexPropertyMap: MutablePropertyMap {}
+extension AdjacencyList: EdgeMutablePropertyGraph where EdgePropertyMap: MutablePropertyMap {}
