@@ -25,4 +25,26 @@ struct GraphTests {
         #expect(graph.inEdges(of: a).map(graph.source) == [root])
         #expect(graph.inEdges(of: root).isEmpty)
     }
+
+    @Test func propertyMap() {
+        enum Weight: GraphProperty {
+            static let defaultValue = 1.0
+        }
+        enum Label: GraphProperty {
+            static let defaultValue = ""
+        }
+        enum Enabled: GraphProperty {
+            static let defaultValue = false
+        }
+        var graph = AdjacencyList()
+            .edgeProperty(Weight.self)
+            .edgeProperty(Label.self)
+            .edgeProperty(Enabled.self)
+
+
+        let a = graph.addVertex()
+        let b = graph.addVertex()
+        let e = graph.addEdge(from: a, to: b, with: ((2, "edge"), false))!
+        graph.edgePropertyMap[e].1 = true
+    }
 }

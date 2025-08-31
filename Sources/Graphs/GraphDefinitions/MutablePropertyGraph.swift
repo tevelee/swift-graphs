@@ -1,25 +1,28 @@
-protocol VertexMutablePropertyGraph: VertexPropertyGraph where VertexPropertyMap: MutablePropertyMap {
+protocol VertexMutablePropertyGraph: VertexPropertyGraph, VertexMutableGraph where VertexPropertyMap: MutablePropertyMap {
     var vertexPropertyMap: VertexPropertyMap { get set }
 }
 
 extension VertexMutablePropertyGraph {
-    mutating func setProperty(value: VertexPropertyMap.Property.Value, of vertex: VertexDescriptor) {
-        var map = vertexPropertyMap
-        map[vertex] = value
-        vertexPropertyMap = map
+    @discardableResult
+    mutating func addVertex(with property: VertexPropertyMap.Property.Value) -> VertexDescriptor {
+        let vertex = addVertex()
+        vertexPropertyMap[vertex] = property
+        return vertex
     }
 }
 
-protocol EdgeMutablePropertyGraph: EdgePropertyGraph where EdgePropertyMap: MutablePropertyMap {
+protocol EdgeMutablePropertyGraph: EdgePropertyGraph, EdgeMutableGraph where EdgePropertyMap: MutablePropertyMap {
     var edgePropertyMap: EdgePropertyMap { get set }
 }
 
 extension EdgeMutablePropertyGraph {
-    mutating func setProperty(value: EdgePropertyMap.Property.Value, of edge: EdgeDescriptor) {
-        var map = edgePropertyMap
-        map[edge] = value
-        edgePropertyMap = map
+    @discardableResult
+    mutating func addEdge(from source: VertexDescriptor, to destination: VertexDescriptor, with property: EdgePropertyMap.Property.Value) -> EdgeDescriptor? {
+        guard let edge = addEdge(from: source, to: destination) else { return nil }
+        edgePropertyMap[edge] = property
+        return edge
     }
 }
 
 protocol MutablePropertyGraph: VertexMutablePropertyGraph, EdgeMutablePropertyGraph {}
+

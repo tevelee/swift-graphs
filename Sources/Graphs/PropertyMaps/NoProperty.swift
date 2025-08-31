@@ -1,7 +1,8 @@
-struct NoProperty<Key>: PropertyMap {
+struct NoProperty<Key>: MutablePropertyMap {
     typealias Property = Empty
 
     subscript(key: Key) -> Empty {
-        Empty()
+        get { Empty() }
+        set {}
     }
 }

@@ -4,11 +4,7 @@ struct DictionaryPropertyMap<Key: Hashable, Property: GraphProperty> {
 
 extension DictionaryPropertyMap: MutablePropertyMap {
     subscript(key: Key) -> Property.Value {
-        get {
-            values[key] ?? Property.defaultValue
-        }
-        set {
-            values[key] = newValue
-        }
+        get { values[key] ?? Property.defaultValue }
+        set { values[key] = newValue }
     }
 }

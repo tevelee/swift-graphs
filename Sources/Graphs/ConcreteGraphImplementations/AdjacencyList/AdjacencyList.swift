@@ -101,3 +101,33 @@ extension AdjacencyList: MutableGraph {
 extension AdjacencyList: PropertyGraph {}
 extension AdjacencyList: VertexMutablePropertyGraph where VertexPropertyMap: MutablePropertyMap {}
 extension AdjacencyList: EdgeMutablePropertyGraph where EdgePropertyMap: MutablePropertyMap {}
+
+extension AdjacencyList {
+    func edgeProperty<P: GraphProperty>(_ property: P.Type) -> AdjacencyList<
+        VertexStore,
+        EdgeStore,
+        VertexPropertyMap,
+        CompositePropertyMap<EdgePropertyMap, DictionaryPropertyMap<EdgeStore.Edge, P>>
+    > {
+        .init(
+            vertexStorage: vertexStorage,
+            edgeStorage: edgeStorage,
+            vertexPropertyMap: vertexPropertyMap,
+            edgePropertyMap: edgePropertyMap.combined(with: DictionaryPropertyMap<EdgeStore.Edge, P>())
+        )
+    }
+
+    func edgeProperty<P: GraphProperty>(_ property: P.Type) -> AdjacencyList<
+        VertexStore,
+        EdgeStore,
+        VertexPropertyMap,
+        DictionaryPropertyMap<EdgeStore.Edge, P>
+    > where EdgePropertyMap == NoProperty<EdgeStore.Edge> {
+        .init(
+            vertexStorage: vertexStorage,
+            edgeStorage: edgeStorage,
+            vertexPropertyMap: vertexPropertyMap,
+            edgePropertyMap: edgePropertyMap.combined(with: DictionaryPropertyMap<EdgeStore.Edge, P>())
+        )
+    }
+}
