@@ -1,18 +1,7 @@
 import Collections
 
-enum DijkstrasAlgorithm<
-    Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph,
-    Weight: Numeric
->
-where
-    Weight.Magnitude == Weight,
-    Graph.VertexDescriptor: Hashable
-{
-
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
-
-    struct Visitor {
+enum DijkstrasAlgorithm {
+    struct Visitor<Vertex, Edge> {
         var initializeVertex: ((Vertex) -> Void)?
         var examineVertex:    ((Vertex) -> Void)?
         var examineEdge:      ((Edge) -> Void)?
@@ -21,40 +10,17 @@ where
         var finishVertex:     ((Vertex) -> Void)?
     }
 
-    enum DijkstraWeight: Comparable {
+    enum Distance<Weight> {
         case infinite
         case finite(Weight)
-
-        static func < (lhs: DijkstraWeight, rhs: DijkstraWeight) -> Bool {
-            switch (lhs, rhs) {
-            case (_, .infinite): true
-            case (.infinite, _): false
-            case (.finite(let lhsValue), .finite(let rhsValue)): lhsValue < rhsValue
-            }
-        }
-
-        static func + (lhs: DijkstraWeight, rhs: Weight) -> DijkstraWeight {
-            switch lhs {
-            case .infinite: .infinite
-            case .finite(let lhsValue): .finite(lhsValue + rhs)
-            }
-        }
     }
 
-    private struct DistanceProperty: VertexProperty {
-        static var defaultValue: DijkstraWeight { .infinite }
-    }
-
-    private struct PredecessorProperty: VertexProperty {
-        static var defaultValue: Vertex? { nil }
-    }
-
-    struct DijkstraResult<Map: PropertyMap<Vertex, VertexPropertyValues>> {
-        let distanceProperty: any VertexProperty<DijkstraWeight>.Type
+    struct Result<Vertex, Weight, Map: PropertyMap<Vertex, VertexPropertyValues>> {
+        let distanceProperty: any VertexProperty<Distance<Weight>>.Type
         let predecessorProperty: any VertexProperty<Vertex?>.Type
         let propertyMap: Map
 
-        func distance(of vertex: Vertex) -> DijkstraWeight {
+        func distance(of vertex: Vertex) -> Distance<Weight> {
             propertyMap[vertex][distanceProperty]
         }
 
@@ -63,32 +29,38 @@ where
         }
     }
 
-    private struct VertexDistance: Comparable {
-        let vertex: Vertex
-        let distance: DijkstraWeight
-
-        static func < (lhs: VertexDistance, rhs: VertexDistance) -> Bool {
-            lhs.distance < rhs.distance
-        }
-
-        static func == (lhs: VertexDistance, rhs: VertexDistance) -> Bool {
-            lhs.vertex == rhs.vertex
-        }
+    private enum DistanceProperty<Weight>: VertexProperty {
+        static var defaultValue: Distance<Weight> { .infinite }
     }
 
-    static func run(
+    private enum PredecessorProperty<Vertex>: VertexProperty {
+        static var defaultValue: Vertex? { nil }
+    }
+
+    fileprivate struct VertexDistance<Vertex, Weight> {
+        let vertex: Vertex
+        let distance: Weight
+    }
+
+    static func run<
+        Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph,
+        Weight: Numeric
+    >(
         on graph: Graph,
         from source: Graph.VertexDescriptor,
         edgeWeight: KeyPath<EdgePropertyValues, Weight>,
-        visitor: Visitor? = nil
-    ) -> DijkstraResult<some PropertyMap<Vertex, VertexPropertyValues>> {
+        visitor: Visitor<Graph.VertexDescriptor, Graph.EdgeDescriptor>? = nil
+    ) -> Result<Graph.VertexDescriptor, Weight, some PropertyMap<Graph.VertexDescriptor, VertexPropertyValues>>
+    where
+        Weight.Magnitude == Weight,
+        Graph.VertexDescriptor: Hashable
+    {
         var visited: Set<Graph.VertexDescriptor> = []
-        var queue = Heap<VertexDistance>()
+        var queue = Heap<VertexDistance<Graph.VertexDescriptor, Distance<Weight>>>()
 
+        let distanceProperty: any VertexProperty<Distance<Weight>>.Type = DistanceProperty.self
+        let predecessorProperty: any VertexProperty<Graph.VertexDescriptor?>.Type = PredecessorProperty.self
         var propertyMap = graph.makeVertexPropertyMap()
-
-        let distanceProperty: any VertexProperty<DijkstraWeight>.Type = DistanceProperty.self
-        let predecessorProperty: any VertexProperty<Vertex?>.Type = PredecessorProperty.self
 
         // Initialize all vertices
         for vertex in graph.vertices() {
@@ -144,10 +116,61 @@ where
             visitor?.finishVertex?(current)
         }
         
-        return DijkstraResult(
+        return Result(
             distanceProperty: distanceProperty,
             predecessorProperty: predecessorProperty,
             propertyMap: propertyMap
         )
+    }
+}
+
+extension DijkstrasAlgorithm.Distance: Equatable where Weight: Equatable {}
+
+extension DijkstrasAlgorithm.Distance: Comparable where Weight: Comparable {
+    static func < (lhs: Self, rhs: Self) -> Bool {
+        switch (lhs, rhs) {
+        case (_, .infinite): true
+        case (.infinite, _): false
+        case (.finite(let lhsValue), .finite(let rhsValue)): lhsValue < rhsValue
+        }
+    }
+}
+
+extension DijkstrasAlgorithm.Distance where Weight: Numeric {
+    static func + (lhs: Self, rhs: Weight) -> Self {
+        switch lhs {
+        case .infinite: .infinite
+        case .finite(let lhsValue): .finite(lhsValue + rhs)
+        }
+    }
+}
+
+extension DijkstrasAlgorithm.Distance: ExpressibleByIntegerLiteral where Weight == Int {
+    init(integerLiteral value: Weight) {
+        self = .finite(value)
+    }
+}
+
+extension DijkstrasAlgorithm.Distance: ExpressibleByFloatLiteral where Weight == Double {
+    init(floatLiteral value: Weight) {
+        self = .finite(value)
+    }
+}
+
+extension DijkstrasAlgorithm.Distance: ExpressibleByNilLiteral {
+    init(nilLiteral: ()) {
+        self = .infinite
+    }
+}
+
+extension DijkstrasAlgorithm.VertexDistance: Equatable where Vertex: Equatable {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.vertex == rhs.vertex
+    }
+}
+
+extension DijkstrasAlgorithm.VertexDistance: Comparable where Weight: Comparable, Vertex: Equatable {
+    static func < (lhs: Self, rhs: Self) -> Bool {
+        lhs.distance < rhs.distance
     }
 }
