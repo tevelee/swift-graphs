@@ -2,10 +2,9 @@ extension Graph where Self: IncidenceGraph & VertexListGraph & EdgePropertyGraph
     func shortestPath<Weight: Comparable>(
         from source: VertexDescriptor,
         to destination: VertexDescriptor,
-        weight: (EdgePropertyValues) -> Weight,
         using algorithm: some ShortestPathAlgorithm<VertexDescriptor, EdgeDescriptor, Weight>
     ) -> Path<VertexDescriptor, EdgeDescriptor>? {
-        algorithm.shortestPath(from: source, to: destination, weight: weight, in: self)
+        algorithm.shortestPath(from: source, to: destination, in: self)
     }
 }
 
@@ -17,7 +16,6 @@ protocol ShortestPathAlgorithm<Vertex, Edge, Weight> {
     func shortestPath(
         from source: Vertex,
         to destination: Vertex,
-        weight: (EdgePropertyValues) -> Weight,
         in graph: some Graph<Vertex, Edge> & IncidenceGraph & VertexListGraph & EdgePropertyGraph
     ) -> Path<Vertex, Edge>?
 }
@@ -26,9 +24,8 @@ extension ShortestPathAlgorithm where Self: ShortestPathUntilAlgorithm, Vertex: 
     func shortestPath(
         from source: Vertex,
         to destination: Vertex,
-        weight: (EdgePropertyValues) -> Weight,
         in graph: some Graph<Vertex, Edge> & IncidenceGraph & VertexListGraph & EdgePropertyGraph
     ) -> Path<Vertex, Edge>? {
-        shortestPath(from: source, until: { $0 == destination }, weight: weight, in: graph)
+        shortestPath(from: source, until: { $0 == destination }, in: graph)
     }
 }

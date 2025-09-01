@@ -54,7 +54,7 @@ struct GraphTests {
             $0.weight = 2
         }
 
-        #expect(graph.shortestPath(from: a, to: b, weight: \.weight, using: .dijkstra())?.vertices == [a, b])
+        #expect(graph.shortestPath(from: a, to: b, using: .dijkstra(weight: \.weight))?.vertices == [a, b])
 
         let result = DijkstrasAlgorithm.run(on: graph, from: a, edgeWeight: \.weight)
         #expect(result.distance(of: b) == 2.0)
