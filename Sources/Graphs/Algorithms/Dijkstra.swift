@@ -16,17 +16,10 @@ enum DijkstrasAlgorithm {
     }
 
     struct Result<Vertex, Weight, Map: PropertyMap<Vertex, VertexPropertyValues>> {
+        let source: Vertex
         let distanceProperty: any VertexProperty<Distance<Weight>>.Type
         let predecessorProperty: any VertexProperty<Vertex?>.Type
         let propertyMap: Map
-
-        func distance(of vertex: Vertex) -> Distance<Weight> {
-            propertyMap[vertex][distanceProperty]
-        }
-
-        func predecessor(of vertex: Vertex) -> Vertex? {
-            propertyMap[vertex][predecessorProperty]
-        }
     }
 
     private enum DistanceProperty<Weight>: VertexProperty {
@@ -115,8 +108,9 @@ enum DijkstrasAlgorithm {
             
             visitor?.finishVertex?(current)
         }
-        
+
         return Result(
+            source: source,
             distanceProperty: distanceProperty,
             predecessorProperty: predecessorProperty,
             propertyMap: propertyMap
@@ -172,5 +166,25 @@ extension DijkstrasAlgorithm.VertexDistance: Equatable where Vertex: Equatable {
 extension DijkstrasAlgorithm.VertexDistance: Comparable where Weight: Comparable, Vertex: Equatable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.distance < rhs.distance
+    }
+}
+
+extension DijkstrasAlgorithm.Result {
+    func distance(of vertex: Vertex) -> DijkstrasAlgorithm.Distance<Weight> {
+        propertyMap[vertex][distanceProperty]
+    }
+
+    func predecessor(of vertex: Vertex) -> Vertex? {
+        propertyMap[vertex][predecessorProperty]
+    }
+
+    func path(to destination: Vertex) -> some Sequence<Vertex> {
+        var current = destination
+        var result = [current]
+        while let predecessor = predecessor(of: current) {
+            result.insert(predecessor, at: 0)
+            current = predecessor
+        }
+        return result
     }
 }

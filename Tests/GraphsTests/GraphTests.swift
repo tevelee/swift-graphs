@@ -56,6 +56,7 @@ struct GraphTests {
 
         let result = DijkstrasAlgorithm.run(on: graph, from: a, edgeWeight: \.weight)
         #expect(result.distance(of: b) == 2.0)
+        #expect(Array(result.path(to: b)) == [a, b])
     }
 }
 
