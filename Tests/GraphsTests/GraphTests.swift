@@ -44,13 +44,34 @@ struct GraphTests {
 
         #expect(Array(graph.vertices { $0.weight == 2 }) == [a])
     }
+
+    @Test func rawDijkstra() {
+        var graph = AdjacencyList()
+
+        let a = graph.addVertex()
+        let b = graph.addVertex()
+        graph.addEdge(from: a, to: b) {
+            $0.weight = 2
+        }
+
+        let result = DijkstrasAlgorithm.run(on: graph, from: a, edgeWeight: \.weight)
+        let distance = result.distance(of: b)
+        print(distance)
+    }
 }
 
-private enum Weight: VertexProperty {
+private enum Weight: VertexProperty, EdgeProperty {
     static let defaultValue = 1.0
 }
 
 extension VertexPropertyValues {
+    var weight: Double {
+        get { self[Weight.self] }
+        set { self[Weight.self] = newValue }
+    }
+}
+
+extension EdgePropertyValues {
     var weight: Double {
         get { self[Weight.self] }
         set { self[Weight.self] = newValue }

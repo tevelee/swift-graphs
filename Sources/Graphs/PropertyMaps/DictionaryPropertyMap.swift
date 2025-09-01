@@ -15,13 +15,13 @@ extension DictionaryPropertyMap: MutablePropertyMap {
     }
 }
 
-extension PropertyGraph where VertexDescriptor: Hashable {
+extension Graph where VertexDescriptor: Hashable {
     func makeVertexPropertyMap() -> some MutablePropertyMap<VertexDescriptor, VertexPropertyValues> {
         .init(defaultValue: .init()) as DictionaryPropertyMap
     }
 }
 
-extension PropertyGraph where EdgeDescriptor: Hashable {
+extension Graph where EdgeDescriptor: Hashable {
     func makeEdgePropertyMap() -> some MutablePropertyMap<EdgeDescriptor, EdgePropertyValues> {
         .init(defaultValue: .init()) as DictionaryPropertyMap
     }
