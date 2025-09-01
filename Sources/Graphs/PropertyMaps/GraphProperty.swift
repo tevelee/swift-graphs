@@ -1,9 +1,8 @@
-protocol GraphProperty<Component> {
-    associatedtype Component: GraphComponent
+protocol GraphProperty<Value> {
     associatedtype Value
 
     static var defaultValue: Value { get }
 }
 
-protocol VertexProperty: GraphProperty where Component == VertexMarker {}
-protocol EdgeProperty: GraphProperty where Component == EdgeMarker {}
+protocol VertexProperty<Value>: GraphProperty {}
+protocol EdgeProperty<Value>: GraphProperty {}

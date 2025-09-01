@@ -1,4 +1,4 @@
-protocol VertexMutablePropertyGraph: VertexPropertyGraph, VertexMutableGraph where VertexPropertyMap: MutablePropertyMap, VertexPropertyMap.Value: MutablePropertyValues<VertexMarker> {
+protocol VertexMutablePropertyGraph: VertexPropertyGraph, VertexMutableGraph where VertexPropertyMap: MutablePropertyMap {
     var vertexPropertyMap: VertexPropertyMap { get set }
 }
 
@@ -13,10 +13,11 @@ extension VertexMutablePropertyGraph {
     subscript(vertex: VertexPropertyMap.Key) -> VertexPropertyMap.Value {
         get { vertexPropertyMap[vertex] }
         set { vertexPropertyMap[vertex] = newValue }
+        // TODO: modify accessor
     }
 }
 
-protocol EdgeMutablePropertyGraph: EdgePropertyGraph, EdgeMutableGraph where EdgePropertyMap: MutablePropertyMap, EdgePropertyMap.Value: MutablePropertyValues<EdgeMarker> {
+protocol EdgeMutablePropertyGraph: EdgePropertyGraph, EdgeMutableGraph where EdgePropertyMap: MutablePropertyMap {
     var edgePropertyMap: EdgePropertyMap { get set }
 }
 
@@ -31,6 +32,7 @@ extension EdgeMutablePropertyGraph {
     subscript(edge: EdgePropertyMap.Key) -> EdgePropertyMap.Value {
         get { edgePropertyMap[edge] }
         set { edgePropertyMap[edge] = newValue }
+        // TODO: modify accessor
     }
 }
 

@@ -33,19 +33,24 @@ struct GraphTests {
             $0.weight = 2
         }
         let b = graph.addVertex()
-        graph.addEdge(from: a, to: b) {
-            $0//.weight = 1
-        }
-        graph[a].weight = 3
-    }
+        graph.addEdge(from: a, to: b)
+        graph[b].weight = 3
 
+        enum Label: VertexProperty {
+            static let defaultValue = ""
+        }
+        var map = graph.makeVertexPropertyMap()
+        map[a][Label.self] = "a"
+
+        #expect(Array(graph.vertices { $0.weight == 2 }) == [a])
+    }
 }
 
 private enum Weight: VertexProperty {
     static let defaultValue = 1.0
 }
 
-extension MutablePropertyValues<VertexMarker> {
+extension VertexPropertyValues {
     var weight: Double {
         get { self[Weight.self] }
         set { self[Weight.self] = newValue }
