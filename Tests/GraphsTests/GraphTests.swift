@@ -27,24 +27,27 @@ struct GraphTests {
     }
 
     @Test func propertyMap() {
-        enum Weight: GraphProperty {
-            static let defaultValue = 1.0
-        }
-        enum Label: GraphProperty {
-            static let defaultValue = ""
-        }
-        enum Enabled: GraphProperty {
-            static let defaultValue = false
-        }
         var graph = AdjacencyList()
-            .edgeProperty(Weight.self)
-            .edgeProperty(Label.self)
-            .edgeProperty(Enabled.self)
 
-
-        let a = graph.addVertex()
+        let a = graph.addVertex {
+            $0.weight = 2
+        }
         let b = graph.addVertex()
-        let e = graph.addEdge(from: a, to: b, with: ((2, "edge"), false))!
-        graph.edgePropertyMap[e].1 = true
+        graph.addEdge(from: a, to: b) {
+            $0//.weight = 1
+        }
+        graph[a].weight = 3
+    }
+
+}
+
+private enum Weight: VertexProperty {
+    static let defaultValue = 1.0
+}
+
+extension MutablePropertyValues<VertexMarker> {
+    var weight: Double {
+        get { self[Weight.self] }
+        set { self[Weight.self] = newValue }
     }
 }

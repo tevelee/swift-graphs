@@ -1,14 +1,24 @@
-struct AdjacencyList<VertexStore: VertexStorage, EdgeStore: EdgeStorage, VertexPropertyMap: PropertyMap, EdgePropertyMap: PropertyMap> where EdgeStore.Vertex == VertexStore.Vertex, VertexPropertyMap.Key == VertexStore.Vertex, EdgePropertyMap.Key == EdgeStore.Edge {
+struct AdjacencyList<VertexStore: VertexStorage, EdgeStore: EdgeStorage, VertexPropertyMap: PropertyMap, EdgePropertyMap: PropertyMap> where
+        EdgeStore.Vertex == VertexStore.Vertex,
+        VertexPropertyMap.Key == VertexStore.Vertex,
+        VertexPropertyMap.Value: PropertyValues<VertexMarker>,
+        EdgePropertyMap.Key == EdgeStore.Edge,
+        EdgePropertyMap.Value: PropertyValues<EdgeMarker>
+{
     private var vertexStorage: VertexStore
     private var edgeStorage: EdgeStore
     var vertexPropertyMap: VertexPropertyMap
     var edgePropertyMap: EdgePropertyMap
 
     init(
-        vertexStorage: VertexStore = OrderedVertexStorage(),
-        edgeStorage: EdgeStore = OrderedEdgeStorage<OrderedVertexStorage.Vertex>().cacheInOutEdges(),
-        vertexPropertyMap: VertexPropertyMap = NoProperty<OrderedVertexStorage.Vertex>(),
-        edgePropertyMap: EdgePropertyMap = NoProperty<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge>()
+        vertexStorage: VertexStore = OVS(),
+        edgeStorage: EdgeStore = OES().cacheInOutEdges(),
+        vertexPropertyMap: VertexPropertyMap = DictionaryPropertyMap<OVS.Vertex, _>(
+            defaultValue: DefaultPropertyValues()
+        ),
+        edgePropertyMap: EdgePropertyMap = DictionaryPropertyMap<OES.Edge, _>(
+            defaultValue: DefaultPropertyValues()
+        )
     ) {
         self.vertexStorage = vertexStorage
         self.edgeStorage = edgeStorage
@@ -99,35 +109,5 @@ extension AdjacencyList: MutableGraph {
 }
 
 extension AdjacencyList: PropertyGraph {}
-extension AdjacencyList: VertexMutablePropertyGraph where VertexPropertyMap: MutablePropertyMap {}
-extension AdjacencyList: EdgeMutablePropertyGraph where EdgePropertyMap: MutablePropertyMap {}
-
-extension AdjacencyList {
-    func edgeProperty<P: GraphProperty>(_ property: P.Type) -> AdjacencyList<
-        VertexStore,
-        EdgeStore,
-        VertexPropertyMap,
-        CompositePropertyMap<EdgePropertyMap, DictionaryPropertyMap<EdgeStore.Edge, P>>
-    > {
-        .init(
-            vertexStorage: vertexStorage,
-            edgeStorage: edgeStorage,
-            vertexPropertyMap: vertexPropertyMap,
-            edgePropertyMap: edgePropertyMap.combined(with: DictionaryPropertyMap<EdgeStore.Edge, P>())
-        )
-    }
-
-    func edgeProperty<P: GraphProperty>(_ property: P.Type) -> AdjacencyList<
-        VertexStore,
-        EdgeStore,
-        VertexPropertyMap,
-        DictionaryPropertyMap<EdgeStore.Edge, P>
-    > where EdgePropertyMap == NoProperty<EdgeStore.Edge> {
-        .init(
-            vertexStorage: vertexStorage,
-            edgeStorage: edgeStorage,
-            vertexPropertyMap: vertexPropertyMap,
-            edgePropertyMap: edgePropertyMap.combined(with: DictionaryPropertyMap<EdgeStore.Edge, P>())
-        )
-    }
-}
+extension AdjacencyList: VertexMutablePropertyGraph where VertexPropertyMap: MutablePropertyMap, VertexPropertyMap.Value: MutablePropertyValues {}
+extension AdjacencyList: EdgeMutablePropertyGraph where EdgePropertyMap: MutablePropertyMap, EdgePropertyMap.Value: MutablePropertyValues {}

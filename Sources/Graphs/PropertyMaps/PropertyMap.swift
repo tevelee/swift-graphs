@@ -1,10 +1,10 @@
-protocol PropertyMap<Key, Property> {
+protocol PropertyMap<Key, Value> {
     associatedtype Key
-    associatedtype Property: GraphProperty
+    associatedtype Value
 
-    subscript(key: Key) -> Property.Value { get }
+    subscript(key: Key) -> Value { get }
 }
 
-protocol MutablePropertyMap<Key, Property>: PropertyMap {
-    subscript(key: Key) -> Property.Value { get set }
+protocol MutablePropertyMap<Key, Value>: PropertyMap {
+    subscript(key: Key) -> Value { get set }
 }
