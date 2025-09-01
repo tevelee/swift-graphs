@@ -2,12 +2,12 @@ import Collections
 
 enum DijkstrasAlgorithm {
     struct Visitor<Vertex, Edge> {
-        var initializeVertex: ((Vertex) -> Void)?
-        var examineVertex:    ((Vertex) -> Void)?
-        var examineEdge:      ((Edge) -> Void)?
-        var edgeRelaxed:      ((Edge) -> Void)?
-        var edgeNotRelaxed:   ((Edge) -> Void)?
-        var finishVertex:     ((Vertex) -> Void)?
+        var initializeVertex: ((Vertex) throws -> Void)?
+        var examineVertex: ((Vertex) throws -> Void)?
+        var examineEdge: ((Edge) throws -> Void)?
+        var edgeRelaxed: ((Edge) throws -> Void)?
+        var edgeNotRelaxed: ((Edge) throws -> Void)?
+        var finishVertex: ((Vertex) throws -> Void)?
     }
 
     enum Distance<Weight> {
@@ -16,7 +16,7 @@ enum DijkstrasAlgorithm {
     }
 
     struct Result<Vertex, Weight, Map: PropertyMap<Vertex, VertexPropertyValues>> {
-        let source: Vertex
+        fileprivate let source: Vertex
         let distanceProperty: any VertexProperty<Distance<Weight>>.Type
         let predecessorProperty: any VertexProperty<Vertex?>.Type
         let propertyMap: Map
@@ -43,7 +43,11 @@ enum DijkstrasAlgorithm {
         from source: Graph.VertexDescriptor,
         edgeWeight: KeyPath<EdgePropertyValues, Weight>,
         visitor: Visitor<Graph.VertexDescriptor, Graph.EdgeDescriptor>? = nil
-    ) -> Result<Graph.VertexDescriptor, Weight, some PropertyMap<Graph.VertexDescriptor, VertexPropertyValues>>
+    ) throws -> Result<
+        Graph.VertexDescriptor,
+        Weight,
+        some PropertyMap<Graph.VertexDescriptor, VertexPropertyValues>
+    >
     where
         Weight.Magnitude == Weight,
         Graph.VertexDescriptor: Hashable
@@ -59,7 +63,7 @@ enum DijkstrasAlgorithm {
         for vertex in graph.vertices() {
             propertyMap[vertex][distanceProperty] = .infinite
             propertyMap[vertex][predecessorProperty] = nil
-            visitor?.initializeVertex?(vertex)
+            try visitor?.initializeVertex?(vertex)
         }
         
         // Set source distance to zero
@@ -79,11 +83,11 @@ enum DijkstrasAlgorithm {
             // Mark vertex as visited
             visited.insert(current)
 
-            visitor?.examineVertex?(current)
+            try visitor?.examineVertex?(current)
 
             // Examine all outgoing edges
             for edge in graph.outEdges(of: current) {
-                visitor?.examineEdge?(edge)
+                try visitor?.examineEdge?(edge)
 
                 guard let destination = graph.destination(of: edge) else { continue }
                 
@@ -100,13 +104,13 @@ enum DijkstrasAlgorithm {
                     propertyMap[destination][distanceProperty] = newDistance
                     propertyMap[destination][predecessorProperty] = current
                     queue.insert(VertexDistance(vertex: destination, distance: newDistance))
-                    visitor?.edgeRelaxed?(edge)
+                    try visitor?.edgeRelaxed?(edge)
                 } else {
-                    visitor?.edgeNotRelaxed?(edge)
+                    try visitor?.edgeNotRelaxed?(edge)
                 }
             }
             
-            visitor?.finishVertex?(current)
+            try visitor?.finishVertex?(current)
         }
 
         return Result(

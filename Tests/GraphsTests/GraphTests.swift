@@ -45,7 +45,7 @@ struct GraphTests {
         #expect(Array(graph.vertices { $0.weight == 2 }) == [a])
     }
 
-    @Test func rawDijkstra() {
+    @Test func rawDijkstra() throws {
         var graph = AdjacencyList()
 
         let a = graph.addVertex()
@@ -54,7 +54,7 @@ struct GraphTests {
             $0.weight = 2
         }
 
-        let result = DijkstrasAlgorithm.run(on: graph, from: a, edgeWeight: \.weight)
+        let result = try DijkstrasAlgorithm.run(on: graph, from: a, edgeWeight: \.weight)
         #expect(result.distance(of: b) == 2.0)
         #expect(Array(result.path(to: b)) == [a, b])
     }
