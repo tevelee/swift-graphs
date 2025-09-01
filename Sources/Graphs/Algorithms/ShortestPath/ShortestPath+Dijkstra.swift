@@ -1,5 +1,5 @@
-extension ShortestPathAlgorithm where Vertex: Hashable, Cost: Numeric, Cost.Magnitude == Cost {
-    static func dijkstra<Vertex, Edge, Cost>() -> Self where Self == DijkstraShortestPath<Vertex, Edge, Cost> {
+extension ShortestPathAlgorithm where Vertex: Hashable, Weight: Numeric, Weight.Magnitude == Weight {
+    static func dijkstra<Vertex, Edge, Weight>() -> Self where Self == DijkstraShortestPath<Vertex, Edge, Weight> {
         .init()
     }
 }

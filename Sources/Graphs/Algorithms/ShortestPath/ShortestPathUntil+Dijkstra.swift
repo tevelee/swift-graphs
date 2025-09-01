@@ -1,14 +1,14 @@
-extension ShortestPathUntilAlgorithm where Vertex: Hashable, Cost: Numeric, Cost.Magnitude == Cost {
-    static func dijkstra<Vertex, Edge, Cost>() -> Self where Self == DijkstraShortestPath<Vertex, Edge, Cost> {
+extension ShortestPathUntilAlgorithm where Vertex: Hashable, Weight: Numeric, Weight.Magnitude == Weight {
+    static func dijkstra<Vertex, Edge, Weight>() -> Self where Self == DijkstraShortestPath<Vertex, Edge, Weight> {
         .init()
     }
 }
 
-struct DijkstraShortestPath<Vertex: Hashable, Edge, Cost: Numeric>: ShortestPathUntilAlgorithm where Cost.Magnitude == Cost {
+struct DijkstraShortestPath<Vertex: Hashable, Edge, Weight: Numeric>: ShortestPathUntilAlgorithm where Weight.Magnitude == Weight {
     func shortestPath(
         from source: Vertex,
         until condition: @escaping (Vertex) -> Bool,
-        cost: (EdgePropertyValues) -> Cost,
+        weight: (EdgePropertyValues) -> Weight,
         in graph: some Graph<Vertex, Edge> & IncidenceGraph & VertexListGraph & EdgePropertyGraph
     ) -> Path<Vertex, Edge>? {
         var destination: Vertex?
@@ -19,7 +19,7 @@ struct DijkstraShortestPath<Vertex: Hashable, Edge, Cost: Numeric>: ShortestPath
             }
             return true
         })
-        let result = DijkstrasAlgorithm.run(on: graph, from: source, edgeWeight: cost, visitor: visitor)
+        let result = DijkstrasAlgorithm.run(on: graph, from: source, edgeWeight: weight, visitor: visitor)
         guard let destination else { return nil }
         return Path(
             source: source,

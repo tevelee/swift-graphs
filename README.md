@@ -15,7 +15,7 @@ While some features are still in early development stages, the project is active
 - **Multiple Graph Types**: Supports general graphs, binary graphs, grid graphs, and lazy graphs (on-demand edge computation).
 - **Weighted Graphs**: Handles graphs with weighted edges, enabling specialized algorithms like shortest pathfinding.
 - **Traversals**: Breadth-First Search (BFS), Depth-First Search (DFS), with support for preorder, inorder, and postorder traversals.
-- **Traversal Strategies**: Includes unique node visiting, and depth, path, and cost tracking during traversals.
+- **Traversal Strategies**: Includes unique node visiting, and depth, path, and weight tracking during traversals.
 - **Shortest Path Algorithms**: Dijkstra, Bellman-Ford, and A* algorithms for finding efficient routes.
 - **Eulerian and Hamiltonian Paths/Cycles**: Support for backtracking, heuristic-based, and Hierholzer's algorithm for Eulerian paths.
 - **Max Flow/Min Cut Algorithms**: Ford-Fulkerson, Edmonds-Karp, and Dinic's algorithms for network flow analysis.
