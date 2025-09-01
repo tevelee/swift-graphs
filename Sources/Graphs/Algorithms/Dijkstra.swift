@@ -15,10 +15,10 @@ enum DijkstrasAlgorithm {
         case finite(Weight)
     }
 
-    struct Result<Vertex, Weight, Map: PropertyMap<Vertex, VertexPropertyValues>> {
+    struct Result<Vertex, Edge, Weight, Map: PropertyMap<Vertex, VertexPropertyValues>> {
         fileprivate let source: Vertex
         let distanceProperty: any VertexProperty<Distance<Weight>>.Type
-        let predecessorProperty: any VertexProperty<Vertex?>.Type
+        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
         let propertyMap: Map
     }
 
@@ -26,8 +26,8 @@ enum DijkstrasAlgorithm {
         static var defaultValue: Distance<Weight> { .infinite }
     }
 
-    private enum PredecessorProperty<Vertex>: VertexProperty {
-        static var defaultValue: Vertex? { nil }
+    private enum PredecessorEdgeProperty<Edge>: VertexProperty {
+        static var defaultValue: Edge? { nil }
     }
 
     fileprivate struct VertexDistance<Vertex, Weight> {
@@ -45,6 +45,7 @@ enum DijkstrasAlgorithm {
         visitor: Visitor<Graph.VertexDescriptor, Graph.EdgeDescriptor>? = nil
     ) -> Result<
         Graph.VertexDescriptor,
+        Graph.EdgeDescriptor,
         Weight,
         some PropertyMap<Graph.VertexDescriptor, VertexPropertyValues>
     >
@@ -56,13 +57,13 @@ enum DijkstrasAlgorithm {
         var queue = Heap<VertexDistance<Graph.VertexDescriptor, Distance<Weight>>>()
 
         let distanceProperty: any VertexProperty<Distance<Weight>>.Type = DistanceProperty.self
-        let predecessorProperty: any VertexProperty<Graph.VertexDescriptor?>.Type = PredecessorProperty.self
+        let predecessorEdgeProperty: any VertexProperty<Graph.EdgeDescriptor?>.Type = PredecessorEdgeProperty.self
         var propertyMap = graph.makeVertexPropertyMap()
 
         // Initialize all vertices
         for vertex in graph.vertices() {
             propertyMap[vertex][distanceProperty] = .infinite
-            propertyMap[vertex][predecessorProperty] = nil
+            propertyMap[vertex][predecessorEdgeProperty] = nil
             visitor?.initializeVertex?(vertex)
         }
         
@@ -102,7 +103,7 @@ enum DijkstrasAlgorithm {
                 let destinationDistance = propertyMap[destination][distanceProperty]
                 if newDistance < destinationDistance {
                     propertyMap[destination][distanceProperty] = newDistance
-                    propertyMap[destination][predecessorProperty] = current
+                    propertyMap[destination][predecessorEdgeProperty] = edge
                     queue.insert(VertexDistance(vertex: destination, distance: newDistance))
                     if visitor?.edgeRelaxed?(edge) == false { break main }
                 } else {
@@ -116,7 +117,7 @@ enum DijkstrasAlgorithm {
         return Result(
             source: source,
             distanceProperty: distanceProperty,
-            predecessorProperty: predecessorProperty,
+            predecessorEdgeProperty: predecessorEdgeProperty,
             propertyMap: propertyMap
         )
     }
@@ -178,15 +179,28 @@ extension DijkstrasAlgorithm.Result {
         propertyMap[vertex][distanceProperty]
     }
 
-    func predecessor(of vertex: Vertex) -> Vertex? {
-        propertyMap[vertex][predecessorProperty]
+    func predecessor(of vertex: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex? {
+        predecessorEdge(of: vertex).flatMap(graph.source)
     }
 
-    func vertices(to destination: Vertex) -> [Vertex] {
+    func predecessorEdge(of vertex: Vertex) -> Edge? {
+        propertyMap[vertex][predecessorEdgeProperty]
+    }
+
+    func vertices(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
+        [source] + path(to: destination, in: graph).map(\.vertex)
+    }
+    
+    func edges(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
+        path(to: destination, in: graph).map(\.edge)
+    }
+
+    func path(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [(vertex: Vertex, edge: Edge)] {
         var current = destination
-        var result = [current]
-        while let predecessor = predecessor(of: current) {
-            result.insert(predecessor, at: 0)
+        var result: [(Vertex, Edge)] = []
+        while let predecessorEdge = predecessorEdge(of: current) {
+            result.insert((current, predecessorEdge), at: 0)
+            guard let predecessor = graph.source(of: predecessorEdge) else { break }
             current = predecessor
         }
         return result

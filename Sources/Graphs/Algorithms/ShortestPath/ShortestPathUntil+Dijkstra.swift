@@ -24,8 +24,8 @@ struct DijkstraShortestPath<Vertex: Hashable, Edge, Cost: Numeric>: ShortestPath
         return Path(
             source: source,
             destination: destination,
-            vertices: result.vertices(to: destination),
-            edges: []//result.edges(to: destination)
+            vertices: result.vertices(to: destination, in: graph),
+            edges: result.edges(to: destination, in: graph)
         )
     }
 }

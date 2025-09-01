@@ -1,4 +1,4 @@
-protocol IncidenceGraph: Graph {
+protocol IncidenceGraph<VertexDescriptor, EdgeDescriptor>: Graph {
     associatedtype OutEdges: Sequence<EdgeDescriptor>
 
     func outEdges(of vertex: VertexDescriptor) -> OutEdges
