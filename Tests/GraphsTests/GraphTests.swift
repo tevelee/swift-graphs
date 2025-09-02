@@ -121,16 +121,14 @@ struct GraphTests {
             visitor: .init(
                 discoverVertex: { vertex in
                     discoveredVertices.append(vertex)
-                    return true
                 },
                 examineVertex: { vertex in
                     examinedVertices.append(vertex)
-                    return true
                 }
             )
         )
 
-        #expect(discoveredVertices == [root, a, b, c, d, e, f, g])
+        #expect(discoveredVertices == [a, b, c, d, e, f, g])
         #expect(examinedVertices == [root, a, b, c, d, e, f, g])
     }
 }

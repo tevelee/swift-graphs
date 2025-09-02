@@ -15,7 +15,7 @@ struct DijkstraShortestPath<Vertex: Hashable, Edge, Weight: Numeric>: ShortestPa
         in graph: some Graph<Vertex, Edge> & IncidenceGraph & VertexListGraph & EdgePropertyGraph
     ) -> Path<Vertex, Edge>? {
         var destination: Vertex?
-        let visitor = DijkstrasAlgorithm.Visitor<Vertex, Edge>(examineVertex: { vertex in
+        let visitor = DijkstrasAlgorithm.Visitor<Vertex, Edge>(examineVertexAndContinue: { vertex in
             if condition(vertex) {
                 destination = vertex
                 return false

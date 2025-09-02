@@ -1,11 +1,17 @@
 enum DijkstrasAlgorithm {
     struct Visitor<Vertex, Edge> {
         var initializeVertex: ((Vertex) -> Void)?
-        var examineVertex: ((Vertex) -> Bool)?
-        var examineEdge: ((Edge) -> Bool)?
-        var edgeRelaxed: ((Edge) -> Bool)?
-        var edgeNotRelaxed: ((Edge) -> Bool)?
-        var finishVertex: ((Vertex) -> Bool)?
+        var examineVertex: ((Vertex) -> Void)?
+        var examineEdge: ((Edge) -> Void)?
+        var edgeRelaxed: ((Edge) -> Void)?
+        var edgeNotRelaxed: ((Edge) -> Void)?
+        var finishVertex: ((Vertex) -> Void)?
+
+        var examineVertexAndContinue: ((Vertex) -> Bool)?
+        var examineEdgeAndContinue: ((Edge) -> Bool)?
+        var edgeRelaxedAndContinue: ((Edge) -> Bool)?
+        var edgeNotRelaxedAndContinue: ((Edge) -> Bool)?
+        var finishVertexAndContinue: ((Vertex) -> Bool)?
     }
 
     enum Distance<Weight> {
@@ -84,11 +90,13 @@ enum DijkstrasAlgorithm {
             // Mark vertex as visited
             visited.insert(current)
 
-            if visitor?.examineVertex?(current) == false { break }
+            visitor?.examineVertex?(current)
+            if visitor?.examineVertexAndContinue?(current) == false { break }
 
             // Examine all outgoing edges
             for edge in graph.outEdges(of: current) {
-                if visitor?.examineEdge?(edge) == false { break main }
+                visitor?.examineEdge?(edge)
+                if visitor?.examineEdgeAndContinue?(edge) == false { break main }
 
                 guard let destination = graph.destination(of: edge) else { continue }
                 
@@ -105,13 +113,16 @@ enum DijkstrasAlgorithm {
                     propertyMap[destination][distanceProperty] = newDistance
                     propertyMap[destination][predecessorEdgeProperty] = edge
                     queue.enqueue(VertexDistance(vertex: destination, distance: newDistance))
-                    if visitor?.edgeRelaxed?(edge) == false { break main }
+                    visitor?.edgeRelaxed?(edge)
+                    if visitor?.edgeRelaxedAndContinue?(edge) == false { break main }
                 } else {
-                    if visitor?.edgeNotRelaxed?(edge) == false { break main }
+                    visitor?.edgeNotRelaxed?(edge)
+                    if visitor?.edgeNotRelaxedAndContinue?(edge) == false { break main }
                 }
             }
             
-            if visitor?.finishVertex?(current) == false { break }
+            visitor?.finishVertex?(current)
+            if visitor?.finishVertexAndContinue?(current) == false { break }
         }
 
         return Result(

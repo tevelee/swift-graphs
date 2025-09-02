@@ -7,12 +7,19 @@ enum BreadthFirstSearchAlgorithm {
     }
     struct Visitor<Vertex, Edge> {
         var initializeVertex: ((Vertex) -> Void)?
-        var discoverVertex: ((Vertex) -> Bool)?
-        var examineVertex: ((Vertex) -> Bool)?
-        var examineEdge: ((Edge) -> Bool)?
-        var treeEdge: ((Edge) -> Bool)?
-        var nonTreeEdge: ((Edge) -> Bool)?
-        var finishVertex: ((Vertex) -> Bool)?
+        var discoverVertex: ((Vertex) -> Void)?
+        var examineVertex: ((Vertex) -> Void)?
+        var examineEdge: ((Edge) -> Void)?
+        var treeEdge: ((Edge) -> Void)?
+        var nonTreeEdge: ((Edge) -> Void)?
+        var finishVertex: ((Vertex) -> Void)?
+
+        var discoverVertexAndContinue: ((Vertex) -> Bool)?
+        var examineVertexAndContinue: ((Vertex) -> Bool)?
+        var examineEdgeAndContinue: ((Edge) -> Bool)?
+        var treeEdgeAndContinue: ((Edge) -> Bool)?
+        var nonTreeEdgeAndContinue: ((Edge) -> Bool)?
+        var finishVertexAndContinue: ((Vertex) -> Bool)?
     }
 
     private enum Color {
@@ -70,17 +77,18 @@ enum BreadthFirstSearchAlgorithm {
         // Set source as discovered
         propertyMap[source][colorProperty] = .gray
         propertyMap[source][distanceProperty] = .reachable(0)
-        _ = visitor?.discoverVertex?(source)
         queue.enqueue(source)
 
         main: while !queue.isEmpty {
             guard let current = queue.dequeue() else { break }
             
-            if visitor?.examineVertex?(current) == false { break }
+            visitor?.examineVertex?(current)
+            if visitor?.examineVertexAndContinue?(current) == false { break }
 
             // Examine all outgoing edges
             for edge in graph.outEdges(of: current) {
-                if visitor?.examineEdge?(edge) == false { break main }
+                visitor?.examineEdge?(edge)
+                if visitor?.examineEdgeAndContinue?(edge) == false { break main }
 
                 guard let destination = graph.destination(of: edge) else { continue }
                 
@@ -91,17 +99,21 @@ enum BreadthFirstSearchAlgorithm {
                     propertyMap[destination][colorProperty] = .gray
                     propertyMap[destination][distanceProperty] = propertyMap[current][distanceProperty] + 1
                     propertyMap[destination][predecessorEdgeProperty] = edge
-                    _ = visitor?.discoverVertex?(destination)
+                    visitor?.discoverVertex?(destination)
+                    if visitor?.discoverVertexAndContinue?(destination) == false { break main }
                     queue.enqueue(destination)
-                    if visitor?.treeEdge?(edge) == false { break main }
+                    visitor?.treeEdge?(edge)
+                    if visitor?.treeEdgeAndContinue?(edge) == false { break main }
                 } else {
                     // Non-tree edge
-                    if visitor?.nonTreeEdge?(edge) == false { break main }
+                    visitor?.nonTreeEdge?(edge)
+                    if visitor?.nonTreeEdgeAndContinue?(edge) == false { break main }
                 }
             }
             
             propertyMap[current][colorProperty] = .black
-            if visitor?.finishVertex?(current) == false { break }
+            visitor?.finishVertex?(current)
+            if visitor?.finishVertexAndContinue?(current) == false { break }
         }
 
         return Result(
