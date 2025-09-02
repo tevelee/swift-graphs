@@ -112,10 +112,8 @@ struct GraphTests {
         graph.addEdge(from: d, to: g)
         graph.addEdge(from: e, to: g)
 
-        var discoveredVertices = [root]
-        discoveredVertices.removeAll()
-        var examinedVertices = [root]
-        examinedVertices.removeAll()
+        var discoveredVertices = graph.makeVertexCollection { Array() }
+        var examinedVertices = graph.makeVertexCollection { Array() }
 
         BreadthFirstSearchAlgorithm.run(
             on: graph,
