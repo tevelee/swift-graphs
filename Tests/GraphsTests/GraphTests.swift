@@ -151,6 +151,142 @@ struct GraphTests {
         #expect(result.vertices == [root, a, c, b, d])
         #expect(result.edges == [ra, rc, ab, cd])
     }
+
+    @Test func dfs() {
+        var graph = AdjacencyList()
+
+        let root = graph.addVertex()
+        let a = graph.addVertex()
+        let b = graph.addVertex()
+        let c = graph.addVertex()
+        let d = graph.addVertex()
+
+        graph.addEdge(from: root, to: a)
+        graph.addEdge(from: root, to: c)
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: c, to: d)
+
+        let result = DepthFirstSearchAlgorithm.run(on: graph, from: root)
+
+        // Check discovery and finish times
+        #expect(result.discoveryTime(of: root) == .discovered(1))
+        #expect(result.finishTime(of: root) == .finished(10))
+        
+        #expect(result.discoveryTime(of: a) == .discovered(2))
+        #expect(result.finishTime(of: a) == .finished(5))
+        
+        #expect(result.discoveryTime(of: b) == .discovered(3))
+        #expect(result.finishTime(of: b) == .finished(4))
+        
+        #expect(result.discoveryTime(of: c) == .discovered(6))
+        #expect(result.finishTime(of: c) == .finished(9))
+        
+        #expect(result.discoveryTime(of: d) == .discovered(7))
+        #expect(result.finishTime(of: d) == .finished(8))
+
+        // Check paths
+        #expect(result.vertices(to: a, in: graph) == [root, a])
+        #expect(result.vertices(to: b, in: graph) == [root, a, b])
+        #expect(result.vertices(to: c, in: graph) == [root, c])
+        #expect(result.vertices(to: d, in: graph) == [root, c, d])
+    }
+
+    @Test func dfsTraversalOrder() {
+        var graph = AdjacencyList()
+
+        let root = graph.addVertex()
+        let a = graph.addVertex()
+        let b = graph.addVertex()
+        let c = graph.addVertex()
+        let d = graph.addVertex()
+        let e = graph.addVertex()
+        let f = graph.addVertex()
+        let g = graph.addVertex()
+
+        graph.addEdge(from: root, to: a)
+        graph.addEdge(from: root, to: b)
+        graph.addEdge(from: a, to: c)
+        graph.addEdge(from: a, to: d)
+        graph.addEdge(from: b, to: d)
+        graph.addEdge(from: b, to: e)
+        graph.addEdge(from: c, to: f)
+        graph.addEdge(from: d, to: f)
+        graph.addEdge(from: d, to: g)
+        graph.addEdge(from: e, to: g)
+
+        var discoveredVertices = graph.makeVertexCollection { Array() }
+        var examinedVertices = graph.makeVertexCollection { Array() }
+
+        DepthFirstSearchAlgorithm.run(
+            on: graph,
+            from: root,
+            visitor: .init(
+                discoverVertex: { vertex in
+                    discoveredVertices.append(vertex)
+                },
+                examineVertex: { vertex in
+                    examinedVertices.append(vertex)
+                }
+            )
+        )
+
+        // DFS should discover vertices in depth-first order
+        #expect(discoveredVertices == [root, a, c, f, d, g, b, e])
+        #expect(examinedVertices == [root, a, c, f, d, g, b, e])
+    }
+
+    @Test func dfsTraversal() {
+        var graph = AdjacencyList()
+
+        let root = graph.addVertex()
+        let a = graph.addVertex()
+        let b = graph.addVertex()
+        let c = graph.addVertex()
+        let d = graph.addVertex()
+
+        let ra = graph.addEdge(from: root, to: a)
+        let rc = graph.addEdge(from: root, to: c)
+        let ab = graph.addEdge(from: a, to: b)
+        let cd = graph.addEdge(from: c, to: d)
+
+        let result = graph.traverse(from: root, using: .dfs())
+        
+        // DFS traversal order: root -> a -> b -> c -> d
+        #expect(result.vertices == [root, a, b, c, d])
+        #expect(result.edges == [ra, ab, rc, cd])
+    }
+
+    @Test func dfsWithCycle() {
+        var graph = AdjacencyList()
+
+        let a = graph.addVertex()
+        let b = graph.addVertex()
+        let c = graph.addVertex()
+
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: c)
+        graph.addEdge(from: c, to: a) // Creates a cycle
+
+        var backEdges = graph.makeEdgeCollection { Array() }
+        var treeEdges = graph.makeEdgeCollection { Array() }
+
+        DepthFirstSearchAlgorithm.run(
+            on: graph,
+            from: a,
+            visitor: .init(
+                treeEdge: { edge in
+                    treeEdges.append(edge)
+                },
+                backEdge: { edge in
+                    backEdges.append(edge)
+                }
+            )
+        )
+
+        // Should detect the back edge (c -> a)
+        #expect(backEdges.count == 1)
+        #expect(treeEdges.count == 2)
+    }
 }
 
 private enum Weight: VertexProperty, EdgeProperty {
