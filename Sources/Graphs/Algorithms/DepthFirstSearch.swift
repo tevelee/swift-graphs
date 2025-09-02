@@ -57,11 +57,17 @@ enum DepthFirstSearchAlgorithm {
     private enum PredecessorEdgeProperty<Edge>: VertexProperty {
         static var defaultValue: Edge? { nil }
     }
+    
+    struct DFSFrame<Vertex> {
+        let vertex: Vertex
+        let isFirstVisit: Bool
+    }
 
     @discardableResult
     static func run<Graph: IncidenceGraph & VertexListGraph>(
         on graph: Graph,
         from source: Graph.VertexDescriptor,
+        makeStack: () -> any StackProtocol<DFSFrame<Graph.VertexDescriptor>> = { Array() },
         visitor: Visitor<Graph.VertexDescriptor, Graph.EdgeDescriptor>? = nil
     ) -> Result<
         Graph.VertexDescriptor,
@@ -86,65 +92,77 @@ enum DepthFirstSearchAlgorithm {
             visitor?.initializeVertex?(vertex)
         }
 
-        func dfsVisit(_ vertex: Graph.VertexDescriptor) {
-            time += 1
-            propertyMap[vertex][colorProperty] = .gray
-            propertyMap[vertex][discoveryTimeProperty] = .discovered(time)
-            
-            visitor?.discoverVertex?(vertex)
-            if visitor?.discoverVertexAndContinue?(vertex) == false { return }
-            
-            visitor?.examineVertex?(vertex)
-            if visitor?.examineVertexAndContinue?(vertex) == false { return }
+        // Use a stack to store vertices to visit, along with their state
+        var stack = makeStack()
+        stack.push(DFSFrame(vertex: source, isFirstVisit: true))
 
-            // Examine all outgoing edges
-            for edge in graph.outEdges(of: vertex) {
-                visitor?.examineEdge?(edge)
-                if visitor?.examineEdgeAndContinue?(edge) == false { return }
+        main: while !stack.isEmpty {
+            guard let frame = stack.pop() else { break }
+            let vertex = frame.vertex
+            
+            if frame.isFirstVisit {
+                // First time visiting this vertex
+                time += 1
+                propertyMap[vertex][colorProperty] = .gray
+                propertyMap[vertex][discoveryTimeProperty] = .discovered(time)
+                
+                visitor?.discoverVertex?(vertex)
+                if visitor?.discoverVertexAndContinue?(vertex) == false { break main }
+                
+                visitor?.examineVertex?(vertex)
+                if visitor?.examineVertexAndContinue?(vertex) == false { break main }
 
-                guard let destination = graph.destination(of: edge) else { continue }
+                // Push the vertex back onto the stack for finishing
+                stack.push(DFSFrame(vertex: vertex, isFirstVisit: false))
                 
-                let destinationColor = propertyMap[destination][colorProperty]
-                
-                switch destinationColor {
-                case .white:
-                    // Tree edge - first time discovering this vertex
-                    propertyMap[destination][predecessorEdgeProperty] = edge
-                    visitor?.treeEdge?(edge)
-                    if visitor?.treeEdgeAndContinue?(edge) == false { return }
-                    dfsVisit(destination)
-                case .gray:
-                    // Back edge - creates a cycle
-                    visitor?.backEdge?(edge)
-                    if visitor?.backEdgeAndContinue?(edge) == false { return }
-                case .black:
-                    // Forward or cross edge
-                    let sourceDiscoveryTime = propertyMap[vertex][discoveryTimeProperty]
-                    let destinationDiscoveryTime = propertyMap[destination][discoveryTimeProperty]
+                // Push all unvisited neighbors onto the stack (in reverse order to maintain DFS order)
+                let outEdges = Array(graph.outEdges(of: vertex))
+                for edge in outEdges.reversed() {
+                    visitor?.examineEdge?(edge)
+                    if visitor?.examineEdgeAndContinue?(edge) == false { break main }
+
+                    guard let destination = graph.destination(of: edge) else { continue }
                     
-                    if case .discovered(let sourceTime) = sourceDiscoveryTime,
-                       case .discovered(let destTime) = destinationDiscoveryTime,
-                       sourceTime < destTime {
-                        // Forward edge
-                        visitor?.forwardEdge?(edge)
-                        if visitor?.forwardEdgeAndContinue?(edge) == false { return }
-                    } else {
-                        // Cross edge
-                        visitor?.crossEdge?(edge)
-                        if visitor?.crossEdgeAndContinue?(edge) == false { return }
+                    let destinationColor = propertyMap[destination][colorProperty]
+                    
+                    switch destinationColor {
+                    case .white:
+                        // Tree edge - first time discovering this vertex
+                        propertyMap[destination][predecessorEdgeProperty] = edge
+                        visitor?.treeEdge?(edge)
+                        if visitor?.treeEdgeAndContinue?(edge) == false { break main }
+                        stack.push(DFSFrame(vertex: destination, isFirstVisit: true))
+                    case .gray:
+                        // Back edge - creates a cycle
+                        visitor?.backEdge?(edge)
+                        if visitor?.backEdgeAndContinue?(edge) == false { break main }
+                    case .black:
+                        // Forward or cross edge
+                        let sourceDiscoveryTime = propertyMap[vertex][discoveryTimeProperty]
+                        let destinationDiscoveryTime = propertyMap[destination][discoveryTimeProperty]
+                        
+                        if case .discovered(let sourceTime) = sourceDiscoveryTime,
+                           case .discovered(let destTime) = destinationDiscoveryTime,
+                           sourceTime < destTime {
+                            // Forward edge
+                            visitor?.forwardEdge?(edge)
+                            if visitor?.forwardEdgeAndContinue?(edge) == false { break main }
+                        } else {
+                            // Cross edge
+                            visitor?.crossEdge?(edge)
+                            if visitor?.crossEdgeAndContinue?(edge) == false { break main }
+                        }
                     }
                 }
+            } else {
+                // Finishing this vertex
+                time += 1
+                propertyMap[vertex][colorProperty] = .black
+                propertyMap[vertex][finishTimeProperty] = .finished(time)
+                visitor?.finishVertex?(vertex)
+                if visitor?.finishVertexAndContinue?(vertex) == false { break main }
             }
-            
-            time += 1
-            propertyMap[vertex][colorProperty] = .black
-            propertyMap[vertex][finishTimeProperty] = .finished(time)
-            visitor?.finishVertex?(vertex)
-            if visitor?.finishVertexAndContinue?(vertex) == false { return }
         }
-
-        // Start DFS from source
-        dfsVisit(source)
 
         return Result(
             source: source,

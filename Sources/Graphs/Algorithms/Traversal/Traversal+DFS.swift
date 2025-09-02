@@ -21,7 +21,7 @@ struct DFSTraversal<Vertex: Hashable, Edge>: TraversalAlgorithm {
             }
         )
         
-        DepthFirstSearchAlgorithm.run(on: graph, from: source, visitor: visitor)
+        DepthFirstSearchAlgorithm.run(on: graph, from: source, makeStack: { Array() }, visitor: visitor)
         
         return TraversalResult(
             vertices: vertices,
