@@ -1,5 +1,3 @@
-import Collections
-
 enum DijkstrasAlgorithm {
     struct Visitor<Vertex, Edge> {
         var initializeVertex: ((Vertex) -> Void)?
@@ -30,11 +28,12 @@ enum DijkstrasAlgorithm {
         static var defaultValue: Edge? { nil }
     }
 
-    fileprivate struct VertexDistance<Vertex, Weight> {
+    struct VertexDistance<Vertex, Weight> {
         let vertex: Vertex
         let distance: Weight
     }
 
+    @discardableResult
     static func run<
         Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph,
         Weight: Numeric
@@ -42,6 +41,7 @@ enum DijkstrasAlgorithm {
         on graph: Graph,
         from source: Graph.VertexDescriptor,
         edgeWeight: (EdgePropertyValues) -> Weight,
+        makeQueue: () -> any QueueProtocol<VertexDistance<Graph.VertexDescriptor, Distance<Weight>>> = { PriorityQueue() },
         visitor: Visitor<Graph.VertexDescriptor, Graph.EdgeDescriptor>? = nil
     ) -> Result<
         Graph.VertexDescriptor,
@@ -54,7 +54,7 @@ enum DijkstrasAlgorithm {
         Graph.VertexDescriptor: Hashable
     {
         var visited: Set<Graph.VertexDescriptor> = []
-        var queue = Heap<VertexDistance<Graph.VertexDescriptor, Distance<Weight>>>()
+        var queue = makeQueue()
 
         let distanceProperty: any VertexProperty<Distance<Weight>>.Type = DistanceProperty.self
         let predecessorEdgeProperty: any VertexProperty<Graph.EdgeDescriptor?>.Type = PredecessorEdgeProperty.self
@@ -69,10 +69,10 @@ enum DijkstrasAlgorithm {
         
         // Set source distance to zero
         propertyMap[source][distanceProperty] = .finite(.zero)
-        queue.insert(VertexDistance(vertex: source, distance: .finite(.zero)))
-        
+        queue.enqueue(VertexDistance(vertex: source, distance: .finite(.zero)))
+
         main: while !queue.isEmpty {
-            guard let currentVertexDistance = queue.popMin() else { break }
+            guard let currentVertexDistance = queue.dequeue() else { break }
             let current = currentVertexDistance.vertex
             
             // Skip if we've already processed this vertex or if the distance in queue is outdated
@@ -104,7 +104,7 @@ enum DijkstrasAlgorithm {
                 if newDistance < destinationDistance {
                     propertyMap[destination][distanceProperty] = newDistance
                     propertyMap[destination][predecessorEdgeProperty] = edge
-                    queue.insert(VertexDistance(vertex: destination, distance: newDistance))
+                    queue.enqueue(VertexDistance(vertex: destination, distance: newDistance))
                     if visitor?.edgeRelaxed?(edge) == false { break main }
                 } else {
                     if visitor?.edgeNotRelaxed?(edge) == false { break main }
