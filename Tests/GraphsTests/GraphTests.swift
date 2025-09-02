@@ -131,6 +131,26 @@ struct GraphTests {
         #expect(discoveredVertices == [a, b, c, d, e, f, g])
         #expect(examinedVertices == [root, a, b, c, d, e, f, g])
     }
+
+    @Test func bfsTraversal() {
+        var graph = AdjacencyList()
+
+        let root = graph.addVertex()
+        let a = graph.addVertex()
+        let b = graph.addVertex()
+        let c = graph.addVertex()
+        let d = graph.addVertex()
+
+        let ra = graph.addEdge(from: root, to: a)
+        let rc = graph.addEdge(from: root, to: c)
+        let ab = graph.addEdge(from: a, to: b)
+        let cd = graph.addEdge(from: c, to: d)
+
+        let result = graph.traverse(from: root, using: .bfs())
+        
+        #expect(result.vertices == [root, a, c, b, d])
+        #expect(result.edges == [ra, rc, ab, cd])
+    }
 }
 
 private enum Weight: VertexProperty, EdgeProperty {
