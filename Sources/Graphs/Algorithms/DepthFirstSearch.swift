@@ -1,13 +1,16 @@
 import Collections
 
-enum DepthFirstSearchAlgorithm {
+struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+    typealias Vertex = Graph.VertexDescriptor
+    typealias Edge = Graph.EdgeDescriptor
+
     enum Time {
         case undiscovered
         case discovered(UInt)
         case finished(UInt)
     }
-    
-    struct Visitor<Vertex, Edge> {
+
+    struct Visitor {
         var initializeVertex: ((Vertex) -> Void)?
         var discoverVertex: ((Vertex) -> Void)?
         var examineVertex: ((Vertex) -> Void)?
@@ -17,15 +20,6 @@ enum DepthFirstSearchAlgorithm {
         var forwardEdge: ((Edge) -> Void)?
         var crossEdge: ((Edge) -> Void)?
         var finishVertex: ((Vertex) -> Void)?
-
-        var discoverVertexAndContinue: ((Vertex) -> Bool)?
-        var examineVertexAndContinue: ((Vertex) -> Bool)?
-        var examineEdgeAndContinue: ((Edge) -> Bool)?
-        var treeEdgeAndContinue: ((Edge) -> Bool)?
-        var backEdgeAndContinue: ((Edge) -> Bool)?
-        var forwardEdgeAndContinue: ((Edge) -> Bool)?
-        var crossEdgeAndContinue: ((Edge) -> Bool)?
-        var finishVertexAndContinue: ((Vertex) -> Bool)?
     }
 
     private enum Color {
@@ -34,12 +28,15 @@ enum DepthFirstSearchAlgorithm {
         case black // Fully processed
     }
 
-    struct Result<Vertex, Edge, Map: PropertyMap<Vertex, VertexPropertyValues>> {
+    struct Result {
+        typealias Vertex = Graph.VertexDescriptor
+        typealias Edge = Graph.EdgeDescriptor
         fileprivate let source: Vertex
+        let currentVertex: Vertex
         let discoveryTimeProperty: any VertexProperty<Time>.Type
         let finishTimeProperty: any VertexProperty<Time>.Type
         let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
-        let propertyMap: Map
+        let propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
     }
 
     private enum ColorProperty: VertexProperty {
@@ -54,132 +51,154 @@ enum DepthFirstSearchAlgorithm {
         static var defaultValue: Time { .undiscovered }
     }
 
-    private enum PredecessorEdgeProperty<Edge>: VertexProperty {
+    private enum PredecessorEdgeProperty: VertexProperty {
         static var defaultValue: Edge? { nil }
     }
-    
-    struct DFSFrame<Vertex> {
+
+    struct DFSFrame {
         let vertex: Vertex
         let isFirstVisit: Bool
     }
 
-    @discardableResult
-    static func run<Graph: IncidenceGraph & VertexListGraph>(
-        on graph: Graph,
-        from source: Graph.VertexDescriptor,
-        makeStack: () -> any StackProtocol<DFSFrame<Graph.VertexDescriptor>> = { Array() },
-        visitor: Visitor<Graph.VertexDescriptor, Graph.EdgeDescriptor>? = nil
-    ) -> Result<
-        Graph.VertexDescriptor,
-        Graph.EdgeDescriptor,
-        some PropertyMap<Graph.VertexDescriptor, VertexPropertyValues>
-    >
-    where Graph.VertexDescriptor: Hashable {
-        let colorProperty: any VertexProperty<Color>.Type = ColorProperty.self
-        let discoveryTimeProperty: any VertexProperty<Time>.Type = DiscoveryTimeProperty.self
-        let finishTimeProperty: any VertexProperty<Time>.Type = FinishTimeProperty.self
-        let predecessorEdgeProperty: any VertexProperty<Graph.EdgeDescriptor?>.Type = PredecessorEdgeProperty.self
-        var propertyMap = graph.makeVertexPropertyMap()
-        
-        var time: UInt = 0
+    private let graph: Graph
+    private let source: Vertex
+    private let makeStack: () -> any StackProtocol<DFSFrame>
 
-        // Initialize all vertices
-        for vertex in graph.vertices() {
-            propertyMap[vertex][colorProperty] = .white
-            propertyMap[vertex][discoveryTimeProperty] = .undiscovered
-            propertyMap[vertex][finishTimeProperty] = .undiscovered
-            propertyMap[vertex][predecessorEdgeProperty] = nil
-            visitor?.initializeVertex?(vertex)
+    init(
+        on graph: Graph,
+        from source: Vertex,
+        makeStack: @escaping () -> any StackProtocol<DFSFrame> = {
+            Array()
+        }
+    ) {
+        self.graph = graph
+        self.source = source
+        self.makeStack = makeStack
+    }
+
+    func makeIterator(visitor: Visitor) -> Iterator {
+        _makeIterator(visitor: visitor)
+    }
+
+    private func _makeIterator(visitor: Visitor?) -> Iterator {
+        Iterator(graph: graph, source: source, visitor: visitor, stack: makeStack())
+    }
+
+    struct Iterator {
+        private let graph: Graph
+        private let source: Vertex
+        private let visitor: Visitor?
+        private var stack: any StackProtocol<DFSFrame>
+        private var time: UInt = 0
+
+        private var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
+        private let colorProperty: any VertexProperty<Color>.Type = ColorProperty.self
+        private let discoveryTimeProperty: any VertexProperty<Time>.Type = DiscoveryTimeProperty.self
+        private let finishTimeProperty: any VertexProperty<Time>.Type = FinishTimeProperty.self
+        private let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
+
+        init(
+            graph: Graph,
+            source: Vertex,
+            visitor: Visitor?,
+            stack: any StackProtocol<DFSFrame>
+        ) {
+            self.graph = graph
+            self.source = source
+            self.visitor = visitor
+            self.stack = stack
+            self.propertyMap = graph.makeVertexPropertyMap()
+
+            for vertex in graph.vertices() {
+                propertyMap[vertex][colorProperty] = .white
+                propertyMap[vertex][discoveryTimeProperty] = .undiscovered
+                propertyMap[vertex][finishTimeProperty] = .undiscovered
+                propertyMap[vertex][predecessorEdgeProperty] = nil
+                visitor?.initializeVertex?(vertex)
+            }
+
+            self.stack.push(DFSFrame(vertex: source, isFirstVisit: true))
         }
 
-        // Use a stack to store vertices to visit, along with their state
-        var stack = makeStack()
-        stack.push(DFSFrame(vertex: source, isFirstVisit: true))
+        mutating func next() -> Result? {
+            while !stack.isEmpty {
+                guard let frame = stack.pop() else { break }
+                let vertex = frame.vertex
 
-        main: while !stack.isEmpty {
-            guard let frame = stack.pop() else { break }
-            let vertex = frame.vertex
-            
-            if frame.isFirstVisit {
-                // First time visiting this vertex
-                time += 1
-                propertyMap[vertex][colorProperty] = .gray
-                propertyMap[vertex][discoveryTimeProperty] = .discovered(time)
-                
-                visitor?.discoverVertex?(vertex)
-                if visitor?.discoverVertexAndContinue?(vertex) == false { break main }
-                
-                visitor?.examineVertex?(vertex)
-                if visitor?.examineVertexAndContinue?(vertex) == false { break main }
+                if frame.isFirstVisit {
+                    time += 1
+                    propertyMap[vertex][colorProperty] = .gray
+                    propertyMap[vertex][discoveryTimeProperty] = .discovered(time)
 
-                // Push the vertex back onto the stack for finishing
-                stack.push(DFSFrame(vertex: vertex, isFirstVisit: false))
-                
-                // Push all unvisited neighbors onto the stack (in reverse order to maintain DFS order)
-                let outEdges = Array(graph.outEdges(of: vertex))
-                for edge in outEdges.reversed() {
-                    visitor?.examineEdge?(edge)
-                    if visitor?.examineEdgeAndContinue?(edge) == false { break main }
+                    visitor?.discoverVertex?(vertex)
+                    visitor?.examineVertex?(vertex)
 
-                    guard let destination = graph.destination(of: edge) else { continue }
-                    
-                    let destinationColor = propertyMap[destination][colorProperty]
-                    
-                    switch destinationColor {
-                    case .white:
-                        // Tree edge - first time discovering this vertex
-                        propertyMap[destination][predecessorEdgeProperty] = edge
-                        visitor?.treeEdge?(edge)
-                        if visitor?.treeEdgeAndContinue?(edge) == false { break main }
-                        stack.push(DFSFrame(vertex: destination, isFirstVisit: true))
-                    case .gray:
-                        // Back edge - creates a cycle
-                        visitor?.backEdge?(edge)
-                        if visitor?.backEdgeAndContinue?(edge) == false { break main }
-                    case .black:
-                        // Forward or cross edge
-                        let sourceDiscoveryTime = propertyMap[vertex][discoveryTimeProperty]
-                        let destinationDiscoveryTime = propertyMap[destination][discoveryTimeProperty]
-                        
-                        if case .discovered(let sourceTime) = sourceDiscoveryTime,
-                           case .discovered(let destTime) = destinationDiscoveryTime,
-                           sourceTime < destTime {
-                            // Forward edge
-                            visitor?.forwardEdge?(edge)
-                            if visitor?.forwardEdgeAndContinue?(edge) == false { break main }
-                        } else {
-                            // Cross edge
-                            visitor?.crossEdge?(edge)
-                            if visitor?.crossEdgeAndContinue?(edge) == false { break main }
+                    stack.push(DFSFrame(vertex: vertex, isFirstVisit: false))
+
+                    let outEdges = Array(graph.outEdges(of: vertex))
+                    for edge in outEdges.reversed() {
+                        visitor?.examineEdge?(edge)
+
+                        guard let destination = graph.destination(of: edge) else { continue }
+
+                        let destinationColor = propertyMap[destination][colorProperty]
+
+                        switch destinationColor {
+                        case .white:
+                            propertyMap[destination][predecessorEdgeProperty] = edge
+                            visitor?.treeEdge?(edge)
+                            stack.push(DFSFrame(vertex: destination, isFirstVisit: true))
+                        case .gray:
+                            visitor?.backEdge?(edge)
+                        case .black:
+                            let sourceDiscoveryTime = propertyMap[vertex][discoveryTimeProperty]
+                            let destinationDiscoveryTime = propertyMap[destination][discoveryTimeProperty]
+
+                            if case .discovered(let sourceTime) = sourceDiscoveryTime,
+                               case .discovered(let destTime) = destinationDiscoveryTime,
+                               sourceTime < destTime {
+                                visitor?.forwardEdge?(edge)
+                            } else {
+                                visitor?.crossEdge?(edge)
+                            }
                         }
                     }
-                }
-            } else {
-                // Finishing this vertex
-                time += 1
-                propertyMap[vertex][colorProperty] = .black
-                propertyMap[vertex][finishTimeProperty] = .finished(time)
-                visitor?.finishVertex?(vertex)
-                if visitor?.finishVertexAndContinue?(vertex) == false { break main }
-            }
-        }
+                } else {
+                    time += 1
+                    propertyMap[vertex][colorProperty] = .black
+                    propertyMap[vertex][finishTimeProperty] = .finished(time)
+                    visitor?.finishVertex?(vertex)
 
-        return Result(
-            source: source,
-            discoveryTimeProperty: discoveryTimeProperty,
-            finishTimeProperty: finishTimeProperty,
-            predecessorEdgeProperty: predecessorEdgeProperty,
-            propertyMap: propertyMap
-        )
+                    return Result(
+                        source: source,
+                        currentVertex: vertex,
+                        discoveryTimeProperty: discoveryTimeProperty,
+                        finishTimeProperty: finishTimeProperty,
+                        predecessorEdgeProperty: predecessorEdgeProperty,
+                        propertyMap: propertyMap
+                    )
+                }
+            }
+
+            return nil
+        }
+    }
+}
+
+extension DepthFirstSearchAlgorithm.Iterator: IteratorProtocol {}
+
+extension DepthFirstSearchAlgorithm: Sequence {
+    func makeIterator() -> Iterator {
+        _makeIterator(visitor: nil)
     }
 }
 
 extension DepthFirstSearchAlgorithm.Result {
-    func discoveryTime(of vertex: Vertex) -> DepthFirstSearchAlgorithm.Time {
+    func discoveryTime(of vertex: Vertex) -> DepthFirstSearchAlgorithm<Graph>.Time {
         propertyMap[vertex][discoveryTimeProperty]
     }
-    
-    func finishTime(of vertex: Vertex) -> DepthFirstSearchAlgorithm.Time {
+
+    func finishTime(of vertex: Vertex) -> DepthFirstSearchAlgorithm<Graph>.Time {
         propertyMap[vertex][finishTimeProperty]
     }
 
@@ -194,7 +213,7 @@ extension DepthFirstSearchAlgorithm.Result {
     func vertices(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
         [source] + path(to: destination, in: graph).map(\.vertex)
     }
-    
+
     func edges(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
         path(to: destination, in: graph).map(\.edge)
     }
@@ -216,8 +235,8 @@ extension DepthFirstSearchAlgorithm.Time: Equatable {}
 extension DepthFirstSearchAlgorithm.Time: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
-        case (.undiscovered, _): true
         case (_, .undiscovered): false
+        case (.undiscovered, _): true
         case (.discovered(let lhsValue), .discovered(let rhsValue)): lhsValue < rhsValue
         case (.finished(let lhsValue), .finished(let rhsValue)): lhsValue < rhsValue
         case (.discovered(let lhsValue), .finished(let rhsValue)): lhsValue < rhsValue
@@ -228,8 +247,32 @@ extension DepthFirstSearchAlgorithm.Time: Comparable {
 
 extension DepthFirstSearchAlgorithm.Time: ExpressibleByIntegerLiteral {
     typealias IntegerLiteralType = UInt
-    
+
     init(integerLiteral value: UInt) {
         self = .discovered(value)
+    }
+}
+
+extension DepthFirstSearchAlgorithm.Time: ExpressibleByNilLiteral {
+    init(nilLiteral: ()) {
+        self = .undiscovered
+    }
+}
+
+struct DFSWithVisitor<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+    typealias Base = DepthFirstSearchAlgorithm<Graph>
+    let base: Base
+    let makeVisitor: () -> Base.Visitor
+}
+
+extension DFSWithVisitor: Sequence {
+    func makeIterator() -> Base.Iterator {
+        base.makeIterator(visitor: makeVisitor())
+    }
+}
+
+extension DepthFirstSearchAlgorithm {
+    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> DFSWithVisitor<Graph> {
+        .init(base: self, makeVisitor: makeVisitor)
     }
 }

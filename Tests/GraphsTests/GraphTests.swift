@@ -76,7 +76,7 @@ struct GraphTests {
         graph.addEdge(from: c, to: d)
 
         let result = BreadthFirstSearchAlgorithm(on: graph, from: root)
-            .prefix { $0.depth() < 3 } // just to deminstrate
+            .prefix { $0.depth() < 3 } // just to demonstrate
             .reduce(into: nil) { $0 = $1 }
 
         #expect(result?.depth(of: root) == 0)
@@ -168,12 +168,12 @@ struct GraphTests {
         graph.addEdge(from: a, to: b)
         graph.addEdge(from: c, to: d)
 
-        let result = DepthFirstSearchAlgorithm.run(on: graph, from: root)
+        let result = DepthFirstSearchAlgorithm(on: graph, from: root).reduce(into: nil) { $0 = $1 }
 
-        #expect(result.vertices(to: a, in: graph) == [root, a])
-        #expect(result.vertices(to: b, in: graph) == [root, a, b])
-        #expect(result.vertices(to: c, in: graph) == [root, c])
-        #expect(result.vertices(to: d, in: graph) == [root, c, d])
+        #expect(result?.vertices(to: a, in: graph) == [root, a])
+        #expect(result?.vertices(to: b, in: graph) == [root, a, b])
+        #expect(result?.vertices(to: c, in: graph) == [root, c])
+        #expect(result?.vertices(to: d, in: graph) == [root, c, d])
     }
 
     @Test func dfsTraversalOrder() {
@@ -202,18 +202,18 @@ struct GraphTests {
         var discoveredVertices = graph.makeVertexCollection { Array() }
         var examinedVertices = graph.makeVertexCollection { Array() }
 
-        DepthFirstSearchAlgorithm.run(
-            on: graph,
-            from: root,
-            visitor: .init(
-                discoverVertex: { vertex in
-                    discoveredVertices.append(vertex)
-                },
-                examineVertex: { vertex in
-                    examinedVertices.append(vertex)
-                }
-            )
-        )
+        DepthFirstSearchAlgorithm(on: graph, from: root)
+            .withVisitor {
+                .init(
+                    discoverVertex: { vertex in
+                        discoveredVertices.append(vertex)
+                    },
+                    examineVertex: { vertex in
+                        examinedVertices.append(vertex)
+                    }
+                )
+            }
+            .forEach { _ in }
 
         #expect(discoveredVertices == [root, a, c, f, d, g, b, e])
         #expect(examinedVertices == [root, a, c, f, d, g, b, e])
@@ -253,18 +253,18 @@ struct GraphTests {
         var backEdges = graph.makeEdgeCollection { Array() }
         var treeEdges = graph.makeEdgeCollection { Array() }
 
-        DepthFirstSearchAlgorithm.run(
-            on: graph,
-            from: a,
-            visitor: .init(
-                treeEdge: { edge in
-                    treeEdges.append(edge)
-                },
-                backEdge: { edge in
-                    backEdges.append(edge)
-                }
-            )
-        )
+        DepthFirstSearchAlgorithm(on: graph, from: a)
+            .withVisitor {
+                .init(
+                    treeEdge: { edge in
+                        treeEdges.append(edge)
+                    },
+                    backEdge: { edge in
+                        backEdges.append(edge)
+                    }
+                )
+            }
+            .forEach { _ in }
 
         // Should detect the back edge (c -> a)
         #expect(backEdges.count == 1)

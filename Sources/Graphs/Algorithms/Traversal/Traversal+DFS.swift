@@ -12,16 +12,18 @@ struct DFSTraversal<Vertex: Hashable, Edge>: TraversalAlgorithm {
         var vertices: [Vertex] = []
         var edges: [Edge] = []
 
-        let visitor = DepthFirstSearchAlgorithm.Visitor<Vertex, Edge>(
-            examineVertex: { vertex in
-                vertices.append(vertex)
-            },
-            examineEdge: { edge in
-                edges.append(edge)
+        DepthFirstSearchAlgorithm(on: graph, from: source)
+            .withVisitor {
+                .init(
+                    examineVertex: { vertex in
+                        vertices.append(vertex)
+                    },
+                    examineEdge: { edge in
+                        edges.append(edge)
+                    }
+                )
             }
-        )
-        
-        DepthFirstSearchAlgorithm.run(on: graph, from: source, makeStack: { Array() }, visitor: visitor)
+            .forEach { _ in }
         
         return TraversalResult(
             vertices: vertices,
