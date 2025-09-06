@@ -14,16 +14,9 @@ struct DijkstraShortestPath<Vertex: Hashable, Edge, Weight: Numeric>: ShortestPa
         until condition: @escaping (Vertex) -> Bool,
         in graph: some Graph<Vertex, Edge> & IncidenceGraph & VertexListGraph & EdgePropertyGraph
     ) -> Path<Vertex, Edge>? {
-        var destination: Vertex?
-        let visitor = DijkstrasAlgorithm.Visitor<Vertex, Edge>(examineVertexAndContinue: { vertex in
-            if condition(vertex) {
-                destination = vertex
-                return false
-            }
-            return true
-        })
-        let result = DijkstrasAlgorithm.run(on: graph, from: source, edgeWeight: weight, visitor: visitor)
-        guard let destination else { return nil }
+        let sequence = DijkstraAlgorithm(on: graph, from: source, edgeWeight: weight)
+        guard let result = sequence.first(where: { condition($0.currentVertex) }) else { return nil }
+        let destination = result.currentVertex
         return Path(
             source: source,
             destination: destination,
