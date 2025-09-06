@@ -12,18 +12,18 @@ struct BFSTraversal<Vertex: Hashable, Edge>: TraversalAlgorithm {
         var vertices: [Vertex] = []
         var edges: [Edge] = []
 
-        BreadthFirstSearchAlgorithm.run(
-            on: graph,
-            from: source,
-            visitor: .init(
-                examineVertex: { vertex in
-                    vertices.append(vertex)
-                },
-                examineEdge: { edge in
-                    edges.append(edge)
-                }
-            )
-        )
+        BreadthFirstSearchAlgorithm(on: graph, from: source)
+            .withVisitor {
+                .init(
+                    examineVertex: { vertex in
+                        vertices.append(vertex)
+                    },
+                    examineEdge: { edge in
+                        edges.append(edge)
+                    }
+                )
+            }
+            .forEach { _ in }
         
         return TraversalResult(
             vertices: vertices,

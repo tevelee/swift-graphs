@@ -1,30 +1,37 @@
 import Collections
 
 struct BreadthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+    typealias Vertex = Graph.VertexDescriptor
+    typealias Edge = Graph.EdgeDescriptor
+    
     enum Distance {
         case unreachable
-        case reachable(UInt)
+        case reachable(depth: UInt)
     }
     
-    struct Visitor<Vertex, Edge> {
+    struct Visitor {
         var initializeVertex: ((Vertex) -> Void)?
         var discoverVertex: ((Vertex) -> Void)?
         var examineVertex: ((Vertex) -> Void)?
         var examineEdge: ((Edge) -> Void)?
         var treeEdge: ((Edge) -> Void)?
         var nonTreeEdge: ((Edge) -> Void)?
+        var grayTargetEdge: ((Edge) -> Void)?
+        var blackTargetEdge: ((Edge) -> Void)?
         var finishVertex: ((Vertex) -> Void)?
     }
     
-    private enum Color {
+    private enum Color: Equatable {
         case white // Undiscovered
         case gray // Discovered but not fully processed
         case black // Fully processed
     }
     
-    struct Result<Vertex, Edge> {
+    struct Result {
+        typealias Vertex = Graph.VertexDescriptor
+        typealias Edge = Graph.EdgeDescriptor
         fileprivate let source: Vertex
-        let examinedVertex: Vertex
+        let currentVertex: Vertex
         let distanceProperty: any VertexProperty<Distance>.Type
         let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
         let propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
@@ -38,43 +45,50 @@ struct BreadthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> wher
         static var defaultValue: Distance { .unreachable }
     }
     
-    private enum PredecessorEdgeProperty<Edge>: VertexProperty {
+    private enum PredecessorEdgeProperty: VertexProperty {
         static var defaultValue: Edge? { nil }
     }
     
     private let graph: Graph
-    private let source: Graph.VertexDescriptor
-    private let makeVisitor: (() -> Visitor<Graph.VertexDescriptor, Graph.EdgeDescriptor>)?
-    private let makeQueue: () -> any QueueProtocol<Graph.VertexDescriptor>
+    private let source: Vertex
+    private let makeQueue: () -> any QueueProtocol<Vertex>
     
     init(
         on graph: Graph,
-        from source: Graph.VertexDescriptor,
-        makeVisitor: (() -> Visitor<Graph.VertexDescriptor, Graph.EdgeDescriptor>)? = nil,
-        makeQueue: @escaping () -> any QueueProtocol<Graph.VertexDescriptor> = { Deque<Graph.VertexDescriptor>() }
+        from source: Vertex, // TODO: multi source with a set/sequence of vertices
+        makeQueue: @escaping () -> any QueueProtocol<Vertex> = {
+            Deque()
+        }
     ) {
         self.graph = graph
         self.source = source
-        self.makeVisitor = makeVisitor
         self.makeQueue = makeQueue
+    }
+    
+    func makeIterator(visitor: Visitor) -> Iterator {
+        _makeIterator(visitor: visitor)
+    }
+    
+    private func _makeIterator(visitor: Visitor?) -> Iterator {
+        Iterator(graph: graph, source: source, visitor: visitor, queue: makeQueue())
     }
     
     struct Iterator {
         private let graph: Graph
-        private let source: Graph.VertexDescriptor
-        private let visitor: Visitor<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
-        private var queue: any QueueProtocol<Graph.VertexDescriptor>
+        private let source: Vertex
+        private let visitor: Visitor?
+        private var queue: any QueueProtocol<Vertex>
 
-        private var propertyMap: any MutablePropertyMap<Graph.VertexDescriptor, VertexPropertyValues>
+        private var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
         private let colorProperty: any VertexProperty<Color>.Type = ColorProperty.self
         private let distanceProperty: any VertexProperty<Distance>.Type = DistanceProperty.self
-        private let predecessorEdgeProperty: any VertexProperty<Graph.EdgeDescriptor?>.Type = PredecessorEdgeProperty.self
+        private let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
         
         init(
             graph: Graph,
-            source: Graph.VertexDescriptor,
-            visitor: Visitor<Graph.VertexDescriptor, Graph.EdgeDescriptor>?,
-            queue: any QueueProtocol<Graph.VertexDescriptor>
+            source: Vertex,
+            visitor: Visitor?,
+            queue: any QueueProtocol<Vertex>
         ) {
             self.graph = graph
             self.source = source
@@ -82,7 +96,6 @@ struct BreadthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> wher
             self.propertyMap = graph.makeVertexPropertyMap()
             self.queue = queue
             
-            // Initialize all vertices
             for vertex in graph.vertices() {
                 propertyMap[vertex][colorProperty] = .white
                 propertyMap[vertex][distanceProperty] = .unreachable
@@ -90,20 +103,18 @@ struct BreadthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> wher
                 visitor?.initializeVertex?(vertex)
             }
             
-            // Prepare queue with source
             propertyMap[source][colorProperty] = .gray
-            propertyMap[source][distanceProperty] = .reachable(0)
+            propertyMap[source][distanceProperty] = .reachable(depth: 0)
             self.queue.enqueue(source)
         }
         
-        mutating func next() -> Result<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        mutating func next() -> Result? {
             guard let current = queue.dequeue() else {
                 return nil
             }
             
             visitor?.examineVertex?(current)
             
-            // Examine all outgoing edges
             for edge in graph.outEdges(of: current) {
                 visitor?.examineEdge?(edge)
                 
@@ -111,7 +122,8 @@ struct BreadthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> wher
                 
                 let destinationColor = propertyMap[destination][colorProperty]
                 
-                if destinationColor == .white {
+                switch destinationColor {
+                case .white:
                     // Tree edge - first time discovering this vertex
                     propertyMap[destination][colorProperty] = .gray
                     propertyMap[destination][distanceProperty] = propertyMap[current][distanceProperty] + 1
@@ -119,8 +131,13 @@ struct BreadthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> wher
                     visitor?.discoverVertex?(destination)
                     queue.enqueue(destination)
                     visitor?.treeEdge?(edge)
-                } else {
-                    // Non-tree edge
+                case .gray:
+                    // Non-tree edge to an in-progress vertex
+                    visitor?.grayTargetEdge?(edge)
+                    visitor?.nonTreeEdge?(edge)
+                case .black:
+                    // Non-tree edge to a finished vertex
+                    visitor?.blackTargetEdge?(edge)
                     visitor?.nonTreeEdge?(edge)
                 }
             }
@@ -130,7 +147,7 @@ struct BreadthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> wher
             
             return Result(
                 source: source,
-                examinedVertex: current,
+                currentVertex: current,
                 distanceProperty: distanceProperty,
                 predecessorEdgeProperty: predecessorEdgeProperty,
                 propertyMap: propertyMap
@@ -143,12 +160,46 @@ extension BreadthFirstSearchAlgorithm.Iterator: IteratorProtocol {}
 
 extension BreadthFirstSearchAlgorithm: Sequence {
     func makeIterator() -> Iterator {
-        Iterator(graph: graph, source: source, visitor: makeVisitor?(), queue: makeQueue())
+        _makeIterator(visitor: nil)
     }
 }
 
 extension BreadthFirstSearchAlgorithm.Result {
-    func distance(of vertex: Vertex) -> BreadthFirstSearchAlgorithm.Distance {
+    func depth() -> UInt {
+        switch depth(of: currentVertex) {
+            case .reachable(let distance):
+                return distance
+            case .unreachable:
+                assertionFailure("The currently examined vertex should always be reachable")
+                return 0
+        }
+    }
+    
+    func predecessor(in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex {
+        predecessor(of: currentVertex, in: graph).unwrap(
+            orReport: "The currently examined vertex should always have a predecessor"
+        )
+    }
+    
+    func predecessorEdge() -> Edge {
+        predecessorEdge(of: currentVertex).unwrap(
+            orReport: "The currently examined vertex should always have a predecessor edge"
+        )
+    }
+    
+    func vertices(in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
+        vertices(to: currentVertex, in: graph)
+    }
+    
+    func edges(in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
+        edges(to: currentVertex, in: graph)
+    }
+    
+    func path(in graph: some IncidenceGraph<Vertex, Edge>) -> [(vertex: Vertex, edge: Edge)] {
+        path(to: currentVertex, in: graph)
+    }
+    
+    func depth(of vertex: Vertex) -> BreadthFirstSearchAlgorithm.Distance {
         propertyMap[vertex][distanceProperty]
     }
     
@@ -158,6 +209,10 @@ extension BreadthFirstSearchAlgorithm.Result {
     
     func predecessorEdge(of vertex: Vertex) -> Edge? {
         propertyMap[vertex][predecessorEdgeProperty]
+    }
+    
+    func hasPath(to vertex: Vertex) -> Bool {
+        propertyMap[vertex][distanceProperty] != .unreachable
     }
     
     func vertices(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
@@ -185,25 +240,25 @@ extension BreadthFirstSearchAlgorithm.Distance: Equatable {}
 extension BreadthFirstSearchAlgorithm.Distance: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
-            case (_, .unreachable): true
             case (.unreachable, _): false
+            case (_, .unreachable): true
             case (.reachable(let lhsValue), .reachable(let rhsValue)): lhsValue < rhsValue
         }
     }
 }
 
 extension BreadthFirstSearchAlgorithm.Distance {
-    static func + (lhs: Self, rhs: UInt) -> Self {
-        switch lhs {
+    static func + (distance: Self, amount: UInt) -> Self {
+        switch distance {
             case .unreachable: .unreachable
-            case .reachable(let lhsValue): .reachable(lhsValue + rhs)
+            case .reachable(let depth): .reachable(depth: depth + amount)
         }
     }
 }
 
 extension BreadthFirstSearchAlgorithm.Distance: ExpressibleByIntegerLiteral {
     init(integerLiteral value: UInt) {
-        self = .reachable(value)
+        self = .reachable(depth: value)
     }
 }
 
@@ -213,20 +268,20 @@ extension BreadthFirstSearchAlgorithm.Distance: ExpressibleByNilLiteral {
     }
 }
 
-// Convenience: preserve a compatibility API that fully runs BFS and returns the final state
+struct BFSWithVisitor<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+    typealias Base = BreadthFirstSearchAlgorithm<Graph>
+    let base: Base
+    let makeVisitor: () -> Base.Visitor
+}
+
+extension BFSWithVisitor: Sequence {
+    func makeIterator() -> Base.Iterator {
+        base.makeIterator(visitor: makeVisitor())
+    }
+}
+
 extension BreadthFirstSearchAlgorithm {
-    @discardableResult
-    static func run(
-        on graph: Graph,
-        from source: Graph.VertexDescriptor,
-        visitor: Visitor<Graph.VertexDescriptor, Graph.EdgeDescriptor>? = nil
-    ) -> Result<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
-        var last: Result<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
-        for step in BreadthFirstSearchAlgorithm(on: graph, from: source, makeVisitor: visitor.map { visitor in
-            { visitor }
-        }) {
-            last = step
-        }
-        return last!
+    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> BFSWithVisitor<Graph> {
+        .init(base: self, makeVisitor: makeVisitor)
     }
 }

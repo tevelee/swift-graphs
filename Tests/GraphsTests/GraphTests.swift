@@ -75,18 +75,20 @@ struct GraphTests {
         graph.addEdge(from: a, to: b)
         graph.addEdge(from: c, to: d)
 
-        let result = BreadthFirstSearchAlgorithm.run(on: graph, from: root)
+        let result = BreadthFirstSearchAlgorithm(on: graph, from: root)
+            .prefix { $0.depth() < 3 } // just to deminstrate
+            .reduce(into: nil) { $0 = $1 }
 
-        #expect(result.distance(of: root) == 0)
-        #expect(result.distance(of: a) == 1)
-        #expect(result.distance(of: c) == 1)
-        #expect(result.distance(of: b) == 2)
-        #expect(result.distance(of: d) == 2)
+        #expect(result?.depth(of: root) == 0)
+        #expect(result?.depth(of: a) == 1)
+        #expect(result?.depth(of: c) == 1)
+        #expect(result?.depth(of: b) == 2)
+        #expect(result?.depth(of: d) == 2)
 
-        #expect(result.vertices(to: a, in: graph) == [root, a])
-        #expect(result.vertices(to: b, in: graph) == [root, a, b])
-        #expect(result.vertices(to: c, in: graph) == [root, c])
-        #expect(result.vertices(to: d, in: graph) == [root, c, d])
+        #expect(result?.vertices(to: a, in: graph) == [root, a])
+        #expect(result?.vertices(to: b, in: graph) == [root, a, b])
+        #expect(result?.vertices(to: c, in: graph) == [root, c])
+        #expect(result?.vertices(to: d, in: graph) == [root, c, d])
     }
 
     @Test func bfsTraversalOrder() {
@@ -115,18 +117,18 @@ struct GraphTests {
         var discoveredVertices = graph.makeVertexCollection { Array() }
         var examinedVertices = graph.makeVertexCollection { Array() }
 
-        BreadthFirstSearchAlgorithm.run(
-            on: graph,
-            from: root,
-            visitor: .init(
-                discoverVertex: { vertex in
-                    discoveredVertices.append(vertex)
-                },
-                examineVertex: { vertex in
-                    examinedVertices.append(vertex)
-                }
-            )
-        )
+        BreadthFirstSearchAlgorithm(on: graph, from: root)
+            .withVisitor {
+                .init(
+                    discoverVertex: { vertex in
+                        discoveredVertices.append(vertex)
+                    },
+                    examineVertex: { vertex in
+                        examinedVertices.append(vertex)
+                    }
+                )
+            }
+            .forEach { _ in }
 
         #expect(discoveredVertices == [a, b, c, d, e, f, g])
         #expect(examinedVertices == [root, a, b, c, d, e, f, g])
@@ -234,7 +236,7 @@ struct GraphTests {
         let result = graph.traverse(from: root, using: .dfs())
 
         #expect(result.vertices == [root, a, b, c, d])
-        #expect(result.edges == [rc, ra, ab, cd])
+        #expect(result.edges == [rc, ra, ab, cd]) // TODO: fix the order
     }
 
     @Test func dfsWithCycle() {
