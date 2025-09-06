@@ -1,4 +1,4 @@
-requirements
+# Project high level requirements
 - flexible graph representations with a small core API and make it extensible for various wide range of algorithms, representations
   - adjacency list
   - adjacency matrix
@@ -20,7 +20,7 @@ requirements
   - group by use-cases e.g. shortest path algotihms, traversals, minimum spanning tree and specify specific algo as parameter (with a good default)
 
 
-Example
+## Code organization example
 
 Callsite graph.shortestPath(from: "Root", to: "Z", using: .dijkstra()) // or .aStar() or .bellmanFord()
 extension GraphComponent where Edge: Weighted {
@@ -68,6 +68,8 @@ extension ShortestPathAlgorithm where Self: ShortestPathUntilAlgorithm, Node: Eq
 
 Similarly, capabilities would be nice to look like this behind a unified API surface with extensible/plugin architecture
 
+## Callsite examples
+
 Note: this is not the exact API surface I precisely want, the graph repsentations might require something different. I expect a lot of changes needed around traversal strategies
 graph.traverse(from: "Root", strategy: .bfs())
 graph.traverse(from: "Root", strategy: .dfs())
@@ -100,7 +102,8 @@ gridGraph.hamiltonianCycle()
 gridGraph.hamiltonianPath()
 gridGraph.hamiltonianPath(from: GridPosition(x: 0, y: 0))
 gridGraph.hamiltonianPath(from: GridPosition(x: 0, y: 0), to: GridPosition(x: 4, y: 4))
-TODOs
+
+# TODOs
 [ ] basic graph representations
   [x] basic protocols for vertices, edges
   [ ] multiple representations
