@@ -136,7 +136,8 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
                     stack.push(DFSFrame(vertex: vertex, isFirstVisit: false))
 
                     let outEdges = Array(graph.outEdges(of: vertex))
-                    for edge in outEdges.reversed() {
+                    var whiteNeighbors: [Vertex] = []
+                    for edge in outEdges {
                         visitor?.examineEdge?(edge)
 
                         guard let destination = graph.destination(of: edge) else { continue }
@@ -147,7 +148,7 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
                         case .white:
                             propertyMap[destination][predecessorEdgeProperty] = edge
                             visitor?.treeEdge?(edge)
-                            stack.push(DFSFrame(vertex: destination, isFirstVisit: true))
+                            whiteNeighbors.append(destination)
                         case .gray:
                             visitor?.backEdge?(edge)
                         case .black:
@@ -162,6 +163,10 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
                                 visitor?.crossEdge?(edge)
                             }
                         }
+                    }
+
+                    for neighbor in whiteNeighbors.reversed() {
+                        stack.push(DFSFrame(vertex: neighbor, isFirstVisit: true))
                     }
                 } else {
                     time += 1

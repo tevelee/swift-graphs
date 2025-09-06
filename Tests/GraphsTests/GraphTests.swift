@@ -236,7 +236,7 @@ struct GraphTests {
         let result = graph.traverse(from: root, using: .dfs())
 
         #expect(result.vertices == [root, a, b, c, d])
-        #expect(result.edges == [rc, ra, ab, cd]) // TODO: fix the order
+        #expect(result.edges == [ra, rc, ab, cd])
     }
 
     @Test func dfsWithCycle() {
