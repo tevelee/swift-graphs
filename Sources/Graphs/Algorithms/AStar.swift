@@ -356,11 +356,31 @@ extension Heuristic {
     }
     
     static func distance(
-        _ distance: DistanceAlgorithm<Graph.VertexDescriptor, EstimatedCost>,
         to destination: Graph.VertexDescriptor,
+        using distance: DistanceAlgorithm<Graph.VertexDescriptor, EstimatedCost>
     ) -> Self {
         .init { vertex, _ in
             distance.calculateDistance(vertex, destination)
+        }
+    }
+}
+
+extension Heuristic where Graph: PropertyGraph {
+    static func euclideanDistance<Coordinate: SIMD>(
+        to destination: Graph.VertexDescriptor,
+        of coordinates: @escaping (VertexPropertyValues) -> Coordinate
+    ) -> Self where EstimatedCost == Coordinate.Scalar, Coordinate.Scalar: FloatingPoint {
+        .init { vertex, graph in
+            DistanceAlgorithm.euclidean { coordinates(graph[$0]) }.calculateDistance(vertex, destination)
+        }
+    }
+    
+    static func manhattanDistance<Coordinate: SIMD>(
+        to destination: Graph.VertexDescriptor,
+        of coordinates: @escaping (VertexPropertyValues) -> Coordinate
+    ) -> Self where EstimatedCost == Coordinate.Scalar, Coordinate.Scalar: FloatingPoint {
+        .init { vertex, graph in
+            DistanceAlgorithm.manhattan { coordinates(graph[$0]) }.calculateDistance(vertex, destination)
         }
     }
 }

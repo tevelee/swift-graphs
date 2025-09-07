@@ -3,7 +3,7 @@ import simd
 @testable import Graphs
 
 enum Coordinates2D: VertexProperty {
-    static let defaultValue: SIMD2<Double> = .init(0, 0)
+    static let defaultValue = SIMD2<Double>(0, 0)
 }
 
 extension VertexPropertyValues {
