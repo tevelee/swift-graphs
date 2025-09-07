@@ -1,4 +1,4 @@
-struct AdjacencyList<VertexStore: VertexStorage, EdgeStore: EdgeStorage, VertexPropertyMap: PropertyMap, EdgePropertyMap: PropertyMap> where
+struct AdjacencyList<VertexStore: VertexStorage, EdgeStore: EdgeStorage, VertexPropertyMap: MutablePropertyMap, EdgePropertyMap: MutablePropertyMap> where
         EdgeStore.Vertex == VertexStore.Vertex,
         VertexPropertyMap.Key == VertexStore.Vertex,
         VertexPropertyMap.Value == VertexPropertyValues,
@@ -109,5 +109,4 @@ extension AdjacencyList: MutableGraph {
 }
 
 extension AdjacencyList: PropertyGraph {}
-extension AdjacencyList: VertexMutablePropertyGraph where VertexPropertyMap: MutablePropertyMap {}
-extension AdjacencyList: EdgeMutablePropertyGraph where EdgePropertyMap: MutablePropertyMap {}
+extension AdjacencyList: MutablePropertyGraph {}

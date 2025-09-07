@@ -26,11 +26,11 @@ struct PropertyMapTests {
     @Test func customLabelPropertyViaMap() {
         var graph = AdjacencyList()
         let a = graph.addVertex()
-        enum Label: VertexProperty { static let defaultValue = "" }
+        enum CustomLabel: VertexProperty { static let defaultValue = "" }
         var map = graph.makeVertexPropertyMap()
-        #expect(map[a][Label.self] == "")
-        map[a][Label.self] = "a"
-        #expect(map[a][Label.self] == "a")
+        #expect(map[a][CustomLabel.self] == "")
+        map[a][CustomLabel.self] = "a"
+        #expect(map[a][CustomLabel.self] == "a")
     }
 }
 

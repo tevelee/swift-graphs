@@ -2,6 +2,20 @@
 import Testing
 
 struct BFSTests {
+    @Test func order() {
+        var graph = AdjacencyList()
+        graph.add(edges: [
+            ("root", "a"),
+            ("a", "x"),
+            ("a", "y"),
+            ("a", "z"),
+            ("root", "b"),
+            ("root", "c"),
+        ])
+        let result = graph.traverse(from: "root", using: .bfs())
+        #expect(result.verticeLabels(in: graph) == ["root", "a", "b", "c", "x", "y", "z"])
+    }
+    
     @Test func startsAtSourceAndComputesDistancesAndPaths() {
         var graph = AdjacencyList()
         let root = graph.addVertex()
