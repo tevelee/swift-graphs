@@ -1,20 +1,19 @@
 extension Graph where Self: IncidenceGraph & VertexListGraph, VertexDescriptor: Hashable {
     func traverse(
         from source: VertexDescriptor,
-        using algorithm: some TraversalAlgorithm<VertexDescriptor, EdgeDescriptor>
+        using algorithm: some TraversalAlgorithm<Self>
     ) -> TraversalResult<VertexDescriptor, EdgeDescriptor> {
         algorithm.traverse(from: source, in: self)
     }
 }
 
-protocol TraversalAlgorithm<Vertex, Edge> {
-    associatedtype Vertex: Hashable
-    associatedtype Edge
+protocol TraversalAlgorithm<Graph> {
+    associatedtype Graph: IncidenceGraph & VertexListGraph
 
     func traverse(
-        from source: Vertex,
-        in graph: some Graph<Vertex, Edge> & IncidenceGraph & VertexListGraph
-    ) -> TraversalResult<Vertex, Edge>
+        from source: Graph.VertexDescriptor,
+        in graph: Graph
+    ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor>
 }
 
 struct TraversalResult<Vertex, Edge> {

@@ -1,33 +1,22 @@
-extension TraversalAlgorithm where Vertex: Hashable {
-    static func dfs<Vertex, Edge>() -> Self where Self == DFSTraversal<Vertex, Edge> {
-        .init()
+extension TraversalAlgorithm {
+    static func dfs<Graph>(order: DFSOrder<Graph> = .preorder) -> Self where Self == DFSTraversal<Graph> {
+        .init(order: order)
     }
 }
 
-struct DFSTraversal<Vertex: Hashable, Edge>: TraversalAlgorithm {
+struct DFSTraversal<Graph: IncidenceGraph & VertexListGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
+    let order: DFSOrder<Graph>
     func traverse(
-        from source: Vertex,
-        in graph: some Graph<Vertex, Edge> & IncidenceGraph & VertexListGraph
-    ) -> TraversalResult<Vertex, Edge> {
-        var vertices: [Vertex] = []
-        var edges: [Edge] = []
-
+        from source: Graph.VertexDescriptor,
+        in graph: Graph
+    ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
         DepthFirstSearchAlgorithm(on: graph, from: source)
-            .withVisitor {
-                .init(
-                    examineVertex: { vertex in
-                        vertices.append(vertex)
-                    },
-                    examineEdge: { edge in
-                        edges.append(edge)
-                    }
-                )
-            }
+            .withVisitor { order.visitor }
             .forEach { _ in }
         
         return TraversalResult(
-            vertices: vertices,
-            edges: edges
+            vertices: order.vertices(),
+            edges: order.edges()
         )
     }
 }

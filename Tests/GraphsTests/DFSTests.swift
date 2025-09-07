@@ -73,6 +73,23 @@ struct DFSTests {
         #expect(result.edges == [ra, rc, ab, cd])
     }
 
+    @Test func traversalWrapperReturnsVerticesPostorderAndEdgesInAdjacencyOrder() {
+        var graph = AdjacencyList()
+        let root = graph.addVertex()
+        let a = graph.addVertex()
+        let b = graph.addVertex()
+        let c = graph.addVertex()
+        let d = graph.addVertex()
+        let ra = graph.addEdge(from: root, to: a)!
+        let rc = graph.addEdge(from: root, to: c)!
+        let ab = graph.addEdge(from: a, to: b)!
+        let cd = graph.addEdge(from: c, to: d)!
+
+        let result = graph.traverse(from: root, using: .dfs(order: .postorder))
+        #expect(result.vertices == [b, a, d, c, root])
+        #expect(result.edges == [ra, rc, ab, cd])
+    }
+
     @Test func classificationDetectsBackEdgesInCycles() {
         var graph = AdjacencyList()
         let a = graph.addVertex()

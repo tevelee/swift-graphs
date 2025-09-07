@@ -281,3 +281,45 @@ extension DepthFirstSearchAlgorithm {
         .init(base: self, makeVisitor: makeVisitor)
     }
 }
+
+struct DFSOrder<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+    let visitor: DepthFirstSearchAlgorithm<Graph>.Visitor
+    let vertices: () -> [Graph.VertexDescriptor]
+    let edges: () -> [Graph.EdgeDescriptor]
+    
+    init(
+        visitor: DepthFirstSearchAlgorithm<Graph>.Visitor,
+        vertices: @autoclosure @escaping () -> [Graph.VertexDescriptor],
+        edges: @autoclosure @escaping () -> [Graph.EdgeDescriptor]
+    ) {
+        self.visitor = visitor
+        self.vertices = vertices
+        self.edges = edges
+    }
+    
+    static var preorder: Self {
+        var vertices: [Graph.VertexDescriptor] = []
+        var edges: [Graph.EdgeDescriptor] = []
+        return DFSOrder(
+            visitor: .init(
+                discoverVertex: { vertices.append($0) },
+                examineEdge: { edges.append($0) }
+            ),
+            vertices: vertices,
+            edges: edges
+        )
+    }
+
+    static var postorder: Self {
+        var vertices: [Graph.VertexDescriptor] = []
+        var edges: [Graph.EdgeDescriptor] = []
+        return DFSOrder(
+            visitor: .init(
+                examineEdge: { edges.append($0) },
+                finishVertex: { vertices.append($0) }
+            ),
+            vertices: vertices,
+            edges: edges
+        )
+    }
+}
