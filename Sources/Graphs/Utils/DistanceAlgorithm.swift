@@ -5,9 +5,11 @@ struct DistanceAlgorithm<Coordinate, Distance> {
     let calculateDistance: (Coordinate, Coordinate) -> Distance
 }
 
-extension DistanceAlgorithm where Coordinate == SIMD2<Double>, Distance == Double {
-    static var euclidean: Self {
-        .init { a, b in simd_distance(a, b) }
+extension DistanceAlgorithm {
+    static func euclidean<Vertex>(_ coordinate: (Vertex) -> Coordinate) -> Self {
+        .init { a, b in
+            simd_distance(coordinate(a), coordinate(b))
+        }
     }
 
     static var manhattan: Self {

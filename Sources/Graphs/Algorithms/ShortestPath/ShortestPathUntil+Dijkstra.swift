@@ -1,13 +1,13 @@
 extension ShortestPathUntilAlgorithm {
     static func dijkstra<Graph: IncidenceGraph, Weight: Numeric>(
-        weight: CostAlgorithm<Graph, Weight>
+        weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == DijkstraShortestPath<Graph, Weight>, Weight.Magnitude == Weight {
         .init(weight: weight)
     }
 }
 
 struct DijkstraShortestPath<Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric>: ShortestPathUntilAlgorithm where Weight.Magnitude == Weight, Graph.VertexDescriptor: Hashable {
-    let weight: CostAlgorithm<Graph, Weight>
+    let weight: CostDefinition<Graph, Weight>
 
     func shortestPath(
         from source: Graph.VertexDescriptor,

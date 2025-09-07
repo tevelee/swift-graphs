@@ -14,14 +14,15 @@ struct AStarTests {
         graph.addEdge(from: c, to: d) { $0.weight = 1 }
         graph.addEdge(from: b, to: d) { $0.weight = 5 }
 
-        let path = graph.shortestPath(from: a, to: d, using: .aStar(weight: .property(\.weight), heuristic: .constant()))
+        let path = graph.shortestPath(from: a, to: d, using: .aStar(weight: .property(\.weight), heuristic: .uniform(0)))
         #expect(path?.vertices == [a, c, d])
 
         let res = AStarAlgorithm(
             on: graph,
             from: a,
             edgeWeight: .property(\.weight),
-            heuristic: .constant()
+            heuristic: .uniform(0),
+            calculateTotalCost: +
         ).first { $0.currentVertex == d }
         #expect(res?.vertices(to: d, in: graph) == [a, c, d])
     }

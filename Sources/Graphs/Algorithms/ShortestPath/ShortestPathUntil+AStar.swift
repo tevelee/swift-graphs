@@ -1,26 +1,37 @@
 extension ShortestPathUntilAlgorithm {
+    static func aStar<Graph: IncidenceGraph, Weight: Numeric, HScore, FScore>(
+        weight: CostDefinition<Graph, Weight>,
+        heuristic: Heuristic<Graph, HScore>,
+        calculateTotalCost: @escaping (Weight, HScore) -> FScore
+    ) -> Self where Self == AStarShortestPath<Graph, Weight, HScore, FScore> {
+        .init(weight: weight, heuristic: heuristic, calculateTotalCost: calculateTotalCost)
+    }
+    
     static func aStar<Graph: IncidenceGraph, Weight: Numeric>(
-        weight: CostAlgorithm<Graph, Weight>,
+        weight: CostDefinition<Graph, Weight>,
         heuristic: Heuristic<Graph, Weight>
-    ) -> Self where Self == AStarShortestPath<Graph, Weight> {
-        .init(weight: weight, heuristic: heuristic)
+    ) -> Self where Self == AStarShortestPath<Graph, Weight, Weight, Weight> {
+        .init(weight: weight, heuristic: heuristic, calculateTotalCost: +)
     }
 }
 
-struct AStarShortestPath<Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric & Comparable>: ShortestPathUntilAlgorithm where Graph.VertexDescriptor: Hashable {
-    let weight: CostAlgorithm<Graph, Weight>
-    let heuristic: Heuristic<Graph, Weight>
+struct AStarShortestPath<Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric & Comparable, HScore: Numeric, FScore: Comparable>: ShortestPathUntilAlgorithm where Graph.VertexDescriptor: Hashable, HScore.Magnitude == HScore {
+    let weight: CostDefinition<Graph, Weight>
+    let heuristic: Heuristic<Graph, HScore>
+    let calculateTotalCost: (Weight, HScore) -> FScore
 
     func shortestPath(
         from source: Graph.VertexDescriptor,
         until condition: @escaping (Graph.VertexDescriptor) -> Bool,
+        
         in graph: Graph
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let sequence = AStarAlgorithm(
             on: graph,
             from: source,
             edgeWeight: weight,
-            heuristic: heuristic
+            heuristic: heuristic,
+            calculateTotalCost: calculateTotalCost
         )
         guard let result = sequence.first(where: { condition($0.currentVertex) }) else { return nil }
         let destination = result.currentVertex

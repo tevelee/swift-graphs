@@ -48,13 +48,13 @@ struct DijkstraAlgorithm<
 
     private let graph: Graph
     private let source: Vertex
-    private let edgeWeight: CostAlgorithm<Graph, Weight>
+    private let edgeWeight: CostDefinition<Graph, Weight>
     private let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
 
     init(
         on graph: Graph,
         from source: Vertex,
-        edgeWeight: CostAlgorithm<Graph, Weight>,
+        edgeWeight: CostDefinition<Graph, Weight>,
         makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
             PriorityQueue()
         }
@@ -82,7 +82,7 @@ struct DijkstraAlgorithm<
     struct Iterator {
         private let graph: Graph
         private let source: Vertex
-        private let edgeWeight: CostAlgorithm<Graph, Weight>
+        private let edgeWeight: CostDefinition<Graph, Weight>
         private let visitor: Visitor?
         private var queue: any QueueProtocol<PriorityItem>
         private var visited: Set<Vertex> = []
@@ -94,7 +94,7 @@ struct DijkstraAlgorithm<
         init(
             graph: Graph,
             source: Vertex,
-            edgeWeight: CostAlgorithm<Graph, Weight>,
+            edgeWeight: CostDefinition<Graph, Weight>,
             visitor: Visitor?,
             queue: any QueueProtocol<PriorityItem>
         ) {
@@ -188,8 +188,11 @@ extension DijkstraAlgorithm.Cost: Comparable where Weight: Comparable {
 extension DijkstraAlgorithm.Cost where Weight: Numeric {
     static func + (lhs: Self, rhs: Weight) -> Self {
         switch lhs {
-            case .infinite: .infinite
-            case .finite(let lhsValue): .finite(lhsValue + rhs)
+            case .infinite:
+                assertionFailure(".infinite means unreachable, but if it's being examined it should be reachable")
+                return .infinite
+            case .finite(let lhsValue):
+                return .finite(lhsValue + rhs)
         }
     }
 }

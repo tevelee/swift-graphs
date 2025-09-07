@@ -1,15 +1,23 @@
 struct AStarAlgorithm<
     Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
-    Weight: Numeric & Comparable
+    Weight: Numeric & Comparable,
+    HScore: Numeric,
+    FScore: Comparable
 > where
-    Graph.VertexDescriptor: Hashable
+    Graph.VertexDescriptor: Hashable,
+    HScore.Magnitude == HScore
 {
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
 
-    enum Cost {
+    enum GScore {
         case infinite
         case finite(Weight)
+    }
+    
+    enum Cost {
+        case infinite
+        case finite(FScore)
     }
 
     struct Visitor {
@@ -24,15 +32,16 @@ struct AStarAlgorithm<
     struct Result {
         typealias Vertex = Graph.VertexDescriptor
         typealias Edge = Graph.EdgeDescriptor
+        typealias GScore = AStarAlgorithm.GScore
         fileprivate let source: Vertex
         let currentVertex: Vertex
-        let gScoreProperty: any VertexProperty<Cost>.Type
+        let gScoreProperty: any VertexProperty<GScore>.Type
         let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
         let propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
     }
 
     private enum GScoreProperty: VertexProperty {
-        static var defaultValue: Cost { .infinite }
+        static var defaultValue: GScore { .infinite }
     }
 
     private enum PredecessorEdgeProperty: VertexProperty {
@@ -42,20 +51,22 @@ struct AStarAlgorithm<
     struct PriorityItem {
         typealias Vertex = Graph.VertexDescriptor
         let vertex: Vertex
-        let fScore: Cost
+        let totalCost: FScore
     }
 
     private let graph: Graph
     private let source: Vertex
-    private let edgeWeight: CostAlgorithm<Graph, Weight>
-    private let heuristic: Heuristic<Graph, Weight>
+    private let edgeWeight: CostDefinition<Graph, Weight>
+    private let heuristic: Heuristic<Graph, HScore>
+    private let calculateTotalCost: (GScore, HScore) -> FScore
     private let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
 
     init(
         on graph: Graph,
         from source: Vertex,
-        edgeWeight: CostAlgorithm<Graph, Weight>,
-        heuristic: Heuristic<Graph, Weight>,
+        edgeWeight: CostDefinition<Graph, Weight>,
+        heuristic: Heuristic<Graph, HScore>,
+        calculateTotalCost: @escaping (Weight, HScore) -> FScore,
         makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
             PriorityQueue()
         }
@@ -64,6 +75,15 @@ struct AStarAlgorithm<
         self.source = source
         self.edgeWeight = edgeWeight
         self.heuristic = heuristic
+        self.calculateTotalCost = { gScore, hScore in
+            switch gScore {
+                case .infinite:
+                    assertionFailure(".infinite means unreachable, but if it's being examined it should be reachable")
+                    return calculateTotalCost(.zero, hScore)
+                case .finite(let weight):
+                    return calculateTotalCost(weight, hScore)
+            }
+        }
         self.makePriorityQueue = makePriorityQueue
     }
 
@@ -77,6 +97,7 @@ struct AStarAlgorithm<
             source: source,
             edgeWeight: edgeWeight,
             heuristic: heuristic,
+            calculateTotalCost: calculateTotalCost,
             visitor: visitor,
             queue: makePriorityQueue()
         )
@@ -85,21 +106,23 @@ struct AStarAlgorithm<
     struct Iterator {
         private let graph: Graph
         private let source: Vertex
-        private let edgeWeight: CostAlgorithm<Graph, Weight>
-        private let heuristic: Heuristic<Graph, Weight>
+        private let edgeWeight: CostDefinition<Graph, Weight>
+        private let heuristic: Heuristic<Graph, HScore>
+        private let calculateTotalCost: (GScore, HScore) -> FScore
         private let visitor: Visitor?
         private var queue: any QueueProtocol<PriorityItem>
         private var visited: Set<Vertex> = []
 
         private var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
-        private let gScoreProperty: any VertexProperty<Cost>.Type = GScoreProperty.self
+        private let gScoreProperty: any VertexProperty<GScore>.Type = GScoreProperty.self
         private let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
 
         init(
             graph: Graph,
             source: Vertex,
-            edgeWeight: CostAlgorithm<Graph, Weight>,
-            heuristic: Heuristic<Graph, Weight>,
+            edgeWeight: CostDefinition<Graph, Weight>,
+            heuristic: Heuristic<Graph, HScore>,
+            calculateTotalCost: @escaping (GScore, HScore) -> FScore,
             visitor: Visitor?,
             queue: any QueueProtocol<PriorityItem>
         ) {
@@ -107,6 +130,7 @@ struct AStarAlgorithm<
             self.source = source
             self.edgeWeight = edgeWeight
             self.heuristic = heuristic
+            self.calculateTotalCost = calculateTotalCost
             self.visitor = visitor
             self.queue = queue
             self.propertyMap = graph.makeVertexPropertyMap()
@@ -117,9 +141,11 @@ struct AStarAlgorithm<
                 visitor?.initializeVertex?(vertex)
             }
 
-            propertyMap[source][gScoreProperty] = .finite(.zero)
-            let initialF: Cost = .finite(heuristic.evaluate(source, graph))
-            self.queue.enqueue(.init(vertex: source, fScore: initialF))
+            let gScore: GScore = .finite(.zero)
+            propertyMap[source][gScoreProperty] = gScore
+            let hScore: HScore = heuristic.estimatedCost(source, graph)
+            let fScore: FScore = calculateTotalCost(gScore, hScore)
+            self.queue.enqueue(.init(vertex: source, totalCost: fScore))
         }
 
         mutating func next() -> Result? {
@@ -129,8 +155,8 @@ struct AStarAlgorithm<
                 if visited.contains(popped.vertex) { continue }
                 let storedG = propertyMap[popped.vertex][gScoreProperty]
                 // Recompute f from current best g to ensure consistency
-                let currentF = storedG + heuristic.evaluate(popped.vertex, graph)
-                if popped.fScore > currentF { continue }
+                let currentF = calculateTotalCost(storedG, heuristic.estimatedCost(popped.vertex, graph))
+                if popped.totalCost > currentF { continue }
                 current = popped.vertex
                 break
             }
@@ -153,8 +179,8 @@ struct AStarAlgorithm<
                 if tentativeG < neighborG {
                     propertyMap[neighbor][gScoreProperty] = tentativeG
                     propertyMap[neighbor][predecessorEdgeProperty] = edge
-                    let f = tentativeG + heuristic.evaluate(neighbor, graph)
-                    queue.enqueue(.init(vertex: neighbor, fScore: f))
+                    let fScore = calculateTotalCost(tentativeG, heuristic.estimatedCost(neighbor, graph))
+                    queue.enqueue(.init(vertex: neighbor, totalCost: fScore))
                     visitor?.edgeRelaxed?(edge)
                 } else {
                     visitor?.edgeNotRelaxed?(edge)
@@ -183,9 +209,9 @@ extension AStarAlgorithm: Sequence {
     }
 }
 
-extension AStarAlgorithm.Cost: Equatable where Weight: Equatable {}
+extension AStarAlgorithm.Cost: Equatable where FScore: Equatable {}
 
-extension AStarAlgorithm.Cost: Comparable where Weight: Comparable {
+extension AStarAlgorithm.Cost: Comparable where FScore: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
             case (.infinite, _): false
@@ -195,23 +221,36 @@ extension AStarAlgorithm.Cost: Comparable where Weight: Comparable {
     }
 }
 
-extension AStarAlgorithm.Cost {
-    static func + (lhs: Self, rhs: Weight) -> Self {
-        switch lhs {
-            case .infinite: .infinite
-            case .finite(let lhsValue): .finite(lhsValue + rhs)
+extension AStarAlgorithm.GScore: Comparable {
+    static func < (lhs: Self, rhs: Self) -> Bool {
+        switch (lhs, rhs) {
+            case (.infinite, _): false
+            case (_, .infinite): true
+            case (.finite(let lhsValue), .finite(let rhsValue)): lhsValue < rhsValue
         }
     }
 }
 
-extension AStarAlgorithm.Cost: ExpressibleByIntegerLiteral where Weight == UInt {
-    init(integerLiteral value: Weight) {
+extension AStarAlgorithm.GScore {
+    static func + (lhs: Self, rhs: Weight) -> Self {
+        switch lhs {
+            case .infinite:
+                assertionFailure(".infinite means unreachable, but if it's being examined it should be reachable")
+                return .infinite
+            case .finite(let lhsValue):
+                return .finite(lhsValue + rhs)
+        }
+    }
+}
+
+extension AStarAlgorithm.Cost: ExpressibleByIntegerLiteral where FScore == UInt {
+    init(integerLiteral value: FScore) {
         self = .finite(value)
     }
 }
 
-extension AStarAlgorithm.Cost: ExpressibleByFloatLiteral where Weight == Double {
-    init(floatLiteral value: Weight) {
+extension AStarAlgorithm.Cost: ExpressibleByFloatLiteral where FScore == Double {
+    init(floatLiteral value: FScore) {
         self = .finite(value)
     }
 }
@@ -230,7 +269,7 @@ extension AStarAlgorithm.PriorityItem: Equatable {
 
 extension AStarAlgorithm.PriorityItem: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
-        lhs.fScore < rhs.fScore
+        lhs.totalCost < rhs.totalCost
     }
 }
 
@@ -269,7 +308,7 @@ extension AStarAlgorithm.Result {
         path(to: currentVertex, in: graph)
     }
 
-    func gScore(of vertex: Vertex) -> AStarAlgorithm<Graph, Weight>.Cost {
+    func gScore(of vertex: Vertex) -> GScore {
         propertyMap[vertex][gScoreProperty]
     }
 
@@ -305,19 +344,19 @@ extension AStarAlgorithm.Result {
     }
 }
 
-struct Heuristic<Graph: Graphs.Graph, HScore> {
-    let evaluate: (Graph.VertexDescriptor, Graph) -> HScore
+struct Heuristic<Graph: Graphs.Graph, EstimatedCost> {
+    let estimatedCost: (Graph.VertexDescriptor, Graph) -> EstimatedCost
 }
 
 extension Heuristic {
-    static func constant(value: HScore = 0.0) -> Self {
+    static func uniform(_ value: EstimatedCost) -> Self {
         .init { _, _ in
             value
         }
     }
     
     static func distance(
-        _ distance: DistanceAlgorithm<Graph.VertexDescriptor, HScore>,
+        _ distance: DistanceAlgorithm<Graph.VertexDescriptor, EstimatedCost>,
         to destination: Graph.VertexDescriptor,
     ) -> Self {
         .init { vertex, _ in
