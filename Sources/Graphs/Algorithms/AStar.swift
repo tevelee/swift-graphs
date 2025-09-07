@@ -2,8 +2,7 @@ struct AStarAlgorithm<
     Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
     Weight: Numeric & Comparable
 > where
-    Graph.VertexDescriptor: Hashable,
-    Weight.Magnitude == Weight
+    Graph.VertexDescriptor: Hashable
 {
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
@@ -48,15 +47,15 @@ struct AStarAlgorithm<
 
     private let graph: Graph
     private let source: Vertex
-    private let edgeWeight: (EdgePropertyValues) -> Weight
-    private let heuristic: (Vertex) -> Weight
+    private let edgeWeight: CostAlgorithm<Graph, Weight>
+    private let heuristic: Heuristic<Graph, Weight>
     private let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
 
     init(
         on graph: Graph,
         from source: Vertex,
-        edgeWeight: @escaping (EdgePropertyValues) -> Weight,
-        heuristic: @escaping (Vertex) -> Weight,
+        edgeWeight: CostAlgorithm<Graph, Weight>,
+        heuristic: Heuristic<Graph, Weight>,
         makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
             PriorityQueue()
         }
@@ -86,8 +85,8 @@ struct AStarAlgorithm<
     struct Iterator {
         private let graph: Graph
         private let source: Vertex
-        private let edgeWeight: (EdgePropertyValues) -> Weight
-        private let heuristic: (Vertex) -> Weight
+        private let edgeWeight: CostAlgorithm<Graph, Weight>
+        private let heuristic: Heuristic<Graph, Weight>
         private let visitor: Visitor?
         private var queue: any QueueProtocol<PriorityItem>
         private var visited: Set<Vertex> = []
@@ -99,8 +98,8 @@ struct AStarAlgorithm<
         init(
             graph: Graph,
             source: Vertex,
-            edgeWeight: @escaping (EdgePropertyValues) -> Weight,
-            heuristic: @escaping (Vertex) -> Weight,
+            edgeWeight: CostAlgorithm<Graph, Weight>,
+            heuristic: Heuristic<Graph, Weight>,
             visitor: Visitor?,
             queue: any QueueProtocol<PriorityItem>
         ) {
@@ -119,7 +118,7 @@ struct AStarAlgorithm<
             }
 
             propertyMap[source][gScoreProperty] = .finite(.zero)
-            let initialF: Cost = .finite(heuristic(source))
+            let initialF: Cost = .finite(heuristic.evaluate(source, graph))
             self.queue.enqueue(.init(vertex: source, fScore: initialF))
         }
 
@@ -130,7 +129,7 @@ struct AStarAlgorithm<
                 if visited.contains(popped.vertex) { continue }
                 let storedG = propertyMap[popped.vertex][gScoreProperty]
                 // Recompute f from current best g to ensure consistency
-                let currentF = storedG + heuristic(popped.vertex)
+                let currentF = storedG + heuristic.evaluate(popped.vertex, graph)
                 if popped.fScore > currentF { continue }
                 current = popped.vertex
                 break
@@ -147,14 +146,14 @@ struct AStarAlgorithm<
                 guard let neighbor = graph.destination(of: edge) else { continue }
                 if visited.contains(neighbor) { continue }
 
-                let weight = edgeWeight(graph[edge])
+                let weight = edgeWeight.costToExplore(edge, graph)
                 let tentativeG = currentG + weight
 
                 let neighborG = propertyMap[neighbor][gScoreProperty]
                 if tentativeG < neighborG {
                     propertyMap[neighbor][gScoreProperty] = tentativeG
                     propertyMap[neighbor][predecessorEdgeProperty] = edge
-                    let f = tentativeG + heuristic(neighbor)
+                    let f = tentativeG + heuristic.evaluate(neighbor, graph)
                     queue.enqueue(.init(vertex: neighbor, fScore: f))
                     visitor?.edgeRelaxed?(edge)
                 } else {
@@ -303,5 +302,26 @@ extension AStarAlgorithm.Result {
 
     func hasPath(to vertex: Vertex) -> Bool {
         propertyMap[vertex][gScoreProperty] != .infinite
+    }
+}
+
+struct Heuristic<Graph: Graphs.Graph, HScore> {
+    let evaluate: (Graph.VertexDescriptor, Graph) -> HScore
+}
+
+extension Heuristic {
+    static func constant(value: HScore = 0.0) -> Self {
+        .init { _, _ in
+            value
+        }
+    }
+    
+    static func distance(
+        _ distance: DistanceAlgorithm<Graph.VertexDescriptor, HScore>,
+        to destination: Graph.VertexDescriptor,
+    ) -> Self {
+        .init { vertex, _ in
+            distance.calculateDistance(vertex, destination)
+        }
     }
 }

@@ -1,21 +1,21 @@
-extension ShortestPathUntilAlgorithm where Vertex: Hashable, Weight: Numeric, Weight.Magnitude == Weight {
-    static func aStar<Vertex, Edge, Weight>(
-        weight: @escaping (EdgePropertyValues) -> Weight,
-        heuristic: @escaping (Vertex) -> Weight
-    ) -> Self where Self == AStarShortestPath<Vertex, Edge, Weight> {
+extension ShortestPathUntilAlgorithm {
+    static func aStar<Graph: IncidenceGraph, Weight: Numeric>(
+        weight: CostAlgorithm<Graph, Weight>,
+        heuristic: Heuristic<Graph, Weight>
+    ) -> Self where Self == AStarShortestPath<Graph, Weight> {
         .init(weight: weight, heuristic: heuristic)
     }
 }
 
-struct AStarShortestPath<Vertex: Hashable, Edge, Weight: Numeric>: ShortestPathUntilAlgorithm where Weight.Magnitude == Weight {
-    let weight: (EdgePropertyValues) -> Weight
-    let heuristic: (Vertex) -> Weight
+struct AStarShortestPath<Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric & Comparable>: ShortestPathUntilAlgorithm where Graph.VertexDescriptor: Hashable {
+    let weight: CostAlgorithm<Graph, Weight>
+    let heuristic: Heuristic<Graph, Weight>
 
     func shortestPath(
-        from source: Vertex,
-        until condition: @escaping (Vertex) -> Bool,
-        in graph: some Graph<Vertex, Edge> & IncidenceGraph & VertexListGraph & EdgePropertyGraph
-    ) -> Path<Vertex, Edge>? {
+        from source: Graph.VertexDescriptor,
+        until condition: @escaping (Graph.VertexDescriptor) -> Bool,
+        in graph: Graph
+    ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let sequence = AStarAlgorithm(
             on: graph,
             from: source,

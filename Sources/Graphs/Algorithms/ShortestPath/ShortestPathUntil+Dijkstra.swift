@@ -1,19 +1,19 @@
-extension ShortestPathUntilAlgorithm where Vertex: Hashable, Weight: Numeric, Weight.Magnitude == Weight {
-    static func dijkstra<Vertex, Edge, Weight>(
-        weight: @escaping (EdgePropertyValues) -> Weight
-    ) -> Self where Self == DijkstraShortestPath<Vertex, Edge, Weight> {
+extension ShortestPathUntilAlgorithm {
+    static func dijkstra<Graph: IncidenceGraph, Weight: Numeric>(
+        weight: CostAlgorithm<Graph, Weight>
+    ) -> Self where Self == DijkstraShortestPath<Graph, Weight>, Weight.Magnitude == Weight {
         .init(weight: weight)
     }
 }
 
-struct DijkstraShortestPath<Vertex: Hashable, Edge, Weight: Numeric>: ShortestPathUntilAlgorithm where Weight.Magnitude == Weight {
-    let weight: (EdgePropertyValues) -> Weight
+struct DijkstraShortestPath<Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric>: ShortestPathUntilAlgorithm where Weight.Magnitude == Weight, Graph.VertexDescriptor: Hashable {
+    let weight: CostAlgorithm<Graph, Weight>
 
     func shortestPath(
-        from source: Vertex,
-        until condition: @escaping (Vertex) -> Bool,
-        in graph: some Graph<Vertex, Edge> & IncidenceGraph & VertexListGraph & EdgePropertyGraph
-    ) -> Path<Vertex, Edge>? {
+        from source: Graph.VertexDescriptor,
+        until condition: @escaping (Graph.VertexDescriptor) -> Bool,
+        in graph: Graph
+    ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let sequence = DijkstraAlgorithm(on: graph, from: source, edgeWeight: weight)
         guard let result = sequence.first(where: { condition($0.currentVertex) }) else { return nil }
         let destination = result.currentVertex

@@ -48,13 +48,13 @@ struct DijkstraAlgorithm<
 
     private let graph: Graph
     private let source: Vertex
-    private let edgeWeight: (EdgePropertyValues) -> Weight
+    private let edgeWeight: CostAlgorithm<Graph, Weight>
     private let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
 
     init(
         on graph: Graph,
         from source: Vertex,
-        edgeWeight: @escaping (EdgePropertyValues) -> Weight,
+        edgeWeight: CostAlgorithm<Graph, Weight>,
         makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
             PriorityQueue()
         }
@@ -82,7 +82,7 @@ struct DijkstraAlgorithm<
     struct Iterator {
         private let graph: Graph
         private let source: Vertex
-        private let edgeWeight: (EdgePropertyValues) -> Weight
+        private let edgeWeight: CostAlgorithm<Graph, Weight>
         private let visitor: Visitor?
         private var queue: any QueueProtocol<PriorityItem>
         private var visited: Set<Vertex> = []
@@ -94,7 +94,7 @@ struct DijkstraAlgorithm<
         init(
             graph: Graph,
             source: Vertex,
-            edgeWeight: @escaping (EdgePropertyValues) -> Weight,
+            edgeWeight: CostAlgorithm<Graph, Weight>,
             visitor: Visitor?,
             queue: any QueueProtocol<PriorityItem>
         ) {
@@ -137,7 +137,7 @@ struct DijkstraAlgorithm<
                 guard let destination = graph.destination(of: edge) else { continue }
                 if visited.contains(destination) { continue }
 
-                let weight = edgeWeight(graph[edge])
+                let weight = edgeWeight.costToExplore(edge, graph)
                 let newCost = currentCost + weight
 
                 let destinationCost = propertyMap[destination][distanceProperty]

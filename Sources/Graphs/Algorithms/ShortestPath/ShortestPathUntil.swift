@@ -1,21 +1,19 @@
-extension Graph where Self: IncidenceGraph & VertexListGraph & EdgePropertyGraph {
-    func shortestPath<Weight: Comparable>(
+extension IncidenceGraph {
+    func shortestPath(
         from source: VertexDescriptor,
         until condition: @escaping (VertexDescriptor) -> Bool,
-        using algorithm: some ShortestPathUntilAlgorithm<VertexDescriptor, EdgeDescriptor, Weight>
+        using algorithm: some ShortestPathUntilAlgorithm<Self>
     ) -> Path<VertexDescriptor, EdgeDescriptor>? {
         algorithm.shortestPath(from: source, until: condition, in: self)
     }
 }
 
-protocol ShortestPathUntilAlgorithm<Vertex, Edge, Weight> {
-    associatedtype Vertex
-    associatedtype Edge
-    associatedtype Weight: Comparable
+protocol ShortestPathUntilAlgorithm<Graph> {
+    associatedtype Graph: IncidenceGraph
 
     func shortestPath(
-        from source: Vertex,
-        until condition: @escaping (Vertex) -> Bool,
-        in graph: some Graph<Vertex, Edge> & IncidenceGraph & VertexListGraph & EdgePropertyGraph
-    ) -> Path<Vertex, Edge>?
+        from source: Graph.VertexDescriptor,
+        until condition: @escaping (Graph.VertexDescriptor) -> Bool,
+        in graph: Graph
+    ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 }

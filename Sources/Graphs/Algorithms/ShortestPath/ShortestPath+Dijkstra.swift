@@ -1,7 +1,7 @@
-extension ShortestPathAlgorithm where Vertex: Hashable, Weight: Numeric, Weight.Magnitude == Weight {
-    static func dijkstra<Vertex, Edge, Weight>(
-        weight: @escaping (EdgePropertyValues) -> Weight
-    ) -> Self where Self == DijkstraShortestPath<Vertex, Edge, Weight> {
+extension ShortestPathAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
+    static func dijkstra<Graph, Weight>(
+        weight: CostAlgorithm<Graph, Weight>
+    ) -> Self where Self == DijkstraShortestPath<Graph, Weight> {
         .init(weight: weight)
     }
 }
