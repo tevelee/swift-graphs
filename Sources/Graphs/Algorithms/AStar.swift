@@ -209,6 +209,24 @@ extension AStarAlgorithm: Sequence {
     }
 }
 
+struct AStarWithVisitor<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: Numeric & Comparable, HScore: Numeric, FScore: Comparable> where Graph.VertexDescriptor: Hashable, HScore.Magnitude == HScore {
+    typealias Base = AStarAlgorithm<Graph, Weight, HScore, FScore>
+    let base: Base
+    let makeVisitor: () -> Base.Visitor
+}
+
+extension AStarWithVisitor: Sequence {
+    func makeIterator() -> AStarAlgorithm<Graph, Weight, HScore, FScore>.Iterator {
+        base.makeIterator(visitor: makeVisitor())
+    }
+}
+
+extension AStarAlgorithm {
+    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> AStarWithVisitor<Graph, Weight, HScore, FScore> {
+        .init(base: self, makeVisitor: makeVisitor)
+    }
+}
+
 extension AStarAlgorithm.Cost: Equatable where FScore: Equatable {}
 
 extension AStarAlgorithm.Cost: Comparable where FScore: Comparable {
