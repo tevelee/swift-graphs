@@ -1,5 +1,4 @@
 import Collections
-import Foundation
 
 extension VertexStorage {
     static func ordered() -> OrderedVertexStorage where Self == OrderedVertexStorage {
@@ -10,16 +9,13 @@ extension VertexStorage {
 typealias OVS = OrderedVertexStorage
 struct OrderedVertexStorage: VertexStorage {
     struct Vertex: Identifiable, Hashable {
-        private let _id: UUID
-
+        private let _id: Int
         var id: some Hashable { _id }
-
-        fileprivate init() {
-            _id = UUID()
-        }
+        fileprivate init(_id: Int) { self._id = _id }
     }
 
     private var _vertices: OrderedSet<Vertex> = []
+    private var _nextId: Int = 0
 
     var numberOfVertices: Int {
         _vertices.count
@@ -34,7 +30,8 @@ struct OrderedVertexStorage: VertexStorage {
     }
 
     mutating func addVertex() -> Vertex {
-        let vertex = Vertex()
+        let vertex = Vertex(_id: _nextId)
+        _nextId &+= 1
         _vertices.updateOrAppend(vertex)
         return vertex
     }

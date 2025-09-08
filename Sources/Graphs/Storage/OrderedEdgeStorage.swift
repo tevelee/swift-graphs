@@ -1,5 +1,4 @@
 import Collections
-import Foundation
 
 extension EdgeStorage {
     static func ordered<Vertex>() -> OrderedEdgeStorage<Vertex> where Self == OrderedEdgeStorage<Vertex> {
@@ -10,16 +9,13 @@ extension EdgeStorage {
 typealias OES = OrderedEdgeStorage<OVS.Vertex>
 struct OrderedEdgeStorage<Vertex: Hashable>: EdgeStorage {
     struct Edge: Identifiable, Hashable {
-        private let _id: UUID
-
+        private let _id: Int
         var id: some Hashable { _id }
-
-        fileprivate init() {
-            _id = UUID()
-        }
+        fileprivate init(_id: Int) { self._id = _id }
     }
 
     private var _edges: OrderedDictionary<Edge, (source: Vertex, destination: Vertex)> = [:]
+    private var _nextId: Int = 0
 
     var numberOfEdges: Int {
         _edges.count
@@ -50,7 +46,8 @@ struct OrderedEdgeStorage<Vertex: Hashable>: EdgeStorage {
     }
 
     mutating func addEdge(from source: Vertex, to destination: Vertex) -> Edge {
-        let edge = Edge()
+        let edge = Edge(_id: _nextId)
+        _nextId &+= 1
         _edges[edge] = (source, destination)
         return edge
     }
