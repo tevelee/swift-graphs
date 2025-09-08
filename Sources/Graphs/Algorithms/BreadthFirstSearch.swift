@@ -19,6 +19,7 @@ struct BreadthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> wher
         var grayTargetEdge: ((Edge) -> Void)?
         var blackTargetEdge: ((Edge) -> Void)?
         var finishVertex: ((Vertex) -> Void)?
+        var shouldTraverse: (((from: Vertex, to: Vertex, via: Edge, context: Result)) -> Bool)?
     }
     
     private enum Color: Equatable {
@@ -125,6 +126,14 @@ struct BreadthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> wher
                 switch destinationColor {
                 case .white:
                     // Tree edge - first time discovering this vertex
+                    let context = Result(
+                        source: source,
+                        currentVertex: current,
+                        distanceProperty: distanceProperty,
+                        predecessorEdgeProperty: predecessorEdgeProperty,
+                        propertyMap: propertyMap
+                    )
+                    if let veto = visitor?.shouldTraverse, veto((from: current, to: destination, via: edge, context: context)) == false { continue }
                     propertyMap[destination][colorProperty] = .gray
                     propertyMap[destination][distanceProperty] = propertyMap[current][distanceProperty] + 1
                     propertyMap[destination][predecessorEdgeProperty] = edge

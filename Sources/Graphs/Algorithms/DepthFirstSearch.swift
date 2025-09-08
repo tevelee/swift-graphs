@@ -20,6 +20,7 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
         var forwardEdge: ((Edge) -> Void)?
         var crossEdge: ((Edge) -> Void)?
         var finishVertex: ((Vertex) -> Void)?
+        var shouldTraverse: (((from: Vertex, to: Vertex, via: Edge, context: Result)) -> Bool)?
     }
 
     private enum Color {
@@ -36,6 +37,7 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
         let discoveryTimeProperty: any VertexProperty<Time>.Type
         let finishTimeProperty: any VertexProperty<Time>.Type
         let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
+        let depthProperty: any VertexProperty<UInt?>.Type
         let propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
     }
 
@@ -55,9 +57,14 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
         static var defaultValue: Edge? { nil }
     }
 
+    private enum DepthProperty: VertexProperty {
+        static var defaultValue: UInt? { nil }
+    }
+
     struct DFSFrame {
         let vertex: Vertex
         let isFirstVisit: Bool
+        let depth: UInt
     }
 
     private let graph: Graph
@@ -96,6 +103,7 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
         private let discoveryTimeProperty: any VertexProperty<Time>.Type = DiscoveryTimeProperty.self
         private let finishTimeProperty: any VertexProperty<Time>.Type = FinishTimeProperty.self
         private let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
+        private let depthProperty: any VertexProperty<UInt?>.Type = DepthProperty.self
 
         init(
             graph: Graph,
@@ -114,10 +122,11 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
                 propertyMap[vertex][discoveryTimeProperty] = .undiscovered
                 propertyMap[vertex][finishTimeProperty] = .undiscovered
                 propertyMap[vertex][predecessorEdgeProperty] = nil
+                propertyMap[vertex][depthProperty] = nil
                 visitor?.initializeVertex?(vertex)
             }
 
-            self.stack.push(DFSFrame(vertex: source, isFirstVisit: true))
+            self.stack.push(DFSFrame(vertex: source, isFirstVisit: true, depth: 0))
         }
 
         mutating func next() -> Result? {
@@ -129,11 +138,12 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
                     time += 1
                     propertyMap[vertex][colorProperty] = .gray
                     propertyMap[vertex][discoveryTimeProperty] = .discovered(time)
+                    propertyMap[vertex][depthProperty] = frame.depth
 
                     visitor?.discoverVertex?(vertex)
                     visitor?.examineVertex?(vertex)
 
-                    stack.push(DFSFrame(vertex: vertex, isFirstVisit: false))
+                    stack.push(DFSFrame(vertex: vertex, isFirstVisit: false, depth: frame.depth))
 
                     let outEdges = Array(graph.outEdges(of: vertex))
                     var whiteNeighbors: [Vertex] = []
@@ -146,6 +156,16 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
 
                         switch destinationColor {
                         case .white:
+                            let context = Result(
+                                source: source,
+                                currentVertex: vertex,
+                                discoveryTimeProperty: discoveryTimeProperty,
+                                finishTimeProperty: finishTimeProperty,
+                                predecessorEdgeProperty: predecessorEdgeProperty,
+                                depthProperty: depthProperty,
+                                propertyMap: propertyMap
+                            )
+                            if let veto = visitor?.shouldTraverse, veto((from: vertex, to: destination, via: edge, context: context)) == false { continue }
                             propertyMap[destination][predecessorEdgeProperty] = edge
                             visitor?.treeEdge?(edge)
                             whiteNeighbors.append(destination)
@@ -166,7 +186,7 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
                     }
 
                     for neighbor in whiteNeighbors.reversed() {
-                        stack.push(DFSFrame(vertex: neighbor, isFirstVisit: true))
+                        stack.push(DFSFrame(vertex: neighbor, isFirstVisit: true, depth: frame.depth + 1))
                     }
                 } else {
                     time += 1
@@ -180,6 +200,7 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
                         discoveryTimeProperty: discoveryTimeProperty,
                         finishTimeProperty: finishTimeProperty,
                         predecessorEdgeProperty: predecessorEdgeProperty,
+                        depthProperty: depthProperty,
                         propertyMap: propertyMap
                     )
                 }
@@ -232,6 +253,14 @@ extension DepthFirstSearchAlgorithm.Result {
             current = predecessor
         }
         return result
+    }
+
+    func depth() -> UInt {
+        propertyMap[currentVertex][depthProperty] ?? 0
+    }
+
+    func depth(of vertex: Vertex) -> UInt? {
+        propertyMap[vertex][depthProperty]
     }
 }
 
