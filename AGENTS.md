@@ -107,7 +107,7 @@ gridGraph.hamiltonianPath(from: GridPosition(x: 0, y: 0), to: GridPosition(x: 4,
 [ ] basic graph representations
   [x] basic protocols for vertices, edges
   [ ] multiple representations
-    [ ] adjacency list
+    [x] adjacency list
       [ ] variable storage, e.g. array/dictionary/vector
     [ ] matrix
   [ ] special graphs
@@ -119,9 +119,10 @@ gridGraph.hamiltonianPath(from: GridPosition(x: 0, y: 0), to: GridPosition(x: 4,
 [ ] property maps like BGL to store weights, capacities etc for algos
 [ ] extensions on graph to support various algos
   [ ] shortest paths from source until end condition
-    [ ] Dijkstra
-    [ ] A*
-      [ ] Injectable heuristic (e.g. distance like manhattan/hamiltonian
+    [x] Dijkstra
+    [x] A*
+      [x] Injectable heuristic (e.g. distance like manhattan/hamiltonian)
+    [x] Iteratively deepening A*
   [ ] shortest paths from source to all vertices
     [ ] Dijkstra
     [ ] A*
@@ -134,16 +135,16 @@ gridGraph.hamiltonianPath(from: GridPosition(x: 0, y: 0), to: GridPosition(x: 4,
   [ ] K shortest paths
     [ ] Yen
   [ ] traversals
-    [ ] ability to track predecessor path, depth etc. in visits
-    [ ] ability to skip already visited (acyclic)
-    [ ] limited depth support
-    [ ] BFS
-    [ ] DFS
-      [ ] prefix order
-      [ ] postfix order
+    [x] ability to track predecessor path, depth etc. in visits
+    [x] ability to skip already visited (acyclic)
+    [x] limited depth support
+    [x] BFS
+    [x] DFS
+      [x] prefix order
+      [x] postfix order
       [ ] represent binary graph edges with a dedicated type/marker and support infix order
       [ ] iteratively deepening
-    [ ] Best-first search
+    [x] Best-first search
     [ ] Instead of a BGL like API, let's expose the traversal as an iterable Sequence. And search becomes just a filter on the sequence.
   [ ] topological sort
   [ ] computing graph properties
