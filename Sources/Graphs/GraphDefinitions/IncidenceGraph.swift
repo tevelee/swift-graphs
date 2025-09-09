@@ -11,4 +11,8 @@ extension IncidenceGraph {
     func successors(of vertex: VertexDescriptor) -> some Sequence<VertexDescriptor> {
         outEdges(of: vertex).lazy.compactMap(destination)
     }
+
+    func isSink(vertex: VertexDescriptor) -> Bool {
+        outDegree(of: vertex) == 0
+    }
 }
