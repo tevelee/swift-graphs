@@ -124,30 +124,30 @@ struct BreadthFirstSearch<Graph: IncidenceGraph & VertexListGraph> where Graph.V
                 let destinationColor = propertyMap[destination][colorProperty]
                 
                 switch destinationColor {
-                case .white:
-                    // Tree edge - first time discovering this vertex
-                    let context = Result(
-                        source: source,
-                        currentVertex: current,
-                        distanceProperty: distanceProperty,
-                        predecessorEdgeProperty: predecessorEdgeProperty,
-                        propertyMap: propertyMap
-                    )
-                    if let veto = visitor?.shouldTraverse, veto((from: current, to: destination, via: edge, context: context)) == false { continue }
-                    propertyMap[destination][colorProperty] = .gray
-                    propertyMap[destination][distanceProperty] = propertyMap[current][distanceProperty] + 1
-                    propertyMap[destination][predecessorEdgeProperty] = edge
-                    visitor?.discoverVertex?(destination)
-                    queue.enqueue(destination)
-                    visitor?.treeEdge?(edge)
-                case .gray:
-                    // Non-tree edge to an in-progress vertex
-                    visitor?.grayTargetEdge?(edge)
-                    visitor?.nonTreeEdge?(edge)
-                case .black:
-                    // Non-tree edge to a finished vertex
-                    visitor?.blackTargetEdge?(edge)
-                    visitor?.nonTreeEdge?(edge)
+                    case .white:
+                        // Tree edge - first time discovering this vertex
+                        let context = Result(
+                            source: source,
+                            currentVertex: current,
+                            distanceProperty: distanceProperty,
+                            predecessorEdgeProperty: predecessorEdgeProperty,
+                            propertyMap: propertyMap
+                        )
+                        if let veto = visitor?.shouldTraverse, veto((from: current, to: destination, via: edge, context: context)) == false { continue }
+                        propertyMap[destination][colorProperty] = .gray
+                        propertyMap[destination][distanceProperty] = propertyMap[current][distanceProperty] + 1
+                        propertyMap[destination][predecessorEdgeProperty] = edge
+                        visitor?.discoverVertex?(destination)
+                        queue.enqueue(destination)
+                        visitor?.treeEdge?(edge)
+                    case .gray:
+                        // Non-tree edge to an in-progress vertex
+                        visitor?.grayTargetEdge?(edge)
+                        visitor?.nonTreeEdge?(edge)
+                    case .black:
+                        // Non-tree edge to a finished vertex
+                        visitor?.blackTargetEdge?(edge)
+                        visitor?.nonTreeEdge?(edge)
                 }
             }
             

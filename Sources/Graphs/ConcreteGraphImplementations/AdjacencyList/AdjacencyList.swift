@@ -9,21 +9,8 @@ struct AdjacencyList<VertexStore: VertexStorage, EdgeStore: EdgeStorage, VertexP
     var edgeStore: EdgeStore
     var vertexPropertyMap: VertexPropertyMap
     var edgePropertyMap: EdgePropertyMap
-
-    init(
-        vertexStore: VertexStore,
-        edgeStore: EdgeStore,
-        vertexPropertyMap: VertexPropertyMap,
-        edgePropertyMap: EdgePropertyMap
-    ) {
-        self.vertexStore = vertexStore
-        self.edgeStore = edgeStore
-        self.vertexPropertyMap = vertexPropertyMap
-        self.edgePropertyMap = edgePropertyMap
-    }
 }
 
-// Zero-argument ergonomic initializer using ordered storages by default
 extension AdjacencyList where
     VertexStore == OrderedVertexStorage,
     EdgeStore == CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
@@ -31,16 +18,10 @@ extension AdjacencyList where
     EdgePropertyMap == DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
 {
     init() {
-        self.init(
-            vertexStore: OrderedVertexStorage(),
-            edgeStore: OrderedEdgeStorage<OrderedVertexStorage.Vertex>().cacheInOutEdges(),
-            vertexPropertyMap: .init(defaultValue: .init()),
-            edgePropertyMap: .init(defaultValue: .init())
-        )
+        self.init(edgeStore: OrderedEdgeStorage().cacheInOutEdges())
     }
 }
 
-// Ergonomic initializer that allows plugging any EdgeStore while defaulting VertexStore and maps
 extension AdjacencyList where
     VertexStore == OrderedVertexStorage,
     VertexPropertyMap == DictionaryPropertyMap<VertexStore.Vertex, VertexPropertyValues>,
@@ -74,3 +55,5 @@ extension AdjacencyList: AdjacencyGraph {}
 extension AdjacencyList: MutableGraph {}
 extension AdjacencyList: PropertyGraph {}
 extension AdjacencyList: MutablePropertyGraph {}
+extension AdjacencyList: BinaryIncidenceGraph where EdgeStore: BinaryEdgeStorage {}
+extension AdjacencyList: MutableBinaryIncidenceGraph where EdgeStore: BinaryEdgeStorage {}

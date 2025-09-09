@@ -3,7 +3,7 @@ import XCTest
 
 final class BinaryAdjacencyListTests: XCTestCase {
     func testSetChildrenAndNeighbors() {
-        var g = AdjacencyList(edgeStore: BinaryEdgeStorage())
+        var g = AdjacencyList(edgeStore: BinaryEdgeStore())
 
         let a = g.addVertex()
         let b = g.addVertex()
@@ -30,7 +30,7 @@ final class BinaryAdjacencyListTests: XCTestCase {
     }
 
     func testReplacingLeftChild() {
-        var g = AdjacencyList(edgeStore: BinaryEdgeStorage())
+        var g = AdjacencyList(edgeStore: BinaryEdgeStore())
 
         let a = g.addVertex()
         let b = g.addVertex()

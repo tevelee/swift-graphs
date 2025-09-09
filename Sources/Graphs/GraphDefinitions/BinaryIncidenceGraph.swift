@@ -1,14 +1,24 @@
-protocol BinaryIncidenceGraph: Graph {
+protocol BinaryIncidenceGraph: IncidenceGraph {
     func leftEdge(of v: VertexDescriptor) -> EdgeDescriptor?
     func rightEdge(of v: VertexDescriptor) -> EdgeDescriptor?
-
-    func leftNeighbor(of v: VertexDescriptor) -> VertexDescriptor?
-    func rightNeighbor(of v: VertexDescriptor) -> VertexDescriptor?
 }
 
-protocol MutableBinaryIncidenceGraph: BinaryIncidenceGraph, MutableGraph {
-    @discardableResult
-    mutating func setLeftChild(of parent: VertexDescriptor, to child: VertexDescriptor) -> EdgeDescriptor?
-    @discardableResult
-    mutating func setRightChild(of parent: VertexDescriptor, to child: VertexDescriptor) -> EdgeDescriptor?
+extension BinaryIncidenceGraph {
+    func leftNeighbor(of v: VertexDescriptor) -> VertexDescriptor? {
+        leftEdge(of: v).flatMap(destination)
+    }
+
+    func rightNeighbor(of v: VertexDescriptor) -> VertexDescriptor? {
+        rightEdge(of: v).flatMap(destination)
+    }
+}
+
+extension BinaryIncidenceGraph where Self: EdgeStorageBackedGraph, EdgeStore: BinaryEdgeStorage {
+    func leftEdge(of v: VertexDescriptor) -> EdgeDescriptor? {
+        edgeStore.leftEdge(of: v)
+    }
+
+    func rightEdge(of v: VertexDescriptor) -> EdgeDescriptor? {
+        edgeStore.rightEdge(of: v)
+    }
 }

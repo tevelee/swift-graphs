@@ -1,6 +1,6 @@
 import Collections
 
-struct BinaryEdgeStorage<Vertex: Hashable>: EdgeStorage {
+struct BinaryEdgeStore<Vertex: Hashable>: BinaryEdgeStorage {
     struct Edge: Identifiable, Hashable {
         private let _id: Int
         var id: some Hashable { _id }
@@ -82,9 +82,6 @@ struct BinaryEdgeStorage<Vertex: Hashable>: EdgeStorage {
         }
     }
 
-    // MARK: Binary helpers
-    func leftNeighbor(of v: Vertex) -> Vertex? { leftEdgeMap[v].flatMap { edgesStore[$0]?.destination } }
-    func rightNeighbor(of v: Vertex) -> Vertex? { rightEdgeMap[v].flatMap { edgesStore[$0]?.destination } }
     func leftEdge(of v: Vertex) -> Edge? { leftEdgeMap[v] }
     func rightEdge(of v: Vertex) -> Edge? { rightEdgeMap[v] }
 }

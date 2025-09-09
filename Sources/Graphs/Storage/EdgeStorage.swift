@@ -15,3 +15,8 @@ protocol EdgeStorage {
     func incomingEdges(of vertex: Vertex) -> Edges
     func inDegree(of vertex: Vertex) -> Int
 }
+
+protocol BinaryEdgeStorage: EdgeStorage {
+    func leftEdge(of v: Vertex) -> Edge?
+    func rightEdge(of v: Vertex) -> Edge?
+}

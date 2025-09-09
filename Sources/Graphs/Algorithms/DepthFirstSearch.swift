@@ -145,9 +145,8 @@ struct DepthFirstSearch<Graph: IncidenceGraph & VertexListGraph> where Graph.Ver
 
                     stack.push(DFSFrame(vertex: vertex, isFirstVisit: false, depth: frame.depth))
 
-                    let outgoingEdges = Array(graph.outgoingEdges(of: vertex))
                     var whiteNeighbors: [Vertex] = []
-                    for edge in outgoingEdges {
+                    for edge in graph.outgoingEdges(of: vertex) {
                         visitor?.examineEdge?(edge)
 
                         guard let destination = graph.destination(of: edge) else { continue }
@@ -155,33 +154,33 @@ struct DepthFirstSearch<Graph: IncidenceGraph & VertexListGraph> where Graph.Ver
                         let destinationColor = propertyMap[destination][colorProperty]
 
                         switch destinationColor {
-                        case .white:
-                            let context = Result(
-                                source: source,
-                                currentVertex: vertex,
-                                discoveryTimeProperty: discoveryTimeProperty,
-                                finishTimeProperty: finishTimeProperty,
-                                predecessorEdgeProperty: predecessorEdgeProperty,
-                                depthProperty: depthProperty,
-                                propertyMap: propertyMap
-                            )
-                            if let veto = visitor?.shouldTraverse, veto((from: vertex, to: destination, via: edge, context: context)) == false { continue }
-                            propertyMap[destination][predecessorEdgeProperty] = edge
-                            visitor?.treeEdge?(edge)
-                            whiteNeighbors.append(destination)
-                        case .gray:
-                            visitor?.backEdge?(edge)
-                        case .black:
-                            let sourceDiscoveryTime = propertyMap[vertex][discoveryTimeProperty]
-                            let destinationDiscoveryTime = propertyMap[destination][discoveryTimeProperty]
+                            case .white:
+                                let context = Result(
+                                    source: source,
+                                    currentVertex: vertex,
+                                    discoveryTimeProperty: discoveryTimeProperty,
+                                    finishTimeProperty: finishTimeProperty,
+                                    predecessorEdgeProperty: predecessorEdgeProperty,
+                                    depthProperty: depthProperty,
+                                    propertyMap: propertyMap
+                                )
+                                if let veto = visitor?.shouldTraverse, veto((from: vertex, to: destination, via: edge, context: context)) == false { continue }
+                                propertyMap[destination][predecessorEdgeProperty] = edge
+                                visitor?.treeEdge?(edge)
+                                whiteNeighbors.append(destination)
+                            case .gray:
+                                visitor?.backEdge?(edge)
+                            case .black:
+                                let sourceDiscoveryTime = propertyMap[vertex][discoveryTimeProperty]
+                                let destinationDiscoveryTime = propertyMap[destination][discoveryTimeProperty]
 
-                            if case .discovered(let sourceTime) = sourceDiscoveryTime,
-                               case .discovered(let destTime) = destinationDiscoveryTime,
-                               sourceTime < destTime {
-                                visitor?.forwardEdge?(edge)
-                            } else {
-                                visitor?.crossEdge?(edge)
-                            }
+                                if case .discovered(let sourceTime) = sourceDiscoveryTime,
+                                case .discovered(let destTime) = destinationDiscoveryTime,
+                                sourceTime < destTime {
+                                    visitor?.forwardEdge?(edge)
+                                } else {
+                                    visitor?.crossEdge?(edge)
+                                }
                         }
                     }
 
@@ -312,16 +311,16 @@ extension DepthFirstSearch {
 }
 
 struct DFSOrder<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    let visitor: DepthFirstSearch<Graph>.Visitor
+    let makeVisitor: (Graph) -> DepthFirstSearch<Graph>.Visitor
     let vertices: () -> [Graph.VertexDescriptor]
     let edges: () -> [Graph.EdgeDescriptor]
     
     init(
-        visitor: DepthFirstSearch<Graph>.Visitor,
+        makeVisitor: @escaping (Graph) -> DepthFirstSearch<Graph>.Visitor,
         vertices: @autoclosure @escaping () -> [Graph.VertexDescriptor],
         edges: @autoclosure @escaping () -> [Graph.EdgeDescriptor]
     ) {
-        self.visitor = visitor
+        self.makeVisitor = makeVisitor
         self.vertices = vertices
         self.edges = edges
     }
@@ -330,10 +329,12 @@ struct DFSOrder<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescr
         var vertices: [Graph.VertexDescriptor] = []
         var edges: [Graph.EdgeDescriptor] = []
         return DFSOrder(
-            visitor: .init(
-                discoverVertex: { vertices.append($0) },
-                examineEdge: { edges.append($0) }
-            ),
+            makeVisitor: { _ in
+                .init(
+                    discoverVertex: { vertices.append($0) },
+                    examineEdge: { edges.append($0) }
+                )
+            },
             vertices: vertices,
             edges: edges
         )
@@ -343,12 +344,49 @@ struct DFSOrder<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescr
         var vertices: [Graph.VertexDescriptor] = []
         var edges: [Graph.EdgeDescriptor] = []
         return DFSOrder(
-            visitor: .init(
-                examineEdge: { edges.append($0) },
-                finishVertex: { vertices.append($0) }
-            ),
+            makeVisitor: { _ in
+                .init(
+                    examineEdge: { edges.append($0) },
+                    finishVertex: { vertices.append($0) }
+                )
+            },
             vertices: vertices,
             edges: edges
         )
     }
 }
+
+extension DFSOrder where Graph: BinaryIncidenceGraph {
+    static var inorder: Self {
+        var vertices: [Graph.VertexDescriptor] = []
+        var edges: [Graph.EdgeDescriptor] = []
+
+        var emitted: Set<Graph.VertexDescriptor> = []
+        func emit(_ v: Graph.VertexDescriptor) {
+            if emitted.insert(v).inserted { vertices.append(v) }
+        }
+        var parent: [Graph.VertexDescriptor: Graph.VertexDescriptor] = [:]
+
+        return DFSOrder(
+            makeVisitor: { g in
+                .init(
+                    discoverVertex: { v in
+                        if g.leftNeighbor(of: v) == nil { emit(v) }
+                    },
+                    examineEdge: { e in edges.append(e) },
+                    treeEdge: { e in
+                        guard let p = g.source(of: e), let c = g.destination(of: e) else { return }
+                        parent[c] = p
+                    },
+                    finishVertex: { u in
+                        if let p = parent[u], g.leftNeighbor(of: p) == u { emit(p) }
+                    }
+                )
+            },
+            vertices: vertices,
+            edges: edges
+        )
+    }
+}
+
+

@@ -11,7 +11,7 @@ struct DFSTraversal<Graph: IncidenceGraph & VertexListGraph>: TraversalAlgorithm
         in graph: Graph
     ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
         DepthFirstSearch(on: graph, from: source)
-            .withVisitor { order.visitor }
+            .withVisitor { order.makeVisitor(graph) }
             .forEach { _ in }
         
         return TraversalResult(
