@@ -14,6 +14,13 @@ struct CacheInOutEdges<Base: EdgeStorage>: EdgeStorage where Base.Edges == Order
 
     init(base: Base) {
         self.base = base
+        // Hydrate caches for pre-populated storages
+        for edge in base.edges() {
+            if let (source, destination) = base.endpoints(of: edge) {
+                _outgoingEdges[source, default: []].updateOrAppend(edge)
+                _incomingEdges[destination, default: []].updateOrAppend(edge)
+            }
+        }
     }
 
     private var _outgoingEdges: OrderedDictionary<Vertex, OrderedSet<Edge>> = [:]

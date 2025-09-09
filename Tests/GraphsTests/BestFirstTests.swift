@@ -3,8 +3,7 @@ import Testing
 
 struct BestFirstTests {
     @Test func greedyBestFirst_OrdersByHeuristic() {
-        typealias G = AdjacencyList<OVS, CacheInOutEdges<OES>, DictionaryPropertyMap<OVS.Vertex, VertexPropertyValues>, DictionaryPropertyMap<OES.Edge, EdgePropertyValues>>
-        var graph = G(edgeStorage: OES().cacheInOutEdges())
+        var graph = AdjacencyList()
         graph.add(edges: [
             ("s", "a"),
             ("s", "b"),

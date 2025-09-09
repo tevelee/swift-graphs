@@ -11,19 +11,48 @@ struct AdjacencyList<VertexStore: VertexStorage, EdgeStore: EdgeStorage, VertexP
     var edgePropertyMap: EdgePropertyMap
 
     init(
-        vertexStorage: VertexStore = OVS(),
-        edgeStorage: EdgeStore = OES().cacheInOutEdges(),
-        vertexPropertyMap: VertexPropertyMap = DictionaryPropertyMap<OVS.Vertex, _>(
-            defaultValue: VertexPropertyValues()
-        ),
-        edgePropertyMap: EdgePropertyMap = DictionaryPropertyMap<OES.Edge, _>(
-            defaultValue: EdgePropertyValues()
-        )
+        vertexStorage: VertexStore,
+        edgeStorage: EdgeStore,
+        vertexPropertyMap: VertexPropertyMap,
+        edgePropertyMap: EdgePropertyMap
     ) {
         self.vertexStorage = vertexStorage
         self.edgeStorage = edgeStorage
         self.vertexPropertyMap = vertexPropertyMap
         self.edgePropertyMap = edgePropertyMap
+    }
+}
+
+// Zero-argument ergonomic initializer using ordered storages by default
+extension AdjacencyList where
+    VertexStore == OrderedVertexStorage,
+    EdgeStore == CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
+    VertexPropertyMap == DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
+    EdgePropertyMap == DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
+{
+    init() {
+        self.init(
+            vertexStorage: OrderedVertexStorage(),
+            edgeStorage: OrderedEdgeStorage().cacheInOutEdges(),
+            vertexPropertyMap: .init(defaultValue: .init()),
+            edgePropertyMap: .init(defaultValue: .init())
+        )
+    }
+}
+
+// Ergonomic initializer that allows plugging any EdgeStore while defaulting VertexStore and maps
+extension AdjacencyList where
+    VertexStore == OrderedVertexStorage,
+    VertexPropertyMap == DictionaryPropertyMap<VertexStore.Vertex, VertexPropertyValues>,
+    EdgePropertyMap == DictionaryPropertyMap<EdgeStore.Edge, EdgePropertyValues>
+{
+    init(edgeStorage: EdgeStore) {
+        self.init(
+            vertexStorage: OrderedVertexStorage(),
+            edgeStorage: edgeStorage,
+            vertexPropertyMap: .init(defaultValue: .init()),
+            edgePropertyMap: .init(defaultValue: .init())
+        )
     }
 }
 
