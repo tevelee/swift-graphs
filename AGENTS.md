@@ -108,21 +108,21 @@ gridGraph.hamiltonianPath(from: GridPosition(x: 0, y: 0), to: GridPosition(x: 4,
   [x] basic protocols for vertices, edges
   [ ] multiple representations
     [x] adjacency list
-      [ ] variable storage, e.g. array/dictionary/vector
-    [ ] matrix
-  [ ] special graphs
-    [ ] binary (lhs/rhs edge)
+      [x] variable storage, e.g. array/dictionary/vector
+    [x] matrix
+  [x] special graphs
+    [x] binary (lhs/rhs edge)
     [ ] grid
     [ ] lazy
     [ ] bipartite
 [ ] conditional conformances on equatable, hashable
-[ ] property maps like BGL to store weights, capacities etc for algos
+[x] property maps like BGL to store weights, capacities etc for algos
 [ ] extensions on graph to support various algos
   [ ] shortest paths from source until end condition
     [x] Dijkstra
     [x] A*
       [x] Injectable heuristic (e.g. distance like manhattan/hamiltonian)
-    [x] Iteratively deepening A*
+    [ ] Iteratively deepening A*
   [ ] shortest paths from source to all vertices
     [ ] Dijkstra
     [ ] A*
@@ -134,7 +134,7 @@ gridGraph.hamiltonianPath(from: GridPosition(x: 0, y: 0), to: GridPosition(x: 4,
     [ ] Bidirectional Dijkstra
   [ ] K shortest paths
     [ ] Yen
-  [ ] traversals
+  [x] traversals
     [x] ability to track predecessor path, depth etc. in visits
     [x] ability to skip already visited (acyclic)
     [x] limited depth support
@@ -142,10 +142,10 @@ gridGraph.hamiltonianPath(from: GridPosition(x: 0, y: 0), to: GridPosition(x: 4,
     [x] DFS
       [x] prefix order
       [x] postfix order
-      [ ] represent binary graph edges with a dedicated type/marker and support infix order
-      [ ] iteratively deepening
+      [x] represent binary graph edges with a dedicated type/marker and support infix order
+      [x] iteratively deepening
     [x] Best-first search
-    [ ] Instead of a BGL like API, let's expose the traversal as an iterable Sequence. And search becomes just a filter on the sequence.
+    [x] Instead of a BGL like API, let's expose the traversal as an iterable Sequence. And search becomes just a filter on the sequence.
   [ ] topological sort
   [ ] computing graph properties
     [ ] is cyclic

@@ -11,10 +11,10 @@ final class BinaryAdjacencyListTests: XCTestCase {
         let d = g.addVertex()
         let e = g.addVertex()
 
-        _ = g.setLeftChild(of: a, to: b)
-        _ = g.setRightChild(of: a, to: c)
-        _ = g.setLeftChild(of: b, to: d)
-        _ = g.setRightChild(of: b, to: e)
+        g.setLeftNeighbor(of: a, to: b)
+        g.setRightNeighbor(of: a, to: c)
+        g.setLeftNeighbor(of: b, to: d)
+        g.setRightNeighbor(of: b, to: e)
 
         XCTAssertEqual(g.leftNeighbor(of: a), b)
         XCTAssertEqual(g.rightNeighbor(of: a), c)
@@ -36,10 +36,10 @@ final class BinaryAdjacencyListTests: XCTestCase {
         let b = g.addVertex()
         let x = g.addVertex()
 
-        _ = g.setLeftChild(of: a, to: b)
+        g.setLeftNeighbor(of: a, to: b)
         XCTAssertEqual(g.leftNeighbor(of: a), b)
 
-        _ = g.setLeftChild(of: a, to: x)
+        g.setLeftNeighbor(of: a, to: x)
         XCTAssertEqual(g.leftNeighbor(of: a), x)
         XCTAssertEqual(g.outDegree(of: a), 1)
     }

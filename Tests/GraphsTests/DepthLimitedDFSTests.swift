@@ -12,8 +12,8 @@ struct DepthLimitedDFSTests {
 
         let ra = graph.addEdge(from: root, to: a)!
         let rb = graph.addEdge(from: root, to: b)!
-        _ = graph.addEdge(from: a, to: x)!
-        _ = graph.addEdge(from: b, to: y)!
+        graph.addEdge(from: a, to: x)
+        graph.addEdge(from: b, to: y)
 
         let result = graph.traverse(from: root, using: .depthLimitedDFS(maxDepth: 1))
 
@@ -27,8 +27,8 @@ struct DepthLimitedDFSTests {
         let root = graph.addVertex()
         let a = graph.addVertex()
         let b = graph.addVertex()
-        _ = graph.addEdge(from: root, to: a)!
-        _ = graph.addEdge(from: root, to: b)!
+        graph.addEdge(from: root, to: a)
+        graph.addEdge(from: root, to: b)
 
         let result = graph.traverse(from: root, using: .depthLimitedDFS(maxDepth: 0))
 

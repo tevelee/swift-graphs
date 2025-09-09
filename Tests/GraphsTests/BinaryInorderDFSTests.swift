@@ -16,10 +16,10 @@ final class BinaryInorderDFSTests: XCTestCase {
         //    b     c
         //   / \
         //  d   e
-        g.setLeftChild(of: a, to: b)
-        g.setRightChild(of: a, to: c)
-        g.setLeftChild(of: b, to: d)
-        g.setRightChild(of: b, to: e)
+        g.setLeftNeighbor(of: a, to: b)
+        g.setRightNeighbor(of: a, to: c)
+        g.setLeftNeighbor(of: b, to: d)
+        g.setRightNeighbor(of: b, to: e)
 
         let result = g.traverse(from: a, using: .dfs(order: .inorder))
         XCTAssertEqual(result.vertices, [d, b, e, a, c])

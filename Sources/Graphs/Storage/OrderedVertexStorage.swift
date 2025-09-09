@@ -6,7 +6,6 @@ extension VertexStorage {
     }
 }
 
-typealias OVS = OrderedVertexStorage
 struct OrderedVertexStorage: VertexStorage {
     struct Vertex: Identifiable, Hashable {
         private let _id: Int

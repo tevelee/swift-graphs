@@ -5,26 +5,11 @@ struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
         let id: Int
     }
 
-    // CSR-like contiguous storage of edges (dynamic variant)
-    // We keep parallel arrays of sources and destinations.
-    // Removed edges are tracked via a freelist of reusable indices.
     private var sources: [Vertex] = []
     private var destinations: [Vertex] = []
     private var freeList: [Int] = []
 
     init() {}
-
-    init<S: Sequence>(_ edges: S) where S.Element == (source: Vertex, destination: Vertex) {
-        var tempSources: [Vertex] = []
-        var tempDestinations: [Vertex] = []
-        for (s, d) in edges {
-            tempSources.append(s)
-            tempDestinations.append(d)
-        }
-        self.sources = tempSources
-        self.destinations = tempDestinations
-        self.freeList = []
-    }
 
     var edgeCount: Int {
         sources.count - freeList.count

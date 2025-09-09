@@ -1,9 +1,14 @@
-struct AdjacencyList<VertexStore: VertexStorage, EdgeStore: EdgeStorage, VertexPropertyMap: MutablePropertyMap, EdgePropertyMap: MutablePropertyMap> where
-        EdgeStore.Vertex == VertexStore.Vertex,
-        VertexPropertyMap.Key == VertexStore.Vertex,
-        VertexPropertyMap.Value == VertexPropertyValues,
-        EdgePropertyMap.Key == EdgeStore.Edge,
-        EdgePropertyMap.Value == EdgePropertyValues
+struct AdjacencyList<
+    VertexStore: VertexStorage,
+    EdgeStore: EdgeStorage,
+    VertexPropertyMap: MutablePropertyMap,
+    EdgePropertyMap: MutablePropertyMap
+> where
+    EdgeStore.Vertex == VertexStore.Vertex,
+    VertexPropertyMap.Key == VertexStore.Vertex,
+    VertexPropertyMap.Value == VertexPropertyValues,
+    EdgePropertyMap.Key == EdgeStore.Edge,
+    EdgePropertyMap.Value == EdgePropertyValues
 {
     var vertexStore: VertexStore
     var edgeStore: EdgeStore

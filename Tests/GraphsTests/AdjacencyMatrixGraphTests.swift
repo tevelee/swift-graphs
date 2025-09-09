@@ -45,7 +45,7 @@ struct AdjacencyMatrixTests {
         var g = AdjacencyMatrix()
         let x = g.addVertex()
         let y = g.addVertex()
-        _ = g.addEdge(from: x, to: y)!
+        g.addEdge(from: x, to: y)
         #expect(g.edgeCount == 1)
 
         if let e = g.edge(from: x, to: y) {

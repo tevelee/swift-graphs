@@ -6,7 +6,6 @@ extension EdgeStorage {
     }
 }
 
-typealias OES = OrderedEdgeStorage<OVS.Vertex>
 struct OrderedEdgeStorage<Vertex: Hashable>: EdgeStorage {
     struct Edge: Identifiable, Hashable {
         private let _id: Int
