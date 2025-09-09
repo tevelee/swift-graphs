@@ -2,9 +2,15 @@ struct VertexPropertyValues {
     private var storage = PropertyValues()
 
     subscript<P: VertexProperty>(property: P.Type) -> P.Value {
-        get { storage[property] }
         set { storage[property] = newValue }
-        // TODO: modify accessor
+        _read {
+            yield storage[property]
+        }
+        _modify {
+            var value: P.Value = storage[property]
+            defer { storage[property] = value }
+            yield &value
+        }
     }
 }
 
@@ -12,9 +18,15 @@ struct EdgePropertyValues {
     private var storage = PropertyValues()
 
     subscript<P: EdgeProperty>(property: P.Type) -> P.Value {
-        get { storage[property] }
         set { storage[property] = newValue }
-        // TODO: modify accessor
+        _read {
+            yield storage[property]
+        }
+        _modify {
+            var value: P.Value = storage[property]
+            defer { storage[property] = value }
+            yield &value
+        }
     }
 }
 
@@ -22,9 +34,21 @@ private struct PropertyValues {
     private var storage: [ObjectIdentifier: Any] = [:]
 
     subscript<P: GraphProperty>(property: P.Type) -> P.Value {
-        get { storage[ObjectIdentifier(property)] as? P.Value ?? P.defaultValue }
         set { storage[ObjectIdentifier(property)] = newValue }
-        // TODO: modify accessor
+        _read {
+            let key = ObjectIdentifier(property)
+            if let val = storage[key] as? P.Value {
+                yield val
+            } else {
+                yield P.defaultValue
+            }
+        }
+        _modify {
+            let key = ObjectIdentifier(property)
+            var value = (storage[key] as? P.Value) ?? P.defaultValue
+            defer { storage[key] = value }
+            yield &value
+        }
     }
 }
 

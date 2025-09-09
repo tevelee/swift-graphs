@@ -11,9 +11,15 @@ extension VertexMutablePropertyGraph {
     }
 
     subscript(vertex: VertexPropertyMap.Key) -> VertexPropertyMap.Value {
-        get { vertexPropertyMap[vertex] }
         set { vertexPropertyMap[vertex] = newValue }
-        // TODO: modify accessor
+        _read {
+            yield vertexPropertyMap[vertex]
+        }
+        _modify {
+            var value = vertexPropertyMap[vertex]
+            defer { vertexPropertyMap[vertex] = value }
+            yield &value
+        }
     }
 }
 
@@ -30,9 +36,15 @@ extension EdgeMutablePropertyGraph {
     }
 
     subscript(edge: EdgePropertyMap.Key) -> EdgePropertyMap.Value {
-        get { edgePropertyMap[edge] }
         set { edgePropertyMap[edge] = newValue }
-        // TODO: modify accessor
+        _read {
+            yield edgePropertyMap[edge]
+        }
+        _modify {
+            var value = edgePropertyMap[edge]
+            defer { edgePropertyMap[edge] = value }
+            yield &value
+        }
     }
 }
 

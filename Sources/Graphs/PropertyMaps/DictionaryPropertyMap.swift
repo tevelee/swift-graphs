@@ -9,9 +9,15 @@ struct DictionaryPropertyMap<Key: Hashable, Value> {
 
 extension DictionaryPropertyMap: MutablePropertyMap {
     subscript(key: Key) -> Value {
-        get { values[key] ?? defaultValue }
         set { values[key] = newValue }
-        // TODO: modify accessor
+        _read {
+            yield values[key] ?? defaultValue
+        }
+        _modify {
+            var value = values[key] ?? defaultValue
+            defer { values[key] = value }
+            yield &value
+        }
     }
 }
 
