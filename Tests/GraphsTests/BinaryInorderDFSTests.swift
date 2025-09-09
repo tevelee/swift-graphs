@@ -3,7 +3,7 @@ import XCTest
 
 final class BinaryInorderDFSTests: XCTestCase {
     func testInorderTraversal() {
-        var g = AdjacencyList(edgeStorage: BinaryEdgeStorage())
+        var g = AdjacencyList(edgeStore: BinaryEdgeStorage())
 
         let a = g.addVertex()
         let b = g.addVertex()

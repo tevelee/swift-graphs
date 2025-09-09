@@ -5,19 +5,19 @@ struct AdjacencyList<VertexStore: VertexStorage, EdgeStore: EdgeStorage, VertexP
         EdgePropertyMap.Key == EdgeStore.Edge,
         EdgePropertyMap.Value == EdgePropertyValues
 {
-    private var vertexStorage: VertexStore
-    private var edgeStorage: EdgeStore
+    var vertexStore: VertexStore
+    var edgeStore: EdgeStore
     var vertexPropertyMap: VertexPropertyMap
     var edgePropertyMap: EdgePropertyMap
 
     init(
-        vertexStorage: VertexStore,
-        edgeStorage: EdgeStore,
+        vertexStore: VertexStore,
+        edgeStore: EdgeStore,
         vertexPropertyMap: VertexPropertyMap,
         edgePropertyMap: EdgePropertyMap
     ) {
-        self.vertexStorage = vertexStorage
-        self.edgeStorage = edgeStorage
+        self.vertexStore = vertexStore
+        self.edgeStore = edgeStore
         self.vertexPropertyMap = vertexPropertyMap
         self.edgePropertyMap = edgePropertyMap
     }
@@ -32,8 +32,8 @@ extension AdjacencyList where
 {
     init() {
         self.init(
-            vertexStorage: OrderedVertexStorage(),
-            edgeStorage: OrderedEdgeStorage().cacheInOutEdges(),
+            vertexStore: OrderedVertexStorage(),
+            edgeStore: OrderedEdgeStorage<OrderedVertexStorage.Vertex>().cacheInOutEdges(),
             vertexPropertyMap: .init(defaultValue: .init()),
             edgePropertyMap: .init(defaultValue: .init())
         )
@@ -46,10 +46,10 @@ extension AdjacencyList where
     VertexPropertyMap == DictionaryPropertyMap<VertexStore.Vertex, VertexPropertyValues>,
     EdgePropertyMap == DictionaryPropertyMap<EdgeStore.Edge, EdgePropertyValues>
 {
-    init(edgeStorage: EdgeStore) {
+    init(edgeStore: EdgeStore) {
         self.init(
-            vertexStorage: OrderedVertexStorage(),
-            edgeStorage: edgeStorage,
+            vertexStore: OrderedVertexStorage(),
+            edgeStore: edgeStore,
             vertexPropertyMap: .init(defaultValue: .init()),
             edgePropertyMap: .init(defaultValue: .init())
         )
@@ -60,82 +60,17 @@ extension AdjacencyList: Graph {
     typealias VertexDescriptor = VertexStore.Vertex
     typealias EdgeDescriptor = EdgeStore.Edge
 }
-
+extension AdjacencyList: VertexStorageBackedGraph {}
+extension AdjacencyList: EdgeStorageBackedGraph {}
 extension AdjacencyList: IncidenceGraph {
-    func outgoingEdges(of vertex: VertexDescriptor) -> EdgeStore.Edges {
-        edgeStorage.outgoingEdges(of: vertex)
-    }
-
-    func source(of edge: EdgeDescriptor) -> VertexDescriptor? {
-        edgeStorage.endpoints(of: edge)?.source
-    }
-    
-    func destination(of edge: EdgeDescriptor) -> VertexDescriptor? {
-        edgeStorage.endpoints(of: edge)?.destination
-    }
-    
-    func outDegree(of vertex: VertexDescriptor) -> Int {
-        edgeStorage.outDegree(of: vertex)
-    }
+    typealias OutgoingEdges = EdgeStore.Edges
 }
-
 extension AdjacencyList: BidirectionalGraph {
-    func incomingEdges(of vertex: VertexDescriptor) -> EdgeStore.Edges {
-        edgeStorage.incomingEdges(of: vertex)
-    }
-
-    func inDegree(of vertex: VertexDescriptor) -> Int {
-        edgeStorage.inDegree(of: vertex)
-    }
+    typealias IncomingEdges = EdgeStore.Edges
 }
-
-extension AdjacencyList: VertexListGraph {
-    func vertices() -> VertexStore.Vertices {
-        vertexStorage.vertices()
-    }
-
-    var vertexCount: Int {
-        vertexStorage.vertexCount
-    }
-}
-
-extension AdjacencyList: EdgeListGraph {
-    func edges() -> EdgeStore.Edges {
-        edgeStorage.edges()
-    }
-
-    var edgeCount: Int {
-        edgeStorage.edgeCount
-    }
-}
-
+extension AdjacencyList: VertexListGraph {}
+extension AdjacencyList: EdgeListGraph {}
 extension AdjacencyList: AdjacencyGraph {}
-
-extension AdjacencyList: MutableGraph {
-    @discardableResult
-    mutating func addEdge(from source: VertexDescriptor, to destination: VertexDescriptor) -> EdgeDescriptor? {
-        guard vertexStorage.contains(source), vertexStorage.contains(destination) else { return nil }
-        return edgeStorage.addEdge(from: source, to: destination)
-    }
-
-    mutating func remove(edge: consuming EdgeDescriptor) {
-        edgeStorage.remove(edge: edge)
-    }
-
-    mutating func addVertex() -> VertexDescriptor {
-        vertexStorage.addVertex()
-    }
-
-    mutating func remove(vertex: consuming VertexDescriptor) {
-        for edge in outgoingEdges(of: vertex) {
-            remove(edge: edge)
-        }
-        for edge in incomingEdges(of: vertex) {
-            remove(edge: edge)
-        }
-        vertexStorage.remove(vertex: vertex)
-    }
-}
-
+extension AdjacencyList: MutableGraph {}
 extension AdjacencyList: PropertyGraph {}
 extension AdjacencyList: MutablePropertyGraph {}

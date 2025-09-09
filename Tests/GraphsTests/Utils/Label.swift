@@ -26,6 +26,7 @@ extension AdjacencyList {
         addVertex { $0.label = "\(file):\(line)" }
     }
     
+    @discardableResult
     mutating func addEdge(
         from source: VertexDescriptor,
         to destination: VertexDescriptor,

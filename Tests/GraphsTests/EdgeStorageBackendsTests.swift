@@ -3,7 +3,7 @@ import Testing
 
 struct EdgeStorageBackendsTests {
     @Test func cooAdjacencyList_basic() {
-        var g = AdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
+        var g = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
 
         let u = g.addVertex()
         let v = g.addVertex()
@@ -19,7 +19,7 @@ struct EdgeStorageBackendsTests {
     }
 
     @Test func csrAdjacencyList_basic() {
-        var g = AdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
+        var g = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
         
         let a = g.addVertex()
         let b = g.addVertex()
