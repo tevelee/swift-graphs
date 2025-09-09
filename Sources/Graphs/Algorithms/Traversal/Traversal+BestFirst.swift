@@ -16,7 +16,7 @@ struct BestFirstTraversal<Graph: IncidenceGraph & VertexListGraph & EdgeProperty
         var vertices: [Graph.VertexDescriptor] = []
         var edges: [Graph.EdgeDescriptor] = []
 
-        AStarAlgorithm(
+        AStar(
             on: graph,
             from: source,
             edgeWeight: .uniform(0),

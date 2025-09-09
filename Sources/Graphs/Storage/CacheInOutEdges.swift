@@ -16,36 +16,36 @@ struct CacheInOutEdges<Base: EdgeStorage>: EdgeStorage where Base.Edges == Order
         self.base = base
     }
 
-    private var _outEdges: OrderedDictionary<Vertex, OrderedSet<Edge>> = [:]
-    private var _inEdges: OrderedDictionary<Vertex, OrderedSet<Edge>> = [:]
+    private var _outgoingEdges: OrderedDictionary<Vertex, OrderedSet<Edge>> = [:]
+    private var _incomingEdges: OrderedDictionary<Vertex, OrderedSet<Edge>> = [:]
 
-    func outEdges(of vertex: Vertex) -> OrderedSet<Edge> {
-        _outEdges[vertex] ?? []
+    func outgoingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
+        _outgoingEdges[vertex] ?? []
     }
 
     func outDegree(of vertex: Vertex) -> Int {
-        outEdges(of: vertex).count
+        outgoingEdges(of: vertex).count
     }
 
-    func inEdges(of vertex: Vertex) -> OrderedSet<Edge> {
-        _inEdges[vertex] ?? []
+    func incomingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
+        _incomingEdges[vertex] ?? []
     }
 
     func inDegree(of vertex: Vertex) -> Int {
-        inEdges(of: vertex).count
+        incomingEdges(of: vertex).count
     }
 
     mutating func addEdge(from source: Vertex, to destination: Vertex) -> Edge {
         let edge = base.addEdge(from: source, to: destination)
-        _outEdges[source, default: []].updateOrAppend(edge)
-        _inEdges[destination, default: []].updateOrAppend(edge)
+        _outgoingEdges[source, default: []].updateOrAppend(edge)
+        _incomingEdges[destination, default: []].updateOrAppend(edge)
         return edge
     }
 
     mutating func remove(edge: Edge) {
         if let (source, destination) = endpoints(of: edge) {
-            _outEdges[source]?.remove(edge)
-            _inEdges[destination]?.remove(edge)
+            _outgoingEdges[source]?.remove(edge)
+            _incomingEdges[destination]?.remove(edge)
         }
         base.remove(edge: edge)
     }
@@ -58,7 +58,7 @@ struct CacheInOutEdges<Base: EdgeStorage>: EdgeStorage where Base.Edges == Order
         base.edges()
     }
 
-    var numberOfEdges: Int {
-        base.numberOfEdges
+    var edgeCount: Int {
+        base.edgeCount
     }
 }

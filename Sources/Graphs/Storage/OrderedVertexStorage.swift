@@ -17,7 +17,7 @@ struct OrderedVertexStorage: VertexStorage {
     private var _vertices: OrderedSet<Vertex> = []
     private var _nextId: Int = 0
 
-    var numberOfVertices: Int {
+    var vertexCount: Int {
         _vertices.count
     }
 

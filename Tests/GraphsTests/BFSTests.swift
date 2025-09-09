@@ -28,7 +28,7 @@ struct BFSTests {
         graph.addEdge(from: a, to: b)
         graph.addEdge(from: c, to: d)
 
-        let result = BreadthFirstSearchAlgorithm(on: graph, from: root)
+        let result = BreadthFirstSearch(on: graph, from: root)
             .prefix { $0.depth() < 3 }
             .reduce(into: nil) { $0 = $1 }
 
@@ -69,7 +69,7 @@ struct BFSTests {
         var discovered = graph.makeVertexCollection { Array() }
         var examined = graph.makeVertexCollection { Array() }
 
-        BreadthFirstSearchAlgorithm(on: graph, from: root)
+        BreadthFirstSearch(on: graph, from: root)
             .withVisitor {
                 .init(
                     discoverVertex: { discovered.append($0) },

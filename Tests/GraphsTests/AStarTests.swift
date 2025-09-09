@@ -24,7 +24,7 @@ struct AStarTests {
         )
         #expect(path?.vertices == [a, c, d])
 
-        let res = AStarAlgorithm(
+        let res = AStar(
             on: graph,
             from: a,
             edgeWeight: .property(\.weight),

@@ -9,8 +9,8 @@ protocol AdjacencyGraph: Graph {
 extension AdjacencyGraph where Self: BidirectionalGraph, VertexDescriptor: Hashable {
     func adjacentVertices(of vertex: VertexDescriptor) -> OrderedSet<VertexDescriptor> {
         var result: OrderedSet<VertexDescriptor> = []
-        result.append(contentsOf: outEdges(of: vertex).compactMap(destination))
-        result.append(contentsOf: inEdges(of: vertex).compactMap(source))
+        result.append(contentsOf: outgoingEdges(of: vertex).compactMap(destination))
+        result.append(contentsOf: incomingEdges(of: vertex).compactMap(source))
         return result
     }
 }

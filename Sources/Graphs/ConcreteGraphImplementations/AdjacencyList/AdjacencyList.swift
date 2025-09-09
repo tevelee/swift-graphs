@@ -33,8 +33,8 @@ extension AdjacencyList: Graph {
 }
 
 extension AdjacencyList: IncidenceGraph {
-    func outEdges(of vertex: VertexDescriptor) -> EdgeStore.Edges {
-        edgeStorage.outEdges(of: vertex)
+    func outgoingEdges(of vertex: VertexDescriptor) -> EdgeStore.Edges {
+        edgeStorage.outgoingEdges(of: vertex)
     }
 
     func source(of edge: EdgeDescriptor) -> VertexDescriptor? {
@@ -51,8 +51,8 @@ extension AdjacencyList: IncidenceGraph {
 }
 
 extension AdjacencyList: BidirectionalGraph {
-    func inEdges(of vertex: VertexDescriptor) -> EdgeStore.Edges {
-        edgeStorage.inEdges(of: vertex)
+    func incomingEdges(of vertex: VertexDescriptor) -> EdgeStore.Edges {
+        edgeStorage.incomingEdges(of: vertex)
     }
 
     func inDegree(of vertex: VertexDescriptor) -> Int {
@@ -65,8 +65,8 @@ extension AdjacencyList: VertexListGraph {
         vertexStorage.vertices()
     }
 
-    var numberOfVertices: Int {
-        vertexStorage.numberOfVertices
+    var vertexCount: Int {
+        vertexStorage.vertexCount
     }
 }
 
@@ -75,8 +75,8 @@ extension AdjacencyList: EdgeListGraph {
         edgeStorage.edges()
     }
 
-    var numberOfEdges: Int {
-        edgeStorage.numberOfEdges
+    var edgeCount: Int {
+        edgeStorage.edgeCount
     }
 }
 
@@ -98,10 +98,10 @@ extension AdjacencyList: MutableGraph {
     }
 
     mutating func remove(vertex: consuming VertexDescriptor) {
-        for edge in outEdges(of: vertex) {
+        for edge in outgoingEdges(of: vertex) {
             remove(edge: edge)
         }
-        for edge in inEdges(of: vertex) {
+        for edge in incomingEdges(of: vertex) {
             remove(edge: edge)
         }
         vertexStorage.remove(vertex: vertex)

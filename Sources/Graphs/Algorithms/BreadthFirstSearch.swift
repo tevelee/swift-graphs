@@ -1,6 +1,6 @@
 import Collections
 
-struct BreadthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+struct BreadthFirstSearch<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
     
@@ -116,7 +116,7 @@ struct BreadthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> wher
             
             visitor?.examineVertex?(current)
             
-            for edge in graph.outEdges(of: current) {
+            for edge in graph.outgoingEdges(of: current) {
                 visitor?.examineEdge?(edge)
                 
                 guard let destination = graph.destination(of: edge) else { continue }
@@ -165,15 +165,15 @@ struct BreadthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> wher
     }
 }
 
-extension BreadthFirstSearchAlgorithm.Iterator: IteratorProtocol {}
+extension BreadthFirstSearch.Iterator: IteratorProtocol {}
 
-extension BreadthFirstSearchAlgorithm: Sequence {
+extension BreadthFirstSearch: Sequence {
     func makeIterator() -> Iterator {
         _makeIterator(visitor: nil)
     }
 }
 
-extension BreadthFirstSearchAlgorithm.Result {
+extension BreadthFirstSearch.Result {
     func depth() -> UInt {
         switch depth(of: currentVertex) {
             case .reachable(let distance):
@@ -208,7 +208,7 @@ extension BreadthFirstSearchAlgorithm.Result {
         path(to: currentVertex, in: graph)
     }
     
-    func depth(of vertex: Vertex) -> BreadthFirstSearchAlgorithm.Distance {
+    func depth(of vertex: Vertex) -> BreadthFirstSearch.Distance {
         propertyMap[vertex][distanceProperty]
     }
     
@@ -244,9 +244,9 @@ extension BreadthFirstSearchAlgorithm.Result {
     }
 }
 
-extension BreadthFirstSearchAlgorithm.Distance: Equatable {}
+extension BreadthFirstSearch.Distance: Equatable {}
 
-extension BreadthFirstSearchAlgorithm.Distance: Comparable {
+extension BreadthFirstSearch.Distance: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
             case (.unreachable, _): false
@@ -256,7 +256,7 @@ extension BreadthFirstSearchAlgorithm.Distance: Comparable {
     }
 }
 
-extension BreadthFirstSearchAlgorithm.Distance {
+extension BreadthFirstSearch.Distance {
     static func + (distance: Self, amount: UInt) -> Self {
         switch distance {
             case .unreachable: .unreachable
@@ -265,20 +265,20 @@ extension BreadthFirstSearchAlgorithm.Distance {
     }
 }
 
-extension BreadthFirstSearchAlgorithm.Distance: ExpressibleByIntegerLiteral {
+extension BreadthFirstSearch.Distance: ExpressibleByIntegerLiteral {
     init(integerLiteral value: UInt) {
         self = .reachable(depth: value)
     }
 }
 
-extension BreadthFirstSearchAlgorithm.Distance: ExpressibleByNilLiteral {
+extension BreadthFirstSearch.Distance: ExpressibleByNilLiteral {
     init(nilLiteral: ()) {
         self = .unreachable
     }
 }
 
 struct BFSWithVisitor<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Base = BreadthFirstSearchAlgorithm<Graph>
+    typealias Base = BreadthFirstSearch<Graph>
     let base: Base
     let makeVisitor: () -> Base.Visitor
 }
@@ -289,7 +289,7 @@ extension BFSWithVisitor: Sequence {
     }
 }
 
-extension BreadthFirstSearchAlgorithm {
+extension BreadthFirstSearch {
     func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> BFSWithVisitor<Graph> {
         .init(base: self, makeVisitor: makeVisitor)
     }

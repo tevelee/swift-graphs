@@ -12,7 +12,7 @@ struct DepthLimitedDFSTraversal<Graph: IncidenceGraph & VertexListGraph>: Traver
     ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
         var vertices: [Graph.VertexDescriptor] = []
         var edges: [Graph.EdgeDescriptor] = []
-        let visitor = DepthFirstSearchAlgorithm<Graph>.Visitor(
+        let visitor = DepthFirstSearch<Graph>.Visitor(
             discoverVertex: { v in vertices.append(v) },
             treeEdge: { e in edges.append(e) },
             shouldTraverse: { args in
@@ -21,7 +21,7 @@ struct DepthLimitedDFSTraversal<Graph: IncidenceGraph & VertexListGraph>: Traver
             }
         )
 
-        DepthFirstSearchAlgorithm(on: graph, from: source)
+        DepthFirstSearch(on: graph, from: source)
             .withVisitor { visitor }
             .forEach { _ in }
         return TraversalResult(vertices: vertices, edges: edges)

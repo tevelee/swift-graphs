@@ -14,7 +14,7 @@ struct DFSTests {
         graph.addEdge(from: a, to: b)
         graph.addEdge(from: c, to: d)
 
-        let last = DepthFirstSearchAlgorithm(on: graph, from: root).reduce(into: nil) { $0 = $1 }
+        let last = DepthFirstSearch(on: graph, from: root).reduce(into: nil) { $0 = $1 }
         #expect(last?.vertices(to: a, in: graph) == [root, a])
         #expect(last?.vertices(to: b, in: graph) == [root, a, b])
         #expect(last?.vertices(to: c, in: graph) == [root, c])
@@ -44,7 +44,7 @@ struct DFSTests {
 
         var discovered = graph.makeVertexCollection { Array() }
         var examined = graph.makeVertexCollection { Array() }
-        DepthFirstSearchAlgorithm(on: graph, from: root)
+        DepthFirstSearch(on: graph, from: root)
             .withVisitor {
                 .init(
                     discoverVertex: { discovered.append($0) },
@@ -101,7 +101,7 @@ struct DFSTests {
 
         var backEdges = graph.makeEdgeCollection { Array() }
         var treeEdges = graph.makeEdgeCollection { Array() }
-        DepthFirstSearchAlgorithm(on: graph, from: a)
+        DepthFirstSearch(on: graph, from: a)
             .withVisitor {
                 .init(
                     treeEdge: { treeEdges.append($0) },

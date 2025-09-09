@@ -1,7 +1,7 @@
 protocol IncidenceGraph<VertexDescriptor, EdgeDescriptor>: Graph {
-    associatedtype OutEdges: Sequence<EdgeDescriptor>
+    associatedtype OutgoingEdges: Sequence<EdgeDescriptor>
 
-    func outEdges(of vertex: VertexDescriptor) -> OutEdges
+    func outgoingEdges(of vertex: VertexDescriptor) -> OutgoingEdges
     func source(of edge: EdgeDescriptor) -> VertexDescriptor?
     func destination(of edge: EdgeDescriptor) -> VertexDescriptor?
     func outDegree(of vertex: VertexDescriptor) -> Int
@@ -9,7 +9,7 @@ protocol IncidenceGraph<VertexDescriptor, EdgeDescriptor>: Graph {
 
 extension IncidenceGraph {
     func successors(of vertex: VertexDescriptor) -> some Sequence<VertexDescriptor> {
-        outEdges(of: vertex).lazy.compactMap(destination)
+        outgoingEdges(of: vertex).lazy.compactMap(destination)
     }
 
     func isSink(vertex: VertexDescriptor) -> Bool {

@@ -10,7 +10,7 @@ struct DijkstraTests {
 
         #expect(graph.shortestPath(from: a, to: b, using: .dijkstra(weight: .property(\.weight)))?.vertices == [a, b])
 
-        let res = DijkstraAlgorithm(on: graph, from: a, edgeWeight: .property(\.weight)).reduce(into: nil) { $0 = $1 }
+        let res = Dijkstra(on: graph, from: a, edgeWeight: .property(\.weight)).reduce(into: nil) { $0 = $1 }
         #expect(res?.distance(of: b) == 2.0)
         #expect(res?.vertices(to: b, in: graph) == [a, b])
         #expect(graph[e].weight == 2)

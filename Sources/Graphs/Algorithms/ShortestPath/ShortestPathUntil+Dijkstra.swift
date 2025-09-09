@@ -14,7 +14,7 @@ struct DijkstraShortestPath<Graph: IncidenceGraph & EdgePropertyGraph & VertexLi
         until condition: @escaping (Graph.VertexDescriptor) -> Bool,
         in graph: Graph
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-        let sequence = DijkstraAlgorithm(on: graph, from: source, edgeWeight: weight)
+        let sequence = Dijkstra(on: graph, from: source, edgeWeight: weight)
         guard let result = sequence.first(where: { condition($0.currentVertex) }) else { return nil }
         let destination = result.currentVertex
         return Path(

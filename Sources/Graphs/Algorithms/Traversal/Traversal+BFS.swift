@@ -12,7 +12,7 @@ struct BFSTraversal<Graph: IncidenceGraph & VertexListGraph>: TraversalAlgorithm
         var vertices: [Graph.VertexDescriptor] = []
         var edges: [Graph.EdgeDescriptor] = []
 
-        BreadthFirstSearchAlgorithm(on: graph, from: source)
+        BreadthFirstSearch(on: graph, from: source)
             .withVisitor {
                 .init(
                     examineVertex: { vertex in

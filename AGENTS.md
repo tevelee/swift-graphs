@@ -42,11 +42,11 @@ public protocol ShortestPathUntilAlgorithm<Node, Edge> {
     ) -> Path<Node, Edge>?
 }
 extension ShortestPathUntilAlgorithm {
-    @inlinable public static func dijkstra<Node, Edge>() -> Self where Self == DijkstraAlgorithm<Node, Edge> {
+    @inlinable public static func dijkstra<Node, Edge>() -> Self where Self == Dijkstra<Node, Edge> {
         .init()
     }
 }
-extension DijkstraAlgorithm: ShortestPathUntilAlgorithm {
+extension Dijkstra: ShortestPathUntilAlgorithm {
     @inlinable public func shortestPath(
         from source: Node,
         until condition: (Node) -> Bool,

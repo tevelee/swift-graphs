@@ -1,6 +1,6 @@
 import Collections
 
-struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+struct DepthFirstSearch<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
 
@@ -145,9 +145,9 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
 
                     stack.push(DFSFrame(vertex: vertex, isFirstVisit: false, depth: frame.depth))
 
-                    let outEdges = Array(graph.outEdges(of: vertex))
+                    let outgoingEdges = Array(graph.outgoingEdges(of: vertex))
                     var whiteNeighbors: [Vertex] = []
-                    for edge in outEdges {
+                    for edge in outgoingEdges {
                         visitor?.examineEdge?(edge)
 
                         guard let destination = graph.destination(of: edge) else { continue }
@@ -211,20 +211,20 @@ struct DepthFirstSearchAlgorithm<Graph: IncidenceGraph & VertexListGraph> where 
     }
 }
 
-extension DepthFirstSearchAlgorithm.Iterator: IteratorProtocol {}
+extension DepthFirstSearch.Iterator: IteratorProtocol {}
 
-extension DepthFirstSearchAlgorithm: Sequence {
+extension DepthFirstSearch: Sequence {
     func makeIterator() -> Iterator {
         _makeIterator(visitor: nil)
     }
 }
 
-extension DepthFirstSearchAlgorithm.Result {
-    func discoveryTime(of vertex: Vertex) -> DepthFirstSearchAlgorithm<Graph>.Time {
+extension DepthFirstSearch.Result {
+    func discoveryTime(of vertex: Vertex) -> DepthFirstSearch<Graph>.Time {
         propertyMap[vertex][discoveryTimeProperty]
     }
 
-    func finishTime(of vertex: Vertex) -> DepthFirstSearchAlgorithm<Graph>.Time {
+    func finishTime(of vertex: Vertex) -> DepthFirstSearch<Graph>.Time {
         propertyMap[vertex][finishTimeProperty]
     }
 
@@ -264,9 +264,9 @@ extension DepthFirstSearchAlgorithm.Result {
     }
 }
 
-extension DepthFirstSearchAlgorithm.Time: Equatable {}
+extension DepthFirstSearch.Time: Equatable {}
 
-extension DepthFirstSearchAlgorithm.Time: Comparable {
+extension DepthFirstSearch.Time: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
         case (_, .undiscovered): false
@@ -279,7 +279,7 @@ extension DepthFirstSearchAlgorithm.Time: Comparable {
     }
 }
 
-extension DepthFirstSearchAlgorithm.Time: ExpressibleByIntegerLiteral {
+extension DepthFirstSearch.Time: ExpressibleByIntegerLiteral {
     typealias IntegerLiteralType = UInt
 
     init(integerLiteral value: UInt) {
@@ -287,14 +287,14 @@ extension DepthFirstSearchAlgorithm.Time: ExpressibleByIntegerLiteral {
     }
 }
 
-extension DepthFirstSearchAlgorithm.Time: ExpressibleByNilLiteral {
+extension DepthFirstSearch.Time: ExpressibleByNilLiteral {
     init(nilLiteral: ()) {
         self = .undiscovered
     }
 }
 
 struct DFSWithVisitor<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Base = DepthFirstSearchAlgorithm<Graph>
+    typealias Base = DepthFirstSearch<Graph>
     let base: Base
     let makeVisitor: () -> Base.Visitor
 }
@@ -305,19 +305,19 @@ extension DFSWithVisitor: Sequence {
     }
 }
 
-extension DepthFirstSearchAlgorithm {
+extension DepthFirstSearch {
     func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> DFSWithVisitor<Graph> {
         .init(base: self, makeVisitor: makeVisitor)
     }
 }
 
 struct DFSOrder<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    let visitor: DepthFirstSearchAlgorithm<Graph>.Visitor
+    let visitor: DepthFirstSearch<Graph>.Visitor
     let vertices: () -> [Graph.VertexDescriptor]
     let edges: () -> [Graph.EdgeDescriptor]
     
     init(
-        visitor: DepthFirstSearchAlgorithm<Graph>.Visitor,
+        visitor: DepthFirstSearch<Graph>.Visitor,
         vertices: @autoclosure @escaping () -> [Graph.VertexDescriptor],
         edges: @autoclosure @escaping () -> [Graph.EdgeDescriptor]
     ) {

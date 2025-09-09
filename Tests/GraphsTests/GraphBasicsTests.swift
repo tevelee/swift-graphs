@@ -23,7 +23,7 @@ struct GraphBasicsTests {
         #expect(graph.adjacentVertices(of: a) == [b, c, d, root])
     }
 
-    @Test func inAndOutEdgesRespectInsertionOrder() {
+    @Test func inAndoutgoingEdgesRespectInsertionOrder() {
         var graph = AdjacencyList()
         let u = graph.addVertex()
         let v = graph.addVertex()
@@ -32,9 +32,9 @@ struct GraphBasicsTests {
         let uv = graph.addEdge(from: u, to: v)!
         let uw = graph.addEdge(from: u, to: w)!
 
-        #expect(graph.outEdges(of: u) == [uv, uw])
-        #expect(graph.inEdges(of: v) == [uv])
-        #expect(graph.inEdges(of: w) == [uw])
+        #expect(graph.outgoingEdges(of: u) == [uv, uw])
+        #expect(graph.incomingEdges(of: v) == [uv])
+        #expect(graph.incomingEdges(of: w) == [uw])
     }
 }
 

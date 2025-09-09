@@ -1,4 +1,4 @@
-struct DijkstraAlgorithm<
+struct Dijkstra<
     Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
     Weight: Numeric & Comparable
 > where
@@ -121,7 +121,7 @@ struct DijkstraAlgorithm<
             while let popped = queue.dequeue() {
                 if visited.contains(popped.vertex) { continue }
                 let stored = propertyMap[popped.vertex][distanceProperty]
-                if popped.cost > stored { continue }
+                if popped.cost != stored { continue }
                 current = popped.vertex
                 break
             }
@@ -131,7 +131,7 @@ struct DijkstraAlgorithm<
             visitor?.examineVertex?(current)
 
             let currentCost = propertyMap[current][distanceProperty]
-            for edge in graph.outEdges(of: current) {
+            for edge in graph.outgoingEdges(of: current) {
                 visitor?.examineEdge?(edge)
 
                 guard let destination = graph.destination(of: edge) else { continue }
@@ -165,17 +165,17 @@ struct DijkstraAlgorithm<
     }
 }
 
-extension DijkstraAlgorithm.Iterator: IteratorProtocol {}
+extension Dijkstra.Iterator: IteratorProtocol {}
 
-extension DijkstraAlgorithm: Sequence {
+extension Dijkstra: Sequence {
     func makeIterator() -> Iterator {
         _makeIterator(visitor: nil)
     }
 }
 
-extension DijkstraAlgorithm.Cost: Equatable where Weight: Equatable {}
+extension Dijkstra.Cost: Equatable where Weight: Equatable {}
 
-extension DijkstraAlgorithm.Cost: Comparable where Weight: Comparable {
+extension Dijkstra.Cost: Comparable where Weight: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
             case (.infinite, _): false
@@ -185,7 +185,7 @@ extension DijkstraAlgorithm.Cost: Comparable where Weight: Comparable {
     }
 }
 
-extension DijkstraAlgorithm.Cost where Weight: Numeric {
+extension Dijkstra.Cost where Weight: Numeric {
     static func + (lhs: Self, rhs: Weight) -> Self {
         switch lhs {
             case .infinite:
@@ -197,37 +197,37 @@ extension DijkstraAlgorithm.Cost where Weight: Numeric {
     }
 }
 
-extension DijkstraAlgorithm.Cost: ExpressibleByIntegerLiteral where Weight == UInt {
+extension Dijkstra.Cost: ExpressibleByIntegerLiteral where Weight == UInt {
     init(integerLiteral value: Weight) {
         self = .finite(value)
     }
 }
 
-extension DijkstraAlgorithm.Cost: ExpressibleByFloatLiteral where Weight == Double {
+extension Dijkstra.Cost: ExpressibleByFloatLiteral where Weight == Double {
     init(floatLiteral value: Weight) {
         self = .finite(value)
     }
 }
 
-extension DijkstraAlgorithm.Cost: ExpressibleByNilLiteral {
+extension Dijkstra.Cost: ExpressibleByNilLiteral {
     init(nilLiteral: ()) {
         self = .infinite
     }
 }
 
-extension DijkstraAlgorithm.PriorityItem: Equatable {
+extension Dijkstra.PriorityItem: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.vertex == rhs.vertex
     }
 }
 
-extension DijkstraAlgorithm.PriorityItem: Comparable {
+extension Dijkstra.PriorityItem: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.cost < rhs.cost
     }
 }
 
-extension DijkstraAlgorithm.Result {
+extension Dijkstra.Result {
     func currentDistance() -> Weight {
         switch distance(of: currentVertex) {
             case .finite(let value):
@@ -262,7 +262,7 @@ extension DijkstraAlgorithm.Result {
         path(to: currentVertex, in: graph)
     }
 
-    func distance(of vertex: Vertex) -> DijkstraAlgorithm<Graph, Weight>.Cost {
+    func distance(of vertex: Vertex) -> Dijkstra<Graph, Weight>.Cost {
         propertyMap[vertex][distanceProperty]
     }
 
@@ -300,7 +300,7 @@ extension DijkstraAlgorithm.Result {
 
 struct DijkstraWithVisitor<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: Numeric & Comparable>
 where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-    typealias Base = DijkstraAlgorithm<Graph, Weight>
+    typealias Base = Dijkstra<Graph, Weight>
     let base: Base
     let makeVisitor: () -> Base.Visitor
 }
@@ -311,7 +311,7 @@ extension DijkstraWithVisitor: Sequence {
     }
 }
 
-extension DijkstraAlgorithm {
+extension Dijkstra {
     func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> DijkstraWithVisitor<Graph, Weight> {
         .init(base: self, makeVisitor: makeVisitor)
     }

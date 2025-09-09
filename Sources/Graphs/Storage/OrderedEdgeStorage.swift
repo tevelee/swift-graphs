@@ -17,7 +17,7 @@ struct OrderedEdgeStorage<Vertex: Hashable>: EdgeStorage {
     private var _edges: OrderedDictionary<Edge, (source: Vertex, destination: Vertex)> = [:]
     private var _nextId: Int = 0
 
-    var numberOfEdges: Int {
+    var edgeCount: Int {
         _edges.count
     }
 
@@ -29,20 +29,20 @@ struct OrderedEdgeStorage<Vertex: Hashable>: EdgeStorage {
         _edges[edge]
     }
 
-    func outEdges(of vertex: Vertex) -> OrderedSet<Edge> {
+    func outgoingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
         _edges.filter { $0.value.source == vertex }.keys
     }
 
     func outDegree(of vertex: Vertex) -> Int {
-        outEdges(of: vertex).count
+        outgoingEdges(of: vertex).count
     }
 
-    func inEdges(of vertex: Vertex) -> OrderedSet<Edge> {
+    func incomingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
         _edges.filter { $0.value.destination == vertex }.keys
     }
 
     func inDegree(of vertex: Vertex) -> Int {
-        inEdges(of: vertex).count
+        incomingEdges(of: vertex).count
     }
 
     mutating func addEdge(from source: Vertex, to destination: Vertex) -> Edge {

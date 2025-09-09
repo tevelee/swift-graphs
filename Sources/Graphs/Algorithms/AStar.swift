@@ -1,4 +1,4 @@
-struct AStarAlgorithm<
+struct AStar<
     Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
     Weight: Numeric & Comparable,
     HScore: Numeric,
@@ -32,7 +32,7 @@ struct AStarAlgorithm<
     struct Result {
         typealias Vertex = Graph.VertexDescriptor
         typealias Edge = Graph.EdgeDescriptor
-        typealias GScore = AStarAlgorithm.GScore
+        typealias GScore = AStar.GScore
         fileprivate let source: Vertex
         let currentVertex: Vertex
         let gScoreProperty: any VertexProperty<GScore>.Type
@@ -166,7 +166,7 @@ struct AStarAlgorithm<
             visitor?.examineVertex?(current)
 
             let currentG = propertyMap[current][gScoreProperty]
-            for edge in graph.outEdges(of: current) {
+            for edge in graph.outgoingEdges(of: current) {
                 visitor?.examineEdge?(edge)
 
                 guard let neighbor = graph.destination(of: edge) else { continue }
@@ -201,35 +201,35 @@ struct AStarAlgorithm<
     }
 }
 
-extension AStarAlgorithm.Iterator: IteratorProtocol {}
+extension AStar.Iterator: IteratorProtocol {}
 
-extension AStarAlgorithm: Sequence {
+extension AStar: Sequence {
     func makeIterator() -> Iterator {
         _makeIterator(visitor: nil)
     }
 }
 
 struct AStarWithVisitor<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: Numeric & Comparable, HScore: Numeric, FScore: Comparable> where Graph.VertexDescriptor: Hashable, HScore.Magnitude == HScore {
-    typealias Base = AStarAlgorithm<Graph, Weight, HScore, FScore>
+    typealias Base = AStar<Graph, Weight, HScore, FScore>
     let base: Base
     let makeVisitor: () -> Base.Visitor
 }
 
 extension AStarWithVisitor: Sequence {
-    func makeIterator() -> AStarAlgorithm<Graph, Weight, HScore, FScore>.Iterator {
+    func makeIterator() -> AStar<Graph, Weight, HScore, FScore>.Iterator {
         base.makeIterator(visitor: makeVisitor())
     }
 }
 
-extension AStarAlgorithm {
+extension AStar {
     func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> AStarWithVisitor<Graph, Weight, HScore, FScore> {
         .init(base: self, makeVisitor: makeVisitor)
     }
 }
 
-extension AStarAlgorithm.Cost: Equatable where FScore: Equatable {}
+extension AStar.Cost: Equatable where FScore: Equatable {}
 
-extension AStarAlgorithm.Cost: Comparable where FScore: Comparable {
+extension AStar.Cost: Comparable where FScore: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
             case (.infinite, _): false
@@ -239,7 +239,7 @@ extension AStarAlgorithm.Cost: Comparable where FScore: Comparable {
     }
 }
 
-extension AStarAlgorithm.GScore: Comparable {
+extension AStar.GScore: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
             case (.infinite, _): false
@@ -249,7 +249,7 @@ extension AStarAlgorithm.GScore: Comparable {
     }
 }
 
-extension AStarAlgorithm.GScore {
+extension AStar.GScore {
     static func + (lhs: Self, rhs: Weight) -> Self {
         switch lhs {
             case .infinite:
@@ -261,37 +261,37 @@ extension AStarAlgorithm.GScore {
     }
 }
 
-extension AStarAlgorithm.Cost: ExpressibleByIntegerLiteral where FScore == UInt {
+extension AStar.Cost: ExpressibleByIntegerLiteral where FScore == UInt {
     init(integerLiteral value: FScore) {
         self = .finite(value)
     }
 }
 
-extension AStarAlgorithm.Cost: ExpressibleByFloatLiteral where FScore == Double {
+extension AStar.Cost: ExpressibleByFloatLiteral where FScore == Double {
     init(floatLiteral value: FScore) {
         self = .finite(value)
     }
 }
 
-extension AStarAlgorithm.Cost: ExpressibleByNilLiteral {
+extension AStar.Cost: ExpressibleByNilLiteral {
     init(nilLiteral: ()) {
         self = .infinite
     }
 }
 
-extension AStarAlgorithm.PriorityItem: Equatable {
+extension AStar.PriorityItem: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.vertex == rhs.vertex
     }
 }
 
-extension AStarAlgorithm.PriorityItem: Comparable {
+extension AStar.PriorityItem: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.totalCost < rhs.totalCost
     }
 }
 
-extension AStarAlgorithm.Result {
+extension AStar.Result {
     func currentDistance() -> Weight {
         switch gScore(of: currentVertex) {
             case .finite(let value):

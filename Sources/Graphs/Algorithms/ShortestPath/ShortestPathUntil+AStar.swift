@@ -26,7 +26,7 @@ struct AStarShortestPathUntil<Graph: IncidenceGraph & EdgePropertyGraph & Vertex
         
         in graph: Graph
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-        let sequence = AStarAlgorithm(
+        let sequence = AStar(
             on: graph,
             from: source,
             edgeWeight: weight,

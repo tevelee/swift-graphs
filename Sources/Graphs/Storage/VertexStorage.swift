@@ -6,5 +6,5 @@ protocol VertexStorage {
     mutating func remove(vertex: Vertex)
     func contains(_ vertex: Vertex) -> Bool
     func vertices() -> Vertices
-    var numberOfVertices: Int { get }
+    var vertexCount: Int { get }
 }

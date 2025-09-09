@@ -7,11 +7,11 @@ protocol EdgeStorage {
     mutating func remove(edge: Edge)
     func endpoints(of edge: Edge) -> (source: Vertex, destination: Vertex)?
     func edges() -> Edges
-    var numberOfEdges: Int { get }
+    var edgeCount: Int { get }
 
     // Incidence operations
-    func outEdges(of vertex: Vertex) -> Edges
+    func outgoingEdges(of vertex: Vertex) -> Edges
     func outDegree(of vertex: Vertex) -> Int
-    func inEdges(of vertex: Vertex) -> Edges
+    func incomingEdges(of vertex: Vertex) -> Edges
     func inDegree(of vertex: Vertex) -> Int
 }
