@@ -69,7 +69,7 @@ struct HeuristicToDestination<Graph: Graphs.Graph, EstimatedCost> {
 
 extension HeuristicToDestination where Graph: PropertyGraph {
     static func euclideanDistance<Coordinate: SIMD>(
-        of coordinates: @escaping (VertexPropertyValues) -> Coordinate
+        of coordinates: @escaping (VertexProperties) -> Coordinate
     ) -> Self where EstimatedCost == Coordinate.Scalar, Coordinate.Scalar: FloatingPoint {
         .init { destination in
             .euclideanDistance(to: destination, of: coordinates)
@@ -77,7 +77,7 @@ extension HeuristicToDestination where Graph: PropertyGraph {
     }
     
     static func manhattanDistance<Coordinate: SIMD>(
-        of coordinates: @escaping (VertexPropertyValues) -> Coordinate
+        of coordinates: @escaping (VertexProperties) -> Coordinate
     ) -> Self where EstimatedCost == Coordinate.Scalar, Coordinate.Scalar: FloatingPoint {
         .init { destination in
             .manhattanDistance(to: destination, of: coordinates)

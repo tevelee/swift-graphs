@@ -1,4 +1,8 @@
-struct VertexPropertyValues {
+protocol VertexProperties {
+    subscript<P: VertexProperty>(property: P.Type) -> P.Value { get set }
+}
+
+struct VertexPropertyValues: VertexProperties {
     private var storage = PropertyValues()
 
     subscript<P: VertexProperty>(property: P.Type) -> P.Value {
@@ -14,7 +18,11 @@ struct VertexPropertyValues {
     }
 }
 
-struct EdgePropertyValues {
+protocol EdgeProperties {
+    subscript<P: EdgeProperty>(property: P.Type) -> P.Value { get set }
+}
+
+struct EdgePropertyValues: EdgeProperties {
     private var storage = PropertyValues()
 
     subscript<P: EdgeProperty>(property: P.Type) -> P.Value {
@@ -37,8 +45,8 @@ private struct PropertyValues {
         set { storage[ObjectIdentifier(property)] = newValue }
         _read {
             let key = ObjectIdentifier(property)
-            if let val = storage[key] as? P.Value {
-                yield val
+            if let value = storage[key] as? P.Value {
+                yield value
             } else {
                 yield P.defaultValue
             }

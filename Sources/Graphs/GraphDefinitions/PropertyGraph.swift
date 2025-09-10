@@ -1,5 +1,6 @@
 protocol VertexPropertyGraph: Graph {
-    associatedtype VertexPropertyMap: PropertyMap<VertexDescriptor, VertexPropertyValues>
+    associatedtype VertexProperties: Graphs.VertexProperties
+    associatedtype VertexPropertyMap: PropertyMap<VertexDescriptor, VertexProperties>
 
     var vertexPropertyMap: VertexPropertyMap { get }
 }
@@ -11,13 +12,14 @@ extension VertexPropertyGraph {
 }
 
 extension VertexPropertyGraph where Self: VertexListGraph {
-    func vertices(satisfying condition: @escaping (VertexPropertyValues) -> Bool) -> LazyFilterSequence<Vertices> {
+    func vertices(satisfying condition: @escaping (VertexProperties) -> Bool) -> LazyFilterSequence<Vertices> {
         vertices().lazy.filter { condition(vertexPropertyMap[$0]) }
     }
 }
 
 protocol EdgePropertyGraph: Graph {
-    associatedtype EdgePropertyMap: PropertyMap<EdgeDescriptor, EdgePropertyValues>
+    associatedtype EdgeProperties: Graphs.EdgeProperties
+    associatedtype EdgePropertyMap: PropertyMap<EdgeDescriptor, EdgeProperties>
 
     var edgePropertyMap: EdgePropertyMap { get }
 }
@@ -29,7 +31,7 @@ extension EdgePropertyGraph {
 }
 
 extension EdgePropertyGraph where Self: EdgeListGraph {
-    func edges(satisfying condition: @escaping (EdgePropertyValues) -> Bool) -> LazyFilterSequence<Edges> {
+    func edges(satisfying condition: @escaping (EdgeProperties) -> Bool) -> LazyFilterSequence<Edges> {
         edges().lazy.filter { condition(edgePropertyMap[$0]) }
     }
 }

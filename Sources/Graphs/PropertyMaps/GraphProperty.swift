@@ -6,3 +6,11 @@ protocol GraphProperty<Value> {
 
 protocol VertexProperty<Value>: GraphProperty {}
 protocol EdgeProperty<Value>: GraphProperty {}
+
+// MARK: optional
+
+extension Optional: GraphProperty where Wrapped: GraphProperty {
+    static var defaultValue: Self { nil }
+}
+extension Optional: VertexProperty where Wrapped: VertexProperty {}
+extension Optional: EdgeProperty where Wrapped: EdgeProperty {}

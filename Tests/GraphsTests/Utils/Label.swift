@@ -4,14 +4,14 @@ enum Label: VertexProperty, EdgeProperty {
     static let defaultValue = ""
 }
 
-extension VertexPropertyValues {
+extension VertexProperties {
     var label: String {
         get { self[Label.self] }
         set { self[Label.self] = newValue }
     }
 }
 
-extension EdgePropertyValues {
+extension EdgeProperties {
     var label: String {
         get { self[Label.self] }
         set { self[Label.self] = newValue }
