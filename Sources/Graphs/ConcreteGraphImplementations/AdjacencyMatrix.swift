@@ -7,6 +7,9 @@ struct AdjacencyMatrix {
     private var edgesStore: OrderedDictionary<Edge, (source: Vertex, destination: Vertex)> = [:]
     private var nextVertexId: Int = 0
     private var nextEdgeId: Int = 0
+    // Property maps
+    var vertexPropertyMap: DictionaryPropertyMap<Vertex, VertexPropertyValues> = .init(defaultValue: .init())
+    var edgePropertyMap: DictionaryPropertyMap<Edge, EdgePropertyValues> = .init(defaultValue: .init())
 }
 
 extension AdjacencyMatrix: Graph {
@@ -135,6 +138,13 @@ extension AdjacencyMatrix: AdjacencyGraph {
         return result
     }
 }
+
+extension AdjacencyMatrix: PropertyGraph {
+    typealias VertexPropertyMap = DictionaryPropertyMap<Vertex, VertexPropertyValues>
+    typealias EdgePropertyMap = DictionaryPropertyMap<Edge, EdgePropertyValues>
+}
+
+extension AdjacencyMatrix: MutablePropertyGraph {}
 
 private extension AdjacencyMatrix {
     func index(of v: Vertex) -> Int? { verticesStore.firstIndex(of: v) }
