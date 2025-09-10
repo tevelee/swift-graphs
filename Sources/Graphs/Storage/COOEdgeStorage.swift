@@ -7,17 +7,18 @@ struct COOEdgeStorage<Vertex: Hashable>: EdgeStorage {
 
     private var sources: [Vertex] = []
     private var destinations: [Vertex] = []
-    private var freeList: [Int] = []
+    // Use a Set for O(1) tombstone checks
+    private var tombstones: Set<Int> = []
 
     var edgeCount: Int {
-        sources.count - freeList.count
+        sources.count - tombstones.count
     }
 
     func edges() -> OrderedSet<Edge> {
         var result: OrderedSet<Edge> = []
         result.reserveCapacity(sources.count)
         for raw in 0..<sources.count {
-            if !freeList.contains(raw) {
+            if !tombstones.contains(raw) {
                 result.updateOrAppend(Edge(id: raw))
             }
         }
@@ -27,7 +28,7 @@ struct COOEdgeStorage<Vertex: Hashable>: EdgeStorage {
     func endpoints(of edge: Edge) -> (source: Vertex, destination: Vertex)? {
         let idx = edge.id
         guard idx >= 0 && idx < sources.count else { return nil }
-        if freeList.contains(idx) { return nil }
+        if tombstones.contains(idx) { return nil }
         return (sources[idx], destinations[idx])
     }
 
@@ -36,7 +37,7 @@ struct COOEdgeStorage<Vertex: Hashable>: EdgeStorage {
         result.reserveCapacity(8)
         if sources.isEmpty { return result }
         for i in 0..<sources.count {
-            if freeList.contains(i) { continue }
+            if tombstones.contains(i) { continue }
             if sources[i] == vertex { result.updateOrAppend(Edge(id: i)) }
         }
         return result
@@ -51,7 +52,7 @@ struct COOEdgeStorage<Vertex: Hashable>: EdgeStorage {
         result.reserveCapacity(8)
         if destinations.isEmpty { return result }
         for i in 0..<destinations.count {
-            if freeList.contains(i) { continue }
+            if tombstones.contains(i) { continue }
             if destinations[i] == vertex { result.updateOrAppend(Edge(id: i)) }
         }
         return result
@@ -62,23 +63,22 @@ struct COOEdgeStorage<Vertex: Hashable>: EdgeStorage {
     }
 
     mutating func addEdge(from source: Vertex, to destination: Vertex) -> Edge {
-        if let reused = freeList.popLast() {
+        // Try to reuse a tombstoned slot if any
+        if let reused = tombstones.first {
+            tombstones.remove(reused)
             sources[reused] = source
             destinations[reused] = destination
-            let edge = Edge(id: reused)
-            return edge
-        } else {
-            let id = sources.count
-            sources.append(source)
-            destinations.append(destination)
-            let edge = Edge(id: id)
-            return edge
+            return Edge(id: reused)
         }
+        let id = sources.count
+        sources.append(source)
+        destinations.append(destination)
+        return Edge(id: id)
     }
 
     mutating func remove(edge: Edge) {
         guard endpoints(of: edge) != nil else { return }
-        freeList.append(edge.id)
+        tombstones.insert(edge.id)
     }
 }
 
