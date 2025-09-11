@@ -36,11 +36,3 @@ extension DijkstraAllPaths: ShortestPathsFromSourceAlgorithm {
     }
 }
 
-extension ShortestPathsFromSourceAlgorithm {
-    static func dijkstra<Graph: IncidenceGraph & EdgePropertyGraph, Weight: Numeric & Comparable>(
-        on graph: Graph,
-        edgeWeight: CostDefinition<Graph, Weight>
-    ) -> DijkstraAllPaths<Graph, Weight> where Self == DijkstraAllPaths<Graph, Weight>, Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-        DijkstraAllPaths(on: graph, edgeWeight: edgeWeight)
-    }
-}

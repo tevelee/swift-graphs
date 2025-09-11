@@ -34,9 +34,10 @@ struct BellmanFord<
         
         // Initialize distances
         for vertex in graph.vertices() {
-            distances[vertex] = vertex == source ? .finite(.zero) : .infinite
+            distances[vertex] = .infinite
             predecessors[vertex] = nil
         }
+        distances[source] = .finite(.zero)
         
         // Relax edges |V| - 1 times
         let vertices = Array(graph.vertices())
@@ -150,20 +151,3 @@ extension BellmanFord: ShortestPathsFromSourceAlgorithm {
 }
 
 
-extension ShortestPathAlgorithm {
-    static func bellmanFord<Graph: IncidenceGraph & EdgeListGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric & Comparable>(
-        on graph: Graph,
-        edgeWeight: CostDefinition<Graph, Weight>
-    ) -> BellmanFord<Graph, Weight> where Self == BellmanFord<Graph, Weight>, Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-        BellmanFord(on: graph, edgeWeight: edgeWeight)
-    }
-}
-
-extension ShortestPathsFromSourceAlgorithm {
-    static func bellmanFord<Graph: IncidenceGraph & EdgeListGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric & Comparable>(
-        on graph: Graph,
-        edgeWeight: CostDefinition<Graph, Weight>
-    ) -> BellmanFord<Graph, Weight> where Self == BellmanFord<Graph, Weight>, Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-        BellmanFord(on: graph, edgeWeight: edgeWeight)
-    }
-}

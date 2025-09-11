@@ -92,12 +92,4 @@ extension FloydWarshall {
     }
 }
 
-extension ShortestPathsForAllPairsAlgorithm {
-    static func floydWarshall<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: Numeric & Comparable>(
-        on graph: Graph,
-        edgeWeight: CostDefinition<Graph, Weight>
-    ) -> FloydWarshall<Graph, Weight> where Self == FloydWarshall<Graph, Weight>, Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-        FloydWarshall(on: graph, edgeWeight: edgeWeight)
-    }
-}
 

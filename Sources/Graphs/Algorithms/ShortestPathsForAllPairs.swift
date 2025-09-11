@@ -24,8 +24,7 @@ struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: Numeric & Comparabl
     }
     
     func path(from source: Vertex, to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> Path<Vertex, Edge>? {
-        guard let predecessorEdges = predecessors[source]?[destination],
-              let _ = predecessorEdges else {
+        guard let predecessorEdges = predecessors[source]?[destination] else {
             return nil
         }
         

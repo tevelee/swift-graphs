@@ -11,8 +11,8 @@ struct KShortestPathsTests {
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 2 }
-        _ = graph.addEdge(from: b, to: c) { $0.weight = 3 }
+        graph.addEdge(from: a, to: b) { $0.weight = 2 }
+        graph.addEdge(from: b, to: c) { $0.weight = 3 }
         
         let paths = graph.kShortestPaths(from: a, to: c, k: 3, using: .yen(on: graph, edgeWeight: .property(\.weight)))
         
@@ -36,15 +36,15 @@ struct KShortestPathsTests {
         let d = graph.addVertex { $0.label = "D" }
         
         // Path 1: A -> B -> D (weight 3)
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 1 }
-        _ = graph.addEdge(from: b, to: d) { $0.weight = 2 }
+        graph.addEdge(from: a, to: b) { $0.weight = 1 }
+        graph.addEdge(from: b, to: d) { $0.weight = 2 }
         
         // Path 2: A -> C -> D (weight 4)
-        _ = graph.addEdge(from: a, to: c) { $0.weight = 2 }
-        _ = graph.addEdge(from: c, to: d) { $0.weight = 2 }
+        graph.addEdge(from: a, to: c) { $0.weight = 2 }
+        graph.addEdge(from: c, to: d) { $0.weight = 2 }
         
         // Path 3: A -> B -> C -> D (weight 5)
-        _ = graph.addEdge(from: b, to: c) { $0.weight = 2 }
+        graph.addEdge(from: b, to: c) { $0.weight = 2 }
         
         let paths = graph.kShortestPaths(from: a, to: d, k: 3, using: .yen(on: graph, edgeWeight: .property(\.weight)))
         
@@ -71,8 +71,8 @@ struct KShortestPathsTests {
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 1 }
-        _ = graph.addEdge(from: b, to: c) { $0.weight = 2 }
+        graph.addEdge(from: a, to: b) { $0.weight = 1 }
+        graph.addEdge(from: b, to: c) { $0.weight = 2 }
         
         let paths = graph.kShortestPaths(from: a, to: c, k: 5, using: .yen(on: graph, edgeWeight: .property(\.weight)))
         
@@ -92,8 +92,8 @@ struct KShortestPathsTests {
         let c = graph.addVertex { $0.label = "C" }
         let d = graph.addVertex { $0.label = "D" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 1 }
-        _ = graph.addEdge(from: c, to: d) { $0.weight = 2 }
+        graph.addEdge(from: a, to: b) { $0.weight = 1 }
+        graph.addEdge(from: c, to: d) { $0.weight = 2 }
         // No connection between A-B and C-D components
         
         let paths = graph.kShortestPaths(from: a, to: d, k: 3, using: .yen(on: graph, edgeWeight: .property(\.weight)))
@@ -107,7 +107,7 @@ struct KShortestPathsTests {
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 1 }
+        graph.addEdge(from: a, to: b) { $0.weight = 1 }
         
         let paths = graph.kShortestPaths(from: a, to: a, k: 3, using: .yen(on: graph, edgeWeight: .property(\.weight)))
         
@@ -122,8 +122,8 @@ struct KShortestPathsTests {
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 1 }
-        _ = graph.addEdge(from: b, to: c) { $0.weight = 2 }
+        graph.addEdge(from: a, to: b) { $0.weight = 1 }
+        graph.addEdge(from: b, to: c) { $0.weight = 2 }
         
         let paths = graph.kShortestPaths(from: a, to: c, k: 10, using: .yen(on: graph, edgeWeight: .property(\.weight)))
         

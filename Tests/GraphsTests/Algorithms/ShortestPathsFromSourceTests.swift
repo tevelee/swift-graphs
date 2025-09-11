@@ -11,8 +11,8 @@ struct ShortestPathsFromSourceTests {
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 2 }
-        _ = graph.addEdge(from: b, to: c) { $0.weight = 3 }
+        graph.addEdge(from: a, to: b) { $0.weight = 2 }
+        graph.addEdge(from: b, to: c) { $0.weight = 3 }
         
         let result = graph.shortestPathsFromSource(a, using: .dijkstra(on: graph, edgeWeight: .property(\.weight)))
         
@@ -32,13 +32,13 @@ struct ShortestPathsFromSourceTests {
         let d = graph.addVertex { $0.label = "D" }
         let e = graph.addVertex { $0.label = "E" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 4 }
-        _ = graph.addEdge(from: a, to: c) { $0.weight = 2 }
-        _ = graph.addEdge(from: b, to: c) { $0.weight = 1 }
-        _ = graph.addEdge(from: b, to: d) { $0.weight = 5 }
-        _ = graph.addEdge(from: c, to: d) { $0.weight = 8 }
-        _ = graph.addEdge(from: c, to: e) { $0.weight = 10 }
-        _ = graph.addEdge(from: d, to: e) { $0.weight = 2 }
+        graph.addEdge(from: a, to: b) { $0.weight = 4 }
+        graph.addEdge(from: a, to: c) { $0.weight = 2 }
+        graph.addEdge(from: b, to: c) { $0.weight = 1 }
+        graph.addEdge(from: b, to: d) { $0.weight = 5 }
+        graph.addEdge(from: c, to: d) { $0.weight = 8 }
+        graph.addEdge(from: c, to: e) { $0.weight = 10 }
+        graph.addEdge(from: d, to: e) { $0.weight = 2 }
         
         let result = graph.shortestPathsFromSource(a, using: .dijkstra(on: graph, edgeWeight: .property(\.weight)))
         
@@ -59,8 +59,8 @@ struct ShortestPathsFromSourceTests {
         let c = graph.addVertex { $0.label = "C" }
         let d = graph.addVertex { $0.label = "D" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 1 }
-        _ = graph.addEdge(from: c, to: d) { $0.weight = 2 }
+        graph.addEdge(from: a, to: b) { $0.weight = 1 }
+        graph.addEdge(from: c, to: d) { $0.weight = 2 }
         // No connection between A-B and C-D components
         
         let result = graph.shortestPathsFromSource(a, using: .dijkstra(on: graph, edgeWeight: .property(\.weight)))
@@ -87,8 +87,8 @@ struct ShortestPathsFromSourceTests {
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 2 }
-        _ = graph.addEdge(from: b, to: c) { $0.weight = -1 }
+        graph.addEdge(from: a, to: b) { $0.weight = 2 }
+        graph.addEdge(from: b, to: c) { $0.weight = -1 }
         
         let result = graph.shortestPathsFromSource(a, using: .bellmanFord(on: graph, edgeWeight: .property(\.weight)))
         
@@ -106,9 +106,9 @@ struct ShortestPathsFromSourceTests {
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 1 }
-        _ = graph.addEdge(from: b, to: c) { $0.weight = 1 }
-        _ = graph.addEdge(from: c, to: a) { $0.weight = -3 } // Negative cycle
+        graph.addEdge(from: a, to: b) { $0.weight = 1 }
+        graph.addEdge(from: b, to: c) { $0.weight = 1 }
+        graph.addEdge(from: c, to: a) { $0.weight = -3 } // Negative cycle
         
         let result = graph.shortestPathsFromSource(a, using: .bellmanFord(on: graph, edgeWeight: .property(\.weight)))
         
@@ -126,11 +126,11 @@ struct ShortestPathsFromSourceTests {
         let c = graph.addVertex { $0.label = "C" }
         let d = graph.addVertex { $0.label = "D" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 4 }
-        _ = graph.addEdge(from: a, to: c) { $0.weight = 5 }
-        _ = graph.addEdge(from: b, to: c) { $0.weight = -2 }
-        _ = graph.addEdge(from: b, to: d) { $0.weight = 1 }
-        _ = graph.addEdge(from: c, to: d) { $0.weight = 3 }
+        graph.addEdge(from: a, to: b) { $0.weight = 4 }
+        graph.addEdge(from: a, to: c) { $0.weight = 5 }
+        graph.addEdge(from: b, to: c) { $0.weight = -2 }
+        graph.addEdge(from: b, to: d) { $0.weight = 1 }
+        graph.addEdge(from: c, to: d) { $0.weight = 3 }
         
         let result = graph.shortestPathsFromSource(a, using: .bellmanFord(on: graph, edgeWeight: .property(\.weight)))
         

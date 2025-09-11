@@ -274,11 +274,3 @@ extension BidirectionalDijkstra.PriorityItem: Comparable {
     }
 }
 
-extension ShortestPathAlgorithm {
-    static func bidirectionalDijkstra<Graph: IncidenceGraph & BidirectionalGraph & EdgePropertyGraph, Weight: Numeric & Comparable>(
-        on graph: Graph,
-        edgeWeight: CostDefinition<Graph, Weight>
-    ) -> BidirectionalDijkstra<Graph, Weight> where Self == BidirectionalDijkstra<Graph, Weight>, Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-        BidirectionalDijkstra(on: graph, edgeWeight: edgeWeight)
-    }
-}

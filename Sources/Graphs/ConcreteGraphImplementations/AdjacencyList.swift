@@ -62,3 +62,22 @@ extension AdjacencyList: PropertyGraph {}
 extension AdjacencyList: MutablePropertyGraph {}
 extension AdjacencyList: BinaryIncidenceGraph where EdgeStore: BinaryEdgeStorage {}
 extension AdjacencyList: MutableBinaryIncidenceGraph where EdgeStore: BinaryEdgeStorage {}
+
+protocol AdjacencyListProtocol:
+    Graph,
+    VertexStorageBackedGraph,
+    EdgeStorageBackedGraph,
+    IncidenceGraph,
+    BidirectionalGraph,
+    VertexListGraph,
+    EdgeListGraph,
+    AdjacencyGraph,
+    MutableGraph,
+    PropertyGraph,
+    MutablePropertyGraph {}
+
+extension AdjacencyList: AdjacencyListProtocol where
+    VertexStore == OrderedVertexStorage,
+    EdgeStore == CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
+    VertexPropertyMap == DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
+    EdgePropertyMap == DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues> {}

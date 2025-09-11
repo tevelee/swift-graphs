@@ -15,7 +15,40 @@ extension ShortestPathAlgorithm {
     }
 }
 
-extension AStarShortestPathUntil: ShortestPathAlgorithm {}
+struct AStarShortestPathUntil<
+    Graph: IncidenceGraph & EdgePropertyGraph,
+    Weight: Numeric & Comparable,
+    HScore: Numeric,
+    FScore: Comparable
+>: ShortestPathAlgorithm where
+    Graph.VertexDescriptor: Hashable,
+    HScore.Magnitude == HScore
+{
+    let weight: CostDefinition<Graph, Weight>
+    let heuristic: Heuristic<Graph, HScore>
+    let calculateTotalCost: (Weight, HScore) -> FScore
+
+    func shortestPath(
+        from source: Graph.VertexDescriptor,
+        to destination: Graph.VertexDescriptor,
+        in graph: Graph
+    ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        let sequence = AStar(
+            on: graph,
+            from: source,
+            edgeWeight: weight,
+            heuristic: heuristic,
+            calculateTotalCost: calculateTotalCost
+        )
+        guard let result = sequence.first(where: { $0.currentVertex == destination }) else { return nil }
+        return Path(
+            source: source,
+            destination: destination,
+            vertices: result.vertices(to: destination, in: graph),
+            edges: result.edges(to: destination, in: graph)
+        )
+    }
+}
 
 extension ShortestPathAlgorithm {
     static func aStar<Graph: IncidenceGraph, Weight: Numeric, HScore, FScore>(

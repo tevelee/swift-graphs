@@ -11,8 +11,8 @@ struct ShortestPathsForAllPairsTests {
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 2 }
-        _ = graph.addEdge(from: b, to: c) { $0.weight = 3 }
+        graph.addEdge(from: a, to: b) { $0.weight = 2 }
+        graph.addEdge(from: b, to: c) { $0.weight = 3 }
         
         let result = graph.shortestPathsForAllPairs(using: .floydWarshall(on: graph, edgeWeight: .property(\.weight)))
         
@@ -32,11 +32,11 @@ struct ShortestPathsForAllPairsTests {
         let c = graph.addVertex { $0.label = "C" }
         let d = graph.addVertex { $0.label = "D" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 1 }
-        _ = graph.addEdge(from: a, to: c) { $0.weight = 4 }
-        _ = graph.addEdge(from: b, to: c) { $0.weight = 2 }
-        _ = graph.addEdge(from: b, to: d) { $0.weight = 7 }
-        _ = graph.addEdge(from: c, to: d) { $0.weight = 1 }
+        graph.addEdge(from: a, to: b) { $0.weight = 1 }
+        graph.addEdge(from: a, to: c) { $0.weight = 4 }
+        graph.addEdge(from: b, to: c) { $0.weight = 2 }
+        graph.addEdge(from: b, to: d) { $0.weight = 7 }
+        graph.addEdge(from: c, to: d) { $0.weight = 1 }
         
         let result = graph.shortestPathsForAllPairs(using: .floydWarshall(on: graph, edgeWeight: .property(\.weight)))
         
@@ -55,8 +55,8 @@ struct ShortestPathsForAllPairsTests {
         let c = graph.addVertex { $0.label = "C" }
         let d = graph.addVertex { $0.label = "D" }
         
-        _ = graph.addEdge(from: a, to: b) { $0.weight = 1 }
-        _ = graph.addEdge(from: c, to: d) { $0.weight = 2 }
+        graph.addEdge(from: a, to: b) { $0.weight = 1 }
+        graph.addEdge(from: c, to: d) { $0.weight = 2 }
         // No connection between A-B and C-D components
         
         let result = graph.shortestPathsForAllPairs(using: .floydWarshall(on: graph, edgeWeight: .property(\.weight)))

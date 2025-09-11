@@ -20,7 +20,7 @@ struct ShortestPathsFromSource<Vertex: Hashable, Edge, Weight: Numeric & Compara
     }
     
     func path(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> Path<Vertex, Edge>? {
-        guard let _ = distances[destination] else { return nil }
+        guard distances[destination] != nil else { return nil }
         
         // Reconstruct path by following predecessors
         var current = destination
