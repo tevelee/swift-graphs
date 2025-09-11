@@ -3,19 +3,19 @@ extension ShortestPathAlgorithm {
         weight: CostDefinition<Graph, Weight>,
         heuristic: Heuristic<Graph, HScore>,
         calculateTotalCost: @escaping (Weight, HScore) -> FScore
-    ) -> Self where Self == AStarShortestPathUntil<Graph, Weight, HScore, FScore> {
+    ) -> Self where Self == AStarShortestPathAlgorithm<Graph, Weight, HScore, FScore> {
         .init(weight: weight, heuristic: heuristic, calculateTotalCost: calculateTotalCost)
     }
     
     static func aStar<Graph: IncidenceGraph, Weight: Numeric>(
         weight: CostDefinition<Graph, Weight>,
         heuristic: Heuristic<Graph, Weight>
-    ) -> Self where Self == AStarShortestPathUntil<Graph, Weight, Weight, Weight> {
+    ) -> Self where Self == AStarShortestPathAlgorithm<Graph, Weight, Weight, Weight> {
         .init(weight: weight, heuristic: heuristic, calculateTotalCost: +)
     }
 }
 
-struct AStarShortestPathUntil<
+struct AStarShortestPathAlgorithm<
     Graph: IncidenceGraph & EdgePropertyGraph,
     Weight: Numeric & Comparable,
     HScore: Numeric,

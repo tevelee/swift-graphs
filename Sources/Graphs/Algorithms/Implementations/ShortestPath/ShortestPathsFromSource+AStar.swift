@@ -30,8 +30,8 @@ struct AStarFromSource<
         var predecessors: [Graph.VertexDescriptor: Graph.EdgeDescriptor?] = [:]
         
         for result in aStar {
-            distances[result.currentVertex] = result.cost
-            predecessors[result.currentVertex] = result.predecessorEdge
+            distances[result.currentVertex] = result.currentDistance()
+            predecessors[result.currentVertex] = result.predecessorEdge()
         }
         
         return ShortestPathsFromSource(

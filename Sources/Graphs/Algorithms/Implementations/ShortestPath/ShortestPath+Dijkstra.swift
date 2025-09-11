@@ -1,12 +1,12 @@
 extension ShortestPathAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
     static func dijkstra<Graph: IncidenceGraph & EdgePropertyGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
-    ) -> Self where Self == DijkstraShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable {
+    ) -> Self where Self == DijkstraShortestPathAlgorithm<Graph, Weight>, Graph.VertexDescriptor: Hashable {
         .init(weight: weight)
     }
 }
 
-struct DijkstraShortestPath<
+struct DijkstraShortestPathAlgorithm<
     Graph: IncidenceGraph & EdgePropertyGraph,
     Weight: Numeric & Comparable
 >: ShortestPathAlgorithm where

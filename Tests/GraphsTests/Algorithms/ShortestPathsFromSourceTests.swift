@@ -14,7 +14,7 @@ struct ShortestPathsFromSourceTests {
         graph.addEdge(from: a, to: b) { $0.weight = 2 }
         graph.addEdge(from: b, to: c) { $0.weight = 3 }
         
-        let result = graph.shortestPathsFromSource(a, using: .dijkstra(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsFromSource(a, using: .dijkstra(weight: .property(\.weight)))
         
         // Test distances
         #expect(result.distance(to: c) == 5.0)
@@ -40,7 +40,7 @@ struct ShortestPathsFromSourceTests {
         graph.addEdge(from: c, to: e) { $0.weight = 10 }
         graph.addEdge(from: d, to: e) { $0.weight = 2 }
         
-        let result = graph.shortestPathsFromSource(a, using: .dijkstra(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsFromSource(a, using: .dijkstra(weight: .property(\.weight)))
         
         // Test shortest paths from A
         #expect(result.distance(to: a) == 0.0)
@@ -63,7 +63,7 @@ struct ShortestPathsFromSourceTests {
         graph.addEdge(from: c, to: d) { $0.weight = 2 }
         // No connection between A-B and C-D components
         
-        let result = graph.shortestPathsFromSource(a, using: .dijkstra(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsFromSource(a, using: .dijkstra(weight: .property(\.weight)))
         
         // Test unreachable vertices
         #expect(result.distance(to: c) == nil)
@@ -90,7 +90,7 @@ struct ShortestPathsFromSourceTests {
         graph.addEdge(from: a, to: b) { $0.weight = 2 }
         graph.addEdge(from: b, to: c) { $0.weight = -1 }
         
-        let result = graph.shortestPathsFromSource(a, using: .bellmanFord(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsFromSource(a, using: .bellmanFord(weight: .property(\.weight)))
         
         // Test that negative weights are handled correctly
         #expect(result.distance(to: c) == 1.0) // A -> B -> C (2 + (-1) = 1)
@@ -110,7 +110,7 @@ struct ShortestPathsFromSourceTests {
         graph.addEdge(from: b, to: c) { $0.weight = 1 }
         graph.addEdge(from: c, to: a) { $0.weight = -3 } // Negative cycle
         
-        let result = graph.shortestPathsFromSource(a, using: .bellmanFord(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsFromSource(a, using: .bellmanFord(weight: .property(\.weight)))
         
         // With negative cycle, distances should be undefined
         // The algorithm should still return some result, but it may not be optimal
@@ -132,7 +132,7 @@ struct ShortestPathsFromSourceTests {
         graph.addEdge(from: b, to: d) { $0.weight = 1 }
         graph.addEdge(from: c, to: d) { $0.weight = 3 }
         
-        let result = graph.shortestPathsFromSource(a, using: .bellmanFord(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsFromSource(a, using: .bellmanFord(weight: .property(\.weight)))
         
         // Test shortest paths considering negative weights
         #expect(result.distance(to: a) == 0.0)
@@ -145,7 +145,7 @@ struct ShortestPathsFromSourceTests {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         
-        let result = graph.shortestPathsFromSource(a, using: .dijkstra(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsFromSource(a, using: .dijkstra(weight: .property(\.weight)))
         
         #expect(result.distance(to: a) == 0.0)
         #expect(result.hasPath(to: a) == true)
