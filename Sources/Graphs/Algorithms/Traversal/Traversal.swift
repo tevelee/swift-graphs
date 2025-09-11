@@ -1,4 +1,4 @@
-extension Graph where Self: IncidenceGraph & VertexListGraph, VertexDescriptor: Hashable {
+extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
     func traverse(
         from source: VertexDescriptor,
         using algorithm: some TraversalAlgorithm<Self>
@@ -8,7 +8,7 @@ extension Graph where Self: IncidenceGraph & VertexListGraph, VertexDescriptor: 
 }
 
 protocol TraversalAlgorithm<Graph> {
-    associatedtype Graph: IncidenceGraph & VertexListGraph
+    associatedtype Graph: IncidenceGraph
 
     func traverse(
         from source: Graph.VertexDescriptor,

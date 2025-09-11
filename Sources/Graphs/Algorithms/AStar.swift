@@ -1,5 +1,5 @@
 struct AStar<
-    Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph & EdgePropertyGraph,
     Weight: Numeric & Comparable,
     HScore: Numeric,
     FScore: Comparable
@@ -21,7 +21,6 @@ struct AStar<
     }
 
     struct Visitor {
-        var initializeVertex: ((Vertex) -> Void)?
         var examineVertex: ((Vertex) -> Void)?
         var examineEdge: ((Edge) -> Void)?
         var edgeRelaxed: ((Edge) -> Void)?
@@ -135,12 +134,6 @@ struct AStar<
             self.queue = queue
             self.propertyMap = graph.makeVertexPropertyMap()
 
-            for vertex in graph.vertices() {
-                propertyMap[vertex][gScoreProperty] = .infinite
-                propertyMap[vertex][predecessorEdgeProperty] = nil
-                visitor?.initializeVertex?(vertex)
-            }
-
             let gScore: GScore = .finite(.zero)
             propertyMap[source][gScoreProperty] = gScore
             let hScore: HScore = heuristic.estimatedCost(source, graph)
@@ -209,7 +202,7 @@ extension AStar: Sequence {
     }
 }
 
-struct AStarWithVisitor<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: Numeric & Comparable, HScore: Numeric, FScore: Comparable> where Graph.VertexDescriptor: Hashable, HScore.Magnitude == HScore {
+struct AStarWithVisitor<Graph: IncidenceGraph & EdgePropertyGraph, Weight: Numeric & Comparable, HScore: Numeric, FScore: Comparable> where Graph.VertexDescriptor: Hashable, HScore.Magnitude == HScore {
     typealias Base = AStar<Graph, Weight, HScore, FScore>
     let base: Base
     let makeVisitor: () -> Base.Visitor

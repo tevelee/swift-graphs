@@ -1,6 +1,6 @@
 import Collections
 
-struct DepthFirstSearch<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescriptor: Hashable {
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
 
@@ -11,7 +11,6 @@ struct DepthFirstSearch<Graph: IncidenceGraph & VertexListGraph> where Graph.Ver
     }
 
     struct Visitor {
-        var initializeVertex: ((Vertex) -> Void)?
         var discoverVertex: ((Vertex) -> Void)?
         var examineVertex: ((Vertex) -> Void)?
         var examineEdge: ((Edge) -> Void)?
@@ -116,15 +115,6 @@ struct DepthFirstSearch<Graph: IncidenceGraph & VertexListGraph> where Graph.Ver
             self.visitor = visitor
             self.stack = stack
             self.propertyMap = graph.makeVertexPropertyMap()
-
-            for vertex in graph.vertices() {
-                propertyMap[vertex][colorProperty] = .white
-                propertyMap[vertex][discoveryTimeProperty] = .undiscovered
-                propertyMap[vertex][finishTimeProperty] = .undiscovered
-                propertyMap[vertex][predecessorEdgeProperty] = nil
-                propertyMap[vertex][depthProperty] = nil
-                visitor?.initializeVertex?(vertex)
-            }
 
             self.stack.push(DFSFrame(vertex: source, isFirstVisit: true, depth: 0))
         }
@@ -292,7 +282,7 @@ extension DepthFirstSearch.Time: ExpressibleByNilLiteral {
     }
 }
 
-struct DFSWithVisitor<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+struct DFSWithVisitor<Graph: IncidenceGraph> where Graph.VertexDescriptor: Hashable {
     typealias Base = DepthFirstSearch<Graph>
     let base: Base
     let makeVisitor: () -> Base.Visitor
@@ -310,7 +300,7 @@ extension DepthFirstSearch {
     }
 }
 
-struct DFSOrder<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+struct DFSOrder<Graph: IncidenceGraph> where Graph.VertexDescriptor: Hashable {
     let makeVisitor: (Graph) -> DepthFirstSearch<Graph>.Visitor
     let vertices: () -> [Graph.VertexDescriptor]
     let edges: () -> [Graph.EdgeDescriptor]

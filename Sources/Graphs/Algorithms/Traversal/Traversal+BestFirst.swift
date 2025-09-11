@@ -6,7 +6,7 @@ extension TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
     }
 }
 
-struct BestFirstTraversal<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, HScore: Numeric & Comparable>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable, HScore.Magnitude == HScore {
+struct BestFirstTraversal<Graph: IncidenceGraph & EdgePropertyGraph, HScore: Numeric & Comparable>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable, HScore.Magnitude == HScore {
     let heuristic: Heuristic<Graph, HScore>
 
     func traverse(

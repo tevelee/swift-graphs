@@ -1,8 +1,8 @@
-import XCTest
+import Testing
 @testable import Graphs
 
-final class BinaryInorderDFSTests: XCTestCase {
-    func testInorderTraversal() {
+struct BinaryInorderDFSTests {
+    @Test func testInorderTraversal() {
         var g = AdjacencyList(edgeStore: BinaryEdgeStore())
 
         let a = g.addVertex()
@@ -22,7 +22,7 @@ final class BinaryInorderDFSTests: XCTestCase {
         g.setRightNeighbor(of: b, to: e)
 
         let result = g.traverse(from: a, using: .dfs(order: .inorder))
-        XCTAssertEqual(result.vertices, [d, b, e, a, c])
+        #expect(result.vertices == [d, b, e, a, c])
     }
 }
 

@@ -1,5 +1,5 @@
 struct Dijkstra<
-    Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph & EdgePropertyGraph,
     Weight: Numeric & Comparable
 > where
     Graph.VertexDescriptor: Hashable,
@@ -14,7 +14,6 @@ struct Dijkstra<
     }
 
     struct Visitor {
-        var initializeVertex: ((Vertex) -> Void)?
         var examineVertex: ((Vertex) -> Void)?
         var examineEdge: ((Edge) -> Void)?
         var edgeRelaxed: ((Edge) -> Void)?
@@ -104,12 +103,6 @@ struct Dijkstra<
             self.visitor = visitor
             self.queue = queue
             self.propertyMap = graph.makeVertexPropertyMap()
-
-            for vertex in graph.vertices() {
-                propertyMap[vertex][distanceProperty] = .infinite
-                propertyMap[vertex][predecessorEdgeProperty] = nil
-                visitor?.initializeVertex?(vertex)
-            }
 
             propertyMap[source][distanceProperty] = .finite(.zero)
             self.queue.enqueue(.init(vertex: source, cost: .finite(.zero)))
@@ -298,7 +291,7 @@ extension Dijkstra.Result {
     }
 }
 
-struct DijkstraWithVisitor<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: Numeric & Comparable>
+struct DijkstraWithVisitor<Graph: IncidenceGraph & EdgePropertyGraph, Weight: Numeric & Comparable>
 where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
     typealias Base = Dijkstra<Graph, Weight>
     let base: Base

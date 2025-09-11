@@ -4,7 +4,7 @@ extension TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
     }
 }
 
-struct BFSTraversal<Graph: IncidenceGraph & VertexListGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
+struct BFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
     func traverse(
         from source: Graph.VertexDescriptor,
         in graph: Graph

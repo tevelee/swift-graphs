@@ -4,7 +4,7 @@ extension TraversalAlgorithm {
     }
 }
 
-struct DepthLimitedDFSTraversal<Graph: IncidenceGraph & VertexListGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
+struct DepthLimitedDFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
     let maxDepth: UInt
     func traverse(
         from source: Graph.VertexDescriptor,

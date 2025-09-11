@@ -15,7 +15,7 @@ extension ShortestPathUntilAlgorithm {
     }
 }
 
-struct AStarShortestPathUntil<Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric & Comparable, HScore: Numeric, FScore: Comparable>: ShortestPathUntilAlgorithm where Graph.VertexDescriptor: Hashable, HScore.Magnitude == HScore {
+struct AStarShortestPathUntil<Graph: IncidenceGraph & EdgePropertyGraph, Weight: Numeric & Comparable, HScore: Numeric, FScore: Comparable>: ShortestPathUntilAlgorithm where Graph.VertexDescriptor: Hashable, HScore.Magnitude == HScore {
     let weight: CostDefinition<Graph, Weight>
     let heuristic: Heuristic<Graph, HScore>
     let calculateTotalCost: (Weight, HScore) -> FScore

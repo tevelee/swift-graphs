@@ -1,8 +1,8 @@
-import XCTest
+import Testing
 @testable import Graphs
 
-final class BinaryAdjacencyListTests: XCTestCase {
-    func testSetChildrenAndNeighbors() {
+struct BinaryAdjacencyListTests {
+    @Test func testSetChildrenAndNeighbors() {
         var g = AdjacencyList(edgeStore: BinaryEdgeStore())
 
         let a = g.addVertex()
@@ -16,20 +16,20 @@ final class BinaryAdjacencyListTests: XCTestCase {
         g.setLeftNeighbor(of: b, to: d)
         g.setRightNeighbor(of: b, to: e)
 
-        XCTAssertEqual(g.leftNeighbor(of: a), b)
-        XCTAssertEqual(g.rightNeighbor(of: a), c)
-        XCTAssertEqual(g.leftNeighbor(of: b), d)
-        XCTAssertEqual(g.rightNeighbor(of: b), e)
+        #expect(g.leftNeighbor(of: a) == b)
+        #expect(g.rightNeighbor(of: a) == c)
+        #expect(g.leftNeighbor(of: b) == d)
+        #expect(g.rightNeighbor(of: b) == e)
 
-        XCTAssertEqual(g.outDegree(of: a), 2)
-        XCTAssertEqual(g.inDegree(of: a), 0)
-        XCTAssertEqual(g.outDegree(of: b), 2)
-        XCTAssertEqual(g.inDegree(of: b), 1)
-        XCTAssertEqual(g.outDegree(of: c), 0)
-        XCTAssertEqual(g.inDegree(of: c), 1)
+        #expect(g.outDegree(of: a) == 2)
+        #expect(g.inDegree(of: a) == 0)
+        #expect(g.outDegree(of: b) == 2)
+        #expect(g.inDegree(of: b) == 1)
+        #expect(g.outDegree(of: c) == 0)
+        #expect(g.inDegree(of: c) == 1)
     }
 
-    func testReplacingLeftChild() {
+    @Test func testReplacingLeftChild() {
         var g = AdjacencyList(edgeStore: BinaryEdgeStore())
 
         let a = g.addVertex()
@@ -37,11 +37,11 @@ final class BinaryAdjacencyListTests: XCTestCase {
         let x = g.addVertex()
 
         g.setLeftNeighbor(of: a, to: b)
-        XCTAssertEqual(g.leftNeighbor(of: a), b)
+        #expect(g.leftNeighbor(of: a) == b)
 
         g.setLeftNeighbor(of: a, to: x)
-        XCTAssertEqual(g.leftNeighbor(of: a), x)
-        XCTAssertEqual(g.outDegree(of: a), 1)
+        #expect(g.leftNeighbor(of: a) == x)
+        #expect(g.outDegree(of: a) == 1)
     }
 }
 

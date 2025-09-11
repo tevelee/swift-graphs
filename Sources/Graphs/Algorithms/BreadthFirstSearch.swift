@@ -1,6 +1,6 @@
 import Collections
 
-struct BreadthFirstSearch<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescriptor: Hashable {
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
     
@@ -10,7 +10,6 @@ struct BreadthFirstSearch<Graph: IncidenceGraph & VertexListGraph> where Graph.V
     }
     
     struct Visitor {
-        var initializeVertex: ((Vertex) -> Void)?
         var discoverVertex: ((Vertex) -> Void)?
         var examineVertex: ((Vertex) -> Void)?
         var examineEdge: ((Edge) -> Void)?
@@ -96,13 +95,6 @@ struct BreadthFirstSearch<Graph: IncidenceGraph & VertexListGraph> where Graph.V
             self.visitor = visitor
             self.propertyMap = graph.makeVertexPropertyMap()
             self.queue = queue
-            
-            for vertex in graph.vertices() {
-                propertyMap[vertex][colorProperty] = .white
-                propertyMap[vertex][distanceProperty] = .unreachable
-                propertyMap[vertex][predecessorEdgeProperty] = nil
-                visitor?.initializeVertex?(vertex)
-            }
             
             propertyMap[source][colorProperty] = .gray
             propertyMap[source][distanceProperty] = .reachable(depth: 0)
@@ -277,7 +269,7 @@ extension BreadthFirstSearch.Distance: ExpressibleByNilLiteral {
     }
 }
 
-struct BFSWithVisitor<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+struct BFSWithVisitor<Graph: IncidenceGraph> where Graph.VertexDescriptor: Hashable {
     typealias Base = BreadthFirstSearch<Graph>
     let base: Base
     let makeVisitor: () -> Base.Visitor
