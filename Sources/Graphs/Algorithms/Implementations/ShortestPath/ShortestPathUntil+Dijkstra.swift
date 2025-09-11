@@ -6,7 +6,13 @@ extension ShortestPathUntilAlgorithm {
     }
 }
 
-struct DijkstraShortestPath<Graph: IncidenceGraph & EdgePropertyGraph, Weight: Numeric>: ShortestPathUntilAlgorithm where Weight.Magnitude == Weight, Graph.VertexDescriptor: Hashable {
+struct DijkstraShortestPath<
+    Graph: IncidenceGraph & EdgePropertyGraph,
+    Weight: Numeric
+>: ShortestPathUntilAlgorithm where
+    Weight.Magnitude == Weight,
+    Graph.VertexDescriptor: Hashable
+{
     let weight: CostDefinition<Graph, Weight>
 
     func shortestPath(

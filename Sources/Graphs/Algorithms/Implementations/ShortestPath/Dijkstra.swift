@@ -8,10 +8,6 @@ struct Dijkstra<
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
 
-    enum Cost {
-        case infinite
-        case finite(Weight)
-    }
 
     struct Visitor {
         var examineVertex: ((Vertex) -> Void)?
@@ -26,13 +22,13 @@ struct Dijkstra<
         typealias Edge = Graph.EdgeDescriptor
         fileprivate let source: Vertex
         let currentVertex: Vertex
-        let distanceProperty: any VertexProperty<Cost>.Type
+        let distanceProperty: any VertexProperty<Cost<Weight>>.Type
         let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
         let propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
     }
 
     private enum DistanceProperty: VertexProperty {
-        static var defaultValue: Cost { .infinite }
+        static var defaultValue: Cost<Weight> { .infinite }
     }
 
     private enum PredecessorEdgeProperty: VertexProperty {
@@ -42,7 +38,7 @@ struct Dijkstra<
     struct PriorityItem {
         typealias Vertex = Graph.VertexDescriptor
         let vertex: Vertex
-        let cost: Cost
+        let cost: Cost<Weight>
     }
 
     private let graph: Graph
@@ -156,6 +152,50 @@ struct Dijkstra<
             )
         }
     }
+    
+    /// Runs Dijkstra to completion and returns all shortest paths from the source
+    func allShortestPaths() -> ShortestPathsFromSource<Vertex, Edge, Weight> {
+        // Run the algorithm to completion and collect all processed vertices
+        var processedVertices: Set<Vertex> = []
+        var lastResult: Result? = nil
+        
+        for result in self {
+            processedVertices.insert(result.currentVertex)
+            lastResult = result
+        }
+        
+        guard let result = lastResult else {
+            // No results, return empty
+            return ShortestPathsFromSource(
+                source: source,
+                distances: [:],
+                predecessors: [:]
+            )
+        }
+        
+        // Extract all distances and predecessors from the result
+        var distances: [Vertex: Weight] = [:]
+        var predecessors: [Vertex: Edge?] = [:]
+        
+        // Check all processed vertices
+        for vertex in processedVertices {
+            let cost = result.propertyMap[vertex][result.distanceProperty]
+            switch cost {
+                case .infinite:
+                    // Skip unreachable vertices
+                    continue
+                case .finite(let weight):
+                    distances[vertex] = weight
+            }
+            predecessors[vertex] = result.propertyMap[vertex][result.predecessorEdgeProperty]
+        }
+        
+        return ShortestPathsFromSource(
+            source: source,
+            distances: distances,
+            predecessors: predecessors
+        )
+    }
 }
 
 extension Dijkstra.Iterator: IteratorProtocol {}
@@ -166,47 +206,7 @@ extension Dijkstra: Sequence {
     }
 }
 
-extension Dijkstra.Cost: Equatable where Weight: Equatable {}
 
-extension Dijkstra.Cost: Comparable where Weight: Comparable {
-    static func < (lhs: Self, rhs: Self) -> Bool {
-        switch (lhs, rhs) {
-            case (.infinite, _): false
-            case (_, .infinite): true
-            case (.finite(let lhsValue), .finite(let rhsValue)): lhsValue < rhsValue
-        }
-    }
-}
-
-extension Dijkstra.Cost where Weight: Numeric {
-    static func + (lhs: Self, rhs: Weight) -> Self {
-        switch lhs {
-            case .infinite:
-                assertionFailure(".infinite means unreachable, but if it's being examined it should be reachable")
-                return .infinite
-            case .finite(let lhsValue):
-                return .finite(lhsValue + rhs)
-        }
-    }
-}
-
-extension Dijkstra.Cost: ExpressibleByIntegerLiteral where Weight == UInt {
-    init(integerLiteral value: Weight) {
-        self = .finite(value)
-    }
-}
-
-extension Dijkstra.Cost: ExpressibleByFloatLiteral where Weight == Double {
-    init(floatLiteral value: Weight) {
-        self = .finite(value)
-    }
-}
-
-extension Dijkstra.Cost: ExpressibleByNilLiteral {
-    init(nilLiteral: ()) {
-        self = .infinite
-    }
-}
 
 extension Dijkstra.PriorityItem: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -255,7 +255,7 @@ extension Dijkstra.Result {
         path(to: currentVertex, in: graph)
     }
 
-    func distance(of vertex: Vertex) -> Dijkstra<Graph, Weight>.Cost {
+    func distance(of vertex: Vertex) -> Cost<Weight> {
         propertyMap[vertex][distanceProperty]
     }
 

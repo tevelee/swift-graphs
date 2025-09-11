@@ -31,9 +31,7 @@ struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
 
     init() {}
 
-    // MARK: - EdgeStorage
-
-    var edgeCount: Int { alive.count }
+        var edgeCount: Int { alive.count }
 
     func edges() -> OrderedSet<Edge> {
         var result: OrderedSet<Edge> = []
@@ -84,9 +82,7 @@ struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
         incomingBuckets[vertex]?.count ?? 0
     }
 
-    // MARK: - Mutations
-
-    private mutating func ensureIndex(for vertex: Vertex) -> Int {
+        private mutating func ensureIndex(for vertex: Vertex) -> Int {
         if let idx = vertexIndex[vertex] { return idx }
         let newIndex = vertexIndex.count
         vertexIndex[vertex] = newIndex

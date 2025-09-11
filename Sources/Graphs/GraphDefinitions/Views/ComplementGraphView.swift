@@ -1,6 +1,10 @@
 import Collections
 
-struct ComplementGraphView<Base: EdgeLookupGraph & VertexListGraph>: Graph where Base.VertexDescriptor: Hashable {
+struct ComplementGraphView<
+    Base: EdgeLookupGraph & VertexListGraph
+>: Graph where
+    Base.VertexDescriptor: Hashable
+{
     typealias VertexDescriptor = Base.VertexDescriptor
     struct EdgeDescriptor: Hashable {
         let source: VertexDescriptor

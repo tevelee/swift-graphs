@@ -1,0 +1,64 @@
+import Foundation
+
+protocol ShortestPathsForAllPairsAlgorithm<Graph, Weight> {
+    associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
+    associatedtype Weight: Numeric & Comparable
+    
+    func shortestPathsForAllPairs(in graph: Graph) -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>
+}
+
+struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: Numeric & Comparable> {
+    let distances: [Vertex: [Vertex: Cost<Weight>]]
+    let predecessors: [Vertex: [Vertex: Edge?]]
+    
+    func distance(from source: Vertex, to destination: Vertex) -> Cost<Weight>? {
+        distances[source]?[destination]
+    }
+    
+    func hasPath(from source: Vertex, to destination: Vertex) -> Bool {
+        guard let cost = distances[source]?[destination] else { return false }
+        switch cost {
+            case .infinite: return false
+            case .finite: return true
+        }
+    }
+    
+    func path(from source: Vertex, to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> Path<Vertex, Edge>? {
+        guard let predecessorEdges = predecessors[source]?[destination],
+              let _ = predecessorEdges else {
+            return nil
+        }
+        
+        // Reconstruct path by following predecessors
+        var current = destination
+        var vertices: [Vertex] = [destination]
+        var edges: [Edge] = []
+        
+        while let edge = predecessors[source]?[current] {
+            guard let edge = edge else { break }
+            edges.insert(edge, at: 0)
+            guard let predecessor = graph.source(of: edge) else { break }
+            if predecessor == source { break }
+            vertices.insert(predecessor, at: 0)
+            current = predecessor
+        }
+        
+        vertices.insert(source, at: 0)
+        
+        return Path(
+            source: source,
+            destination: destination,
+            vertices: vertices,
+            edges: edges
+        )
+    }
+    
+}
+
+extension IncidenceGraph where Self: VertexListGraph {
+    func shortestPathsForAllPairs<Weight: Numeric & Comparable>(
+        using algorithm: some ShortestPathsForAllPairsAlgorithm<Self, Weight>
+    ) -> AllPairsShortestPaths<VertexDescriptor, EdgeDescriptor, Weight> {
+        algorithm.shortestPathsForAllPairs(in: self)
+    }
+}

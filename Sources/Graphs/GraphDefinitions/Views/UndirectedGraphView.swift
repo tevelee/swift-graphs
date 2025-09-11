@@ -1,6 +1,10 @@
 import Collections
 
-struct UndirectedGraphView<Base: BidirectionalGraph>: Graph where Base.EdgeDescriptor: Hashable {
+struct UndirectedGraphView<
+    Base: BidirectionalGraph
+>: Graph where
+    Base.EdgeDescriptor: Hashable
+{
     typealias VertexDescriptor = Base.VertexDescriptor
     struct EdgeDescriptor: Hashable {
         let base: Base.EdgeDescriptor

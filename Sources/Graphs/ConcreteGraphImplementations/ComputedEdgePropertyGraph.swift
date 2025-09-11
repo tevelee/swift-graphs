@@ -81,7 +81,12 @@ extension ComputedEdgePropertyGraph: EdgePropertyGraph where Base: EdgePropertyG
     }
 }
 
-struct ComputedEdgePropertyMap<Base: PropertyMap, Property: EdgeProperty>: PropertyMap where Base.Value: EdgeProperties {
+struct ComputedEdgePropertyMap<
+    Base: PropertyMap,
+    Property: EdgeProperty
+>: PropertyMap where
+    Base.Value: EdgeProperties
+{
     var base: Base
     let compute: (Base.Key) -> Property.Value
 

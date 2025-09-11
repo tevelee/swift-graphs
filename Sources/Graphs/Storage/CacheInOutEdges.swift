@@ -6,7 +6,11 @@ extension EdgeStorage where Edges == OrderedSet<Edge> {
     }
 }
 
-struct CacheInOutEdges<Base: EdgeStorage>: EdgeStorage where Base.Edges == OrderedSet<Base.Edge> {
+struct CacheInOutEdges<
+    Base: EdgeStorage
+>: EdgeStorage where
+    Base.Edges == OrderedSet<Base.Edge>
+{
     typealias Vertex = Base.Vertex
     typealias Edge = Base.Edge
 

@@ -6,8 +6,13 @@ extension SearchAlgorithm {
     }
 }
 
-struct DijkstraSearch<Graph: IncidenceGraph & EdgePropertyGraph, Weight: Numeric & Comparable>: SearchAlgorithm 
-where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
+struct DijkstraSearch<
+    Graph: IncidenceGraph & EdgePropertyGraph,
+    Weight: Numeric & Comparable
+>: SearchAlgorithm where
+    Graph.VertexDescriptor: Hashable,
+    Weight.Magnitude == Weight
+{
     let edgeWeight: CostDefinition<Graph, Weight>
     
     init(edgeWeight: CostDefinition<Graph, Weight>) {

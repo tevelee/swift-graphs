@@ -15,10 +15,6 @@ struct AStar<
         case finite(Weight)
     }
     
-    enum Cost {
-        case infinite
-        case finite(FScore)
-    }
 
     struct Visitor {
         var examineVertex: ((Vertex) -> Void)?
@@ -202,7 +198,15 @@ extension AStar: Sequence {
     }
 }
 
-struct AStarWithVisitor<Graph: IncidenceGraph & EdgePropertyGraph, Weight: Numeric & Comparable, HScore: Numeric, FScore: Comparable> where Graph.VertexDescriptor: Hashable, HScore.Magnitude == HScore {
+struct AStarWithVisitor<
+    Graph: IncidenceGraph & EdgePropertyGraph,
+    Weight: Numeric & Comparable,
+    HScore: Numeric,
+    FScore: Comparable
+> where
+    Graph.VertexDescriptor: Hashable,
+    HScore.Magnitude == HScore
+{
     typealias Base = AStar<Graph, Weight, HScore, FScore>
     let base: Base
     let makeVisitor: () -> Base.Visitor
@@ -220,17 +224,6 @@ extension AStar {
     }
 }
 
-extension AStar.Cost: Equatable where FScore: Equatable {}
-
-extension AStar.Cost: Comparable where FScore: Comparable {
-    static func < (lhs: Self, rhs: Self) -> Bool {
-        switch (lhs, rhs) {
-            case (.infinite, _): false
-            case (_, .infinite): true
-            case (.finite(let lhsValue), .finite(let rhsValue)): lhsValue < rhsValue
-        }
-    }
-}
 
 extension AStar.GScore: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
@@ -254,23 +247,6 @@ extension AStar.GScore {
     }
 }
 
-extension AStar.Cost: ExpressibleByIntegerLiteral where FScore == UInt {
-    init(integerLiteral value: FScore) {
-        self = .finite(value)
-    }
-}
-
-extension AStar.Cost: ExpressibleByFloatLiteral where FScore == Double {
-    init(floatLiteral value: FScore) {
-        self = .finite(value)
-    }
-}
-
-extension AStar.Cost: ExpressibleByNilLiteral {
-    init(nilLiteral: ()) {
-        self = .infinite
-    }
-}
 
 extension AStar.PriorityItem: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {

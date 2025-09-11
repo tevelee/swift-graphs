@@ -17,8 +17,6 @@ extension ShortestPathAlgorithm {
 
 extension AStarShortestPathUntil: ShortestPathAlgorithm {}
 
-// MARK: - Destination-aware A*
-
 extension ShortestPathAlgorithm {
     static func aStar<Graph: IncidenceGraph, Weight: Numeric, HScore, FScore>(
         weight: CostDefinition<Graph, Weight>,
@@ -36,7 +34,15 @@ extension ShortestPathAlgorithm {
     }
 }
 
-struct AStarShortestPathToDestination<Graph: IncidenceGraph & EdgePropertyGraph, Weight: Numeric & Comparable, HScore: Numeric, FScore: Comparable>: ShortestPathAlgorithm where Graph.VertexDescriptor: Hashable, HScore.Magnitude == HScore {
+struct AStarShortestPathToDestination<
+    Graph: IncidenceGraph & EdgePropertyGraph,
+    Weight: Numeric & Comparable,
+    HScore: Numeric,
+    FScore: Comparable
+>: ShortestPathAlgorithm where
+    Graph.VertexDescriptor: Hashable,
+    HScore.Magnitude == HScore
+{
     let weight: CostDefinition<Graph, Weight>
     let heuristicForDestination: HeuristicToDestination<Graph, HScore>
     let calculateTotalCost: (Weight, HScore) -> FScore

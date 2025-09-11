@@ -1,0 +1,91 @@
+@testable import Graphs
+import Testing
+
+struct ShortestPathsForAllPairsTests {
+    
+    @Test func testFloydWarshallBasic() {
+        var graph = AdjacencyList()
+        
+        // Create a simple test graph: A -> B -> C
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        
+        _ = graph.addEdge(from: a, to: b) { $0.weight = 2 }
+        _ = graph.addEdge(from: b, to: c) { $0.weight = 3 }
+        
+        let result = graph.shortestPathsForAllPairs(using: .floydWarshall(on: graph, edgeWeight: .property(\.weight)))
+        
+        // Test some known shortest paths
+        #expect(result.distance(from: a, to: c) == 5.0) // A -> B -> C (2 + 3 = 5)
+        #expect(result.distance(from: a, to: b) == 2.0) // A -> B
+        #expect(result.distance(from: a, to: a) == 0.0) // Self-loop
+        #expect(result.distance(from: b, to: c) == 3.0) // B -> C
+    }
+    
+    @Test func testFloydWarshallComplex() {
+        var graph = AdjacencyList()
+        
+        // Create a more complex graph with multiple paths
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        
+        _ = graph.addEdge(from: a, to: b) { $0.weight = 1 }
+        _ = graph.addEdge(from: a, to: c) { $0.weight = 4 }
+        _ = graph.addEdge(from: b, to: c) { $0.weight = 2 }
+        _ = graph.addEdge(from: b, to: d) { $0.weight = 7 }
+        _ = graph.addEdge(from: c, to: d) { $0.weight = 1 }
+        
+        let result = graph.shortestPathsForAllPairs(using: .floydWarshall(on: graph, edgeWeight: .property(\.weight)))
+        
+        // Test shortest paths
+        #expect(result.distance(from: a, to: d) == 4.0) // A -> B -> C -> D (1 + 2 + 1 = 4)
+        #expect(result.distance(from: a, to: c) == 3.0) // A -> B -> C (1 + 2 = 3)
+        #expect(result.distance(from: b, to: d) == 3.0) // B -> C -> D (2 + 1 = 3)
+    }
+    
+    @Test func testFloydWarshallUnreachable() {
+        var graph = AdjacencyList()
+        
+        // Create disconnected components
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        
+        _ = graph.addEdge(from: a, to: b) { $0.weight = 1 }
+        _ = graph.addEdge(from: c, to: d) { $0.weight = 2 }
+        // No connection between A-B and C-D components
+        
+        let result = graph.shortestPathsForAllPairs(using: .floydWarshall(on: graph, edgeWeight: .property(\.weight)))
+        
+        // Test unreachable paths
+        #expect(result.distance(from: a, to: c) == .infinite)
+        #expect(result.distance(from: a, to: d) == .infinite)
+        #expect(result.distance(from: b, to: c) == .infinite)
+        #expect(result.distance(from: b, to: d) == .infinite)
+        
+        // Test reachable paths
+        #expect(result.distance(from: a, to: b) == 1.0)
+        #expect(result.distance(from: c, to: d) == 2.0)
+    }
+    
+    @Test func testFloydWarshallSingleVertex() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        
+        let result = graph.shortestPathsForAllPairs(using: .floydWarshall(on: graph, edgeWeight: .property(\.weight)))
+        
+        #expect(result.distance(from: a, to: a) == 0.0)
+    }
+    
+    @Test func testFloydWarshallEmptyGraph() {
+        let graph = AdjacencyList()
+        
+        let result = graph.shortestPathsForAllPairs(using: .floydWarshall(on: graph, edgeWeight: .property(\.weight)))
+        
+        #expect(result.distances.isEmpty)
+    }
+}

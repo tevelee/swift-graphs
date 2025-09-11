@@ -54,8 +54,6 @@ struct BufferedIterator<Base: Sequence, Element>: IteratorProtocol {
     }
 }
 
-// MARK: - Convenience Extensions
-
 extension BufferedSequence {
     /// Creates a BufferedSequence that collects elements using a simple callback
     static func collecting(

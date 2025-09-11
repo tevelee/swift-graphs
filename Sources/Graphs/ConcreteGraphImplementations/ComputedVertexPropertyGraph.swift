@@ -81,7 +81,12 @@ extension ComputedVertexPropertyGraph: VertexPropertyGraph where Base: VertexPro
     }
 }
 
-struct ComputedVertexPropertyMap<Base: PropertyMap, Property: VertexProperty>: PropertyMap where Base.Value: VertexProperties {
+struct ComputedVertexPropertyMap<
+    Base: PropertyMap,
+    Property: VertexProperty
+>: PropertyMap where
+    Base.Value: VertexProperties
+{
     var base: Base
     let compute: (Base.Key) -> Property.Value
 

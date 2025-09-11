@@ -1,5 +1,3 @@
-// MARK: - Composite Visitor for DFS
-
 extension DepthFirstSearch.Visitor {
     static func composite(_ visitors: Self...) -> Self {
         .init(
