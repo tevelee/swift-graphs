@@ -10,13 +10,19 @@ struct DFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.Verte
         from source: Graph.VertexDescriptor,
         in graph: Graph
     ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
-        DepthFirstSearch(on: graph, from: source)
-            .withVisitor { order.makeVisitor(graph) }
-            .forEach { _ in }
+        var edges: [Graph.EdgeDescriptor] = []
+        let edgeCollectingVisitor = DepthFirstSearch<Graph>.Visitor(examineEdge: { edges.append($0) })
         
+        let vertices = SharedBuffer<Graph.VertexDescriptor>()
+        let vertexCollectingVisitor = order.makeVisitor(graph, vertices)
+        
+        DepthFirstSearch(on: graph, from: source)
+            .withVisitor { .composite(vertexCollectingVisitor, edgeCollectingVisitor) }
+            .forEach { _ in }
+
         return TraversalResult(
-            vertices: order.vertices(),
-            edges: order.edges()
+            vertices: vertices.elements,
+            edges: edges
         )
     }
 }
