@@ -10,6 +10,14 @@ struct Boruvka<
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
     
+    struct Visitor {
+        var examineEdge: ((Edge) -> Void)?
+        var addEdge: ((Edge, Weight) -> Void)?
+        var skipEdge: ((Edge, String) -> Void)?
+        var unionVertices: ((Vertex, Vertex) -> Void)?
+        var completeComponentMerge: ((Int) -> Void)?
+    }
+    
     struct Result {
         let edges: [Edge]
         let totalWeight: Weight
@@ -27,7 +35,7 @@ struct Boruvka<
         self.edgeWeight = edgeWeight
     }
     
-    func minimumSpanningTree() -> Result {
+    func minimumSpanningTree(visitor: Visitor? = nil) -> Result {
         // Union-Find data structure
         var parent: [Vertex: Vertex] = [:]
         var rank: [Vertex: Int] = [:]
@@ -70,6 +78,12 @@ struct Boruvka<
         // Get all edges
         let allEdges = Array(graph.edges())
         
+        // Notify visitor about all edges being examined
+        for edge in allEdges {
+            visitor?.examineEdge?(edge)
+        }
+        
+        var iteration = 0
         // Repeat until we have one component or no more edges
         while mstEdges.count < graph.vertexCount - 1 && !allEdges.isEmpty {
             // Find minimum weight edge for each component
@@ -116,7 +130,10 @@ struct Boruvka<
                 let destRoot = find(destination)
                 
                 // Skip if both vertices are now in the same component
-                if sourceRoot == destRoot { continue }
+                if sourceRoot == destRoot { 
+                    visitor?.skipEdge?(edge, "Vertices already in same component")
+                    continue 
+                }
                 
                 // Add edge to MST
                 mstEdges.append(edge)
@@ -124,8 +141,13 @@ struct Boruvka<
                 mstVertices.insert(source)
                 mstVertices.insert(destination)
                 union(source, destination)
+                visitor?.addEdge?(edge, edgeWeight)
+                visitor?.unionVertices?(source, destination)
                 addedAnyEdge = true
             }
+            
+            visitor?.completeComponentMerge?(iteration)
+            iteration += 1
             
             // If no edges were added, break to avoid infinite loop
             if !addedAnyEdge { break }
@@ -136,10 +158,33 @@ struct Boruvka<
             mstVertices.insert(vertex)
         }
         
-        return Result(
+        let result = Result(
             edges: mstEdges,
             totalWeight: totalWeight,
             vertices: mstVertices
         )
+        
+        
+        return result
+    }
+}
+
+// Visitor support
+extension Boruvka {
+    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> BoruvkaWithVisitor<Graph, Weight> {
+        .init(base: self, makeVisitor: makeVisitor)
+    }
+}
+
+struct BoruvkaWithVisitor<Graph: EdgeListGraph & IncidenceGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric & Comparable>
+where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
+    typealias Base = Boruvka<Graph, Weight>
+    let base: Base
+    let makeVisitor: () -> Base.Visitor
+}
+
+extension BoruvkaWithVisitor {
+    func minimumSpanningTree() -> Base.Result {
+        base.minimumSpanningTree(visitor: makeVisitor())
     }
 }

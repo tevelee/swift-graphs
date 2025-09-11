@@ -10,6 +10,18 @@ struct BidirectionalDijkstra<
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
     
+    struct Visitor {
+        var examineVertex: ((Vertex, Direction) -> Void)?
+        var examineEdge: ((Edge, Direction) -> Void)?
+        var edgeRelaxed: ((Edge, Direction) -> Void)?
+        var edgeNotRelaxed: ((Edge, Direction) -> Void)?
+        var meetingFound: ((Vertex, Cost<Weight>) -> Void)?
+    }
+    
+    enum Direction {
+        case forward
+        case backward
+    }
     
     struct Result {
         let path: Path<Vertex, Edge>?
@@ -27,11 +39,6 @@ struct BidirectionalDijkstra<
         let direction: Direction
     }
     
-    enum Direction {
-        case forward
-        case backward
-    }
-    
     init(
         on graph: Graph,
         edgeWeight: CostDefinition<Graph, Weight>,
@@ -44,7 +51,7 @@ struct BidirectionalDijkstra<
         self.makePriorityQueue = makePriorityQueue
     }
     
-    func shortestPath(from source: Vertex, to destination: Vertex) -> Result {
+    func shortestPath(from source: Vertex, to destination: Vertex, visitor: Visitor? = nil) -> Result {
         var forwardDistances: [Vertex: Cost<Weight>] = [:]
         var backwardDistances: [Vertex: Cost<Weight>] = [:]
         var forwardPredecessors: [Vertex: Edge?] = [:]
@@ -86,6 +93,8 @@ struct BidirectionalDijkstra<
                 backwardVisited.insert(current)
             }
             
+            visitor?.examineVertex?(current, direction)
+            
             // Check if we've found a meeting point
             if direction == .forward && backwardVisited.contains(current) {
                 let backwardCost = backwardDistances[current] ?? .infinite
@@ -96,10 +105,12 @@ struct BidirectionalDijkstra<
                         if totalCost < bestWeight {
                             bestDistance = .finite(totalCost)
                             meetingVertex = current
+                            visitor?.meetingFound?(current, bestDistance)
                         }
                     } else {
                         bestDistance = .finite(totalCost)
                         meetingVertex = current
+                        visitor?.meetingFound?(current, bestDistance)
                     }
                 }
             } else if direction == .backward && forwardVisited.contains(current) {
@@ -111,10 +122,12 @@ struct BidirectionalDijkstra<
                         if totalCost < bestWeight {
                             bestDistance = .finite(totalCost)
                             meetingVertex = current
+                            visitor?.meetingFound?(current, bestDistance)
                         }
                     } else {
                         bestDistance = .finite(totalCost)
                         meetingVertex = current
+                        visitor?.meetingFound?(current, bestDistance)
                     }
                 }
             }
@@ -132,7 +145,8 @@ struct BidirectionalDijkstra<
                     currentCost: currentCost,
                     distances: &forwardDistances,
                     predecessors: &forwardPredecessors,
-                    queue: &queue
+                    queue: &queue,
+                    visitor: visitor
                 )
             } else {
                 exploreBackward(
@@ -140,7 +154,8 @@ struct BidirectionalDijkstra<
                     currentCost: currentCost,
                     distances: &backwardDistances,
                     predecessors: &backwardPredecessors,
-                    queue: &queue
+                    queue: &queue,
+                    visitor: visitor
                 )
             }
         }
@@ -154,6 +169,7 @@ struct BidirectionalDijkstra<
             backwardPredecessors: backwardPredecessors
         )}
         
+        
         return Result(
             path: path,
             totalDistance: bestDistance,
@@ -166,10 +182,13 @@ struct BidirectionalDijkstra<
         currentCost: Cost<Weight>,
         distances: inout [Vertex: Cost<Weight>],
         predecessors: inout [Vertex: Edge?],
-        queue: inout any QueueProtocol<PriorityItem>
+        queue: inout any QueueProtocol<PriorityItem>,
+        visitor: Visitor?
     ) {
         for edge in graph.outgoingEdges(of: current) {
             guard let neighbor = graph.destination(of: edge) else { continue }
+            
+            visitor?.examineEdge?(edge, .forward)
             
             let weight = edgeWeight.costToExplore(edge, graph)
             let newCost = currentCost + weight
@@ -179,6 +198,9 @@ struct BidirectionalDijkstra<
                 distances[neighbor] = newCost
                 predecessors[neighbor] = edge
                 queue.enqueue(PriorityItem(vertex: neighbor, cost: newCost, direction: .forward))
+                visitor?.edgeRelaxed?(edge, .forward)
+            } else {
+                visitor?.edgeNotRelaxed?(edge, .forward)
             }
         }
     }
@@ -188,10 +210,13 @@ struct BidirectionalDijkstra<
         currentCost: Cost<Weight>,
         distances: inout [Vertex: Cost<Weight>],
         predecessors: inout [Vertex: Edge?],
-        queue: inout any QueueProtocol<PriorityItem>
+        queue: inout any QueueProtocol<PriorityItem>,
+        visitor: Visitor?
     ) {
         for edge in graph.incomingEdges(of: current) {
             guard let neighbor = graph.source(of: edge) else { continue }
+            
+            visitor?.examineEdge?(edge, .backward)
             
             let weight = edgeWeight.costToExplore(edge, graph)
             let newCost = currentCost + weight
@@ -201,6 +226,9 @@ struct BidirectionalDijkstra<
                 distances[neighbor] = newCost
                 predecessors[neighbor] = edge
                 queue.enqueue(PriorityItem(vertex: neighbor, cost: newCost, direction: .backward))
+                visitor?.edgeRelaxed?(edge, .backward)
+            } else {
+                visitor?.edgeNotRelaxed?(edge, .backward)
             }
         }
     }
@@ -271,6 +299,26 @@ extension BidirectionalDijkstra.PriorityItem: Equatable {
 extension BidirectionalDijkstra.PriorityItem: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.cost < rhs.cost
+    }
+}
+
+// Visitor support
+extension BidirectionalDijkstra {
+    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> BidirectionalDijkstraWithVisitor<Graph, Weight> {
+        .init(base: self, makeVisitor: makeVisitor)
+    }
+}
+
+struct BidirectionalDijkstraWithVisitor<Graph: IncidenceGraph & BidirectionalGraph & EdgePropertyGraph, Weight: Numeric & Comparable>
+where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
+    typealias Base = BidirectionalDijkstra<Graph, Weight>
+    let base: Base
+    let makeVisitor: () -> Base.Visitor
+}
+
+extension BidirectionalDijkstraWithVisitor {
+    func shortestPath(from source: Graph.VertexDescriptor, to destination: Graph.VertexDescriptor) -> Base.Result {
+        base.shortestPath(from: source, to: destination, visitor: makeVisitor())
     }
 }
 

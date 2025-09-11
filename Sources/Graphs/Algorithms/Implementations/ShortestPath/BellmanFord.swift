@@ -10,6 +10,14 @@ struct BellmanFord<
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
     
+    struct Visitor {
+        var examineVertex: ((Vertex) -> Void)?
+        var examineEdge: ((Edge) -> Void)?
+        var edgeRelaxed: ((Edge) -> Void)?
+        var edgeNotRelaxed: ((Edge) -> Void)?
+        var detectNegativeCycle: ((Edge) -> Void)?
+        var completeRelaxationIteration: ((Int) -> Void)?
+    }
     
     struct Result {
         let distances: [Vertex: Cost<Weight>]
@@ -28,7 +36,7 @@ struct BellmanFord<
         self.edgeWeight = edgeWeight
     }
     
-    func shortestPathsFromSource(_ source: Vertex) -> Result {
+    func shortestPathsFromSource(_ source: Vertex, visitor: Visitor? = nil) -> Result {
         var distances: [Vertex: Cost<Weight>] = [:]
         var predecessors: [Vertex: Edge?] = [:]
         
@@ -41,10 +49,14 @@ struct BellmanFord<
         
         // Relax edges |V| - 1 times
         let vertices = Array(graph.vertices())
-        for _ in 0..<vertices.count - 1 {
+        for iteration in 0..<vertices.count - 1 {
+            var relaxed = false
+            
             for edge in graph.edges() {
                 guard let sourceVertex = graph.source(of: edge),
                       let destinationVertex = graph.destination(of: edge) else { continue }
+                
+                visitor?.examineEdge?(edge)
                 
                 let sourceCost = distances[sourceVertex]!
                 let weight = edgeWeight.costToExplore(edge, graph)
@@ -54,8 +66,15 @@ struct BellmanFord<
                 if newCost < destinationCost {
                     distances[destinationVertex] = newCost
                     predecessors[destinationVertex] = edge
+                    relaxed = true
+                    visitor?.edgeRelaxed?(edge)
+                } else {
+                    visitor?.edgeNotRelaxed?(edge)
                 }
             }
+            
+            visitor?.completeRelaxationIteration?(iteration)
+            if !relaxed { break }
         }
         
         // Check for negative cycles
@@ -64,6 +83,8 @@ struct BellmanFord<
             guard let sourceVertex = graph.source(of: edge),
                   let destinationVertex = graph.destination(of: edge) else { continue }
             
+            visitor?.examineEdge?(edge)
+            
             let sourceCost = distances[sourceVertex]!
             let weight = edgeWeight.costToExplore(edge, graph)
             let newCost = sourceCost + weight
@@ -71,9 +92,11 @@ struct BellmanFord<
             let destinationCost = distances[destinationVertex]!
             if newCost < destinationCost {
                 hasNegativeCycle = true
+                visitor?.detectNegativeCycle?(edge)
                 break
             }
         }
+        
         
         return Result(
             distances: distances,
@@ -82,8 +105,8 @@ struct BellmanFord<
         )
     }
     
-    func shortestPath(from source: Vertex, to destination: Vertex) -> Path<Vertex, Edge>? {
-        let result = shortestPathsFromSource(source)
+    func shortestPath(from source: Vertex, to destination: Vertex, visitor: Visitor? = nil) -> Path<Vertex, Edge>? {
+        let result = shortestPathsFromSource(source, visitor: visitor)
         
         guard !result.hasNegativeCycle else {
             return nil // Cannot find shortest path if there's a negative cycle
@@ -147,6 +170,30 @@ extension BellmanFord: ShortestPathsFromSourceAlgorithm {
             distances: distances,
             predecessors: result.predecessors
         )
+    }
+}
+
+// Visitor support
+extension BellmanFord {
+    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> BellmanFordWithVisitor<Graph, Weight> {
+        .init(base: self, makeVisitor: makeVisitor)
+    }
+}
+
+struct BellmanFordWithVisitor<Graph: IncidenceGraph & EdgeListGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric & Comparable>
+where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
+    typealias Base = BellmanFord<Graph, Weight>
+    let base: Base
+    let makeVisitor: () -> Base.Visitor
+}
+
+extension BellmanFordWithVisitor {
+    func shortestPathsFromSource(_ source: Graph.VertexDescriptor) -> Base.Result {
+        base.shortestPathsFromSource(source, visitor: makeVisitor())
+    }
+    
+    func shortestPath(from source: Graph.VertexDescriptor, to destination: Graph.VertexDescriptor) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        base.shortestPath(from: source, to: destination, visitor: makeVisitor())
     }
 }
 

@@ -10,6 +10,15 @@ struct Johnson<
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
     
+    struct Visitor {
+        var examineVertex: ((Vertex) -> Void)?
+        var examineEdge: ((Edge) -> Void)?
+        var reweightEdge: ((Edge, Weight) -> Void)?
+        var startDijkstraFromSource: ((Vertex) -> Void)?
+        var completeDijkstraFromSource: ((Vertex) -> Void)?
+        var detectNegativeCycle: (() -> Void)?
+    }
+    
     private let originalGraph: Graph
     private let edgeWeight: CostDefinition<Graph, Weight>
     
@@ -21,7 +30,7 @@ struct Johnson<
         self.edgeWeight = edgeWeight
     }
     
-    func shortestPathsForAllPairs() -> AllPairsShortestPaths<Vertex, Edge, Weight> {
+    func shortestPathsForAllPairs(visitor: Visitor? = nil) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
         // Step 1: Create a virtual augmented graph by simulating Bellman-Ford
         // We'll create a temporary graph structure for the Bellman-Ford step
         let reweightingValues = computeReweightingValues()
@@ -30,6 +39,7 @@ struct Johnson<
         // Check if we found negative cycles
         guard !reweightingValues.isEmpty else {
             // If there's a negative cycle, return empty result
+            visitor?.detectNegativeCycle?()
             return AllPairsShortestPaths(distances: [:], predecessors: [:])
         }
         
@@ -50,6 +60,8 @@ struct Johnson<
         
         // Step 3: Run Dijkstra from each vertex on the reweighted graph
         for source in vertices {
+            visitor?.startDijkstraFromSource?(source)
+            
             let dijkstra = Dijkstra(
                 on: originalGraph,
                 from: source,
@@ -68,7 +80,10 @@ struct Johnson<
             for (destination, predecessor) in dijkstraResult.predecessors {
                 allPredecessors[source]![destination] = predecessor
             }
+            
+            visitor?.completeDijkstraFromSource?(source)
         }
+        
         
         return AllPairsShortestPaths(
             distances: allDistances,
@@ -180,6 +195,23 @@ extension Johnson {
         edgeWeight: CostDefinition<G, W>
     ) -> Johnson<G, W> where G.VertexDescriptor: Hashable, W.Magnitude == W {
         Johnson<G, W>(on: graph, edgeWeight: edgeWeight)
+    }
+    
+    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> JohnsonWithVisitor<Graph, Weight> {
+        .init(base: self, makeVisitor: makeVisitor)
+    }
+}
+
+struct JohnsonWithVisitor<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: Numeric & Comparable>
+where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
+    typealias Base = Johnson<Graph, Weight>
+    let base: Base
+    let makeVisitor: () -> Base.Visitor
+}
+
+extension JohnsonWithVisitor {
+    func shortestPathsForAllPairs() -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
+        base.shortestPathsForAllPairs(visitor: makeVisitor())
     }
 }
 
