@@ -47,26 +47,27 @@ struct BellmanFord<
         }
         distances[source] = .finite(.zero)
         
-        // Relax edges |V| - 1 times
         let vertices = Array(graph.vertices())
-        for iteration in 0..<vertices.count - 1 {
-            var relaxed = false
+        for iteration in 0 ..< vertices.count - 1 {
+            var wasRelaxed = false
             
             for edge in graph.edges() {
                 guard let sourceVertex = graph.source(of: edge),
-                      let destinationVertex = graph.destination(of: edge) else { continue }
+                      let destinationVertex = graph.destination(of: edge) else { 
+                    continue 
+                }
                 
                 visitor?.examineEdge?(edge)
                 
-                let sourceCost = distances[sourceVertex]!
+                guard let sourceCost = distances[sourceVertex] else { continue }
                 let weight = edgeWeight.costToExplore(edge, graph)
                 let newCost = sourceCost + weight
                 
-                let destinationCost = distances[destinationVertex]!
+                guard let destinationCost = distances[destinationVertex] else { continue }
                 if newCost < destinationCost {
                     distances[destinationVertex] = newCost
                     predecessors[destinationVertex] = edge
-                    relaxed = true
+                    wasRelaxed = true
                     visitor?.edgeRelaxed?(edge)
                 } else {
                     visitor?.edgeNotRelaxed?(edge)
@@ -74,22 +75,23 @@ struct BellmanFord<
             }
             
             visitor?.completeRelaxationIteration?(iteration)
-            if !relaxed { break }
+            if !wasRelaxed { break }
         }
         
-        // Check for negative cycles
         var hasNegativeCycle = false
         for edge in graph.edges() {
             guard let sourceVertex = graph.source(of: edge),
-                  let destinationVertex = graph.destination(of: edge) else { continue }
+                  let destinationVertex = graph.destination(of: edge) else { 
+                continue 
+            }
             
             visitor?.examineEdge?(edge)
             
-            let sourceCost = distances[sourceVertex]!
+            guard let sourceCost = distances[sourceVertex] else { continue }
             let weight = edgeWeight.costToExplore(edge, graph)
             let newCost = sourceCost + weight
             
-            let destinationCost = distances[destinationVertex]!
+            guard let destinationCost = distances[destinationVertex] else { continue }
             if newCost < destinationCost {
                 hasNegativeCycle = true
                 visitor?.detectNegativeCycle?(edge)
@@ -109,33 +111,33 @@ struct BellmanFord<
         let result = shortestPathsFromSource(source, visitor: visitor)
         
         guard !result.hasNegativeCycle else {
-            return nil // Cannot find shortest path if there's a negative cycle
+            return nil
         }
         
         guard case .finite = result.distances[destination] else {
-            return nil // No path exists
+            return nil
         }
         
-        // Reconstruct path
-        var current = destination
-        var vertices: [Vertex] = [destination]
-        var edges: [Edge] = []
+        var currentVertex = destination
+        var pathVertices: [Vertex] = [destination]
+        var pathEdges: [Edge] = []
         
-        while let edge = result.predecessors[current] {
-            edges.insert(edge!, at: 0)
-            guard let predecessor = graph.source(of: edge!) else { break }
+        while let edge = result.predecessors[currentVertex] {
+            guard let validEdge = edge else { break }
+            pathEdges.insert(validEdge, at: 0)
+            guard let predecessor = graph.source(of: validEdge) else { break }
             if predecessor == source { break }
-            vertices.insert(predecessor, at: 0)
-            current = predecessor
+            pathVertices.insert(predecessor, at: 0)
+            currentVertex = predecessor
         }
         
-        vertices.insert(source, at: 0)
+        pathVertices.insert(source, at: 0)
         
         return Path(
             source: source,
             destination: destination,
-            vertices: vertices,
-            edges: edges
+            vertices: pathVertices,
+            edges: pathEdges
         )
     }
 }
@@ -157,7 +159,6 @@ extension BellmanFord: ShortestPathsFromSourceAlgorithm {
     ) -> ShortestPathsFromSource<Vertex, Edge, Weight> {
         let result = shortestPathsFromSource(source)
         
-        // Convert Cost to Weight, filtering out infinite costs
         var distances: [Vertex: Weight] = [:]
         for (vertex, cost) in result.distances {
             if case .finite(let weight) = cost {
@@ -173,7 +174,6 @@ extension BellmanFord: ShortestPathsFromSourceAlgorithm {
     }
 }
 
-// Visitor support
 extension BellmanFord {
     func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> BellmanFordWithVisitor<Graph, Weight> {
         .init(base: self, makeVisitor: makeVisitor)

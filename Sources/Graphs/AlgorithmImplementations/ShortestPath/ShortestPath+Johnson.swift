@@ -22,8 +22,8 @@ struct JohnsonShortestPath<
         to destination: Graph.VertexDescriptor,
         in graph: Graph
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-        let johnson = Johnson(on: graph, edgeWeight: weight)
-        let allPairs = johnson.shortestPathsForAllPairs()
+        let johnson = Johnson(edgeWeight: weight)
+        let allPairs = johnson.shortestPathsForAllPairs(in: graph)
         
         // Check if destination is reachable
         guard case .finite = allPairs.distance(from: source, to: destination) else { return nil }

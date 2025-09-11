@@ -1,0 +1,301 @@
+struct Dijkstra<
+    Graph: IncidenceGraph & EdgePropertyGraph,
+    Weight: Numeric & Comparable
+> where
+    Graph.VertexDescriptor: Hashable,
+    Weight.Magnitude == Weight
+{
+    typealias Vertex = Graph.VertexDescriptor
+    typealias Edge = Graph.EdgeDescriptor
+
+    struct Visitor {
+        var examineVertex: ((Vertex) -> Void)?
+        var examineEdge: ((Edge) -> Void)?
+        var edgeRelaxed: ((Edge) -> Void)?
+        var edgeNotRelaxed: ((Edge) -> Void)?
+        var finishVertex: ((Vertex) -> Void)?
+    }
+
+    struct Result {
+        typealias Vertex = Graph.VertexDescriptor
+        typealias Edge = Graph.EdgeDescriptor
+        fileprivate let source: Vertex
+        let currentVertex: Vertex
+        let distanceProperty: any VertexProperty<Cost<Weight>>.Type
+        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
+        let propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
+    }
+
+    private enum DistanceProperty: VertexProperty {
+        static var defaultValue: Cost<Weight> { .infinite }
+    }
+
+    private enum PredecessorEdgeProperty: VertexProperty {
+        static var defaultValue: Edge? { nil }
+    }
+
+    struct PriorityItem {
+        typealias Vertex = Graph.VertexDescriptor
+        let vertex: Vertex
+        let cost: Cost<Weight>
+    }
+
+    private let graph: Graph
+    private let source: Vertex
+    private let edgeWeight: CostDefinition<Graph, Weight>
+    private let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
+
+    init(
+        on graph: Graph,
+        from source: Vertex,
+        edgeWeight: CostDefinition<Graph, Weight>,
+        makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
+            PriorityQueue()
+        }
+    ) {
+        self.graph = graph
+        self.source = source
+        self.edgeWeight = edgeWeight
+        self.makePriorityQueue = makePriorityQueue
+    }
+
+    func makeIterator(visitor: Visitor) -> Iterator {
+        _makeIterator(visitor: visitor)
+    }
+
+    private func _makeIterator(visitor: Visitor?) -> Iterator {
+        Iterator(
+            graph: graph,
+            source: source,
+            edgeWeight: edgeWeight,
+            visitor: visitor,
+            queue: makePriorityQueue()
+        )
+    }
+
+    struct Iterator {
+        private let graph: Graph
+        private let source: Vertex
+        private let edgeWeight: CostDefinition<Graph, Weight>
+        private let visitor: Visitor?
+        private var queue: any QueueProtocol<PriorityItem>
+        private var visited: Set<Vertex> = []
+
+        private var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
+        private let distanceProperty: any VertexProperty<Cost>.Type = DistanceProperty.self
+        private let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
+
+        init(
+            graph: Graph,
+            source: Vertex,
+            edgeWeight: CostDefinition<Graph, Weight>,
+            visitor: Visitor?,
+            queue: any QueueProtocol<PriorityItem>
+        ) {
+            self.graph = graph
+            self.source = source
+            self.edgeWeight = edgeWeight
+            self.visitor = visitor
+            self.queue = queue
+            self.propertyMap = graph.makeVertexPropertyMap()
+
+            propertyMap[source][distanceProperty] = .finite(.zero)
+            self.queue.enqueue(.init(vertex: source, cost: .finite(.zero)))
+        }
+
+        mutating func next() -> Result? {
+            var currentVertex: Vertex?
+            while let popped = queue.dequeue() {
+                if visited.contains(popped.vertex) { continue }
+                let stored = propertyMap[popped.vertex][distanceProperty]
+                if popped.cost != stored { continue }
+                currentVertex = popped.vertex
+                break
+            }
+
+            guard let currentVertex else { return nil }
+
+            visitor?.examineVertex?(currentVertex)
+
+            let currentCost = propertyMap[currentVertex][distanceProperty]
+            for edge in graph.outgoingEdges(of: currentVertex) {
+                visitor?.examineEdge?(edge)
+
+                guard let destination = graph.destination(of: edge) else { continue }
+                if visited.contains(destination) { continue }
+
+                let weight = edgeWeight.costToExplore(edge, graph)
+                let newCost = currentCost + weight
+
+                let destinationCost = propertyMap[destination][distanceProperty]
+                if newCost < destinationCost {
+                    propertyMap[destination][distanceProperty] = newCost
+                    propertyMap[destination][predecessorEdgeProperty] = edge
+                    queue.enqueue(.init(vertex: destination, cost: newCost))
+                    visitor?.edgeRelaxed?(edge)
+                } else {
+                    visitor?.edgeNotRelaxed?(edge)
+                }
+            }
+
+            visited.insert(currentVertex)
+            visitor?.finishVertex?(currentVertex)
+
+            return Result(
+                source: source,
+                currentVertex: currentVertex,
+                distanceProperty: distanceProperty,
+                predecessorEdgeProperty: predecessorEdgeProperty,
+                propertyMap: propertyMap
+            )
+        }
+    }
+    
+    func allShortestPaths() -> ShortestPathsFromSource<Vertex, Edge, Weight> {
+        var processedVertices: Set<Vertex> = []
+        var lastResult: Result? = nil
+        
+        for result in self {
+            processedVertices.insert(result.currentVertex)
+            lastResult = result
+        }
+        
+        guard let result = lastResult else {
+            return ShortestPathsFromSource(
+                source: source,
+                distances: [:],
+                predecessors: [:]
+            )
+        }
+        
+        var distances: [Vertex: Weight] = [:]
+        var predecessors: [Vertex: Edge?] = [:]
+        
+        for vertex in processedVertices {
+            let cost = result.propertyMap[vertex][result.distanceProperty]
+            switch cost {
+                case .infinite:
+                    continue
+                case .finite(let weight):
+                    distances[vertex] = weight
+            }
+            predecessors[vertex] = result.propertyMap[vertex][result.predecessorEdgeProperty]
+        }
+        
+        return ShortestPathsFromSource(
+            source: source,
+            distances: distances,
+            predecessors: predecessors
+        )
+    }
+}
+
+extension Dijkstra.Iterator: IteratorProtocol {}
+
+extension Dijkstra: Sequence {
+    func makeIterator() -> Iterator {
+        _makeIterator(visitor: nil)
+    }
+}
+
+extension Dijkstra.PriorityItem: Equatable {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.vertex == rhs.vertex
+    }
+}
+
+extension Dijkstra.PriorityItem: Comparable {
+    static func < (lhs: Self, rhs: Self) -> Bool {
+        lhs.cost < rhs.cost
+    }
+}
+
+extension Dijkstra.Result {
+    func currentDistance() -> Weight {
+        switch distance(of: currentVertex) {
+            case .finite(let value):
+                return value
+            case .infinite:
+                assertionFailure("The currently examined vertex should always be reachable")
+                return .zero
+        }
+    }
+
+    func predecessor(in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex {
+        predecessor(of: currentVertex, in: graph).unwrap(
+            orReport: "The currently examined vertex should always have a predecessor"
+        )
+    }
+
+    func predecessorEdge() -> Edge {
+        predecessorEdge(of: currentVertex).unwrap(
+            orReport: "The currently examined vertex should always have a predecessor edge"
+        )
+    }
+
+    func vertices(in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
+        vertices(to: currentVertex, in: graph)
+    }
+
+    func edges(in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
+        edges(to: currentVertex, in: graph)
+    }
+
+    func path(in graph: some IncidenceGraph<Vertex, Edge>) -> [(vertex: Vertex, edge: Edge)] {
+        path(to: currentVertex, in: graph)
+    }
+
+    func distance(of vertex: Vertex) -> Cost<Weight> {
+        propertyMap[vertex][distanceProperty]
+    }
+
+    func predecessor(of vertex: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex? {
+        predecessorEdge(of: vertex).flatMap(graph.source)
+    }
+
+    func predecessorEdge(of vertex: Vertex) -> Edge? {
+        propertyMap[vertex][predecessorEdgeProperty]
+    }
+
+    func vertices(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
+        [source] + path(to: destination, in: graph).map(\.vertex)
+    }
+
+    func edges(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
+        path(to: destination, in: graph).map(\.edge)
+    }
+
+    func path(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [(vertex: Vertex, edge: Edge)] {
+        var currentVertex = destination
+        var result: [(Vertex, Edge)] = []
+        while let predecessorEdge = predecessorEdge(of: currentVertex) {
+            result.insert((currentVertex, predecessorEdge), at: 0)
+            guard let predecessor = graph.source(of: predecessorEdge) else { break }
+            currentVertex = predecessor
+        }
+        return result
+    }
+
+    func hasPath(to vertex: Vertex) -> Bool {
+        propertyMap[vertex][distanceProperty] != .infinite
+    }
+}
+
+struct DijkstraWithVisitor<Graph: IncidenceGraph & EdgePropertyGraph, Weight: Numeric & Comparable>
+where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
+    typealias Base = Dijkstra<Graph, Weight>
+    let base: Base
+    let makeVisitor: () -> Base.Visitor
+}
+
+extension DijkstraWithVisitor: Sequence {
+    func makeIterator() -> Base.Iterator {
+        base.makeIterator(visitor: makeVisitor())
+    }
+}
+
+extension Dijkstra {
+    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> DijkstraWithVisitor<Graph, Weight> {
+        .init(base: self, makeVisitor: makeVisitor)
+    }
+}

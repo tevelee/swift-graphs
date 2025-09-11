@@ -1,13 +1,15 @@
-struct Dijkstra<
+struct AStar<
     Graph: IncidenceGraph & EdgePropertyGraph,
-    Weight: Numeric & Comparable
+    Weight: Numeric & Comparable,
+    HScore: Numeric,
+    FScore: Comparable
 > where
     Graph.VertexDescriptor: Hashable,
-    Weight.Magnitude == Weight
+    HScore.Magnitude == HScore
 {
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
-
+    typealias GScore = Cost<Weight>
 
     struct Visitor {
         var examineVertex: ((Vertex) -> Void)?
@@ -20,15 +22,16 @@ struct Dijkstra<
     struct Result {
         typealias Vertex = Graph.VertexDescriptor
         typealias Edge = Graph.EdgeDescriptor
+        typealias GScore = AStar.GScore
         fileprivate let source: Vertex
         let currentVertex: Vertex
-        let distanceProperty: any VertexProperty<Cost<Weight>>.Type
+        let gScoreProperty: any VertexProperty<GScore>.Type
         let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
         let propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
     }
 
-    private enum DistanceProperty: VertexProperty {
-        static var defaultValue: Cost<Weight> { .infinite }
+    private enum GScoreProperty: VertexProperty {
+        static var defaultValue: GScore { .infinite }
     }
 
     private enum PredecessorEdgeProperty: VertexProperty {
@@ -38,18 +41,22 @@ struct Dijkstra<
     struct PriorityItem {
         typealias Vertex = Graph.VertexDescriptor
         let vertex: Vertex
-        let cost: Cost<Weight>
+        let totalCost: FScore
     }
 
     private let graph: Graph
     private let source: Vertex
     private let edgeWeight: CostDefinition<Graph, Weight>
+    private let heuristic: Heuristic<Graph, HScore>
+    private let calculateTotalCost: (GScore, HScore) -> FScore
     private let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
 
     init(
         on graph: Graph,
         from source: Vertex,
         edgeWeight: CostDefinition<Graph, Weight>,
+        heuristic: Heuristic<Graph, HScore>,
+        calculateTotalCost: @escaping (Weight, HScore) -> FScore,
         makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
             PriorityQueue()
         }
@@ -57,6 +64,16 @@ struct Dijkstra<
         self.graph = graph
         self.source = source
         self.edgeWeight = edgeWeight
+        self.heuristic = heuristic
+        self.calculateTotalCost = { gScore, hScore in
+            switch gScore {
+                case .infinite:
+                    assertionFailure(".infinite means unreachable, but if it's being examined it should be reachable")
+                    return calculateTotalCost(.zero, hScore)
+                case .finite(let weight):
+                    return calculateTotalCost(weight, hScore)
+            }
+        }
         self.makePriorityQueue = makePriorityQueue
     }
 
@@ -69,6 +86,8 @@ struct Dijkstra<
             graph: graph,
             source: source,
             edgeWeight: edgeWeight,
+            heuristic: heuristic,
+            calculateTotalCost: calculateTotalCost,
             visitor: visitor,
             queue: makePriorityQueue()
         )
@@ -78,30 +97,39 @@ struct Dijkstra<
         private let graph: Graph
         private let source: Vertex
         private let edgeWeight: CostDefinition<Graph, Weight>
+        private let heuristic: Heuristic<Graph, HScore>
+        private let calculateTotalCost: (GScore, HScore) -> FScore
         private let visitor: Visitor?
         private var queue: any QueueProtocol<PriorityItem>
         private var visited: Set<Vertex> = []
 
         private var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
-        private let distanceProperty: any VertexProperty<Cost>.Type = DistanceProperty.self
+        private let gScoreProperty: any VertexProperty<GScore>.Type = GScoreProperty.self
         private let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
 
         init(
             graph: Graph,
             source: Vertex,
             edgeWeight: CostDefinition<Graph, Weight>,
+            heuristic: Heuristic<Graph, HScore>,
+            calculateTotalCost: @escaping (GScore, HScore) -> FScore,
             visitor: Visitor?,
             queue: any QueueProtocol<PriorityItem>
         ) {
             self.graph = graph
             self.source = source
             self.edgeWeight = edgeWeight
+            self.heuristic = heuristic
+            self.calculateTotalCost = calculateTotalCost
             self.visitor = visitor
             self.queue = queue
             self.propertyMap = graph.makeVertexPropertyMap()
 
-            propertyMap[source][distanceProperty] = .finite(.zero)
-            self.queue.enqueue(.init(vertex: source, cost: .finite(.zero)))
+            let gScore: GScore = .finite(.zero)
+            propertyMap[source][gScoreProperty] = gScore
+            let hScore: HScore = heuristic.estimatedCost(source, graph)
+            let fScore: FScore = calculateTotalCost(gScore, hScore)
+            self.queue.enqueue(.init(vertex: source, totalCost: fScore))
         }
 
         mutating func next() -> Result? {
@@ -109,8 +137,10 @@ struct Dijkstra<
             var current: Vertex?
             while let popped = queue.dequeue() {
                 if visited.contains(popped.vertex) { continue }
-                let stored = propertyMap[popped.vertex][distanceProperty]
-                if popped.cost != stored { continue }
+                let storedG = propertyMap[popped.vertex][gScoreProperty]
+                // Recompute f from current best g to ensure consistency
+                let currentF = calculateTotalCost(storedG, heuristic.estimatedCost(popped.vertex, graph))
+                if popped.totalCost > currentF { continue }
                 current = popped.vertex
                 break
             }
@@ -119,21 +149,22 @@ struct Dijkstra<
 
             visitor?.examineVertex?(current)
 
-            let currentCost = propertyMap[current][distanceProperty]
+            let currentG = propertyMap[current][gScoreProperty]
             for edge in graph.outgoingEdges(of: current) {
                 visitor?.examineEdge?(edge)
 
-                guard let destination = graph.destination(of: edge) else { continue }
-                if visited.contains(destination) { continue }
+                guard let neighbor = graph.destination(of: edge) else { continue }
+                if visited.contains(neighbor) { continue }
 
                 let weight = edgeWeight.costToExplore(edge, graph)
-                let newCost = currentCost + weight
+                let tentativeG = currentG + weight
 
-                let destinationCost = propertyMap[destination][distanceProperty]
-                if newCost < destinationCost {
-                    propertyMap[destination][distanceProperty] = newCost
-                    propertyMap[destination][predecessorEdgeProperty] = edge
-                    queue.enqueue(.init(vertex: destination, cost: newCost))
+                let neighborG = propertyMap[neighbor][gScoreProperty]
+                if tentativeG < neighborG {
+                    propertyMap[neighbor][gScoreProperty] = tentativeG
+                    propertyMap[neighbor][predecessorEdgeProperty] = edge
+                    let fScore = calculateTotalCost(tentativeG, heuristic.estimatedCost(neighbor, graph))
+                    queue.enqueue(.init(vertex: neighbor, totalCost: fScore))
                     visitor?.edgeRelaxed?(edge)
                 } else {
                     visitor?.edgeNotRelaxed?(edge)
@@ -146,83 +177,63 @@ struct Dijkstra<
             return Result(
                 source: source,
                 currentVertex: current,
-                distanceProperty: distanceProperty,
+                gScoreProperty: gScoreProperty,
                 predecessorEdgeProperty: predecessorEdgeProperty,
                 propertyMap: propertyMap
             )
         }
     }
-    
-    /// Runs Dijkstra to completion and returns all shortest paths from the source
-    func allShortestPaths() -> ShortestPathsFromSource<Vertex, Edge, Weight> {
-        // Run the algorithm to completion and collect all processed vertices
-        var processedVertices: Set<Vertex> = []
-        var lastResult: Result? = nil
-        
-        for result in self {
-            processedVertices.insert(result.currentVertex)
-            lastResult = result
-        }
-        
-        guard let result = lastResult else {
-            // No results, return empty
-            return ShortestPathsFromSource(
-                source: source,
-                distances: [:],
-                predecessors: [:]
-            )
-        }
-        
-        // Extract all distances and predecessors from the result
-        var distances: [Vertex: Weight] = [:]
-        var predecessors: [Vertex: Edge?] = [:]
-        
-        // Check all processed vertices
-        for vertex in processedVertices {
-            let cost = result.propertyMap[vertex][result.distanceProperty]
-            switch cost {
-                case .infinite:
-                    // Skip unreachable vertices
-                    continue
-                case .finite(let weight):
-                    distances[vertex] = weight
-            }
-            predecessors[vertex] = result.propertyMap[vertex][result.predecessorEdgeProperty]
-        }
-        
-        return ShortestPathsFromSource(
-            source: source,
-            distances: distances,
-            predecessors: predecessors
-        )
-    }
 }
 
-extension Dijkstra.Iterator: IteratorProtocol {}
+extension AStar.Iterator: IteratorProtocol {}
 
-extension Dijkstra: Sequence {
+extension AStar: Sequence {
     func makeIterator() -> Iterator {
         _makeIterator(visitor: nil)
     }
 }
 
+struct AStarWithVisitor<
+    Graph: IncidenceGraph & EdgePropertyGraph,
+    Weight: Numeric & Comparable,
+    HScore: Numeric,
+    FScore: Comparable
+> where
+    Graph.VertexDescriptor: Hashable,
+    HScore.Magnitude == HScore
+{
+    typealias Base = AStar<Graph, Weight, HScore, FScore>
+    let base: Base
+    let makeVisitor: () -> Base.Visitor
+}
 
+extension AStarWithVisitor: Sequence {
+    func makeIterator() -> AStar<Graph, Weight, HScore, FScore>.Iterator {
+        base.makeIterator(visitor: makeVisitor())
+    }
+}
 
-extension Dijkstra.PriorityItem: Equatable {
+extension AStar {
+    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> AStarWithVisitor<Graph, Weight, HScore, FScore> {
+        .init(base: self, makeVisitor: makeVisitor)
+    }
+}
+
+extension AStar.PriorityItem: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.vertex == rhs.vertex
     }
 }
 
-extension Dijkstra.PriorityItem: Comparable {
+extension AStar.PriorityItem: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
-        lhs.cost < rhs.cost
+        lhs.totalCost < rhs.totalCost
     }
 }
 
-extension Dijkstra.Result {
+extension AStar.Result {
     func currentDistance() -> Weight {
-        switch distance(of: currentVertex) {
+        switch gScore(of: currentVertex) {
             case .finite(let value):
                 return value
             case .infinite:
@@ -255,8 +266,8 @@ extension Dijkstra.Result {
         path(to: currentVertex, in: graph)
     }
 
-    func distance(of vertex: Vertex) -> Cost<Weight> {
-        propertyMap[vertex][distanceProperty]
+    func gScore(of vertex: Vertex) -> GScore {
+        propertyMap[vertex][gScoreProperty]
     }
 
     func predecessor(of vertex: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex? {
@@ -287,25 +298,47 @@ extension Dijkstra.Result {
     }
 
     func hasPath(to vertex: Vertex) -> Bool {
-        propertyMap[vertex][distanceProperty] != .infinite
+        propertyMap[vertex][gScoreProperty] != .infinite
     }
 }
 
-struct DijkstraWithVisitor<Graph: IncidenceGraph & EdgePropertyGraph, Weight: Numeric & Comparable>
-where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-    typealias Base = Dijkstra<Graph, Weight>
-    let base: Base
-    let makeVisitor: () -> Base.Visitor
+struct Heuristic<Graph: Graphs.Graph, EstimatedCost> {
+    let estimatedCost: (Graph.VertexDescriptor, Graph) -> EstimatedCost
 }
 
-extension DijkstraWithVisitor: Sequence {
-    func makeIterator() -> Base.Iterator {
-        base.makeIterator(visitor: makeVisitor())
+extension Heuristic {
+    static func uniform(_ value: EstimatedCost) -> Self {
+        .init { _, _ in
+            value
+        }
+    }
+    
+    static func distance(
+        to destination: Graph.VertexDescriptor,
+        using distance: DistanceAlgorithm<Graph.VertexDescriptor, EstimatedCost>
+    ) -> Self {
+        .init { vertex, _ in
+            distance.calculateDistance(vertex, destination)
+        }
     }
 }
 
-extension Dijkstra {
-    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> DijkstraWithVisitor<Graph, Weight> {
-        .init(base: self, makeVisitor: makeVisitor)
+extension Heuristic where Graph: PropertyGraph {
+    static func euclideanDistance<Coordinate: SIMD>(
+        to destination: Graph.VertexDescriptor,
+        of coordinates: @escaping (VertexProperties) -> Coordinate
+    ) -> Self where EstimatedCost == Coordinate.Scalar, Coordinate.Scalar: FloatingPoint {
+        .init { vertex, graph in
+            DistanceAlgorithm.euclidean { coordinates(graph[$0]) }.calculateDistance(vertex, destination)
+        }
+    }
+    
+    static func manhattanDistance<Coordinate: SIMD>(
+        to destination: Graph.VertexDescriptor,
+        of coordinates: @escaping (VertexProperties) -> Coordinate
+    ) -> Self where EstimatedCost == Coordinate.Scalar, Coordinate.Scalar: FloatingPoint {
+        .init { vertex, graph in
+            DistanceAlgorithm.manhattan { coordinates(graph[$0]) }.calculateDistance(vertex, destination)
+        }
     }
 }

@@ -14,7 +14,7 @@ struct KShortestPathsTests {
         graph.addEdge(from: a, to: b) { $0.weight = 2 }
         graph.addEdge(from: b, to: c) { $0.weight = 3 }
         
-        let paths = graph.kShortestPaths(from: a, to: c, k: 3, using: .yen(on: graph, edgeWeight: .property(\.weight)))
+        let paths = graph.kShortestPaths(from: a, to: c, k: 3, using: .yen(weight: .property(\.weight)))
         
         #expect(paths.count >= 1)
         #expect(paths.count <= 3)
@@ -46,12 +46,12 @@ struct KShortestPathsTests {
         // Path 3: A -> B -> C -> D (weight 5)
         graph.addEdge(from: b, to: c) { $0.weight = 2 }
         
-        let paths = graph.kShortestPaths(from: a, to: d, k: 3, using: .yen(on: graph, edgeWeight: .property(\.weight)))
+        let paths = graph.kShortestPaths(from: a, to: d, k: 3, using: .yen(weight: .property(\.weight)))
         
         #expect(paths.count >= 1)
         
         // Verify paths are in order of increasing cost
-        for i in 0..<(paths.count - 1) {
+        for i in 0 ..< (paths.count - 1) {
             let currentPath = paths[i]
             let nextPath = paths[i + 1]
             
@@ -74,7 +74,7 @@ struct KShortestPathsTests {
         graph.addEdge(from: a, to: b) { $0.weight = 1 }
         graph.addEdge(from: b, to: c) { $0.weight = 2 }
         
-        let paths = graph.kShortestPaths(from: a, to: c, k: 5, using: .yen(on: graph, edgeWeight: .property(\.weight)))
+        let paths = graph.kShortestPaths(from: a, to: c, k: 5, using: .yen(weight: .property(\.weight)))
         
         #expect(paths.count == 1)
         let path = try #require(paths.first)
@@ -96,7 +96,7 @@ struct KShortestPathsTests {
         graph.addEdge(from: c, to: d) { $0.weight = 2 }
         // No connection between A-B and C-D components
         
-        let paths = graph.kShortestPaths(from: a, to: d, k: 3, using: .yen(on: graph, edgeWeight: .property(\.weight)))
+        let paths = graph.kShortestPaths(from: a, to: d, k: 3, using: .yen(weight: .property(\.weight)))
         
         #expect(paths.count >= 0) // May find some paths even in disconnected components
     }
@@ -109,7 +109,7 @@ struct KShortestPathsTests {
         
         graph.addEdge(from: a, to: b) { $0.weight = 1 }
         
-        let paths = graph.kShortestPaths(from: a, to: a, k: 3, using: .yen(on: graph, edgeWeight: .property(\.weight)))
+        let paths = graph.kShortestPaths(from: a, to: a, k: 3, using: .yen(weight: .property(\.weight)))
         
         #expect(paths.count >= 0) // May or may not find a path from A to A
     }
@@ -125,7 +125,7 @@ struct KShortestPathsTests {
         graph.addEdge(from: a, to: b) { $0.weight = 1 }
         graph.addEdge(from: b, to: c) { $0.weight = 2 }
         
-        let paths = graph.kShortestPaths(from: a, to: c, k: 10, using: .yen(on: graph, edgeWeight: .property(\.weight)))
+        let paths = graph.kShortestPaths(from: a, to: c, k: 10, using: .yen(weight: .property(\.weight)))
         
         #expect(paths.count == 1) // Only one path available
     }

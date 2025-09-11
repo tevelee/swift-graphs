@@ -11,10 +11,10 @@ struct SimpleEdge<Vertex>: LazyEdge {
 }
 
 struct LazyIncidenceGraph<Vertex, Edge: LazyEdge<Vertex>, Edges: Collection<Edge>> {
-    let edges: (VertexDescriptor) -> Edges
+    let edgeProvider: (VertexDescriptor) -> Edges
     
     init(edges: @escaping (VertexDescriptor) -> Edges) {
-        self.edges = edges
+        self.edgeProvider = edges
     }
 }
 
@@ -25,7 +25,7 @@ extension LazyIncidenceGraph: Graph {
 
 extension LazyIncidenceGraph: IncidenceGraph {
     func outgoingEdges(of vertex: Vertex) -> Edges {
-        edges(vertex)
+        edgeProvider(vertex)
     }
     
     func source(of edge: Edge) -> Vertex? {
@@ -37,13 +37,13 @@ extension LazyIncidenceGraph: IncidenceGraph {
     }
     
     func outDegree(of vertex: Vertex) -> Int {
-        edges(vertex).count
+        edgeProvider(vertex).count
     }
 }
 
 extension LazyIncidenceGraph {
     init<Neighbors: Collection<Vertex>>(neighbors: @escaping (VertexDescriptor) -> Neighbors) where Edges == LazyMapCollection<Neighbors, SimpleEdge<Vertex>> {
-        self.edges = { source in
+        self.edgeProvider = { source in
             neighbors(source).lazy.map {
                 SimpleEdge(source: source, destination: $0)
             }

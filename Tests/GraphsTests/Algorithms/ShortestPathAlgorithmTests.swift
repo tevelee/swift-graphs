@@ -83,8 +83,7 @@ struct ShortestPathAlgorithmsTests {
         let a = graph.findVertex(labeled: "A")!
         let c = graph.findVertex(labeled: "C")!
         
-        let yen = Yen(on: graph, edgeWeight: .property(\.weight))
-        let paths = yen.kShortestPaths(from: a, to: c, k: 3)
+        let paths = graph.kShortestPaths(from: a, to: c, k: 3, using: .yen(weight: .property(\.weight)))
         
         #expect(paths.count >= 1)
         #expect(paths.count <= 3)

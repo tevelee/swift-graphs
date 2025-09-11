@@ -30,60 +30,57 @@ struct FloydWarshall<
     
     func shortestPathsForAllPairs(visitor: Visitor? = nil) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
         let vertices = Array(graph.vertices())
-        let n = vertices.count
+        let vertexCount = vertices.count
         
-        // Initialize distance and predecessor matrices
         var distances: [Vertex: [Vertex: Cost<Weight>]] = [:]
         var predecessors: [Vertex: [Vertex: Edge?]] = [:]
         
-        // Initialize with infinity for all pairs
         for source in vertices {
             distances[source] = [:]
             predecessors[source] = [:]
             for destination in vertices {
-                distances[source]![destination] = source == destination ? .finite(.zero) : .infinite
-                predecessors[source]![destination] = nil
+                distances[source]?[destination] = source == destination ? .finite(.zero) : .infinite
+                predecessors[source]?[destination] = nil
             }
         }
         
-        // Initialize with direct edge weights
         for source in vertices {
             visitor?.examineVertex?(source)
             for edge in graph.outgoingEdges(of: source) {
                 guard let destination = graph.destination(of: edge) else { continue }
                 visitor?.examineEdge?(edge)
                 let weight = edgeWeight.costToExplore(edge, graph)
-                distances[source]![destination] = .finite(weight)
-                predecessors[source]![destination] = edge
+                distances[source]?[destination] = .finite(weight)
+                predecessors[source]?[destination] = edge
                 visitor?.updateDistance?(source, destination, .finite(weight))
             }
         }
         
-        // Floyd-Warshall main algorithm
-        for k in 0..<n {
-            let intermediate = vertices[k]
-            visitor?.examineVertex?(intermediate)
+        for intermediateIndex in 0 ..< vertexCount {
+            let intermediateVertex = vertices[intermediateIndex]
+            visitor?.examineVertex?(intermediateVertex)
             
-            for i in 0..<n {
-                let source = vertices[i]
-                for j in 0..<n {
-                    let destination = vertices[j]
+            for sourceIndex in 0 ..< vertexCount {
+                let sourceVertex = vertices[sourceIndex]
+                for destinationIndex in 0 ..< vertexCount {
+                    let destinationVertex = vertices[destinationIndex]
                     
-                    let currentDistance = distances[source]![destination]!
-                    let newDistance = distances[source]![intermediate]! + distances[intermediate]![destination]!
+                    let currentDistance = distances[sourceVertex]?[destinationVertex] ?? .infinite
+                    let sourceToIntermediate = distances[sourceVertex]?[intermediateVertex] ?? .infinite
+                    let intermediateToDestination = distances[intermediateVertex]?[destinationVertex] ?? .infinite
+                    let newDistance = sourceToIntermediate + intermediateToDestination
                     
-                    // Check if new path is shorter
                     if newDistance < currentDistance {
-                        distances[source]![destination] = newDistance
-                        predecessors[source]![destination] = predecessors[intermediate]![destination]
-                        visitor?.updateDistance?(source, destination, newDistance)
+                        distances[sourceVertex]?[destinationVertex] = newDistance
+                        let intermediatePredecessor = predecessors[intermediateVertex]?[destinationVertex]
+                        predecessors[sourceVertex]?[destinationVertex] = intermediatePredecessor
+                        visitor?.updateDistance?(sourceVertex, destinationVertex, newDistance)
                     }
                 }
             }
             
-            visitor?.completeIntermediateVertex?(k)
+            visitor?.completeIntermediateVertex?(intermediateIndex)
         }
-        
         
         return AllPairsShortestPaths(
             distances: distances,

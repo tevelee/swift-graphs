@@ -45,59 +45,55 @@ struct Prim<
     }
     
     func minimumSpanningTree(visitor: Visitor? = nil) -> Result {
-        // Priority queue for edges (weight, edge, source, destination)
         var priorityQueue: [PriorityItem] = []
-        
-        // Track which vertices are in the MST
         var inMST: Set<Vertex> = []
-        
-        // Track MST edges and total weight
         var mstEdges: [Edge] = []
         var totalWeight = Weight.zero
         
-        // Choose starting vertex
-        let start = startVertex ?? Array(graph.vertices()).first!
-        inMST.insert(start)
-        visitor?.examineVertex?(start)
+        guard let startVertex = startVertex ?? Array(graph.vertices()).first else {
+            // Return empty result for empty graph
+            return Result(edges: [], totalWeight: Weight.zero, vertices: [])
+        }
+        inMST.insert(startVertex)
+        visitor?.examineVertex?(startVertex)
         
-        // Add all edges from the starting vertex to the priority queue
-        for edge in graph.outgoingEdges(of: start) {
+        for edge in graph.outgoingEdges(of: startVertex) {
             if let destination = graph.destination(of: edge) {
                 visitor?.examineEdge?(edge)
-                let edgeWeight = edgeWeight.costToExplore(edge, graph)
+                let currentEdgeWeight = edgeWeight.costToExplore(edge, graph)
                 priorityQueue.append(PriorityItem(
-                    weight: edgeWeight,
+                    weight: currentEdgeWeight,
                     edge: edge,
-                    source: start,
+                    source: startVertex,
                     destination: destination
                 ))
             }
         }
         
-        // Sort priority queue by weight (min-heap simulation)
         priorityQueue.sort { $0.weight < $1.weight }
         
         while !priorityQueue.isEmpty && inMST.count < graph.vertexCount {
-            // Get the edge with minimum weight
-            let item = priorityQueue.removeFirst()
+            let currentItem = priorityQueue.removeFirst()
             
-            visitor?.examineEdge?(item.edge)
+            visitor?.examineEdge?(currentItem.edge)
             
-            // Skip if destination is already in MST
-            if inMST.contains(item.destination) {
-                visitor?.skipEdge?(item.edge, "Destination already in MST")
+            if inMST.contains(currentItem.destination) {
+                visitor?.skipEdge?(currentItem.edge, "Destination already in MST")
                 continue
             }
             
-            // Add edge to MST
-            mstEdges.append(item.edge)
-            totalWeight = totalWeight + item.weight
-            inMST.insert(item.destination)
-            visitor?.addEdge?(item.edge, item.weight)
-            visitor?.examineVertex?(item.destination)
+            // Early termination: if we have n-1 edges, we can stop
+            if mstEdges.count == graph.vertexCount - 1 {
+                break
+            }
             
-            // Add all edges from the new vertex to the priority queue
-            for newEdge in graph.outgoingEdges(of: item.destination) {
+            mstEdges.append(currentItem.edge)
+            totalWeight = totalWeight + currentItem.weight
+            inMST.insert(currentItem.destination)
+            visitor?.addEdge?(currentItem.edge, currentItem.weight)
+            visitor?.examineVertex?(currentItem.destination)
+            
+            for newEdge in graph.outgoingEdges(of: currentItem.destination) {
                 if let newDestination = graph.destination(of: newEdge),
                    !inMST.contains(newDestination) {
                     visitor?.examineEdge?(newEdge)
@@ -105,33 +101,27 @@ struct Prim<
                     priorityQueue.append(PriorityItem(
                         weight: newEdgeWeight,
                         edge: newEdge,
-                        source: item.destination,
+                        source: currentItem.destination,
                         destination: newDestination
                     ))
                 }
             }
             
-            // Re-sort priority queue (in a real implementation, you'd use a proper heap)
             priorityQueue.sort { $0.weight < $1.weight }
         }
         
-        // Include all vertices, even those not connected by edges
         for vertex in graph.vertices() {
             inMST.insert(vertex)
         }
         
-        let result = Result(
+        return Result(
             edges: mstEdges,
             totalWeight: totalWeight,
             vertices: inMST
         )
-        
-        
-        return result
     }
 }
 
-// Visitor support
 extension Prim {
     func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> PrimWithVisitor<Graph, Weight> {
         .init(base: self, makeVisitor: makeVisitor)

@@ -35,11 +35,9 @@ struct Kruskal<
     }
     
     func minimumSpanningTree(visitor: Visitor? = nil) -> Result {
-        // Union-Find data structure for cycle detection
         var parent: [Vertex: Vertex] = [:]
         var rank: [Vertex: Int] = [:]
         
-        // Initialize all vertices as separate sets
         for vertex in graph.vertices() {
             parent[vertex] = vertex
             rank[vertex] = 0
@@ -54,39 +52,44 @@ struct Kruskal<
             }
         }
         
-        // Find root with path compression
         func find(_ vertex: Vertex) -> Vertex {
-            if parent[vertex] != vertex {
-                parent[vertex] = find(parent[vertex]!)
+            guard let currentParent = parent[vertex] else {
+                // Initialize if not found
+                parent[vertex] = vertex
+                return vertex
             }
-            return parent[vertex]!
+            
+            if currentParent != vertex {
+                parent[vertex] = find(currentParent)
+            }
+            return parent[vertex] ?? vertex
         }
         
-        // Union by rank
-        func union(_ x: Vertex, _ y: Vertex) {
-            let rootX = find(x)
-            let rootY = find(y)
+        func union(_ firstVertex: Vertex, _ secondVertex: Vertex) {
+            let firstRoot = find(firstVertex)
+            let secondRoot = find(secondVertex)
             
-            if rootX == rootY { return }
+            if firstRoot == secondRoot { return }
             
-            if rank[rootX]! < rank[rootY]! {
-                parent[rootX] = rootY
-            } else if rank[rootX]! > rank[rootY]! {
-                parent[rootY] = rootX
+            let firstRank = rank[firstRoot] ?? 0
+            let secondRank = rank[secondRoot] ?? 0
+            
+            if firstRank < secondRank {
+                parent[firstRoot] = secondRoot
+            } else if firstRank > secondRank {
+                parent[secondRoot] = firstRoot
             } else {
-                parent[rootY] = rootX
-                rank[rootX]! += 1
+                parent[secondRoot] = firstRoot
+                rank[firstRoot] = firstRank + 1
             }
         }
         
-        // Sort edges by weight
-        let sortedEdges = graph.edges().sorted { edge1, edge2 in
-            let weight1 = edgeWeight.costToExplore(edge1, graph)
-            let weight2 = edgeWeight.costToExplore(edge2, graph)
-            return weight1 < weight2
+        let sortedEdges = graph.edges().sorted { firstEdge, secondEdge in
+            let firstWeight = edgeWeight.costToExplore(firstEdge, graph)
+            let secondWeight = edgeWeight.costToExplore(secondEdge, graph)
+            return firstWeight < secondWeight
         }
         
-        // Notify visitor about all edges being examined
         for edge in sortedEdges {
             visitor?.examineEdge?(edge)
         }
@@ -100,40 +103,34 @@ struct Kruskal<
                   let destination = graph.destination(of: edge) else { continue }
             
             let sourceRoot = find(source)
-            let destRoot = find(destination)
+            let destinationRoot = find(destination)
             
-            // If including this edge doesn't create a cycle
-            if sourceRoot != destRoot {
+            if sourceRoot != destinationRoot {
                 mstEdges.append(edge)
-                let edgeWeight = edgeWeight.costToExplore(edge, graph)
-                totalWeight = totalWeight + edgeWeight
+                let currentEdgeWeight = edgeWeight.costToExplore(edge, graph)
+                totalWeight = totalWeight + currentEdgeWeight
                 mstVertices.insert(source)
                 mstVertices.insert(destination)
                 union(source, destination)
-                visitor?.addEdge?(edge, edgeWeight)
+                visitor?.addEdge?(edge, currentEdgeWeight)
                 visitor?.unionVertices?(source, destination)
             } else {
                 visitor?.skipEdge?(edge, "Would create cycle")
             }
         }
         
-        // Include all vertices, even those not connected by edges
         for vertex in graph.vertices() {
             mstVertices.insert(vertex)
         }
         
-        let result = Result(
+        return Result(
             edges: mstEdges,
             totalWeight: totalWeight,
             vertices: mstVertices
         )
-        
-        
-        return result
     }
 }
 
-// Visitor support
 extension Kruskal {
     func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> KruskalWithVisitor<Graph, Weight> {
         .init(base: self, makeVisitor: makeVisitor)

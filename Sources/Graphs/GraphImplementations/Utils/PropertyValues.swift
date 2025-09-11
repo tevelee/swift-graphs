@@ -1,7 +1,3 @@
-protocol VertexProperties {
-    subscript<P: VertexProperty>(property: P.Type) -> P.Value { get set }
-}
-
 struct VertexPropertyValues: VertexProperties {
     private var storage = PropertyValues()
 
@@ -16,10 +12,6 @@ struct VertexPropertyValues: VertexProperties {
             yield &value
         }
     }
-}
-
-protocol EdgeProperties {
-    subscript<P: EdgeProperty>(property: P.Type) -> P.Value { get set }
 }
 
 struct EdgePropertyValues: EdgeProperties {

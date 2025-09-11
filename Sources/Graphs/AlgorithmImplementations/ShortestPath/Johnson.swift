@@ -19,71 +19,58 @@ struct Johnson<
         var detectNegativeCycle: (() -> Void)?
     }
     
-    private let originalGraph: Graph
     private let edgeWeight: CostDefinition<Graph, Weight>
     
     init(
-        on graph: Graph,
         edgeWeight: CostDefinition<Graph, Weight>
     ) {
-        self.originalGraph = graph
         self.edgeWeight = edgeWeight
     }
     
-    func shortestPathsForAllPairs(visitor: Visitor? = nil) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
-        // Step 1: Create a virtual augmented graph by simulating Bellman-Ford
-        // We'll create a temporary graph structure for the Bellman-Ford step
-        let reweightingValues = computeReweightingValues()
+    func shortestPathsForAllPairs(in graph: Graph, visitor: Visitor? = nil) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
+        let reweightingValues = computeReweightingValues(in: graph)
         
-        
-        // Check if we found negative cycles
         guard !reweightingValues.isEmpty else {
-            // If there's a negative cycle, return empty result
             visitor?.detectNegativeCycle?()
             return AllPairsShortestPaths(distances: [:], predecessors: [:])
         }
         
-        // Step 2: Initialize distance and predecessor matrices
-        let vertices = Array(originalGraph.vertices())
+        let vertices = Array(graph.vertices())
         var allDistances: [Vertex: [Vertex: Cost<Weight>]] = [:]
         var allPredecessors: [Vertex: [Vertex: Edge?]] = [:]
         
-        // Initialize with infinity for all pairs
         for source in vertices {
             allDistances[source] = [:]
             allPredecessors[source] = [:]
             for destination in vertices {
-                allDistances[source]![destination] = source == destination ? .finite(.zero) : .infinite
-                allPredecessors[source]![destination] = nil
+                allDistances[source]?[destination] = source == destination ? .finite(.zero) : .infinite
+                allPredecessors[source]?[destination] = nil
             }
         }
-        
-        // Step 3: Run Dijkstra from each vertex on the reweighted graph
         for source in vertices {
             visitor?.startDijkstraFromSource?(source)
             
             let dijkstra = Dijkstra(
-                on: originalGraph,
+                on: graph,
                 from: source,
                 edgeWeight: createReweightedCostDefinition(reweightingValues: reweightingValues)
             )
             
             let dijkstraResult = dijkstra.allShortestPaths()
             
-            // Update distances and predecessors for reachable vertices
             for (destination, distance) in dijkstraResult.distances {
-                // Adjust distance back to original weights: d(u,v) = d'(u,v) - h(u) + h(v)
-                let adjustedDistance = distance - reweightingValues[source]! + reweightingValues[destination]!
-                allDistances[source]![destination] = .finite(adjustedDistance)
+                let sourceReweighting = reweightingValues[source] ?? .zero
+                let destinationReweighting = reweightingValues[destination] ?? .zero
+                let adjustedDistance = distance - sourceReweighting + destinationReweighting
+                allDistances[source]?[destination] = .finite(adjustedDistance)
             }
             
             for (destination, predecessor) in dijkstraResult.predecessors {
-                allPredecessors[source]![destination] = predecessor
+                allPredecessors[source]?[destination] = predecessor
             }
             
             visitor?.completeDijkstraFromSource?(source)
         }
-        
         
         return AllPairsShortestPaths(
             distances: allDistances,
@@ -91,74 +78,60 @@ struct Johnson<
         )
     }
     
-    private func computeReweightingValues() -> [Vertex: Weight] {
-        // Simulate Bellman-Ford on an augmented graph by running it on the original graph
-        // with a virtual source that has edges to all vertices with weight 0
-        
-        let vertices = Array(originalGraph.vertices())
+    private func computeReweightingValues(in graph: Graph) -> [Vertex: Weight] {
+        let vertices = Array(graph.vertices())
         var distances: [Vertex: Cost<Weight>] = [:]
         
-        // Initialize distances - all vertices start at infinity
         for vertex in vertices {
             distances[vertex] = .infinite
         }
         
-        // Simulate the virtual source by initializing all vertices to 0
-        // This is equivalent to having a virtual source connected to all vertices with weight 0
-        // But we need to do this in the first iteration of Bellman-Ford
-        
-        // Run Bellman-Ford relaxation |V| times (including the virtual source)
-        for iteration in 0..<vertices.count {
-            var relaxed = false
+        for iteration in 0 ..< vertices.count {
+            var wasRelaxed = false
             
-            // In the first iteration, simulate edges from the virtual source (all vertices get distance 0)
             if iteration == 0 {
                 for vertex in vertices {
-                    if distances[vertex]! > .finite(.zero) {
+                    if (distances[vertex] ?? .infinite) > .finite(.zero) {
                         distances[vertex] = .finite(.zero)
-                        relaxed = true
+                        wasRelaxed = true
                     }
                 }
             }
             
-            // Then relax all original edges
             for source in vertices {
-                for edge in originalGraph.outgoingEdges(of: source) {
-                    guard let destination = originalGraph.destination(of: edge) else { continue }
+                for edge in graph.outgoingEdges(of: source) {
+                    guard let destination = graph.destination(of: edge) else { continue }
                     
-                    let sourceCost = distances[source]!
-                    let weight = edgeWeight.costToExplore(edge, originalGraph)
+                    let sourceCost = distances[source] ?? .infinite
+                    let weight = edgeWeight.costToExplore(edge, graph)
                     let newCost = sourceCost + weight
                     
-                    let destinationCost = distances[destination]!
+                    let destinationCost = distances[destination] ?? .infinite
                     if newCost < destinationCost {
                         distances[destination] = newCost
-                        relaxed = true
+                        wasRelaxed = true
                     }
                 }
             }
             
-            if !relaxed { break }
+            if !wasRelaxed { break }
         }
         
-        // Check for negative cycles by doing one more relaxation
         for source in vertices {
-            for edge in originalGraph.outgoingEdges(of: source) {
-                guard let destination = originalGraph.destination(of: edge) else { continue }
+            for edge in graph.outgoingEdges(of: source) {
+                guard let destination = graph.destination(of: edge) else { continue }
                 
-                let sourceCost = distances[source]!
-                let weight = edgeWeight.costToExplore(edge, originalGraph)
+                let sourceCost = distances[source] ?? .infinite
+                let weight = edgeWeight.costToExplore(edge, graph)
                 let newCost = sourceCost + weight
                 
-                let destinationCost = distances[destination]!
+                let destinationCost = distances[destination] ?? .infinite
                 if newCost < destinationCost {
-                    // Negative cycle detected
                     return [:]
                 }
             }
         }
         
-        // Extract reweighting values
         return Dictionary(uniqueKeysWithValues:
             vertices.compactMap { vertex in
                 guard case .finite(let weight) = distances[vertex] else { return nil }
@@ -175,26 +148,24 @@ struct Johnson<
             }
             
             let originalWeight = self.edgeWeight.costToExplore(edge, graph)
-            let reweightedWeight = originalWeight + reweightingValues[source]! - reweightingValues[destination]!
-            
-            
-            return reweightedWeight
+            let sourceReweighting = reweightingValues[source] ?? .zero
+            let destinationReweighting = reweightingValues[destination] ?? .zero
+            return originalWeight + sourceReweighting - destinationReweighting
         }
     }
 }
 
 extension Johnson: ShortestPathsForAllPairsAlgorithm {
     func shortestPathsForAllPairs(in graph: Graph) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
-        shortestPathsForAllPairs()
+        shortestPathsForAllPairs(in: graph, visitor: nil)
     }
 }
 
 extension Johnson {
     static func create<G: IncidenceGraph & VertexListGraph & EdgePropertyGraph, W: Numeric & Comparable>(
-        on graph: G,
         edgeWeight: CostDefinition<G, W>
     ) -> Johnson<G, W> where G.VertexDescriptor: Hashable, W.Magnitude == W {
-        Johnson<G, W>(on: graph, edgeWeight: edgeWeight)
+        Johnson<G, W>(edgeWeight: edgeWeight)
     }
     
     func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> JohnsonWithVisitor<Graph, Weight> {
@@ -210,16 +181,15 @@ where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
 }
 
 extension JohnsonWithVisitor {
-    func shortestPathsForAllPairs() -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
-        base.shortestPathsForAllPairs(visitor: makeVisitor())
+    func shortestPathsForAllPairs(in graph: Graph) -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
+        base.shortestPathsForAllPairs(in: graph, visitor: makeVisitor())
     }
 }
 
 extension ShortestPathsForAllPairsAlgorithm {
     static func johnson<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: Numeric & Comparable>(
-        on graph: Graph,
         edgeWeight: CostDefinition<Graph, Weight>
     ) -> Johnson<Graph, Weight> where Self == Johnson<Graph, Weight>, Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-        Johnson(on: graph, edgeWeight: edgeWeight)
+        Johnson(edgeWeight: edgeWeight)
     }
 }

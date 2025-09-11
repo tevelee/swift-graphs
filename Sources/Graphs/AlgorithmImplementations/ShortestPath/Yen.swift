@@ -10,7 +10,6 @@ struct Yen<
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
     
-    private let graph: Graph
     private let edgeWeight: CostDefinition<Graph, Weight>
     private let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
     
@@ -20,13 +19,11 @@ struct Yen<
     }
     
     init(
-        on graph: Graph,
         edgeWeight: CostDefinition<Graph, Weight>,
         makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
             PriorityQueue()
         }
     ) {
-        self.graph = graph
         self.edgeWeight = edgeWeight
         self.makePriorityQueue = makePriorityQueue
     }
@@ -34,31 +31,32 @@ struct Yen<
     func kShortestPaths(
         from source: Vertex,
         to destination: Vertex,
-        k: Int
+        k: Int,
+        in graph: Graph
     ) -> [Path<Vertex, Edge>] {
         var result: [Path<Vertex, Edge>] = []
         var candidates: [PriorityItem] = []
         
         // Find the shortest path using Dijkstra
-        guard let shortestPath = findShortestPath(from: source, to: destination) else {
+        guard let shortestPath = findShortestPath(from: source, to: destination, in: graph) else {
             return []
         }
         
         result.append(shortestPath)
         
         // Find k-1 additional paths
-        for i in 1..<k {
+        for i in 1 ..< k {
             let previousPath = result[i-1]
             
             // For each vertex in the previous path, find alternative paths
-            for j in 0..<previousPath.vertices.count - 1 {
+            for j in 0 ..< previousPath.vertices.count - 1 {
                 let spurNode = previousPath.vertices[j]
-                let rootPath = previousPath.vertices[0...j]
+                let rootPath = previousPath.vertices[0 ... j]
                 
                 // Remove edges used in previous paths
                 var removedEdges: [Edge] = []
                 for path in result {
-                    if path.vertices.count > j && Array(path.vertices[0...j]) == Array(rootPath) {
+                    if path.vertices.count > j && Array(path.vertices[0 ... j]) == Array(rootPath) {
                         if j + 1 < path.vertices.count {
                             // Find and remove the edge from spurNode to next vertex
                             for edge in graph.outgoingEdges(of: spurNode) {
@@ -77,16 +75,15 @@ struct Yen<
                 // a way to temporarily modify the graph or work with a copy
                 
                 // Find spur path from spurNode to destination
-                if let spurPath = findShortestPath(from: spurNode, to: destination) {
-                    // Create total path
-                    let totalPath = createTotalPath(
-                        rootPath: Array(rootPath),
-                        spurPath: spurPath,
-                        in: graph
-                    )
+                if let spurPath = findShortestPath(from: spurNode, to: destination, in: graph),
+                   let totalPath = createTotalPath(
+                       rootPath: Array(rootPath),
+                       spurPath: spurPath,
+                       in: graph
+                   ) {
                     
                     if !result.contains(where: { $0.vertices == totalPath.vertices }) {
-                        let cost = calculatePathCost(totalPath)
+                        let cost = calculatePathCost(totalPath, in: graph)
                         candidates.append(PriorityItem(path: totalPath, cost: cost))
                     }
                 }
@@ -106,7 +103,7 @@ struct Yen<
         return result
     }
     
-    private func findShortestPath(from source: Vertex, to destination: Vertex) -> Path<Vertex, Edge>? {
+    private func findShortestPath(from source: Vertex, to destination: Vertex, in graph: Graph) -> Path<Vertex, Edge>? {
         var distances: [Vertex: Cost<Weight>] = [:]
         var predecessors: [Vertex: Edge?] = [:]
         var visited: Set<Vertex> = []
@@ -134,7 +131,7 @@ struct Yen<
                 let newCost = currentCost + weight
                 
                 let currentBestCost = distances[next]
-                if currentBestCost == nil || newCost < currentBestCost! {
+                if currentBestCost == nil || newCost < (currentBestCost ?? .infinite) {
                     distances[next] = newCost
                     predecessors[next] = edge
                     queue.enqueue(PriorityItem(path: Path(source: source, destination: next, vertices: [source, next], edges: [edge]), cost: newCost))
@@ -143,21 +140,22 @@ struct Yen<
         }
         
         // Reconstruct path
-        return reconstructPath(from: source, to: destination, predecessors: predecessors)
+        return reconstructPath(from: source, to: destination, predecessors: predecessors, in: graph)
     }
     
     private func reconstructPath(
         from source: Vertex,
         to destination: Vertex,
-        predecessors: [Vertex: Edge?]
+        predecessors: [Vertex: Edge?],
+        in graph: Graph
     ) -> Path<Vertex, Edge>? {
         var current = destination
         var vertices: [Vertex] = [destination]
         var edges: [Edge] = []
         
-        while let edge = predecessors[current] {
-            edges.insert(edge!, at: 0)
-            guard let predecessor = graph.source(of: edge!) else { break }
+        while let optionalEdge = predecessors[current], let edge = optionalEdge {
+            edges.insert(edge, at: 0)
+            guard let predecessor = graph.source(of: edge) else { break }
             if predecessor == source { break }
             vertices.insert(predecessor, at: 0)
             current = predecessor
@@ -177,19 +175,23 @@ struct Yen<
         rootPath: [Vertex],
         spurPath: Path<Vertex, Edge>,
         in graph: Graph
-    ) -> Path<Vertex, Edge> {
+    ) -> Path<Vertex, Edge>? {
         let totalVertices = rootPath + spurPath.vertices.dropFirst()
         let totalEdges = spurPath.edges
         
+        guard let firstVertex = rootPath.first else {
+            return nil
+        }
+        
         return Path(
-            source: rootPath.first!,
+            source: firstVertex,
             destination: spurPath.destination,
             vertices: totalVertices,
             edges: totalEdges
         )
     }
     
-    private func calculatePathCost(_ path: Path<Vertex, Edge>) -> Cost<Weight> {
+    private func calculatePathCost(_ path: Path<Vertex, Edge>, in graph: Graph) -> Cost<Weight> {
         var totalCost: Weight = .zero
         for edge in path.edges {
             let weight = edgeWeight.costToExplore(edge, graph)
@@ -208,16 +210,7 @@ struct Yen<
     }
 }
 
-extension Yen: KShortestPathsAlgorithm {
-    func kShortestPaths(
-        from source: Vertex,
-        to destination: Vertex,
-        k: Int,
-        in graph: Graph
-    ) -> [Path<Vertex, Edge>] {
-        kShortestPaths(from: source, to: destination, k: k)
-    }
-}
+extension Yen: KShortestPathsAlgorithm {}
 
 extension Yen.PriorityItem: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -228,14 +221,5 @@ extension Yen.PriorityItem: Equatable {
 extension Yen.PriorityItem: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.cost < rhs.cost
-    }
-}
-
-extension KShortestPathsAlgorithm {
-    static func yen<Graph: IncidenceGraph & EdgePropertyGraph, Weight: Numeric & Comparable>(
-        on graph: Graph,
-        edgeWeight: CostDefinition<Graph, Weight>
-    ) -> Yen<Graph, Weight> where Self == Yen<Graph, Weight>, Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-        Yen(on: graph, edgeWeight: edgeWeight)
     }
 }

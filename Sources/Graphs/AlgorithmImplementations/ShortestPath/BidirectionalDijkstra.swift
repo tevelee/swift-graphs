@@ -74,74 +74,63 @@ struct BidirectionalDijkstra<
         var meetingVertex: Vertex?
         
         while let item = queue.dequeue() {
-            let current = item.vertex
+            let currentVertex = item.vertex
             let currentCost = item.cost
             let direction = item.direction
             
-            // Check if we've already processed this vertex in this direction
-            if direction == .forward && forwardVisited.contains(current) { continue }
-            if direction == .backward && backwardVisited.contains(current) { continue }
+            if direction == .forward && forwardVisited.contains(currentVertex) { continue }
+            if direction == .backward && backwardVisited.contains(currentVertex) { continue }
             
-            // Verify this is still the best cost for this vertex
-            let storedCost = direction == .forward ? forwardDistances[current] : backwardDistances[current]
+            let storedCost = direction == .forward ? forwardDistances[currentVertex] : backwardDistances[currentVertex]
             if currentCost != storedCost { continue }
             
-            // Mark as visited
             if direction == .forward {
-                forwardVisited.insert(current)
+                forwardVisited.insert(currentVertex)
             } else {
-                backwardVisited.insert(current)
+                backwardVisited.insert(currentVertex)
             }
             
-            visitor?.examineVertex?(current, direction)
+            visitor?.examineVertex?(currentVertex, direction)
             
-            // Check if we've found a meeting point
-            if direction == .forward && backwardVisited.contains(current) {
-                let backwardCost = backwardDistances[current] ?? .infinite
+            if direction == .forward && backwardVisited.contains(currentVertex) {
+                let backwardCost = backwardDistances[currentVertex] ?? .infinite
                 if case .finite(let currentWeight) = currentCost,
                    case .finite(let backwardWeight) = backwardCost {
                     let totalCost = currentWeight + backwardWeight
                     if case .finite(let bestWeight) = bestDistance {
                         if totalCost < bestWeight {
                             bestDistance = .finite(totalCost)
-                            meetingVertex = current
-                            visitor?.meetingFound?(current, bestDistance)
+                            meetingVertex = currentVertex
+                            visitor?.meetingFound?(currentVertex, bestDistance)
                         }
                     } else {
                         bestDistance = .finite(totalCost)
-                        meetingVertex = current
-                        visitor?.meetingFound?(current, bestDistance)
+                        meetingVertex = currentVertex
+                        visitor?.meetingFound?(currentVertex, bestDistance)
                     }
                 }
-            } else if direction == .backward && forwardVisited.contains(current) {
-                let forwardCost = forwardDistances[current] ?? .infinite
+            } else if direction == .backward && forwardVisited.contains(currentVertex) {
+                let forwardCost = forwardDistances[currentVertex] ?? .infinite
                 if case .finite(let currentWeight) = currentCost,
                    case .finite(let forwardWeight) = forwardCost {
                     let totalCost = forwardWeight + currentWeight
                     if case .finite(let bestWeight) = bestDistance {
                         if totalCost < bestWeight {
                             bestDistance = .finite(totalCost)
-                            meetingVertex = current
-                            visitor?.meetingFound?(current, bestDistance)
+                            meetingVertex = currentVertex
+                            visitor?.meetingFound?(currentVertex, bestDistance)
                         }
                     } else {
                         bestDistance = .finite(totalCost)
-                        meetingVertex = current
-                        visitor?.meetingFound?(current, bestDistance)
+                        meetingVertex = currentVertex
+                        visitor?.meetingFound?(currentVertex, bestDistance)
                     }
                 }
             }
             
-            // Early termination if we've found a path and processed enough vertices
-            if case .finite = bestDistance {
-                // Continue for a few more iterations to ensure optimality
-                // This is a simplified implementation
-            }
-            
-            // Explore neighbors
             if direction == .forward {
                 exploreForward(
-                    from: current,
+                    from: currentVertex,
                     currentCost: currentCost,
                     distances: &forwardDistances,
                     predecessors: &forwardPredecessors,
@@ -150,7 +139,7 @@ struct BidirectionalDijkstra<
                 )
             } else {
                 exploreBackward(
-                    from: current,
+                    from: currentVertex,
                     currentCost: currentCost,
                     distances: &backwardDistances,
                     predecessors: &backwardPredecessors,
@@ -160,7 +149,6 @@ struct BidirectionalDijkstra<
             }
         }
         
-        // Reconstruct path if we found one
         let path = meetingVertex.map { reconstructPath(
             from: source,
             to: destination,
@@ -168,7 +156,6 @@ struct BidirectionalDijkstra<
             forwardPredecessors: forwardPredecessors,
             backwardPredecessors: backwardPredecessors
         )}
-        
         
         return Result(
             path: path,
@@ -178,14 +165,14 @@ struct BidirectionalDijkstra<
     }
     
     private func exploreForward(
-        from current: Vertex,
+        from currentVertex: Vertex,
         currentCost: Cost<Weight>,
         distances: inout [Vertex: Cost<Weight>],
         predecessors: inout [Vertex: Edge?],
         queue: inout any QueueProtocol<PriorityItem>,
         visitor: Visitor?
     ) {
-        for edge in graph.outgoingEdges(of: current) {
+        for edge in graph.outgoingEdges(of: currentVertex) {
             guard let neighbor = graph.destination(of: edge) else { continue }
             
             visitor?.examineEdge?(edge, .forward)
@@ -193,8 +180,8 @@ struct BidirectionalDijkstra<
             let weight = edgeWeight.costToExplore(edge, graph)
             let newCost = currentCost + weight
             
-            let currentBestCost = distances[neighbor]
-            if currentBestCost == nil || newCost < currentBestCost! {
+            let currentBestCost = distances[neighbor] ?? .infinite
+            if currentBestCost == nil || newCost < currentBestCost {
                 distances[neighbor] = newCost
                 predecessors[neighbor] = edge
                 queue.enqueue(PriorityItem(vertex: neighbor, cost: newCost, direction: .forward))
@@ -206,14 +193,14 @@ struct BidirectionalDijkstra<
     }
     
     private func exploreBackward(
-        from current: Vertex,
+        from currentVertex: Vertex,
         currentCost: Cost<Weight>,
         distances: inout [Vertex: Cost<Weight>],
         predecessors: inout [Vertex: Edge?],
         queue: inout any QueueProtocol<PriorityItem>,
         visitor: Visitor?
     ) {
-        for edge in graph.incomingEdges(of: current) {
+        for edge in graph.incomingEdges(of: currentVertex) {
             guard let neighbor = graph.source(of: edge) else { continue }
             
             visitor?.examineEdge?(edge, .backward)
@@ -221,8 +208,8 @@ struct BidirectionalDijkstra<
             let weight = edgeWeight.costToExplore(edge, graph)
             let newCost = currentCost + weight
             
-            let currentBestCost = distances[neighbor]
-            if currentBestCost == nil || newCost < currentBestCost! {
+            let currentBestCost = distances[neighbor] ?? .infinite
+            if currentBestCost == nil || newCost < currentBestCost {
                 distances[neighbor] = newCost
                 predecessors[neighbor] = edge
                 queue.enqueue(PriorityItem(vertex: neighbor, cost: newCost, direction: .backward))
@@ -240,33 +227,30 @@ struct BidirectionalDijkstra<
         forwardPredecessors: [Vertex: Edge?],
         backwardPredecessors: [Vertex: Edge?]
     ) -> Path<Vertex, Edge> {
-        // Reconstruct forward path from source to meeting vertex
         var forwardVertices: [Vertex] = [meetingVertex]
         var forwardEdges: [Edge] = []
         
-        var current = meetingVertex
-        while let edge = forwardPredecessors[current] {
-            forwardEdges.insert(edge!, at: 0)
-            guard let predecessor = graph.source(of: edge!) else { break }
+        var currentVertex = meetingVertex
+        while let optionalEdge = forwardPredecessors[currentVertex], let edge = optionalEdge {
+            forwardEdges.insert(edge, at: 0)
+            guard let predecessor = graph.source(of: edge) else { break }
             if predecessor == source { break }
             forwardVertices.insert(predecessor, at: 0)
-            current = predecessor
+            currentVertex = predecessor
         }
         
-        // Reconstruct backward path from meeting vertex to destination
         var backwardVertices: [Vertex] = []
         var backwardEdges: [Edge] = []
         
-        current = meetingVertex
-        while let edge = backwardPredecessors[current] {
-            backwardEdges.append(edge!)
-            guard let successor = graph.destination(of: edge!) else { break }
+        currentVertex = meetingVertex
+        while let optionalEdge = backwardPredecessors[currentVertex], let edge = optionalEdge {
+            backwardEdges.append(edge)
+            guard let successor = graph.destination(of: edge) else { break }
             if successor == destination { break }
             backwardVertices.append(successor)
-            current = successor
+            currentVertex = successor
         }
         
-        // Combine paths
         let allVertices = forwardVertices + backwardVertices
         let allEdges = forwardEdges + backwardEdges
         
@@ -302,7 +286,6 @@ extension BidirectionalDijkstra.PriorityItem: Comparable {
     }
 }
 
-// Visitor support
 extension BidirectionalDijkstra {
     func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> BidirectionalDijkstraWithVisitor<Graph, Weight> {
         .init(base: self, makeVisitor: makeVisitor)
@@ -321,4 +304,6 @@ extension BidirectionalDijkstraWithVisitor {
         base.shortestPath(from: source, to: destination, visitor: makeVisitor())
     }
 }
+
+
 

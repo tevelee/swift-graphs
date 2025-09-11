@@ -35,14 +35,18 @@ extension GridGraph: VertexListGraph {
         struct Iterator: IteratorProtocol {
             let width: Int
             let height: Int
-            var x: Int = 0
-            var y: Int = 0
+            var currentX: Int = 0
+            var currentY: Int = 0
+            
             mutating func next() -> GridGraph.Vertex? {
-                guard y < height else { return nil }
-                let v = GridGraph.Vertex(x: x, y: y)
-                x += 1
-                if x >= width { x = 0; y += 1 }
-                return v
+                guard currentY < height else { return nil }
+                let vertex = GridGraph.Vertex(x: currentX, y: currentY)
+                currentX += 1
+                if currentX >= width { 
+                    currentX = 0
+                    currentY += 1 
+                }
+                return vertex
             }
         }
     }
@@ -53,27 +57,30 @@ extension GridGraph: VertexListGraph {
 
 extension GridGraph: IncidenceGraph {
     struct OutgoingEdges: Sequence {
-        let v: GridGraph.Vertex
+        let vertex: GridGraph.Vertex
         let width: Int
         let height: Int
         let directions: OrderedSet<GridDirection>
-        func makeIterator() -> Iterator { Iterator(v: v, width: width, height: height, directions: directions) }
+        func makeIterator() -> Iterator {
+            Iterator(vertex: vertex, width: width, height: height, directions: directions)
+        }
 
         struct Iterator: IteratorProtocol {
-            let v: GridGraph.Vertex
+            let vertex: GridGraph.Vertex
             let width: Int
             let height: Int
             let directions: OrderedSet<GridDirection>
-            var idx: Int = 0
+            var currentIndex: Int = 0
+            
             mutating func next() -> GridGraph.Edge? {
-                while idx < directions.count {
-                    defer { idx += 1 }
-                    let dir = directions[directions.index(directions.startIndex, offsetBy: idx)]
-                    let (dx, dy) = GridGraph.delta(for: dir)
-                    let nx = v.x + dx
-                    let ny = v.y + dy
-                    if nx >= 0 && nx < width && ny >= 0 && ny < height {
-                        return GridGraph.Edge(source: v, destination: .init(x: nx, y: ny))
+                while currentIndex < directions.count {
+                    defer { currentIndex += 1 }
+                    let direction = directions[directions.index(directions.startIndex, offsetBy: currentIndex)]
+                    let (deltaX, deltaY) = GridGraph.delta(for: direction)
+                    let nextX = vertex.x + deltaX
+                    let nextY = vertex.y + deltaY
+                    if nextX >= 0 && nextX < width && nextY >= 0 && nextY < height {
+                        return GridGraph.Edge(source: vertex, destination: .init(x: nextX, y: nextY))
                     }
                 }
                 return nil
@@ -82,46 +89,49 @@ extension GridGraph: IncidenceGraph {
     }
 
     func outgoingEdges(of vertex: VertexDescriptor) -> OutgoingEdges {
-        .init(v: vertex, width: width, height: height, directions: allowedDirections)
+        .init(vertex: vertex, width: width, height: height, directions: allowedDirections)
     }
 
     func source(of edge: EdgeDescriptor) -> VertexDescriptor? { edge.source }
     func destination(of edge: EdgeDescriptor) -> VertexDescriptor? { edge.destination }
     func outDegree(of vertex: VertexDescriptor) -> Int {
-        var d = 0
-        for dir in allowedDirections {
-            let (dx, dy) = GridGraph.delta(for: dir)
-            let nx = vertex.x + dx
-            let ny = vertex.y + dy
-            if nx >= 0 && nx < width && ny >= 0 && ny < height { d += 1 }
+        var degree = 0
+        for direction in allowedDirections {
+            let (deltaX, deltaY) = GridGraph.delta(for: direction)
+            let nextX = vertex.x + deltaX
+            let nextY = vertex.y + deltaY
+            if nextX >= 0 && nextX < width && nextY >= 0 && nextY < height { 
+                degree += 1 
+            }
         }
-        return d
+        return degree
     }
 }
 
 extension GridGraph: BidirectionalGraph {
     struct IncomingEdges: Sequence {
-        let v: GridGraph.Vertex
+        let vertex: GridGraph.Vertex
         let width: Int
         let height: Int
         let directions: OrderedSet<GridDirection>
-        func makeIterator() -> Iterator { Iterator(v: v, width: width, height: height, directions: directions) }
+        func makeIterator() -> Iterator { Iterator(vertex: vertex, width: width, height: height, directions: directions) }
 
         struct Iterator: IteratorProtocol {
-            let v: GridGraph.Vertex
+            let vertex: GridGraph.Vertex
             let width: Int
             let height: Int
             let directions: OrderedSet<GridDirection>
-            var idx: Int = 0
+            var currentIndex: Int = 0
+            
             mutating func next() -> GridGraph.Edge? {
-                while idx < directions.count {
-                    defer { idx += 1 }
-                    let dir = directions[directions.index(directions.startIndex, offsetBy: idx)]
-                    let (dx, dy) = GridGraph.delta(for: dir)
-                    let px = v.x - dx
-                    let py = v.y - dy
-                    if px >= 0 && px < width && py >= 0 && py < height {
-                        return GridGraph.Edge(source: .init(x: px, y: py), destination: v)
+                while currentIndex < directions.count {
+                    defer { currentIndex += 1 }
+                    let direction = directions[directions.index(directions.startIndex, offsetBy: currentIndex)]
+                    let (deltaX, deltaY) = GridGraph.delta(for: direction)
+                    let previousX = vertex.x - deltaX
+                    let previousY = vertex.y - deltaY
+                    if previousX >= 0 && previousX < width && previousY >= 0 && previousY < height {
+                        return GridGraph.Edge(source: .init(x: previousX, y: previousY), destination: vertex)
                     }
                 }
                 return nil
@@ -130,18 +140,20 @@ extension GridGraph: BidirectionalGraph {
     }
 
     func incomingEdges(of vertex: VertexDescriptor) -> IncomingEdges {
-        .init(v: vertex, width: width, height: height, directions: allowedDirections)
+        .init(vertex: vertex, width: width, height: height, directions: allowedDirections)
     }
 
     func inDegree(of vertex: VertexDescriptor) -> Int {
-        var d = 0
-        for dir in allowedDirections {
-            let (dx, dy) = GridGraph.delta(for: dir)
-            let px = vertex.x - dx
-            let py = vertex.y - dy
-            if px >= 0 && px < width && py >= 0 && py < height { d += 1 }
+        var degree = 0
+        for direction in allowedDirections {
+            let (deltaX, deltaY) = GridGraph.delta(for: direction)
+            let previousX = vertex.x - deltaX
+            let previousY = vertex.y - deltaY
+            if previousX >= 0 && previousX < width && previousY >= 0 && previousY < height { 
+                degree += 1 
+            }
         }
-        return d
+        return degree
     }
 }
 
@@ -156,25 +168,28 @@ extension GridGraph: EdgeListGraph {
             let width: Int
             let height: Int
             let directions: OrderedSet<GridDirection>
-            var x: Int = 0
-            var y: Int = 0
-            var edgeIter: GridGraph.OutgoingEdges.Iterator? = nil
+            var currentX: Int = 0
+            var currentY: Int = 0
+            var edgeIterator: GridGraph.OutgoingEdges.Iterator? = nil
 
             mutating func next() -> GridGraph.Edge? {
                 while true {
-                    if var it = edgeIter {
-                        if let e = it.next() {
-                            edgeIter = it
-                            return e
+                    if var iterator = edgeIterator {
+                        if let edge = iterator.next() {
+                            edgeIterator = iterator
+                            return edge
                         } else {
-                            edgeIter = nil
+                            edgeIterator = nil
                         }
                     }
-                    guard y < height else { return nil }
-                    let v = GridGraph.Vertex(x: x, y: y)
-                    edgeIter = GridGraph.OutgoingEdges(v: v, width: width, height: height, directions: directions).makeIterator()
-                    x += 1
-                    if x >= width { x = 0; y += 1 }
+                    guard currentY < height else { return nil }
+                    let vertex = GridGraph.Vertex(x: currentX, y: currentY)
+                    edgeIterator = GridGraph.OutgoingEdges(vertex: vertex, width: width, height: height, directions: directions).makeIterator()
+                    currentX += 1
+                    if currentX >= width { 
+                        currentX = 0
+                        currentY += 1 
+                    }
                 }
             }
         }
@@ -183,24 +198,27 @@ extension GridGraph: EdgeListGraph {
     func edges() -> Edges { .init(width: width, height: height, directions: allowedDirections) }
 
     var edgeCount: Int {
-        var total = 0
-        for v in vertices() {
-            total += outDegree(of: v)
+        var totalEdges = 0
+        for vertex in vertices() {
+            totalEdges += outDegree(of: vertex)
         }
-        return total
+        return totalEdges
     }
 }
 
 extension GridGraph: EdgeLookupGraph {
     func edge(from source: VertexDescriptor, to destination: VertexDescriptor) -> EdgeDescriptor? {
-        let dx = destination.x - source.x
-        let dy = destination.y - source.y
-        var allowed = false
-        for dir in allowedDirections {
-            let (adx, ady) = GridGraph.delta(for: dir)
-            if adx == dx && ady == dy { allowed = true; break }
+        let deltaX = destination.x - source.x
+        let deltaY = destination.y - source.y
+        var isAllowed = false
+        for direction in allowedDirections {
+            let (allowedDeltaX, allowedDeltaY) = GridGraph.delta(for: direction)
+            if allowedDeltaX == deltaX && allowedDeltaY == deltaY { 
+                isAllowed = true
+                break 
+            }
         }
-        if !allowed { return nil }
+        if !isAllowed { return nil }
         if destination.x < 0 || destination.x >= width { return nil }
         if destination.y < 0 || destination.y >= height { return nil }
         return Edge(source: source, destination: destination)
@@ -242,3 +260,4 @@ extension OrderedSet<GridDirection> {
         lhs.subtracting(rhs)
     }
 }
+

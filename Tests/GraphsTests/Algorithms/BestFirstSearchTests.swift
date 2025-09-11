@@ -17,7 +17,7 @@ struct BestFirstTests {
             order[g[v].label] ?? 999
         }))
 
-        let labels = result.verticeLabels(in: graph)
+        let labels = result.vertexLabels(in: graph)
         #expect(labels == ["s", "b", "d", "a", "c"])
     }
 }

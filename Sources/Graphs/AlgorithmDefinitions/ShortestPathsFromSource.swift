@@ -27,9 +27,9 @@ struct ShortestPathsFromSource<Vertex: Hashable, Edge, Weight: Numeric & Compara
         var vertices: [Vertex] = [destination]
         var edges: [Edge] = []
         
-        while let edge = predecessors[current] {
-            edges.insert(edge!, at: 0)
-            guard let predecessor = graph.source(of: edge!) else { break }
+        while let optionalEdge = predecessors[current], let edge = optionalEdge {
+            edges.insert(edge, at: 0)
+            guard let predecessor = graph.source(of: edge) else { break }
             if predecessor == source { break }
             vertices.insert(predecessor, at: 0)
             current = predecessor

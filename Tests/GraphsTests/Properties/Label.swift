@@ -39,7 +39,7 @@ extension AdjacencyList {
 
 extension MutablePropertyGraph {
     mutating func add(edges: [(String, String)]) {
-        let labels: [String: VertexDescriptor] = Dictionary(
+        let labelToVertex: [String: VertexDescriptor] = Dictionary(
             grouping: edges.flatMap { [$0, $1] },
             by: \.self
         )
@@ -49,14 +49,14 @@ extension MutablePropertyGraph {
         }
 
         for (sourceLabel, destinationLabel) in edges {
-            let source = labels[sourceLabel]!
-            let destination = labels[destinationLabel]!
+            let source = labelToVertex[sourceLabel]!
+            let destination = labelToVertex[destinationLabel]!
             addEdge(from: source, to: destination)
         }
     }
     
     mutating func add(edges: [(String, String, weight: Double)]) {
-        let labels: [String: VertexDescriptor] = Dictionary(
+        let labelToVertex: [String: VertexDescriptor] = Dictionary(
             grouping: edges.flatMap { source, destination, _ in
                 [source, destination]
             },
@@ -68,8 +68,8 @@ extension MutablePropertyGraph {
         }
 
         for (sourceLabel, destinationLabel, weight) in edges {
-            let source = labels[sourceLabel]!
-            let destination = labels[destinationLabel]!
+            let source = labelToVertex[sourceLabel]!
+            let destination = labelToVertex[destinationLabel]!
             addEdge(from: source, to: destination) {
                 $0.weight = weight
             }
@@ -79,16 +79,16 @@ extension MutablePropertyGraph {
 
 extension AdjacencyList {
     func traverse(
-        from source: String,
+        from sourceLabel: String,
         using algorithm: some TraversalAlgorithm<Self>
     ) -> TraversalResult<VertexDescriptor, EdgeDescriptor> {
-        let source = vertices().first { self[$0].label == source }!
-        return algorithm.traverse(from: source, in: self)
+        let sourceVertex = vertices().first { self[$0].label == sourceLabel }!
+        return algorithm.traverse(from: sourceVertex, in: self)
     }
 }
 
 extension TraversalResult {
-    func verticeLabels<G: PropertyGraph>(in graph: G) -> [String] where G.VertexDescriptor == Vertex {
+    func vertexLabels<G: PropertyGraph>(in graph: G) -> [String] where G.VertexDescriptor == Vertex {
         vertices.map { graph[$0].label }
     }
 }

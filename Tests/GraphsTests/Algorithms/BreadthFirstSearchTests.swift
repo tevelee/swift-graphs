@@ -73,7 +73,7 @@ struct BFSTests {
         let root = graph.findVertex(labeled: "root")!
         
         let result = graph.traverse(from: root, using: .bfs())
-        #expect(result.verticeLabels(in: graph) == ["root", "a", "b", "c", "x", "y", "z"])
+        #expect(result.vertexLabels(in: graph) == ["root", "a", "b", "c", "x", "y", "z"])
     }
     
     @Test func startsAtSourceAndComputesDistancesAndPaths() {

@@ -17,28 +17,27 @@ struct COOEdgeStorage<Vertex: Hashable>: EdgeStorage {
     func edges() -> OrderedSet<Edge> {
         var result: OrderedSet<Edge> = []
         result.reserveCapacity(sources.count)
-        for raw in 0..<sources.count {
-            if !tombstones.contains(raw) {
-                result.updateOrAppend(Edge(id: raw))
+        for index in 0 ..< sources.count {
+            if !tombstones.contains(index) {
+                result.updateOrAppend(Edge(id: index))
             }
         }
         return result
     }
 
     func endpoints(of edge: Edge) -> (source: Vertex, destination: Vertex)? {
-        let idx = edge.id
-        guard idx >= 0 && idx < sources.count else { return nil }
-        if tombstones.contains(idx) { return nil }
-        return (sources[idx], destinations[idx])
+        let index = edge.id
+        guard index >= 0 && index < sources.count else { return nil }
+        if tombstones.contains(index) { return nil }
+        return (sources[index], destinations[index])
     }
 
     func outgoingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
         var result: OrderedSet<Edge> = []
-        result.reserveCapacity(8)
         if sources.isEmpty { return result }
-        for i in 0..<sources.count {
-            if tombstones.contains(i) { continue }
-            if sources[i] == vertex { result.updateOrAppend(Edge(id: i)) }
+        for index in 0 ..< sources.count {
+            if tombstones.contains(index) { continue }
+            if sources[index] == vertex { result.updateOrAppend(Edge(id: index)) }
         }
         return result
     }
@@ -49,11 +48,10 @@ struct COOEdgeStorage<Vertex: Hashable>: EdgeStorage {
 
     func incomingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
         var result: OrderedSet<Edge> = []
-        result.reserveCapacity(8)
         if destinations.isEmpty { return result }
-        for i in 0..<destinations.count {
-            if tombstones.contains(i) { continue }
-            if destinations[i] == vertex { result.updateOrAppend(Edge(id: i)) }
+        for index in 0 ..< destinations.count {
+            if tombstones.contains(index) { continue }
+            if destinations[index] == vertex { result.updateOrAppend(Edge(id: index)) }
         }
         return result
     }
@@ -63,17 +61,16 @@ struct COOEdgeStorage<Vertex: Hashable>: EdgeStorage {
     }
 
     mutating func addEdge(from source: Vertex, to destination: Vertex) -> Edge {
-        // Try to reuse a tombstoned slot if any
-        if let reused = tombstones.first {
-            tombstones.remove(reused)
-            sources[reused] = source
-            destinations[reused] = destination
-            return Edge(id: reused)
+        if let reusedIndex = tombstones.first {
+            tombstones.remove(reusedIndex)
+            sources[reusedIndex] = source
+            destinations[reusedIndex] = destination
+            return Edge(id: reusedIndex)
         }
-        let id = sources.count
+        let newIndex = sources.count
         sources.append(source)
         destinations.append(destination)
-        return Edge(id: id)
+        return Edge(id: newIndex)
     }
 
     mutating func remove(edge: Edge) {

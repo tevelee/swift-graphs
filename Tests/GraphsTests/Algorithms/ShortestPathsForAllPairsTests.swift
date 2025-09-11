@@ -102,7 +102,7 @@ struct ShortestPathsForAllPairsTests {
         graph.addEdge(from: a, to: b) { $0.weight = 2 }
         graph.addEdge(from: b, to: c) { $0.weight = 3 }
         
-        let result = graph.shortestPathsForAllPairs(using: .johnson(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)))
         
         // Test some known shortest paths
         #expect(result.distance(from: a, to: c) == 5.0) // A -> B -> C (2 + 3 = 5)
@@ -123,7 +123,7 @@ struct ShortestPathsForAllPairsTests {
         graph.addEdge(from: b, to: c) { $0.weight = -2 }
         graph.addEdge(from: a, to: c) { $0.weight = 3 }
         
-        let result = graph.shortestPathsForAllPairs(using: .johnson(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)))
         
         // Test shortest paths with negative weights
         #expect(result.distance(from: a, to: c) == -1.0) // A -> B -> C (1 + (-2) = -1)
@@ -146,7 +146,7 @@ struct ShortestPathsForAllPairsTests {
         graph.addEdge(from: b, to: d) { $0.weight = 7 }
         graph.addEdge(from: c, to: d) { $0.weight = 1 }
         
-        let result = graph.shortestPathsForAllPairs(using: .johnson(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)))
         
         // Test shortest paths
         #expect(result.distance(from: a, to: d) == 0.0) // A -> B -> C -> D (1 + (-2) + 1 = 0)
@@ -167,7 +167,7 @@ struct ShortestPathsForAllPairsTests {
         graph.addEdge(from: c, to: d) { $0.weight = 2 }
         // No connection between A-B and C-D components
         
-        let result = graph.shortestPathsForAllPairs(using: .johnson(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)))
         
         // Test unreachable paths
         #expect(result.distance(from: a, to: c) == .infinite)
@@ -184,7 +184,7 @@ struct ShortestPathsForAllPairsTests {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         
-        let result = graph.shortestPathsForAllPairs(using: .johnson(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)))
         
         #expect(result.distance(from: a, to: a) == 0.0)
     }
@@ -192,7 +192,7 @@ struct ShortestPathsForAllPairsTests {
     @Test func testJohnsonEmptyGraph() {
         let graph = AdjacencyList()
         
-        let result = graph.shortestPathsForAllPairs(using: .johnson(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)))
         
         #expect(result.distances.isEmpty)
     }
@@ -209,7 +209,7 @@ struct ShortestPathsForAllPairsTests {
         graph.addEdge(from: b, to: c) { $0.weight = 1 }
         graph.addEdge(from: c, to: a) { $0.weight = -3 } // Creates negative cycle
         
-        let result = graph.shortestPathsForAllPairs(using: .johnson(on: graph, edgeWeight: .property(\.weight)))
+        let result = graph.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)))
         
         // Johnson's algorithm should detect the negative cycle and return empty result
         #expect(result.distances.isEmpty)

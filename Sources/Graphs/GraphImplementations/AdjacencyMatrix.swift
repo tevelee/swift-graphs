@@ -53,7 +53,7 @@ extension AdjacencyMatrix: IncidenceGraph {
     func outgoingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
         guard let i = index(of: vertex) else { return [] }
         var result: OrderedSet<Edge> = []
-        for j in 0..<matrix.count {
+        for j in 0 ..< matrix.count {
             if matrix[i][j] {
                 if let e = edge(from: vertex, to: verticesStore[j]) { result.updateOrAppend(e) }
             }
@@ -70,7 +70,7 @@ extension AdjacencyMatrix: BidirectionalGraph {
     func incomingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
         guard let j = index(of: vertex) else { return [] }
         var result: OrderedSet<Edge> = []
-        for i in 0..<matrix.count {
+        for i in 0 ..< matrix.count {
             if matrix[i][j] {
                 if let e = edge(from: verticesStore[i], to: vertex) { result.updateOrAppend(e) }
             }
@@ -106,7 +106,7 @@ extension AdjacencyMatrix: MutableGraph {
         verticesStore.updateOrAppend(v)
         // Grow matrix
         let n = verticesStore.count
-        for i in 0..<matrix.count { matrix[i].append(false) }
+        for i in 0 ..< matrix.count { matrix[i].append(false) }
         matrix.append(Array(repeating: false, count: n))
         return v
     }
@@ -118,7 +118,7 @@ extension AdjacencyMatrix: MutableGraph {
         for e in incomingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
         // Remove row and column
         matrix.remove(at: idx)
-        for i in 0..<matrix.count { matrix[i].remove(at: idx) }
+        for i in 0 ..< matrix.count { matrix[i].remove(at: idx) }
         verticesStore.remove(vertex)
     }
 }
@@ -128,11 +128,11 @@ extension AdjacencyMatrix: AdjacencyGraph {
         guard let idx = index(of: vertex) else { return [] }
         var result: OrderedSet<Vertex> = []
         // Outgoing neighbors: row scan
-        for j in 0..<matrix.count {
+        for j in 0 ..< matrix.count {
             if matrix[idx][j] { result.updateOrAppend(verticesStore[j]) }
         }
         // Incoming neighbors: column scan
-        for i in 0..<matrix.count {
+        for i in 0 ..< matrix.count {
             if matrix[i][idx] { result.updateOrAppend(verticesStore[i]) }
         }
         return result

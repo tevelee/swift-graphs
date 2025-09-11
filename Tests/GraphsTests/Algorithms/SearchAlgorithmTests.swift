@@ -52,17 +52,17 @@ struct SearchTests {
         
         // Create additional vertices for the chain
         var chainVertices: [OrderedVertexStorage.Vertex] = [start]
-        for _ in 1..<50 {
+        for _ in 1 ..< 50 {
             chainVertices.append(graph.addVertex())
         }
         chainVertices.append(middle)
-        for _ in 51..<100 {
+        for _ in 51 ..< 100 {
             chainVertices.append(graph.addVertex())
         }
         chainVertices.append(end)
         
         // Add edges to create a chain: start -> ... -> middle -> ... -> end
-        for i in 0..<chainVertices.count - 1 {
+        for i in 0 ..< chainVertices.count - 1 {
             graph.addEdge(from: chainVertices[i], to: chainVertices[i+1])
         }
         

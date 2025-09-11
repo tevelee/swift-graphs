@@ -48,10 +48,16 @@ struct Boruvka<
         
         // Find root with path compression
         func find(_ vertex: Vertex) -> Vertex {
-            if parent[vertex] != vertex {
-                parent[vertex] = find(parent[vertex]!)
+            guard let currentParent = parent[vertex] else {
+                // Initialize if not found
+                parent[vertex] = vertex
+                return vertex
             }
-            return parent[vertex]!
+            
+            if currentParent != vertex {
+                parent[vertex] = find(currentParent)
+            }
+            return parent[vertex] ?? vertex
         }
         
         // Union by rank
@@ -61,13 +67,16 @@ struct Boruvka<
             
             if rootX == rootY { return }
             
-            if rank[rootX]! < rank[rootY]! {
+            let rankX = rank[rootX] ?? 0
+            let rankY = rank[rootY] ?? 0
+            
+            if rankX < rankY {
                 parent[rootX] = rootY
-            } else if rank[rootX]! > rank[rootY]! {
+            } else if rankX > rankY {
                 parent[rootY] = rootX
             } else {
                 parent[rootY] = rootX
-                rank[rootX]! += 1
+                rank[rootX] = rankX + 1
             }
         }
         

@@ -22,8 +22,8 @@ struct YenShortestPath<
         to destination: Graph.VertexDescriptor,
         in graph: Graph
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-        let yen = Yen(on: graph, edgeWeight: weight)
-        let paths = yen.kShortestPaths(from: source, to: destination, k: 1)
+        let yen = Yen(edgeWeight: weight)
+        let paths = yen.kShortestPaths(from: source, to: destination, k: 1, in: graph)
         return paths.first
     }
 }
