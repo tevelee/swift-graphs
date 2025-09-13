@@ -42,7 +42,6 @@ extension DepthFirstSearch.Visitor {
                 }
             },
             shouldTraverse: { context in
-                // For shouldTraverse, we need all visitors to agree (AND logic)
                 for visitor in visitors {
                     if let shouldTraverse = visitor.shouldTraverse, !shouldTraverse(context) {
                         return false

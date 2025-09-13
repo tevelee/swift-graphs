@@ -152,27 +152,6 @@ extension BellmanFord: ShortestPathAlgorithm {
     }
 }
 
-extension BellmanFord: ShortestPathsFromSourceAlgorithm {
-    func shortestPathsFromSource(
-        _ source: Vertex,
-        in graph: Graph
-    ) -> ShortestPathsFromSource<Vertex, Edge, Weight> {
-        let result = shortestPathsFromSource(source)
-        
-        var distances: [Vertex: Weight] = [:]
-        for (vertex, cost) in result.distances {
-            if case .finite(let weight) = cost {
-                distances[vertex] = weight
-            }
-        }
-        
-        return ShortestPathsFromSource(
-            source: source,
-            distances: distances,
-            predecessors: result.predecessors
-        )
-    }
-}
 
 extension BellmanFord: VisitorSupporting {}
 

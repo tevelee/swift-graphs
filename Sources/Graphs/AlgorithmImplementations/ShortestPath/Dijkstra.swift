@@ -151,43 +151,6 @@ struct Dijkstra<
         }
     }
     
-    func allShortestPaths() -> ShortestPathsFromSource<Vertex, Edge, Weight> {
-        var processedVertices: Set<Vertex> = []
-        var lastResult: Result? = nil
-        
-        for result in self {
-            processedVertices.insert(result.currentVertex)
-            lastResult = result
-        }
-        
-        guard let result = lastResult else {
-            return ShortestPathsFromSource(
-                source: source,
-                distances: [:],
-                predecessors: [:]
-            )
-        }
-        
-        var distances: [Vertex: Weight] = [:]
-        var predecessors: [Vertex: Edge?] = [:]
-        
-        for vertex in processedVertices {
-            let cost = result.propertyMap[vertex][result.distanceProperty]
-            switch cost {
-                case .infinite:
-                    continue
-                case .finite(let weight):
-                    distances[vertex] = weight
-            }
-            predecessors[vertex] = result.propertyMap[vertex][result.predecessorEdgeProperty]
-        }
-        
-        return ShortestPathsFromSource(
-            source: source,
-            distances: distances,
-            predecessors: predecessors
-        )
-    }
 }
 
 extension Dijkstra.Iterator: IteratorProtocol {}

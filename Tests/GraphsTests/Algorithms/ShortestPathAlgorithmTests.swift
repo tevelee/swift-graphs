@@ -69,12 +69,17 @@ struct ShortestPathAlgorithmsTests {
         let b = graph.findVertex(labeled: "B")!
         let c = graph.findVertex(labeled: "C")!
         
-        let dijkstra = DijkstraAllPaths(on: graph, edgeWeight: .property(\.weight))
-        let result = dijkstra.shortestPathsFromSource(a)
+        let dijkstra = Dijkstra(on: graph, from: a, edgeWeight: .property(\.weight))
+        let result = dijkstra.reduce(into: nil) { $0 = $1 }!
         
-        #expect(result.distance(to: c) == 5.0)
-        #expect(result.distance(to: b) == 2.0)
-        #expect(result.distance(to: a) == 0.0)
+        // Extract distances from property map
+        let distanceToC = result.propertyMap[c][result.distanceProperty]
+        let distanceToB = result.propertyMap[b][result.distanceProperty]
+        let distanceToA = result.propertyMap[a][result.distanceProperty]
+        
+        #expect(distanceToC == .finite(5.0))
+        #expect(distanceToB == .finite(2.0))
+        #expect(distanceToA == .finite(0.0))
     }
     
     @Test func testKShortestPaths() throws {
@@ -123,11 +128,12 @@ struct ShortestPathAlgorithmsTests {
         let a = graph.findVertex(labeled: "A")!
         let b = graph.findVertex(labeled: "B")!
         
-        let dijkstra = DijkstraAllPaths(on: graph, edgeWeight: .property(\.weight))
-        let result = dijkstra.shortestPathsFromSource(a)
+        let dijkstra = Dijkstra(on: graph, from: a, edgeWeight: .property(\.weight))
+        let result = dijkstra.reduce(into: nil) { $0 = $1 }!
         
-        #expect(result.distance(to: b) == nil)
-        #expect(result.hasPath(to: b) == false)
+        // Check that b is unreachable (distance should be infinite)
+        let distanceToB = result.propertyMap[b][result.distanceProperty]
+        #expect(distanceToB == .infinite)
     }
     
     @Test func testSingleVertex() {
@@ -135,10 +141,11 @@ struct ShortestPathAlgorithmsTests {
         
         let a = graph.findVertex(labeled: "A")!
         
-        let dijkstra = DijkstraAllPaths(on: graph, edgeWeight: .property(\.weight))
-        let result = dijkstra.shortestPathsFromSource(a)
+        let dijkstra = Dijkstra(on: graph, from: a, edgeWeight: .property(\.weight))
+        let result = dijkstra.reduce(into: nil) { $0 = $1 }!
         
-        #expect(result.distance(to: a) == 0.0)
-        #expect(result.hasPath(to: a) == true)
+        // Check that distance to self is 0
+        let distanceToA = result.propertyMap[a][result.distanceProperty]
+        #expect(distanceToA == .finite(0.0))
     }
 }

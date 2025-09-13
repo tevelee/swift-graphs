@@ -56,16 +56,31 @@ struct Johnson<
                 edgeWeight: createReweightedCostDefinition(reweightingValues: reweightingValues)
             )
             
-            let dijkstraResult = dijkstra.allShortestPaths()
-            
-            for (destination, distance) in dijkstraResult.distances {
-                let sourceReweighting = reweightingValues[source] ?? .zero
-                let destinationReweighting = reweightingValues[destination] ?? .zero
-                let adjustedDistance = distance - sourceReweighting + destinationReweighting
-                allDistances[source]?[destination] = .finite(adjustedDistance)
+            // Process all vertices and get the final result
+            var lastResult: Dijkstra<Graph, Weight>.Result? = nil
+            for result in dijkstra {
+                lastResult = result
             }
             
-            for (destination, predecessor) in dijkstraResult.predecessors {
+            guard let result = lastResult else {
+                visitor?.completeDijkstraFromSource?(source)
+                continue
+            }
+            
+            // Extract distances and predecessors from property map
+            for destination in vertices {
+                let cost = result.propertyMap[destination][result.distanceProperty]
+                switch cost {
+                case .infinite:
+                    continue // Keep as infinite
+                case .finite(let distance):
+                    let sourceReweighting = reweightingValues[source] ?? .zero
+                    let destinationReweighting = reweightingValues[destination] ?? .zero
+                    let adjustedDistance = distance - sourceReweighting + destinationReweighting
+                    allDistances[source]?[destination] = .finite(adjustedDistance)
+                }
+                
+                let predecessor = result.propertyMap[destination][result.predecessorEdgeProperty]
                 allPredecessors[source]?[destination] = predecessor
             }
             
