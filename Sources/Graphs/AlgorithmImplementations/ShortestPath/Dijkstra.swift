@@ -281,21 +281,5 @@ extension Dijkstra.Result {
     }
 }
 
-struct DijkstraWithVisitor<Graph: IncidenceGraph & EdgePropertyGraph, Weight: Numeric & Comparable>
-where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-    typealias Base = Dijkstra<Graph, Weight>
-    let base: Base
-    let makeVisitor: () -> Base.Visitor
-}
+extension Dijkstra: SequenceVisitorFactorySupporting, VisitorIteratorSupporting {}
 
-extension DijkstraWithVisitor: Sequence {
-    func makeIterator() -> Base.Iterator {
-        base.makeIterator(visitor: makeVisitor())
-    }
-}
-
-extension Dijkstra {
-    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> DijkstraWithVisitor<Graph, Weight> {
-        .init(base: self, makeVisitor: makeVisitor)
-    }
-}

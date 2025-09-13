@@ -161,28 +161,13 @@ extension Johnson: ShortestPathsForAllPairsAlgorithm {
     }
 }
 
+extension Johnson: VisitorSupporting {}
+
 extension Johnson {
     static func create<G: IncidenceGraph & VertexListGraph & EdgePropertyGraph, W: Numeric & Comparable>(
         edgeWeight: CostDefinition<G, W>
     ) -> Johnson<G, W> where G.VertexDescriptor: Hashable, W.Magnitude == W {
         Johnson<G, W>(edgeWeight: edgeWeight)
-    }
-    
-    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> JohnsonWithVisitor<Graph, Weight> {
-        .init(base: self, makeVisitor: makeVisitor)
-    }
-}
-
-struct JohnsonWithVisitor<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: Numeric & Comparable>
-where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-    typealias Base = Johnson<Graph, Weight>
-    let base: Base
-    let makeVisitor: () -> Base.Visitor
-}
-
-extension JohnsonWithVisitor {
-    func shortestPathsForAllPairs(in graph: Graph) -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
-        base.shortestPathsForAllPairs(in: graph, visitor: makeVisitor())
     }
 }
 

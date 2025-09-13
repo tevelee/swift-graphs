@@ -18,6 +18,12 @@ struct Yen<
         let cost: Cost<Weight>
     }
     
+    struct Visitor {
+        func onPathFound(_ path: Path<Vertex, Edge>) {}
+        func onCandidateAdded(_ path: Path<Vertex, Edge>, cost: Cost<Weight>) {}
+        func onPathSelected(_ path: Path<Vertex, Edge>, cost: Cost<Weight>) {}
+    }
+    
     init(
         edgeWeight: CostDefinition<Graph, Weight>,
         makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
@@ -210,7 +216,7 @@ struct Yen<
     }
 }
 
-extension Yen: KShortestPathsAlgorithm {}
+extension Yen: KShortestPathsAlgorithm, VisitorSupporting {}
 
 extension Yen.PriorityItem: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {

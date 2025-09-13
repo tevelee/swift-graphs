@@ -269,20 +269,5 @@ extension BreadthFirstSearch.Distance: ExpressibleByNilLiteral {
     }
 }
 
-struct BFSWithVisitor<Graph: IncidenceGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Base = BreadthFirstSearch<Graph>
-    let base: Base
-    let makeVisitor: () -> Base.Visitor
-}
+extension BreadthFirstSearch: SequenceVisitorFactorySupporting, VisitorIteratorSupporting {}
 
-extension BFSWithVisitor: Sequence {
-    func makeIterator() -> Base.Iterator {
-        base.makeIterator(visitor: makeVisitor())
-    }
-}
-
-extension BreadthFirstSearch {
-    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> BFSWithVisitor<Graph> {
-        .init(base: self, makeVisitor: makeVisitor)
-    }
-}

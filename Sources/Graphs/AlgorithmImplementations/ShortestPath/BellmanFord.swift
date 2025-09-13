@@ -174,27 +174,6 @@ extension BellmanFord: ShortestPathsFromSourceAlgorithm {
     }
 }
 
-extension BellmanFord {
-    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> BellmanFordWithVisitor<Graph, Weight> {
-        .init(base: self, makeVisitor: makeVisitor)
-    }
-}
-
-struct BellmanFordWithVisitor<Graph: IncidenceGraph & EdgeListGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric & Comparable>
-where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-    typealias Base = BellmanFord<Graph, Weight>
-    let base: Base
-    let makeVisitor: () -> Base.Visitor
-}
-
-extension BellmanFordWithVisitor {
-    func shortestPathsFromSource(_ source: Graph.VertexDescriptor) -> Base.Result {
-        base.shortestPathsFromSource(source, visitor: makeVisitor())
-    }
-    
-    func shortestPath(from source: Graph.VertexDescriptor, to destination: Graph.VertexDescriptor) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-        base.shortestPath(from: source, to: destination, visitor: makeVisitor())
-    }
-}
+extension BellmanFord: VisitorSupporting {}
 
 

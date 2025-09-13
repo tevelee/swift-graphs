@@ -193,31 +193,7 @@ extension AStar: Sequence {
     }
 }
 
-struct AStarWithVisitor<
-    Graph: IncidenceGraph & EdgePropertyGraph,
-    Weight: Numeric & Comparable,
-    HScore: Numeric,
-    FScore: Comparable
-> where
-    Graph.VertexDescriptor: Hashable,
-    HScore.Magnitude == HScore
-{
-    typealias Base = AStar<Graph, Weight, HScore, FScore>
-    let base: Base
-    let makeVisitor: () -> Base.Visitor
-}
-
-extension AStarWithVisitor: Sequence {
-    func makeIterator() -> AStar<Graph, Weight, HScore, FScore>.Iterator {
-        base.makeIterator(visitor: makeVisitor())
-    }
-}
-
-extension AStar {
-    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> AStarWithVisitor<Graph, Weight, HScore, FScore> {
-        .init(base: self, makeVisitor: makeVisitor)
-    }
-}
+extension AStar: SequenceVisitorFactorySupporting, VisitorIteratorSupporting {}
 
 extension AStar.PriorityItem: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {

@@ -95,29 +95,14 @@ extension FloydWarshall: ShortestPathsForAllPairsAlgorithm {
     }
 }
 
+extension FloydWarshall: VisitorSupporting {}
+
 extension FloydWarshall {
     static func create<G: IncidenceGraph & VertexListGraph & EdgePropertyGraph, W: Numeric & Comparable>(
         on graph: G,
         edgeWeight: CostDefinition<G, W>
     ) -> FloydWarshall<G, W> where G.VertexDescriptor: Hashable, W.Magnitude == W {
         FloydWarshall<G, W>(on: graph, edgeWeight: edgeWeight)
-    }
-    
-    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> FloydWarshallWithVisitor<Graph, Weight> {
-        .init(base: self, makeVisitor: makeVisitor)
-    }
-}
-
-struct FloydWarshallWithVisitor<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: Numeric & Comparable>
-where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-    typealias Base = FloydWarshall<Graph, Weight>
-    let base: Base
-    let makeVisitor: () -> Base.Visitor
-}
-
-extension FloydWarshallWithVisitor {
-    func shortestPathsForAllPairs() -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
-        base.shortestPathsForAllPairs(visitor: makeVisitor())
     }
 }
 

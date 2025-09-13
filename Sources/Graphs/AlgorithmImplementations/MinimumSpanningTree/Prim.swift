@@ -122,21 +122,4 @@ struct Prim<
     }
 }
 
-extension Prim {
-    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> PrimWithVisitor<Graph, Weight> {
-        .init(base: self, makeVisitor: makeVisitor)
-    }
-}
-
-struct PrimWithVisitor<Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric & Comparable>
-where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-    typealias Base = Prim<Graph, Weight>
-    let base: Base
-    let makeVisitor: () -> Base.Visitor
-}
-
-extension PrimWithVisitor {
-    func minimumSpanningTree() -> Base.Result {
-        base.minimumSpanningTree(visitor: makeVisitor())
-    }
-}
+extension Prim: VisitorSupporting {}

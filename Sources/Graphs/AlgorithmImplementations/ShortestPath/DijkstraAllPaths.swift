@@ -45,22 +45,5 @@ extension DijkstraAllPaths: ShortestPathsFromSourceAlgorithm {
 }
 
 // Visitor support
-extension DijkstraAllPaths {
-    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> DijkstraAllPathsWithVisitor<Graph, Weight> {
-        .init(base: self, makeVisitor: makeVisitor)
-    }
-}
-
-struct DijkstraAllPathsWithVisitor<Graph: IncidenceGraph & EdgePropertyGraph, Weight: Numeric & Comparable>
-where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-    typealias Base = DijkstraAllPaths<Graph, Weight>
-    let base: Base
-    let makeVisitor: () -> Base.Visitor
-}
-
-extension DijkstraAllPathsWithVisitor {
-    func shortestPathsFromSource(_ source: Graph.VertexDescriptor) -> ShortestPathsFromSource<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
-        base.shortestPathsFromSource(source, visitor: makeVisitor())
-    }
-}
+extension DijkstraAllPaths: VisitorSupporting {}
 

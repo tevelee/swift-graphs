@@ -282,23 +282,8 @@ extension DepthFirstSearch.Time: ExpressibleByNilLiteral {
     }
 }
 
-struct DFSWithVisitor<Graph: IncidenceGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Base = DepthFirstSearch<Graph>
-    let base: Base
-    let makeVisitor: () -> Base.Visitor
-}
+extension DepthFirstSearch: SequenceVisitorFactorySupporting, VisitorIteratorSupporting {}
 
-extension DFSWithVisitor: Sequence {
-    func makeIterator() -> Base.Iterator {
-        base.makeIterator(visitor: makeVisitor())
-    }
-}
-
-extension DepthFirstSearch {
-    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> DFSWithVisitor<Graph> {
-        .init(base: self, makeVisitor: makeVisitor)
-    }
-}
 
 // DFSOrder has been moved to Search+DFSOrders.swift as a unified type for all DFS traversals
 

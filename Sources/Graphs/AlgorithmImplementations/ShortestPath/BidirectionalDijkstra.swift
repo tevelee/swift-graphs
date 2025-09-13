@@ -286,24 +286,7 @@ extension BidirectionalDijkstra.PriorityItem: Comparable {
     }
 }
 
-extension BidirectionalDijkstra {
-    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> BidirectionalDijkstraWithVisitor<Graph, Weight> {
-        .init(base: self, makeVisitor: makeVisitor)
-    }
-}
-
-struct BidirectionalDijkstraWithVisitor<Graph: IncidenceGraph & BidirectionalGraph & EdgePropertyGraph, Weight: Numeric & Comparable>
-where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-    typealias Base = BidirectionalDijkstra<Graph, Weight>
-    let base: Base
-    let makeVisitor: () -> Base.Visitor
-}
-
-extension BidirectionalDijkstraWithVisitor {
-    func shortestPath(from source: Graph.VertexDescriptor, to destination: Graph.VertexDescriptor) -> Base.Result {
-        base.shortestPath(from: source, to: destination, visitor: makeVisitor())
-    }
-}
+extension BidirectionalDijkstra: VisitorSupporting {}
 
 
 

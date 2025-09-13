@@ -1,11 +1,5 @@
 import Collections
 
-/// A dynamic CSR-like edge storage.
-///
-/// Notes:
-/// - Maintains CSR row offsets and a flat edge-id array for outgoing edge queries.
-/// - Supports dynamic insert/remove with O(V) row-offset updates on mutation.
-/// - Also maintains incoming buckets for O(1) incoming edge queries.
 struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
     struct Edge: Identifiable, Hashable {
         let id: Int
@@ -19,8 +13,6 @@ struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
     private var alive: OrderedSet<Int> = []
     private var freeList: [Int] = []
     private var incomingBuckets: OrderedDictionary<Vertex, OrderedSet<Int>> = [:]
-
-    init() {}
 
     var edgeCount: Int { alive.count }
 

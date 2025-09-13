@@ -131,21 +131,4 @@ struct Kruskal<
     }
 }
 
-extension Kruskal {
-    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> KruskalWithVisitor<Graph, Weight> {
-        .init(base: self, makeVisitor: makeVisitor)
-    }
-}
-
-struct KruskalWithVisitor<Graph: EdgeListGraph & IncidenceGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric & Comparable>
-where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-    typealias Base = Kruskal<Graph, Weight>
-    let base: Base
-    let makeVisitor: () -> Base.Visitor
-}
-
-extension KruskalWithVisitor {
-    func minimumSpanningTree() -> Base.Result {
-        base.minimumSpanningTree(visitor: makeVisitor())
-    }
-}
+extension Kruskal: VisitorSupporting {}

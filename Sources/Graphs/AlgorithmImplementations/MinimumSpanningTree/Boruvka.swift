@@ -179,21 +179,4 @@ struct Boruvka<
 }
 
 // Visitor support
-extension Boruvka {
-    func withVisitor(_ makeVisitor: @escaping () -> Visitor) -> BoruvkaWithVisitor<Graph, Weight> {
-        .init(base: self, makeVisitor: makeVisitor)
-    }
-}
-
-struct BoruvkaWithVisitor<Graph: EdgeListGraph & IncidenceGraph & EdgePropertyGraph & VertexListGraph, Weight: Numeric & Comparable>
-where Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
-    typealias Base = Boruvka<Graph, Weight>
-    let base: Base
-    let makeVisitor: () -> Base.Visitor
-}
-
-extension BoruvkaWithVisitor {
-    func minimumSpanningTree() -> Base.Result {
-        base.minimumSpanningTree(visitor: makeVisitor())
-    }
-}
+extension Boruvka: VisitorSupporting {}
