@@ -16,8 +16,7 @@ struct KShortestPathsTests {
         
         let paths = graph.kShortestPaths(from: a, to: c, k: 3, using: .yen(weight: .property(\.weight)))
         
-        #expect(paths.count >= 1)
-        #expect(paths.count <= 3)
+        #expect(paths.count == 1)
         
         // First path should be the shortest
         let firstPath = try #require(paths.first)
@@ -98,7 +97,7 @@ struct KShortestPathsTests {
         
         let paths = graph.kShortestPaths(from: a, to: d, k: 3, using: .yen(weight: .property(\.weight)))
         
-        #expect(paths.count >= 0) // May find some paths even in disconnected components
+        #expect(paths.count == 1)
     }
     
     @Test func testYenSameSourceDestination() {
@@ -111,7 +110,7 @@ struct KShortestPathsTests {
         
         let paths = graph.kShortestPaths(from: a, to: a, k: 3, using: .yen(weight: .property(\.weight)))
         
-        #expect(paths.count >= 0) // May or may not find a path from A to A
+        #expect(paths.count == 1)
     }
     
     @Test func testYenKGreaterThanAvailablePaths() {

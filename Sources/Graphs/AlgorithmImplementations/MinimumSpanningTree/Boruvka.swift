@@ -178,5 +178,4 @@ struct Boruvka<
     }
 }
 
-// Visitor support
 extension Boruvka: VisitorSupporting {}

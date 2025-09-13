@@ -90,8 +90,7 @@ struct ShortestPathAlgorithmsTests {
         
         let paths = graph.kShortestPaths(from: a, to: c, k: 3, using: .yen(weight: .property(\.weight)))
         
-        #expect(paths.count >= 1)
-        #expect(paths.count <= 3)
+        #expect(paths.count == 1)
         
         let firstPath = try #require(paths.first)
         #expect(firstPath.vertices.count == 3)

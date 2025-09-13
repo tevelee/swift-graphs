@@ -4,7 +4,7 @@ protocol ColoringAlgorithm<Graph, Color> {
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
     associatedtype Color: Hashable & Equatable
     
-    func colorGraph(in graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color>
+    func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color>
 }
 
 struct GraphColoring<Vertex: Hashable, Color: Hashable & Equatable> {
@@ -37,6 +37,6 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     func colorGraph<Color: Hashable & Equatable>(
         using algorithm: some ColoringAlgorithm<Self, Color>
     ) -> GraphColoring<VertexDescriptor, Color> {
-        algorithm.colorGraph(in: self)
+        algorithm.color(graph: self)
     }
 }

@@ -5,7 +5,7 @@ struct WelshPowellColoringAlgorithm<
     Color: Hashable & Equatable
 >: ColoringAlgorithm where Graph.VertexDescriptor: Hashable {
     
-    func colorGraph(in graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
+    func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
         var vertexColors: [Graph.VertexDescriptor: Color] = [:]
         var usedColors: Set<Color> = []
         

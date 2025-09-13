@@ -78,17 +78,14 @@ struct ColoringAlgorithmTests {
         
         let coloring = graph.colorGraph(using: .greedy(on: graph))
         
-        // Should have a proper coloring
         #expect(coloring.isProper)
+        #expect(coloring.chromaticNumber == 2)
         
-        // Should use at most 3 colors (graph has max degree 2)
-        #expect(coloring.chromaticNumber <= 3)
-        
-        // All vertices should be colored
         let vertices = Array(graph.vertices())
-        for vertex in vertices {
-            #expect(coloring.color(for: vertex) != nil)
-        }
+        #expect(coloring.color(for: vertices[0]) == 0)
+        #expect(coloring.color(for: vertices[1]) == 1)
+        #expect(coloring.color(for: vertices[2]) == 0)
+        #expect(coloring.color(for: vertices[3]) == 1)
     }
     
     @Test func testGreedyColoringCompleteGraph() {
@@ -96,17 +93,14 @@ struct ColoringAlgorithmTests {
         
         let coloring = graph.colorGraph(using: .greedy(on: graph))
         
-        // Should have a proper coloring
         #expect(coloring.isProper)
-        
-        // Complete graph K4 should use 4 colors
         #expect(coloring.chromaticNumber == 4)
         
-        // All vertices should be colored
         let vertices = Array(graph.vertices())
-        for vertex in vertices {
-            #expect(coloring.color(for: vertex) != nil)
-        }
+        #expect(coloring.color(for: vertices[0]) == 0)
+        #expect(coloring.color(for: vertices[1]) == 1)
+        #expect(coloring.color(for: vertices[2]) == 2)
+        #expect(coloring.color(for: vertices[3]) == 3)
     }
     
     @Test func testGreedyColoringBipartiteGraph() {
@@ -114,17 +108,14 @@ struct ColoringAlgorithmTests {
         
         let coloring = graph.colorGraph(using: .greedy(on: graph))
         
-        // Should have a proper coloring
         #expect(coloring.isProper)
+        #expect(coloring.chromaticNumber == 2)
         
-        // Bipartite graph should use at most 2 colors
-        #expect(coloring.chromaticNumber <= 2)
-        
-        // All vertices should be colored
         let vertices = Array(graph.vertices())
-        for vertex in vertices {
-            #expect(coloring.color(for: vertex) != nil)
-        }
+        #expect(coloring.color(for: vertices[0]) == 0)
+        #expect(coloring.color(for: vertices[1]) == 0)
+        #expect(coloring.color(for: vertices[2]) == 1)
+        #expect(coloring.color(for: vertices[3]) == 1)
     }
     
     // MARK: - DSatur Algorithm Tests
@@ -134,17 +125,14 @@ struct ColoringAlgorithmTests {
         
         let coloring = graph.colorGraph(using: .dsatur(on: graph))
         
-        // Should have a proper coloring
         #expect(coloring.isProper)
+        #expect(coloring.chromaticNumber == 2)
         
-        // Should use at most 3 colors (graph has max degree 2)
-        #expect(coloring.chromaticNumber <= 3)
-        
-        // All vertices should be colored
         let vertices = Array(graph.vertices())
-        for vertex in vertices {
-            #expect(coloring.color(for: vertex) != nil)
-        }
+        #expect(coloring.color(for: vertices[0]) == 0)
+        #expect(coloring.color(for: vertices[1]) == 1)
+        #expect(coloring.color(for: vertices[2]) == 0)
+        #expect(coloring.color(for: vertices[3]) == 1)
     }
     
     @Test func testDSaturColoringCompleteGraph() {
@@ -152,17 +140,14 @@ struct ColoringAlgorithmTests {
         
         let coloring = graph.colorGraph(using: .dsatur(on: graph))
         
-        // Should have a proper coloring
         #expect(coloring.isProper)
-        
-        // Complete graph K4 should use 4 colors
         #expect(coloring.chromaticNumber == 4)
         
-        // All vertices should be colored
         let vertices = Array(graph.vertices())
-        for vertex in vertices {
-            #expect(coloring.color(for: vertex) != nil)
-        }
+        #expect(coloring.color(for: vertices[0]) == 0)
+        #expect(coloring.color(for: vertices[1]) == 1)
+        #expect(coloring.color(for: vertices[2]) == 2)
+        #expect(coloring.color(for: vertices[3]) == 3)
     }
     
     @Test func testDSaturColoringBipartiteGraph() {
@@ -170,17 +155,14 @@ struct ColoringAlgorithmTests {
         
         let coloring = graph.colorGraph(using: .dsatur(on: graph))
         
-        // Should have a proper coloring
         #expect(coloring.isProper)
+        #expect(coloring.chromaticNumber == 2)
         
-        // Bipartite graph should use at most 2 colors
-        #expect(coloring.chromaticNumber <= 2)
-        
-        // All vertices should be colored
         let vertices = Array(graph.vertices())
-        for vertex in vertices {
-            #expect(coloring.color(for: vertex) != nil)
-        }
+        #expect(coloring.color(for: vertices[0]) == 0)
+        #expect(coloring.color(for: vertices[1]) == 0)
+        #expect(coloring.color(for: vertices[2]) == 1)
+        #expect(coloring.color(for: vertices[3]) == 1)
     }
     
     // MARK: - Welsh-Powell Algorithm Tests
@@ -190,17 +172,14 @@ struct ColoringAlgorithmTests {
         
         let coloring = graph.colorGraph(using: .welshPowell(on: graph))
         
-        // Should have a proper coloring
         #expect(coloring.isProper)
+        #expect(coloring.chromaticNumber == 2)
         
-        // Should use at most 3 colors (graph has max degree 2)
-        #expect(coloring.chromaticNumber <= 3)
-        
-        // All vertices should be colored
         let vertices = Array(graph.vertices())
-        for vertex in vertices {
-            #expect(coloring.color(for: vertex) != nil)
-        }
+        #expect(coloring.color(for: vertices[0]) == 0)
+        #expect(coloring.color(for: vertices[1]) == 1)
+        #expect(coloring.color(for: vertices[2]) == 0)
+        #expect(coloring.color(for: vertices[3]) == 1)
     }
     
     @Test func testWelshPowellColoringCompleteGraph() {
@@ -208,17 +187,14 @@ struct ColoringAlgorithmTests {
         
         let coloring = graph.colorGraph(using: .welshPowell(on: graph))
         
-        // Should have a proper coloring
         #expect(coloring.isProper)
-        
-        // Complete graph K4 should use 4 colors
         #expect(coloring.chromaticNumber == 4)
         
-        // All vertices should be colored
         let vertices = Array(graph.vertices())
-        for vertex in vertices {
-            #expect(coloring.color(for: vertex) != nil)
-        }
+        #expect(coloring.color(for: vertices[0]) == 0)
+        #expect(coloring.color(for: vertices[1]) == 1)
+        #expect(coloring.color(for: vertices[2]) == 2)
+        #expect(coloring.color(for: vertices[3]) == 3)
     }
     
     @Test func testWelshPowellColoringBipartiteGraph() {
@@ -226,17 +202,14 @@ struct ColoringAlgorithmTests {
         
         let coloring = graph.colorGraph(using: .welshPowell(on: graph))
         
-        // Should have a proper coloring
         #expect(coloring.isProper)
+        #expect(coloring.chromaticNumber == 2)
         
-        // Bipartite graph should use at most 2 colors
-        #expect(coloring.chromaticNumber <= 2)
-        
-        // All vertices should be colored
         let vertices = Array(graph.vertices())
-        for vertex in vertices {
-            #expect(coloring.color(for: vertex) != nil)
-        }
+        #expect(coloring.color(for: vertices[0]) == 0)
+        #expect(coloring.color(for: vertices[1]) == 0)
+        #expect(coloring.color(for: vertices[2]) == 1)
+        #expect(coloring.color(for: vertices[3]) == 1)
     }
     
     // MARK: - Algorithm Comparison Tests
@@ -248,18 +221,23 @@ struct ColoringAlgorithmTests {
         let dsaturColoring = graph.colorGraph(using: .dsatur(on: graph))
         let welshPowellColoring = graph.colorGraph(using: .welshPowell(on: graph))
         
-        // All algorithms should produce proper colorings
         #expect(greedyColoring.isProper)
         #expect(dsaturColoring.isProper)
         #expect(welshPowellColoring.isProper)
         
-        // All algorithms should color all vertices
         let vertices = Array(graph.vertices())
-        for vertex in vertices {
-            #expect(greedyColoring.color(for: vertex) != nil)
-            #expect(dsaturColoring.color(for: vertex) != nil)
-            #expect(welshPowellColoring.color(for: vertex) != nil)
-        }
+        #expect(greedyColoring.color(for: vertices[0]) == 0)
+        #expect(greedyColoring.color(for: vertices[1]) == 1)
+        #expect(greedyColoring.color(for: vertices[2]) == 0)
+        #expect(greedyColoring.color(for: vertices[3]) == 1)
+        #expect(dsaturColoring.color(for: vertices[0]) == 0)
+        #expect(dsaturColoring.color(for: vertices[1]) == 1)
+        #expect(dsaturColoring.color(for: vertices[2]) == 0)
+        #expect(dsaturColoring.color(for: vertices[3]) == 1)
+        #expect(welshPowellColoring.color(for: vertices[0]) == 0)
+        #expect(welshPowellColoring.color(for: vertices[1]) == 1)
+        #expect(welshPowellColoring.color(for: vertices[2]) == 0)
+        #expect(welshPowellColoring.color(for: vertices[3]) == 1)
     }
     
     // MARK: - Edge Cases
@@ -269,7 +247,6 @@ struct ColoringAlgorithmTests {
         
         let coloring = graph.colorGraph(using: .greedy(on: graph))
         
-        // Empty graph should have no colors and be proper
         #expect(coloring.chromaticNumber == 0)
         #expect(coloring.isProper)
         #expect(coloring.vertexColors.isEmpty)
@@ -282,7 +259,6 @@ struct ColoringAlgorithmTests {
         
         let coloring = graph.colorGraph(using: .greedy(on: graph))
         
-        // Single vertex should use 1 color and be proper
         #expect(coloring.chromaticNumber == 1)
         #expect(coloring.isProper)
         #expect(coloring.color(for: vertex) != nil)
@@ -299,7 +275,6 @@ struct ColoringAlgorithmTests {
         
         let coloring = graph.colorGraph(using: .greedy(on: graph))
         
-        // Two connected vertices should use 2 colors and be proper
         #expect(coloring.chromaticNumber == 2)
         #expect(coloring.isProper)
         #expect(coloring.color(for: a) != nil)
@@ -315,7 +290,6 @@ struct ColoringAlgorithmTests {
         let c = graph.addVertex { $0.label = "C" }
         let d = graph.addVertex { $0.label = "D" }
         
-        // Two disconnected components
         graph.addEdge(from: a, to: b)
         graph.addEdge(from: b, to: a)
         graph.addEdge(from: c, to: d)
@@ -323,14 +297,12 @@ struct ColoringAlgorithmTests {
         
         let coloring = graph.colorGraph(using: .greedy(on: graph))
         
-        // Disconnected graph should use 2 colors and be proper
         #expect(coloring.chromaticNumber == 2)
         #expect(coloring.isProper)
         
-        // All vertices should be colored
-        let vertices = [a, b, c, d]
-        for vertex in vertices {
-            #expect(coloring.color(for: vertex) != nil)
-        }
+        #expect(coloring.color(for: a) == 0)
+        #expect(coloring.color(for: b) == 1)
+        #expect(coloring.color(for: c) == 0)
+        #expect(coloring.color(for: d) == 1)
     }
 }

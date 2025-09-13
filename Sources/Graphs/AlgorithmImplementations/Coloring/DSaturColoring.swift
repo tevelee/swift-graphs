@@ -5,7 +5,7 @@ struct DSaturColoringAlgorithm<
     Color: Hashable & Equatable
 >: ColoringAlgorithm where Graph.VertexDescriptor: Hashable {
     
-    func colorGraph(in graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
+    func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
         var vertexColors: [Graph.VertexDescriptor: Color] = [:]
         var usedColors: Set<Color> = []
         
@@ -22,8 +22,14 @@ struct DSaturColoringAlgorithm<
             (vertex, graph.outDegree(of: vertex))
         })
         
-        // Find vertex with maximum degree to start
-        let startVertex = vertices.max { degrees[$0]! < degrees[$1]! }!
+        // Find vertex with maximum degree to start (break ties by vertex index for determinism)
+        let startVertex = vertices.enumerated().max { 
+            if degrees[$0.element]! != degrees[$1.element]! {
+                return degrees[$0.element]! < degrees[$1.element]!
+            }
+            // Break ties by vertex index for determinism
+            return $0.offset > $1.offset
+        }!.element
         
         // Color the first vertex with color 0
         let firstColor = 0 as! Color
@@ -40,7 +46,8 @@ struct DSaturColoringAlgorithm<
             let nextVertex = findMaxSaturationVertex(
                 in: uncoloredVertices,
                 graph: graph,
-                vertexColors: vertexColors
+                vertexColors: vertexColors,
+                vertices: vertices
             )
             
             // Find the smallest available color for this vertex
@@ -80,7 +87,8 @@ struct DSaturColoringAlgorithm<
     private func findMaxSaturationVertex(
         in uncoloredVertices: Set<Graph.VertexDescriptor>,
         graph: Graph,
-        vertexColors: [Graph.VertexDescriptor: Color]
+        vertexColors: [Graph.VertexDescriptor: Color],
+        vertices: [Graph.VertexDescriptor]
     ) -> Graph.VertexDescriptor {
         var maxSaturation = -1
         var maxDegree = -1
@@ -94,9 +102,22 @@ struct DSaturColoringAlgorithm<
             
             let degree = graph.outDegree(of: vertex)
             
-            // Select vertex with maximum saturation degree, breaking ties by degree
-            if saturationDegree > maxSaturation ||
-               (saturationDegree == maxSaturation && degree > maxDegree) {
+            // Select vertex with maximum saturation degree, breaking ties by degree, then by vertex index
+            let shouldSelect: Bool
+            if saturationDegree > maxSaturation {
+                shouldSelect = true
+            } else if saturationDegree == maxSaturation && degree > maxDegree {
+                shouldSelect = true
+            } else if saturationDegree == maxSaturation && degree == maxDegree {
+                // Both saturation and degree are equal, use vertex index for determinism
+                let currentIndex = vertices.firstIndex(of: vertex)!
+                let selectedIndex = vertices.firstIndex(of: selectedVertex)!
+                shouldSelect = currentIndex < selectedIndex
+            } else {
+                shouldSelect = false
+            }
+            
+            if shouldSelect {
                 maxSaturation = saturationDegree
                 maxDegree = degree
                 selectedVertex = vertex

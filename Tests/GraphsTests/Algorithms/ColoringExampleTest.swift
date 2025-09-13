@@ -29,20 +29,17 @@ struct ColoringExampleTest {
         // Test Greedy coloring
         let greedyColoring = graph.colorGraph(using: .greedy(on: graph))
         #expect(greedyColoring.isProper)
-        #expect(greedyColoring.chromaticNumber >= 2) // Pentagon needs at least 2 colors
-        #expect(greedyColoring.chromaticNumber <= 3) // Pentagon can be colored with 3 colors
+        #expect(greedyColoring.chromaticNumber == 3)
         
         // Test DSatur coloring
         let dsaturColoring = graph.colorGraph(using: .dsatur(on: graph))
         #expect(dsaturColoring.isProper)
-        #expect(dsaturColoring.chromaticNumber >= 2)
-        #expect(dsaturColoring.chromaticNumber <= 3)
+        #expect(dsaturColoring.chromaticNumber == 3)
         
         // Test Welsh-Powell coloring
         let welshPowellColoring = graph.colorGraph(using: .welshPowell(on: graph))
         #expect(welshPowellColoring.isProper)
-        #expect(welshPowellColoring.chromaticNumber >= 2)
-        #expect(welshPowellColoring.chromaticNumber <= 3)
+        #expect(welshPowellColoring.chromaticNumber == 3)
         
         // Test with a complete graph K4
         var k4Graph = AdjacencyList()
