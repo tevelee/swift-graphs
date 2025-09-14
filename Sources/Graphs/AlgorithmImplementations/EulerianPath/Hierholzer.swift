@@ -1,10 +1,18 @@
 import Foundation
 
 /// Hierholzer's algorithm for finding Eulerian paths and cycles
-struct Hierholzer<Graph: BidirectionalGraph & VertexListGraph>: EulerianPathAlgorithm, EulerianCycleAlgorithm 
+struct Hierholzer<Graph: BidirectionalGraph & VertexListGraph>
 where Graph.VertexDescriptor: Hashable {
     
-    func eulerianPath(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+    struct Visitor {
+        var examineVertex: ((Graph.VertexDescriptor) -> Void)?
+        var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
+        var addToPath: ((Graph.VertexDescriptor) -> Void)?
+        var addEdgeToPath: ((Graph.EdgeDescriptor) -> Void)?
+        var backtrack: ((Graph.VertexDescriptor) -> Void)?
+    }
+    
+    func eulerianPath(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         guard graph.hasEulerianPath() else { return nil }
         
         let vertices = Array(graph.vertices())
@@ -37,10 +45,10 @@ where Graph.VertexDescriptor: Hashable {
         
         guard let start = startVertex else { return nil }
         
-        return findEulerianPath(from: start, in: graph)
+        return findEulerianPath(from: start, in: graph, visitor: visitor)
     }
     
-    func eulerianCycle(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+    func eulerianCycle(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         guard graph.hasEulerianCycle() else { return nil }
         
         let vertices = Array(graph.vertices())
@@ -54,18 +62,20 @@ where Graph.VertexDescriptor: Hashable {
         if vertices.count == 1 {
             let vertex = vertices[0]
             if graph.degree(of: vertex) == 0 {
-                return Path(source: vertex, destination: vertex, vertices: [vertex], edges: [])
+                let result = Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>(source: vertex, destination: vertex, vertices: [vertex], edges: [])
+                return result
             }
         }
         
         guard let startVertex = vertices.first else { return nil }
         
-        return findEulerianPath(from: startVertex, in: graph)
+        return findEulerianPath(from: startVertex, in: graph, visitor: visitor)
     }
     
     private func findEulerianPath(
         from start: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         var path: [Graph.VertexDescriptor] = []
         var edges: [Graph.EdgeDescriptor] = []
@@ -75,15 +85,19 @@ where Graph.VertexDescriptor: Hashable {
         let vertices = Array(graph.vertices())
         
         for vertex in vertices {
+            visitor?.examineVertex?(vertex)
             adjacency[vertex] = Array(graph.outgoingEdges(of: vertex))
         }
         
         // Hierholzer's algorithm
         var current = start
         var stack: [Graph.VertexDescriptor] = [current]
+        visitor?.examineVertex?(current)
         
         while !stack.isEmpty {
             if let nextEdge = adjacency[current]?.first {
+                visitor?.examineEdge?(nextEdge)
+                
                 // Move to next vertex
                 guard let nextVertex = graph.destination(of: nextEdge) else { 
                     adjacency[current]?.removeFirst()
@@ -95,9 +109,14 @@ where Graph.VertexDescriptor: Hashable {
                 
                 stack.append(nextVertex)
                 current = nextVertex
+                visitor?.examineVertex?(current)
             } else {
                 // No more edges from current vertex, add to path
-                path.append(stack.removeLast())
+                let vertexToAdd = stack.removeLast()
+                path.append(vertexToAdd)
+                visitor?.addToPath?(vertexToAdd)
+                visitor?.backtrack?(vertexToAdd)
+                
                 if !stack.isEmpty {
                     current = stack.last!
                 }
@@ -117,17 +136,21 @@ where Graph.VertexDescriptor: Hashable {
                 graph.destination(of: $0) == to 
             }) {
                 edges.append(edge)
+                visitor?.addEdgeToPath?(edge)
             }
         }
         
         guard path.count > 0 else { return nil }
         
-        return Path(
+        let result = Path(
             source: path.first!,
             destination: path.last!,
             vertices: path,
             edges: edges
         )
+        return result
     }
 }
+
+extension Hierholzer: VisitorSupporting {}
 

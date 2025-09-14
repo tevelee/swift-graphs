@@ -2,10 +2,17 @@ import Foundation
 
 struct GreedyColoringAlgorithm<
     Graph: IncidenceGraph & VertexListGraph,
-    Color: Hashable & Equatable
->: ColoringAlgorithm where Graph.VertexDescriptor: Hashable {
+    Color: IntegerBasedColor
+> where Graph.VertexDescriptor: Hashable {
     
-    func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
+    struct Visitor {
+        var examineVertex: ((Graph.VertexDescriptor) -> Void)?
+        var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
+        var assignColor: ((Graph.VertexDescriptor, Color) -> Void)?
+        var skipVertex: ((Graph.VertexDescriptor, String) -> Void)?
+    }
+    
+    func color(graph: Graph, visitor: Visitor? = nil) -> GraphColoring<Graph.VertexDescriptor, Color> {
         var vertexColors: [Graph.VertexDescriptor: Color] = [:]
         var usedColors: Set<Color> = []
         
@@ -14,25 +21,34 @@ struct GreedyColoringAlgorithm<
         
         // If no vertices, return empty coloring
         guard !vertices.isEmpty else {
-            return GraphColoring(vertexColors: [:], isProper: true)
+            return GraphColoring<Graph.VertexDescriptor, Color>(vertexColors: [:], isProper: true)
         }
         
         // Color the first vertex with color 0
-        let firstColor = 0 as! Color
+        let firstColor = Color(integerValue: 0)
         vertexColors[vertices[0]] = firstColor
         usedColors.insert(firstColor)
+        visitor?.examineVertex?(vertices[0])
+        visitor?.assignColor?(vertices[0], firstColor)
         
         // Color remaining vertices
         for i in 1..<vertices.count {
             let vertex = vertices[i]
+            visitor?.examineVertex?(vertex)
+            
             let neighbors = Set(graph.successors(of: vertex))
+            
+            // Examine edges to neighbors
+            for edge in graph.outgoingEdges(of: vertex) {
+                visitor?.examineEdge?(edge)
+            }
             
             // Find the smallest available color
             var colorIndex = 0
             var assignedColor: Color?
             
             while assignedColor == nil {
-                let candidateColor = colorIndex as! Color
+                let candidateColor = Color(integerValue: colorIndex)
                 
                 // Check if this color is used by any neighbor
                 let isColorUsedByNeighbor = neighbors.contains { neighbor in
@@ -51,6 +67,7 @@ struct GreedyColoringAlgorithm<
             
             vertexColors[vertex] = assignedColor!
             usedColors.insert(assignedColor!)
+            visitor?.assignColor?(vertex, assignedColor!)
         }
         
         // Check if the coloring is proper
@@ -76,4 +93,6 @@ struct GreedyColoringAlgorithm<
         return true
     }
 }
+
+extension GreedyColoringAlgorithm: VisitorSupporting {}
 

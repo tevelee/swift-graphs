@@ -2,10 +2,17 @@ import Foundation
 
 struct WelshPowellColoringAlgorithm<
     Graph: IncidenceGraph & VertexListGraph,
-    Color: Hashable & Equatable
->: ColoringAlgorithm where Graph.VertexDescriptor: Hashable {
+    Color: IntegerBasedColor
+> where Graph.VertexDescriptor: Hashable {
     
-    func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
+    struct Visitor {
+        var examineVertex: ((Graph.VertexDescriptor) -> Void)?
+        var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
+        var assignColor: ((Graph.VertexDescriptor, Color) -> Void)?
+        var skipVertex: ((Graph.VertexDescriptor, String) -> Void)?
+    }
+    
+    func color(graph: Graph, visitor: Visitor? = nil) -> GraphColoring<Graph.VertexDescriptor, Color> {
         var vertexColors: [Graph.VertexDescriptor: Color] = [:]
         var usedColors: Set<Color> = []
         
@@ -14,25 +21,31 @@ struct WelshPowellColoringAlgorithm<
         
         // If no vertices, return empty coloring
         guard !vertices.isEmpty else {
-            return GraphColoring(vertexColors: [:], isProper: true)
+            return GraphColoring<Graph.VertexDescriptor, Color>(vertexColors: [:], isProper: true)
         }
         
         // Sort vertices by degree in descending order
         let sortedVertices = vertices.sorted { v1, v2 in
-            graph.outDegree(of: v1) > graph.outDegree(of: v2)
+            visitor?.examineVertex?(v1)
+            visitor?.examineVertex?(v2)
+            return graph.outDegree(of: v1) > graph.outDegree(of: v2)
         }
         
-        var currentColor = 0 as! Color
+        var currentColor = Color(integerValue: 0)
         
         // Color vertices in order of decreasing degree
         for vertex in sortedVertices {
             // Skip if already colored
             if vertexColors[vertex] != nil {
+                visitor?.skipVertex?(vertex, "Already colored")
                 continue
             }
             
+            visitor?.examineVertex?(vertex)
+            
             // Color this vertex with current color
             vertexColors[vertex] = currentColor
+            visitor?.assignColor?(vertex, currentColor)
             
             // Try to color as many uncolored vertices as possible with the same color
             for otherVertex in sortedVertices {
@@ -41,8 +54,16 @@ struct WelshPowellColoringAlgorithm<
                     continue
                 }
                 
+                visitor?.examineVertex?(otherVertex)
+                
                 // Check if this vertex can be colored with the current color
                 let neighbors = Set(graph.successors(of: otherVertex))
+                
+                // Examine edges to neighbors
+                for edge in graph.outgoingEdges(of: otherVertex) {
+                    visitor?.examineEdge?(edge)
+                }
+                
                 let canUseCurrentColor = !neighbors.contains { neighbor in
                     if let neighborColor = vertexColors[neighbor] {
                         return neighborColor == currentColor
@@ -52,11 +73,12 @@ struct WelshPowellColoringAlgorithm<
                 
                 if canUseCurrentColor {
                     vertexColors[otherVertex] = currentColor
+                    visitor?.assignColor?(otherVertex, currentColor)
                 }
             }
             
             // Move to next color
-            currentColor = (currentColor as! Int + 1) as! Color
+            currentColor = Color(integerValue: currentColor.integerValue + 1)
             usedColors.insert(currentColor)
         }
         
@@ -83,4 +105,6 @@ struct WelshPowellColoringAlgorithm<
         return true
     }
 }
+
+extension WelshPowellColoringAlgorithm: VisitorSupporting {}
 

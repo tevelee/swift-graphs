@@ -7,3 +7,9 @@ extension ColoringAlgorithm where Color == Int {
         .init()
     }
 }
+
+extension DSaturColoringAlgorithm: ColoringAlgorithm {
+    func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
+        color(graph: graph, visitor: nil)
+    }
+}

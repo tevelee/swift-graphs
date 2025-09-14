@@ -3,3 +3,9 @@ extension HamiltonianCycleAlgorithm {
         .init()
     }
 }
+
+extension BacktrackingHamiltonian: HamiltonianCycleAlgorithm {
+    func hamiltonianCycle(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        hamiltonianCycle(in: graph, visitor: nil)
+    }
+}

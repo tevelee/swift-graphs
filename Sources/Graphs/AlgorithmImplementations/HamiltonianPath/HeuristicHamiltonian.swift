@@ -1,6 +1,6 @@
 import Foundation
 
-struct HeuristicHamiltonian<Graph: IncidenceGraph & VertexListGraph>: HamiltonianPathAlgorithm, HamiltonianCycleAlgorithm 
+struct HeuristicHamiltonian<Graph: IncidenceGraph & VertexListGraph> 
 where Graph.VertexDescriptor: Hashable {
     
     enum Heuristic {
@@ -9,13 +9,21 @@ where Graph.VertexDescriptor: Hashable {
         case nearestNeighbor
     }
     
+    struct Visitor {
+        var examineVertex: ((Graph.VertexDescriptor) -> Void)?
+        var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
+        var addToPath: ((Graph.VertexDescriptor) -> Void)?
+        var removeFromPath: ((Graph.VertexDescriptor) -> Void)?
+        var backtrack: ((Graph.VertexDescriptor) -> Void)?
+    }
+    
     let heuristic: Heuristic
     
     init(heuristic: Heuristic = .degreeBased) {
         self.heuristic = heuristic
     }
     
-    func hamiltonianPath(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+    func hamiltonianPath(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let vertices = Array(graph.vertices())
         guard !vertices.isEmpty else { return nil }
         
@@ -25,7 +33,8 @@ where Graph.VertexDescriptor: Hashable {
         }
         
         for startVertex in sortedVertices {
-            if let path = findHamiltonianPath(from: startVertex, in: graph) {
+            visitor?.examineVertex?(startVertex)
+            if let path = findHamiltonianPath(from: startVertex, in: graph, visitor: visitor) {
                 return path
             }
         }
@@ -33,21 +42,22 @@ where Graph.VertexDescriptor: Hashable {
         return nil
     }
     
-    func hamiltonianPath(from source: Graph.VertexDescriptor, in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-        return findHamiltonianPath(from: source, in: graph)
+    func hamiltonianPath(from source: Graph.VertexDescriptor, in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        return findHamiltonianPath(from: source, in: graph, visitor: visitor)
     }
     
-    func hamiltonianPath(from source: Graph.VertexDescriptor, to destination: Graph.VertexDescriptor, in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-        return findHamiltonianPath(from: source, to: destination, in: graph)
+    func hamiltonianPath(from source: Graph.VertexDescriptor, to destination: Graph.VertexDescriptor, in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        return findHamiltonianPath(from: source, to: destination, in: graph, visitor: visitor)
     }
     
-    func hamiltonianCycle(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+    func hamiltonianCycle(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let vertices = Array(graph.vertices())
         guard !vertices.isEmpty else { return nil }
         
         // Try starting from each vertex
         for startVertex in vertices {
-            if let cycle = findHamiltonianCycle(from: startVertex, in: graph) {
+            visitor?.examineVertex?(startVertex)
+            if let cycle = findHamiltonianCycle(from: startVertex, in: graph, visitor: visitor) {
                 return cycle
             }
         }
@@ -57,17 +67,20 @@ where Graph.VertexDescriptor: Hashable {
     
     private func findHamiltonianPath(
         from source: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         var path: [Graph.VertexDescriptor] = [source]
         var visited: Set<Graph.VertexDescriptor> = [source]
+        visitor?.addToPath?(source)
         
         if backtrackPathWithHeuristic(
             current: source,
             path: &path,
             visited: &visited,
             target: nil,
-            in: graph
+            in: graph,
+            visitor: visitor
         ) {
             return buildPath(from: path, in: graph)
         }
@@ -78,17 +91,20 @@ where Graph.VertexDescriptor: Hashable {
     private func findHamiltonianPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         var path: [Graph.VertexDescriptor] = [source]
         var visited: Set<Graph.VertexDescriptor> = [source]
+        visitor?.addToPath?(source)
         
         if backtrackPathWithHeuristic(
             current: source,
             path: &path,
             visited: &visited,
             target: destination,
-            in: graph
+            in: graph,
+            visitor: visitor
         ) {
             return buildPath(from: path, in: graph)
         }
@@ -98,20 +114,24 @@ where Graph.VertexDescriptor: Hashable {
     
     private func findHamiltonianCycle(
         from source: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         var path: [Graph.VertexDescriptor] = [source]
         var visited: Set<Graph.VertexDescriptor> = [source]
+        visitor?.addToPath?(source)
         
         if backtrackCycleWithHeuristic(
             current: source,
             path: &path,
             visited: &visited,
             start: source,
-            in: graph
+            in: graph,
+            visitor: visitor
         ) {
             // Add the starting vertex at the end to complete the cycle
             path.append(source)
+            visitor?.addToPath?(source)
             return buildPath(from: path, in: graph)
         }
         
@@ -123,7 +143,8 @@ where Graph.VertexDescriptor: Hashable {
         path: inout [Graph.VertexDescriptor],
         visited: inout Set<Graph.VertexDescriptor>,
         target: Graph.VertexDescriptor?,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Bool {
         let vertices = Array(graph.vertices())
         
@@ -143,15 +164,26 @@ where Graph.VertexDescriptor: Hashable {
         
         // Try neighbors in heuristic order
         for neighbor in orderedNeighbors {
+            visitor?.examineVertex?(neighbor)
+            
+            // Examine edges to neighbors
+            for edge in graph.outgoingEdges(of: current) {
+                if graph.destination(of: edge) == neighbor {
+                    visitor?.examineEdge?(edge)
+                }
+            }
+            
             path.append(neighbor)
             visited.insert(neighbor)
+            visitor?.addToPath?(neighbor)
             
             if backtrackPathWithHeuristic(
                 current: neighbor,
                 path: &path,
                 visited: &visited,
                 target: target,
-                in: graph
+                in: graph,
+                visitor: visitor
             ) {
                 return true
             }
@@ -159,6 +191,8 @@ where Graph.VertexDescriptor: Hashable {
             // Backtrack
             path.removeLast()
             visited.remove(neighbor)
+            visitor?.removeFromPath?(neighbor)
+            visitor?.backtrack?(neighbor)
         }
         
         return false
@@ -169,7 +203,8 @@ where Graph.VertexDescriptor: Hashable {
         path: inout [Graph.VertexDescriptor],
         visited: inout Set<Graph.VertexDescriptor>,
         start: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Bool {
         let vertices = Array(graph.vertices())
         
@@ -184,15 +219,26 @@ where Graph.VertexDescriptor: Hashable {
         
         // Try neighbors in heuristic order
         for neighbor in orderedNeighbors {
+            visitor?.examineVertex?(neighbor)
+            
+            // Examine edges to neighbors
+            for edge in graph.outgoingEdges(of: current) {
+                if graph.destination(of: edge) == neighbor {
+                    visitor?.examineEdge?(edge)
+                }
+            }
+            
             path.append(neighbor)
             visited.insert(neighbor)
+            visitor?.addToPath?(neighbor)
             
             if backtrackCycleWithHeuristic(
                 current: neighbor,
                 path: &path,
                 visited: &visited,
                 start: start,
-                in: graph
+                in: graph,
+                visitor: visitor
             ) {
                 return true
             }
@@ -200,6 +246,8 @@ where Graph.VertexDescriptor: Hashable {
             // Backtrack
             path.removeLast()
             visited.remove(neighbor)
+            visitor?.removeFromPath?(neighbor)
+            visitor?.backtrack?(neighbor)
         }
         
         return false
@@ -268,4 +316,6 @@ where Graph.VertexDescriptor: Hashable {
         )
     }
 }
+
+extension HeuristicHamiltonian: VisitorSupporting {}
 

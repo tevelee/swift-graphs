@@ -40,3 +40,35 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         algorithm.color(graph: self)
     }
 }
+
+protocol IntegerBasedColor: Hashable & Equatable {
+    init(integerValue value: Int)
+    var integerValue: Int { get }
+}
+
+extension Int: IntegerBasedColor {
+    init(integerValue value: Int) {
+        self = value
+    }
+    
+    var integerValue: Int {
+        self
+    }
+}
+
+extension IntegerBasedColor where Self: RawRepresentable, Self.RawValue == Int {
+    init(integerValue value: Int) {
+        self = Self(rawValue: value)!
+    }
+    
+    var integerValue: Int {
+        self.rawValue
+    }
+}
+
+enum NamedColor: Int, CaseIterable, IntegerBasedColor {
+    case red = 0
+    case green = 1
+    case blue = 2
+    case yellow = 3
+}

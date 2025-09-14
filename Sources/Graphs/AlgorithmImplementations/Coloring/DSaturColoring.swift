@@ -2,10 +2,17 @@ import Foundation
 
 struct DSaturColoringAlgorithm<
     Graph: IncidenceGraph & VertexListGraph,
-    Color: Hashable & Equatable
->: ColoringAlgorithm where Graph.VertexDescriptor: Hashable {
+    Color: IntegerBasedColor
+> where Graph.VertexDescriptor: Hashable {
     
-    func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
+    struct Visitor {
+        var examineVertex: ((Graph.VertexDescriptor) -> Void)?
+        var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
+        var assignColor: ((Graph.VertexDescriptor, Color) -> Void)?
+        var skipVertex: ((Graph.VertexDescriptor, String) -> Void)?
+    }
+    
+    func color(graph: Graph, visitor: Visitor? = nil) -> GraphColoring<Graph.VertexDescriptor, Color> {
         var vertexColors: [Graph.VertexDescriptor: Color] = [:]
         var usedColors: Set<Color> = []
         
@@ -14,12 +21,13 @@ struct DSaturColoringAlgorithm<
         
         // If no vertices, return empty coloring
         guard !vertices.isEmpty else {
-            return GraphColoring(vertexColors: [:], isProper: true)
+            return GraphColoring<Graph.VertexDescriptor, Color>(vertexColors: [:], isProper: true)
         }
         
         // Calculate degrees for all vertices
         let degrees = Dictionary(uniqueKeysWithValues: vertices.map { vertex in
-            (vertex, graph.outDegree(of: vertex))
+            visitor?.examineVertex?(vertex)
+            return (vertex, graph.outDegree(of: vertex))
         })
         
         // Find vertex with maximum degree to start (break ties by vertex index for determinism)
@@ -32,9 +40,10 @@ struct DSaturColoringAlgorithm<
         }!.element
         
         // Color the first vertex with color 0
-        let firstColor = 0 as! Color
+        let firstColor = Color(integerValue: 0)
         vertexColors[startVertex] = firstColor
         usedColors.insert(firstColor)
+        visitor?.assignColor?(startVertex, firstColor)
         
         // Create priority queue for uncolored vertices
         var uncoloredVertices = Set(vertices)
@@ -47,16 +56,25 @@ struct DSaturColoringAlgorithm<
                 in: uncoloredVertices,
                 graph: graph,
                 vertexColors: vertexColors,
-                vertices: vertices
+                vertices: vertices,
+                visitor: visitor
             )
+            
+            visitor?.examineVertex?(nextVertex)
             
             // Find the smallest available color for this vertex
             let neighbors = Set(graph.successors(of: nextVertex))
+            
+            // Examine edges to neighbors
+            for edge in graph.outgoingEdges(of: nextVertex) {
+                visitor?.examineEdge?(edge)
+            }
+            
             var colorIndex = 0
             var assignedColor: Color?
             
             while assignedColor == nil {
-                let candidateColor = colorIndex as! Color
+                let candidateColor = Color(integerValue: colorIndex)
                 
                 // Check if this color is used by any neighbor
                 let isColorUsedByNeighbor = neighbors.contains { neighbor in
@@ -75,6 +93,7 @@ struct DSaturColoringAlgorithm<
             
             vertexColors[nextVertex] = assignedColor!
             usedColors.insert(assignedColor!)
+            visitor?.assignColor?(nextVertex, assignedColor!)
             uncoloredVertices.remove(nextVertex)
         }
         
@@ -88,7 +107,8 @@ struct DSaturColoringAlgorithm<
         in uncoloredVertices: Set<Graph.VertexDescriptor>,
         graph: Graph,
         vertexColors: [Graph.VertexDescriptor: Color],
-        vertices: [Graph.VertexDescriptor]
+        vertices: [Graph.VertexDescriptor],
+        visitor: Visitor?
     ) -> Graph.VertexDescriptor {
         var maxSaturation = -1
         var maxDegree = -1
@@ -144,4 +164,6 @@ struct DSaturColoringAlgorithm<
         return true
     }
 }
+
+extension DSaturColoringAlgorithm: VisitorSupporting {}
 

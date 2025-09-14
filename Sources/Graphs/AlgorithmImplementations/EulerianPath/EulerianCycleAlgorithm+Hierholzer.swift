@@ -3,3 +3,9 @@ extension EulerianCycleAlgorithm {
         .init()
     }
 }
+
+extension Hierholzer: EulerianCycleAlgorithm {
+    func eulerianCycle(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        eulerianCycle(in: graph, visitor: nil)
+    }
+}
