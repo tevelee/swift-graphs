@@ -2,12 +2,12 @@ import Foundation
 
 protocol MinimumSpanningTreeAlgorithm<Graph, Weight> {
     associatedtype Graph: IncidenceGraph & EdgePropertyGraph where Graph.VertexDescriptor: Hashable
-    associatedtype Weight: Numeric & Comparable
+    associatedtype Weight: AdditiveArithmetic & Comparable
     
     func minimumSpanningTree(in graph: Graph) -> MinimumSpanningTree<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>
 }
 
-struct MinimumSpanningTree<Vertex: Hashable, Edge, Weight: Numeric & Comparable> {
+struct MinimumSpanningTree<Vertex: Hashable, Edge, Weight: AdditiveArithmetic & Comparable> {
     let edges: [Edge]
     let totalWeight: Weight
     let vertices: Set<Vertex>
@@ -36,7 +36,7 @@ struct MinimumSpanningTree<Vertex: Hashable, Edge, Weight: Numeric & Comparable>
 }
 
 extension IncidenceGraph where Self: EdgePropertyGraph {
-    func minimumSpanningTree<Weight: Numeric & Comparable>(
+    func minimumSpanningTree<Weight: AdditiveArithmetic & Comparable>(
         using algorithm: some MinimumSpanningTreeAlgorithm<Self, Weight>
     ) -> MinimumSpanningTree<VertexDescriptor, EdgeDescriptor, Weight> {
         algorithm.minimumSpanningTree(in: self)

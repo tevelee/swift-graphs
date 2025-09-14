@@ -1,6 +1,6 @@
 import Foundation
 
-extension MinimumSpanningTreeAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
+extension MinimumSpanningTreeAlgorithm where Weight: AdditiveArithmetic {
     static func prim<Graph: IncidenceGraph & EdgePropertyGraph, Weight>(
         weight: CostDefinition<Graph, Weight>,
         startVertex: Graph.VertexDescriptor? = nil
@@ -11,10 +11,9 @@ extension MinimumSpanningTreeAlgorithm where Weight: Numeric, Weight.Magnitude =
 
 struct PrimMinimumSpanningTreeAlgorithm<
     Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph,
-    Weight: Numeric & Comparable
+    Weight: AdditiveArithmetic & Comparable
 >: MinimumSpanningTreeAlgorithm where
-    Graph.VertexDescriptor: Hashable,
-    Weight.Magnitude == Weight
+    Graph.VertexDescriptor: Hashable
 {
     let weight: CostDefinition<Graph, Weight>
     let startVertex: Graph.VertexDescriptor?

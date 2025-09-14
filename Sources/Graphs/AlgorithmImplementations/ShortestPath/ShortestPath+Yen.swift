@@ -1,6 +1,6 @@
 import Foundation
 
-extension ShortestPathAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
+extension ShortestPathAlgorithm where Weight: AdditiveArithmetic {
     static func yen<Graph: IncidenceGraph & EdgePropertyGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == YenShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable {
@@ -10,10 +10,9 @@ extension ShortestPathAlgorithm where Weight: Numeric, Weight.Magnitude == Weigh
 
 struct YenShortestPath<
     Graph: IncidenceGraph & EdgePropertyGraph,
-    Weight: Numeric & Comparable
+    Weight: AdditiveArithmetic & Comparable
 >: ShortestPathAlgorithm where
-    Graph.VertexDescriptor: Hashable,
-    Weight.Magnitude == Weight
+    Graph.VertexDescriptor: Hashable
 {
     let weight: CostDefinition<Graph, Weight>
     

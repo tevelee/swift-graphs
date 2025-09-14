@@ -2,12 +2,12 @@ import Foundation
 
 protocol ShortestPathsForAllPairsAlgorithm<Graph, Weight> {
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
-    associatedtype Weight: Numeric & Comparable
+    associatedtype Weight: AdditiveArithmetic & Comparable
     
     func shortestPathsForAllPairs(in graph: Graph) -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>
 }
 
-struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: Numeric & Comparable> {
+struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: AdditiveArithmetic & Comparable> {
     let distances: [Vertex: [Vertex: Cost<Weight>]]
     let predecessors: [Vertex: [Vertex: Edge?]]
     
@@ -55,7 +55,7 @@ struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: Numeric & Comparabl
 }
 
 extension IncidenceGraph where Self: VertexListGraph {
-    func shortestPathsForAllPairs<Weight: Numeric & Comparable>(
+    func shortestPathsForAllPairs<Weight: AdditiveArithmetic & Comparable>(
         using algorithm: some ShortestPathsForAllPairsAlgorithm<Self, Weight>
     ) -> AllPairsShortestPaths<VertexDescriptor, EdgeDescriptor, Weight> {
         algorithm.shortestPathsForAllPairs(in: self)

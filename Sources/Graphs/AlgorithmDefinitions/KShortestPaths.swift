@@ -2,7 +2,7 @@ import Foundation
 
 protocol KShortestPathsAlgorithm<Graph, Weight> {
     associatedtype Graph: IncidenceGraph
-    associatedtype Weight: Numeric & Comparable
+    associatedtype Weight: AdditiveArithmetic & Comparable
     
     func kShortestPaths(
         from source: Graph.VertexDescriptor,
@@ -13,7 +13,7 @@ protocol KShortestPathsAlgorithm<Graph, Weight> {
 }
 
 extension IncidenceGraph where VertexDescriptor: Equatable {
-    func kShortestPaths<Weight: Numeric & Comparable>(
+    func kShortestPaths<Weight: AdditiveArithmetic & Comparable>(
         from source: VertexDescriptor,
         to destination: VertexDescriptor,
         k: Int,

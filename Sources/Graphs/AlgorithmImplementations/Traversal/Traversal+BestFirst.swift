@@ -8,10 +8,9 @@ extension TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
 
 struct BestFirstTraversal<
     Graph: IncidenceGraph & EdgePropertyGraph,
-    HScore: Numeric & Comparable
+    HScore: AdditiveArithmetic & Comparable
 >: TraversalAlgorithm where
-    Graph.VertexDescriptor: Hashable,
-    HScore.Magnitude == HScore
+    Graph.VertexDescriptor: Hashable
 {
     let heuristic: Heuristic<Graph, HScore>
 

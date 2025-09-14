@@ -1,6 +1,6 @@
 import Foundation
 
-extension ShortestPathAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
+extension ShortestPathAlgorithm where Weight: AdditiveArithmetic {
     static func bellmanFord<Graph: IncidenceGraph & EdgeListGraph & EdgePropertyGraph & VertexListGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == BellmanFordShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable {
@@ -10,10 +10,9 @@ extension ShortestPathAlgorithm where Weight: Numeric, Weight.Magnitude == Weigh
 
 struct BellmanFordShortestPath<
     Graph: IncidenceGraph & EdgeListGraph & EdgePropertyGraph & VertexListGraph,
-    Weight: Numeric & Comparable
+    Weight: AdditiveArithmetic & Comparable
 >: ShortestPathAlgorithm where
-    Graph.VertexDescriptor: Hashable,
-    Weight.Magnitude == Weight
+    Graph.VertexDescriptor: Hashable
 {
     let weight: CostDefinition<Graph, Weight>
     

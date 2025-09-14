@@ -1,6 +1,6 @@
 import Foundation
 
-extension KShortestPathsAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
+extension KShortestPathsAlgorithm where Weight: AdditiveArithmetic {
     static func yen<Graph: IncidenceGraph & EdgePropertyGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == YenKShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable {
@@ -10,10 +10,9 @@ extension KShortestPathsAlgorithm where Weight: Numeric, Weight.Magnitude == Wei
 
 struct YenKShortestPath<
     Graph: IncidenceGraph & EdgePropertyGraph,
-    Weight: Numeric & Comparable
+    Weight: AdditiveArithmetic & Comparable
 >: KShortestPathsAlgorithm where
-    Graph.VertexDescriptor: Hashable,
-    Weight.Magnitude == Weight
+    Graph.VertexDescriptor: Hashable
 {
     let weight: CostDefinition<Graph, Weight>
     

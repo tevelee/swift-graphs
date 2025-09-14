@@ -1,5 +1,5 @@
 extension ShortestPathUntilAlgorithm {
-    static func aStar<Graph: IncidenceGraph, Weight: Numeric, HScore, FScore>(
+    static func aStar<Graph: IncidenceGraph, Weight: AdditiveArithmetic, HScore, FScore>(
         weight: CostDefinition<Graph, Weight>,
         heuristic: Heuristic<Graph, HScore>,
         calculateTotalCost: @escaping (Weight, HScore) -> FScore
@@ -7,7 +7,7 @@ extension ShortestPathUntilAlgorithm {
         .init(weight: weight, heuristic: heuristic, calculateTotalCost: calculateTotalCost)
     }
     
-    static func aStar<Graph: IncidenceGraph, Weight: Numeric>(
+    static func aStar<Graph: IncidenceGraph, Weight: AdditiveArithmetic>(
         weight: CostDefinition<Graph, Weight>,
         heuristic: Heuristic<Graph, Weight>
     ) -> Self where Self == AStarShortestPathUntil<Graph, Weight, Weight, Weight> {
@@ -17,12 +17,11 @@ extension ShortestPathUntilAlgorithm {
 
 struct AStarShortestPathUntil<
     Graph: IncidenceGraph & EdgePropertyGraph,
-    Weight: Numeric & Comparable,
-    HScore: Numeric,
+    Weight: AdditiveArithmetic & Comparable,
+    HScore: AdditiveArithmetic,
     FScore: Comparable
 >: ShortestPathUntilAlgorithm where
-    Graph.VertexDescriptor: Hashable,
-    HScore.Magnitude == HScore
+    Graph.VertexDescriptor: Hashable
 {
     let weight: CostDefinition<Graph, Weight>
     let heuristic: Heuristic<Graph, HScore>

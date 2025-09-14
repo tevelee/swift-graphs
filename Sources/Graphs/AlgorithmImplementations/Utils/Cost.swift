@@ -17,7 +17,7 @@ extension Cost: Comparable where Weight: Comparable {
     }
 }
 
-extension Cost where Weight: Numeric {
+extension Cost where Weight: AdditiveArithmetic {
     static func + (lhs: Self, rhs: Self) -> Self {
         switch (lhs, rhs) {
             case (.infinite, _), (_, .infinite):

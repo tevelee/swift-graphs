@@ -1,6 +1,6 @@
 import Foundation
 
-extension ShortestPathsForAllPairsAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
+extension ShortestPathsForAllPairsAlgorithm where Weight: AdditiveArithmetic {
     static func floydWarshall<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == FloydWarshallAllPairs<Graph, Weight>, Graph.VertexDescriptor: Hashable {
@@ -10,10 +10,9 @@ extension ShortestPathsForAllPairsAlgorithm where Weight: Numeric, Weight.Magnit
 
 struct FloydWarshallAllPairs<
     Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
-    Weight: Numeric & Comparable
+    Weight: AdditiveArithmetic & Comparable
 >: ShortestPathsForAllPairsAlgorithm where
-    Graph.VertexDescriptor: Hashable,
-    Weight.Magnitude == Weight
+    Graph.VertexDescriptor: Hashable
 {
     let weight: CostDefinition<Graph, Weight>
     

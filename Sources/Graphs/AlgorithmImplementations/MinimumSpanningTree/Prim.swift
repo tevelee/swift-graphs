@@ -2,10 +2,9 @@ import Foundation
 
 struct Prim<
     Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph,
-    Weight: Numeric & Comparable
+    Weight: AdditiveArithmetic & Comparable
 > where
-    Graph.VertexDescriptor: Hashable,
-    Weight.Magnitude == Weight
+    Graph.VertexDescriptor: Hashable
 {
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor

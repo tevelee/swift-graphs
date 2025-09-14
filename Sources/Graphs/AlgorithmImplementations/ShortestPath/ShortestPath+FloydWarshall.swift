@@ -1,6 +1,6 @@
 import Foundation
 
-extension ShortestPathAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
+extension ShortestPathAlgorithm where Weight: AdditiveArithmetic {
     static func floydWarshall<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == FloydWarshallShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable {
@@ -10,10 +10,9 @@ extension ShortestPathAlgorithm where Weight: Numeric, Weight.Magnitude == Weigh
 
 struct FloydWarshallShortestPath<
     Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
-    Weight: Numeric & Comparable
+    Weight: AdditiveArithmetic & Comparable
 >: ShortestPathAlgorithm where
-    Graph.VertexDescriptor: Hashable,
-    Weight.Magnitude == Weight
+    Graph.VertexDescriptor: Hashable
 {
     let weight: CostDefinition<Graph, Weight>
     

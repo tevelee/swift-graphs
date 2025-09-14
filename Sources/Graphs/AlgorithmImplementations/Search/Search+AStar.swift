@@ -17,10 +17,10 @@ extension SearchAlgorithm {
 
 struct AStarSearch<
     Graph: IncidenceGraph & EdgePropertyGraph,
-    Weight: Numeric & Comparable,
-    HScore: Numeric,
+    Weight: AdditiveArithmetic & Comparable,
+    HScore: AdditiveArithmetic,
     FScore: Comparable
->: SearchAlgorithm where Graph.VertexDescriptor: Hashable, HScore.Magnitude == HScore, Weight.Magnitude == Weight {
+>: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
     let edgeWeight: CostDefinition<Graph, Weight>
     let heuristic: Heuristic<Graph, HScore>
     let calculateTotalCost: (Weight, HScore) -> FScore

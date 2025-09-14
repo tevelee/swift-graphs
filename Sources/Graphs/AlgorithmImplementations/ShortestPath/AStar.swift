@@ -1,11 +1,10 @@
 struct AStar<
     Graph: IncidenceGraph & EdgePropertyGraph,
-    Weight: Numeric & Comparable,
-    HScore: Numeric,
+    Weight: AdditiveArithmetic & Comparable,
+    HScore: AdditiveArithmetic,
     FScore: Comparable
 > where
-    Graph.VertexDescriptor: Hashable,
-    HScore.Magnitude == HScore
+    Graph.VertexDescriptor: Hashable
 {
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor

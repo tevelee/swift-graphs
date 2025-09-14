@@ -2,10 +2,9 @@ import Foundation
 
 struct FloydWarshall<
     Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
-    Weight: Numeric & Comparable
+    Weight: AdditiveArithmetic & Comparable
 > where
-    Graph.VertexDescriptor: Hashable,
-    Weight.Magnitude == Weight
+    Graph.VertexDescriptor: Hashable
 {
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
@@ -98,10 +97,10 @@ extension FloydWarshall: ShortestPathsForAllPairsAlgorithm {
 extension FloydWarshall: VisitorSupporting {}
 
 extension FloydWarshall {
-    static func create<G: IncidenceGraph & VertexListGraph & EdgePropertyGraph, W: Numeric & Comparable>(
+    static func create<G: IncidenceGraph & VertexListGraph & EdgePropertyGraph, W: AdditiveArithmetic & Comparable>(
         on graph: G,
         edgeWeight: CostDefinition<G, W>
-    ) -> FloydWarshall<G, W> where G.VertexDescriptor: Hashable, W.Magnitude == W {
+    ) -> FloydWarshall<G, W> where G.VertexDescriptor: Hashable {
         FloydWarshall<G, W>(on: graph, edgeWeight: edgeWeight)
     }
 }

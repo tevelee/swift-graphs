@@ -2,9 +2,10 @@ import Foundation
 
 struct Johnson<
     Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
-    Weight: Numeric & Comparable
+    Weight: AdditiveArithmetic & Comparable
 > where
     Graph.VertexDescriptor: Hashable,
+    Weight: Numeric,
     Weight.Magnitude == Weight
 {
     typealias Vertex = Graph.VertexDescriptor
@@ -179,17 +180,17 @@ extension Johnson: ShortestPathsForAllPairsAlgorithm {
 extension Johnson: VisitorSupporting {}
 
 extension Johnson {
-    static func create<G: IncidenceGraph & VertexListGraph & EdgePropertyGraph, W: Numeric & Comparable>(
+    static func create<G: IncidenceGraph & VertexListGraph & EdgePropertyGraph, W: AdditiveArithmetic & Comparable>(
         edgeWeight: CostDefinition<G, W>
-    ) -> Johnson<G, W> where G.VertexDescriptor: Hashable, W.Magnitude == W {
+    ) -> Johnson<G, W> where G.VertexDescriptor: Hashable {
         Johnson<G, W>(edgeWeight: edgeWeight)
     }
 }
 
 extension ShortestPathsForAllPairsAlgorithm {
-    static func johnson<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: Numeric & Comparable>(
+    static func johnson<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: AdditiveArithmetic & Comparable>(
         edgeWeight: CostDefinition<Graph, Weight>
-    ) -> Johnson<Graph, Weight> where Self == Johnson<Graph, Weight>, Graph.VertexDescriptor: Hashable, Weight.Magnitude == Weight {
+    ) -> Johnson<Graph, Weight> where Self == Johnson<Graph, Weight>, Graph.VertexDescriptor: Hashable {
         Johnson(edgeWeight: edgeWeight)
     }
 }

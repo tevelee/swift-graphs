@@ -1,5 +1,5 @@
 extension IncidenceGraph where VertexDescriptor: Equatable {
-    func shortestPath<Weight: Comparable>(
+    func shortestPath<Weight: AdditiveArithmetic & Comparable>(
         from source: VertexDescriptor,
         to destination: VertexDescriptor,
         using algorithm: some ShortestPathAlgorithm<Self, Weight>
@@ -10,7 +10,7 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
 
 protocol ShortestPathAlgorithm<Graph, Weight> {
     associatedtype Graph: IncidenceGraph
-    associatedtype Weight: Comparable
+    associatedtype Weight: AdditiveArithmetic & Comparable
 
     func shortestPath(
         from source: Graph.VertexDescriptor,

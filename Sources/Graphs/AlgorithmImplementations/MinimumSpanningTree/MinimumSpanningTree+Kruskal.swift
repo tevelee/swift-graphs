@@ -1,6 +1,6 @@
 import Foundation
 
-extension MinimumSpanningTreeAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
+extension MinimumSpanningTreeAlgorithm where Weight: AdditiveArithmetic {
     static func kruskal<Graph: EdgeListGraph & IncidenceGraph & EdgePropertyGraph & VertexListGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == KruskalMinimumSpanningTreeAlgorithm<Graph, Weight>, Graph.VertexDescriptor: Hashable {
@@ -10,10 +10,9 @@ extension MinimumSpanningTreeAlgorithm where Weight: Numeric, Weight.Magnitude =
 
 struct KruskalMinimumSpanningTreeAlgorithm<
     Graph: EdgeListGraph & IncidenceGraph & EdgePropertyGraph & VertexListGraph,
-    Weight: Numeric & Comparable
+    Weight: AdditiveArithmetic & Comparable
 >: MinimumSpanningTreeAlgorithm where
-    Graph.VertexDescriptor: Hashable,
-    Weight.Magnitude == Weight
+    Graph.VertexDescriptor: Hashable
 {
     let weight: CostDefinition<Graph, Weight>
     
