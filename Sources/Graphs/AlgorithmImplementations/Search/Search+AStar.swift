@@ -21,6 +21,8 @@ struct AStarSearch<
     HScore: AdditiveArithmetic,
     FScore: Comparable
 >: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
+    typealias Visitor = AStar<Graph, Weight, HScore, FScore>.Visitor
+    
     let edgeWeight: CostDefinition<Graph, Weight>
     let heuristic: Heuristic<Graph, HScore>
     let calculateTotalCost: (Weight, HScore) -> FScore
@@ -37,7 +39,8 @@ struct AStarSearch<
     
     func search(
         from source: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> AStar<Graph, Weight, HScore, FScore> {
         AStar(
             on: graph,
@@ -48,3 +51,5 @@ struct AStarSearch<
         )
     }
 }
+
+extension AStarSearch: VisitorSupporting {}

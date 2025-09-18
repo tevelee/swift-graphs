@@ -1,14 +1,6 @@
 import Foundation
 
-extension BarabasiAlbert: RandomGraphAlgorithm {
-    func appendRandomGraph<RNG: RandomNumberGenerator>(
-        into graph: inout Graph,
-        vertexCount: Int,
-        using generator: inout RNG
-    ) {
-        appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &generator, visitor: nil)
-    }
-}
+extension BarabasiAlbert: RandomGraphAlgorithm {}
 
 extension RandomGraphAlgorithm {
     static func barabasiAlbert<Graph: RandomGraphConstructible>(

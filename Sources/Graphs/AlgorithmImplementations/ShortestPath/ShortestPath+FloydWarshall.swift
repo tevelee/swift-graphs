@@ -14,15 +14,18 @@ struct FloydWarshallShortestPath<
 >: ShortestPathAlgorithm where
     Graph.VertexDescriptor: Hashable
 {
+    typealias Visitor = FloydWarshall<Graph, Weight>.Visitor
+    
     let weight: CostDefinition<Graph, Weight>
     
     func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let floydWarshall = FloydWarshall(on: graph, edgeWeight: weight)
-        let allPairs = floydWarshall.shortestPathsForAllPairs()
+        let allPairs = floydWarshall.shortestPathsForAllPairs(visitor: visitor)
         
         // Check if destination is reachable
         guard case .finite = allPairs.distance(from: source, to: destination) else { return nil }
@@ -63,3 +66,5 @@ struct FloydWarshallShortestPath<
         )
     }
 }
+
+extension FloydWarshallShortestPath: VisitorSupporting {}

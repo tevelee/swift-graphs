@@ -83,7 +83,7 @@ extension AdjacencyList {
         using algorithm: some TraversalAlgorithm<Self>
     ) -> TraversalResult<VertexDescriptor, EdgeDescriptor> {
         let sourceVertex = vertices().first { self[$0].label == sourceLabel }!
-        return algorithm.traverse(from: sourceVertex, in: self)
+        return algorithm.traverse(from: sourceVertex, in: self, visitor: nil)
     }
 }
 

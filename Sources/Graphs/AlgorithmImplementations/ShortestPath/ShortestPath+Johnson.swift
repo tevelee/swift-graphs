@@ -16,15 +16,18 @@ struct JohnsonShortestPath<
     Weight: Numeric,
     Weight.Magnitude == Weight
 {
+    typealias Visitor = Johnson<Graph, Weight>.Visitor
+    
     let weight: CostDefinition<Graph, Weight>
     
     func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let johnson = Johnson(edgeWeight: weight)
-        let allPairs = johnson.shortestPathsForAllPairs(in: graph)
+        let allPairs = johnson.shortestPathsForAllPairs(in: graph, visitor: visitor)
         
         // Check if destination is reachable
         guard case .finite = allPairs.distance(from: source, to: destination) else { return nil }
@@ -65,3 +68,5 @@ struct JohnsonShortestPath<
         )
     }
 }
+
+extension JohnsonShortestPath: VisitorSupporting {}

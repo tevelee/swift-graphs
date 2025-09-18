@@ -29,21 +29,18 @@ struct Prim<
         let destination: Vertex
     }
     
-    private let graph: Graph
     private let edgeWeight: CostDefinition<Graph, Weight>
     private let startVertex: Vertex?
     
     init(
-        on graph: Graph,
         edgeWeight: CostDefinition<Graph, Weight>,
         startVertex: Vertex? = nil
     ) {
-        self.graph = graph
         self.edgeWeight = edgeWeight
         self.startVertex = startVertex
     }
     
-    func minimumSpanningTree(visitor: Visitor? = nil) -> Result {
+    func minimumSpanningTree(on graph: Graph, visitor: Visitor? = nil) -> Result {
         var priorityQueue: [PriorityItem] = []
         var inMST: Set<Vertex> = []
         var mstEdges: [Edge] = []

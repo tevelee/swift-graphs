@@ -76,11 +76,7 @@ struct AStar<
         self.makePriorityQueue = makePriorityQueue
     }
 
-    func makeIterator(visitor: Visitor) -> Iterator {
-        _makeIterator(visitor: visitor)
-    }
-
-    private func _makeIterator(visitor: Visitor?) -> Iterator {
+    func makeIterator(visitor: Visitor?) -> Iterator {
         Iterator(
             graph: graph,
             source: source,
@@ -188,11 +184,11 @@ extension AStar.Iterator: IteratorProtocol {}
 
 extension AStar: Sequence {
     func makeIterator() -> Iterator {
-        _makeIterator(visitor: nil)
+        makeIterator(visitor: nil)
     }
 }
 
-extension AStar: SequenceVisitorFactorySupporting, VisitorIteratorSupporting {}
+extension AStar: VisitorSupporting {}
 
 extension AStar.PriorityItem: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -317,3 +313,5 @@ extension Heuristic where Graph: PropertyGraph {
         }
     }
 }
+
+extension AStar: VisitorSupportingSequence {}

@@ -2,13 +2,13 @@ extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hash
     func eulerianPath(
         using algorithm: some EulerianPathAlgorithm<Self>
     ) -> Path<VertexDescriptor, EdgeDescriptor>? {
-        algorithm.eulerianPath(in: self)
+        algorithm.eulerianPath(in: self, visitor: nil)
     }
     
     func eulerianCycle(
         using algorithm: some EulerianCycleAlgorithm<Self>
     ) -> Path<VertexDescriptor, EdgeDescriptor>? {
-        algorithm.eulerianCycle(in: self)
+        algorithm.eulerianCycle(in: self, visitor: nil)
     }
     
     func hasEulerianPath() -> Bool {
@@ -57,12 +57,30 @@ extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hash
 
 protocol EulerianPathAlgorithm<Graph> {
     associatedtype Graph: BidirectionalGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
+    associatedtype Visitor
     
-    func eulerianPath(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
+    func eulerianPath(in graph: Graph, visitor: Visitor?) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 }
 
 protocol EulerianCycleAlgorithm<Graph> {
     associatedtype Graph: BidirectionalGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
+    associatedtype Visitor
     
-    func eulerianCycle(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
+    func eulerianCycle(in graph: Graph, visitor: Visitor?) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
+}
+
+extension VisitorWrapper: EulerianPathAlgorithm where Base: EulerianPathAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+    typealias Graph = Base.Graph
+    
+    func eulerianPath(in graph: Base.Graph, visitor: Base.Visitor?) -> Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>? {
+        base.eulerianPath(in: graph, visitor: self.visitor.combined(with: visitor))
+    }
+}
+
+extension VisitorWrapper: EulerianCycleAlgorithm where Base: EulerianCycleAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+    typealias Graph = Base.Graph
+    
+    func eulerianCycle(in graph: Base.Graph, visitor: Base.Visitor?) -> Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>? {
+        base.eulerianCycle(in: graph, visitor: self.visitor.combined(with: visitor))
+    }
 }

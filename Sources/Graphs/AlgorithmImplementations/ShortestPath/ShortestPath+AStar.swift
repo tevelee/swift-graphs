@@ -23,6 +23,8 @@ struct AStarShortestPathAlgorithm<
 >: ShortestPathAlgorithm where
     Graph.VertexDescriptor: Hashable
 {
+    typealias Visitor = AStar<Graph, Weight, HScore, FScore>.Visitor
+    
     let weight: CostDefinition<Graph, Weight>
     let heuristic: Heuristic<Graph, HScore>
     let calculateTotalCost: (Weight, HScore) -> FScore
@@ -30,7 +32,8 @@ struct AStarShortestPathAlgorithm<
     func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let sequence = AStar(
             on: graph,
@@ -39,6 +42,7 @@ struct AStarShortestPathAlgorithm<
             heuristic: heuristic,
             calculateTotalCost: calculateTotalCost
         )
+        .withVisitor { visitor }
         guard let result = sequence.first(where: { $0.currentVertex == destination }) else { return nil }
         return Path(
             source: source,
@@ -48,6 +52,8 @@ struct AStarShortestPathAlgorithm<
         )
     }
 }
+
+extension AStarShortestPathAlgorithm: VisitorSupporting {}
 
 extension ShortestPathAlgorithm {
     static func aStar<Graph: IncidenceGraph, Weight: AdditiveArithmetic, HScore, FScore>(
@@ -74,6 +80,8 @@ struct AStarShortestPathToDestination<
 >: ShortestPathAlgorithm where
     Graph.VertexDescriptor: Hashable
 {
+    typealias Visitor = AStar<Graph, Weight, HScore, FScore>.Visitor
+    
     let weight: CostDefinition<Graph, Weight>
     let heuristicForDestination: HeuristicToDestination<Graph, HScore>
     let calculateTotalCost: (Weight, HScore) -> FScore
@@ -81,7 +89,8 @@ struct AStarShortestPathToDestination<
     func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let sequence = AStar(
             on: graph,
@@ -90,6 +99,7 @@ struct AStarShortestPathToDestination<
             heuristic: heuristicForDestination.estimatedCost(destination),
             calculateTotalCost: calculateTotalCost
         )
+        .withVisitor { visitor }
         guard let result = sequence.first(where: { $0.currentVertex == destination }) else { return nil }
         return Path(
             source: source,
@@ -121,3 +131,5 @@ extension HeuristicToDestination where Graph: PropertyGraph {
         }
     }
 }
+
+extension AStarShortestPathToDestination: VisitorSupporting {}

@@ -2,12 +2,27 @@ import Foundation
 
 protocol RandomGraphAlgorithm<Graph> {
     associatedtype Graph: MutableGraph where Graph.VertexDescriptor: Hashable
+    associatedtype Visitor
 
     func appendRandomGraph<RNG: RandomNumberGenerator>(
         into graph: inout Graph,
         vertexCount: Int,
-        using generator: inout RNG
+        using generator: inout RNG,
+        visitor: Visitor?
     )
+}
+
+extension VisitorWrapper: RandomGraphAlgorithm where Base: RandomGraphAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+    typealias Visitor = Base.Visitor
+    
+    func appendRandomGraph<RNG: RandomNumberGenerator>(
+        into graph: inout Base.Graph,
+        vertexCount: Int,
+        using generator: inout RNG,
+        visitor: Base.Visitor?
+    ) {
+        base.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &generator, visitor: self.visitor.combined(with: visitor))
+    }
 }
 
 extension RandomGraphAlgorithm {
@@ -27,7 +42,18 @@ extension RandomGraphConstructible where VertexDescriptor: Hashable {
     ) -> Self {
         var graph = Self.init()
         var rng = SystemRandomNumberGenerator()
-        algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &rng)
+        algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &rng, visitor: nil)
+        return graph
+    }
+    
+    static func randomGraph<Algorithm: RandomGraphAlgorithm<Self>>(
+        vertexCount: Int,
+        using algorithm: Algorithm,
+        visitor: Algorithm.Visitor?
+    ) -> Self {
+        var graph = Self.init()
+        var rng = SystemRandomNumberGenerator()
+        algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &rng, visitor: visitor)
         return graph
     }
 }
@@ -35,7 +61,7 @@ extension RandomGraphConstructible where VertexDescriptor: Hashable {
 extension MutableGraph where VertexDescriptor: Hashable {
     mutating func appendRandom<Algorithm: RandomGraphAlgorithm<Self>>(vertexCount: Int, using algorithm: Algorithm) {
         var rng = SystemRandomNumberGenerator()
-        algorithm.appendRandomGraph(into: &self, vertexCount: vertexCount, using: &rng)
+        algorithm.appendRandomGraph(into: &self, vertexCount: vertexCount, using: &rng, visitor: nil)
     }
 
     mutating func appendRandom<Algorithm: RandomGraphAlgorithm<Self>, RNG: RandomNumberGenerator>(
@@ -43,7 +69,7 @@ extension MutableGraph where VertexDescriptor: Hashable {
         using algorithm: Algorithm,
         generator: inout RNG
     ) {
-        algorithm.appendRandomGraph(into: &self, vertexCount: vertexCount, using: &generator)
+        algorithm.appendRandomGraph(into: &self, vertexCount: vertexCount, using: &generator, visitor: nil)
     }
 }
 
@@ -63,9 +89,10 @@ struct RandomGraphAlgorithmWithGenerator<Algorithm: RandomGraphAlgorithm, RNG: R
     func appendRandomGraph<R: RandomNumberGenerator>(
         into graph: inout Algorithm.Graph,
         vertexCount: Int,
-        using generator: inout R
+        using generator: inout R,
+        visitor: Algorithm.Visitor?
     ) {
         var g = fixedGenerator
-        algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &g)
+        algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &g, visitor: visitor)
     }
 }

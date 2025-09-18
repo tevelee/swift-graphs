@@ -3,8 +3,9 @@ import Foundation
 protocol MinimumSpanningTreeAlgorithm<Graph, Weight> {
     associatedtype Graph: IncidenceGraph & EdgePropertyGraph where Graph.VertexDescriptor: Hashable
     associatedtype Weight: AdditiveArithmetic & Comparable
+    associatedtype Visitor
     
-    func minimumSpanningTree(in graph: Graph) -> MinimumSpanningTree<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>
+    func minimumSpanningTree(in graph: Graph, visitor: Visitor?) -> MinimumSpanningTree<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>
 }
 
 struct MinimumSpanningTree<Vertex: Hashable, Edge, Weight: AdditiveArithmetic & Comparable> {
@@ -35,10 +36,19 @@ struct MinimumSpanningTree<Vertex: Hashable, Edge, Weight: AdditiveArithmetic & 
     }
 }
 
+extension VisitorWrapper: MinimumSpanningTreeAlgorithm where Base: MinimumSpanningTreeAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+    typealias Graph = Base.Graph
+    typealias Weight = Base.Weight
+    
+    func minimumSpanningTree(in graph: Base.Graph, visitor: Base.Visitor?) -> MinimumSpanningTree<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Weight> {
+        base.minimumSpanningTree(in: graph, visitor: self.visitor.combined(with: visitor))
+    }
+}
+
 extension IncidenceGraph where Self: EdgePropertyGraph {
     func minimumSpanningTree<Weight: AdditiveArithmetic & Comparable>(
         using algorithm: some MinimumSpanningTreeAlgorithm<Self, Weight>
     ) -> MinimumSpanningTree<VertexDescriptor, EdgeDescriptor, Weight> {
-        algorithm.minimumSpanningTree(in: self)
+        algorithm.minimumSpanningTree(in: self, visitor: nil)
     }
 }

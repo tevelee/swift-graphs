@@ -59,11 +59,7 @@ struct Dijkstra<
         self.makePriorityQueue = makePriorityQueue
     }
 
-    func makeIterator(visitor: Visitor) -> Iterator {
-        _makeIterator(visitor: visitor)
-    }
-
-    private func _makeIterator(visitor: Visitor?) -> Iterator {
+    func makeIterator(visitor: Visitor?) -> Iterator {
         Iterator(
             graph: graph,
             source: source,
@@ -157,7 +153,7 @@ extension Dijkstra.Iterator: IteratorProtocol {}
 
 extension Dijkstra: Sequence {
     func makeIterator() -> Iterator {
-        _makeIterator(visitor: nil)
+        makeIterator(visitor: nil)
     }
 }
 
@@ -244,5 +240,4 @@ extension Dijkstra.Result {
     }
 }
 
-extension Dijkstra: SequenceVisitorFactorySupporting, VisitorIteratorSupporting {}
-
+extension Dijkstra: VisitorSupportingSequence {}

@@ -75,3 +75,5 @@ struct WattsStrogatz<
         }
     }
 }
+
+extension WattsStrogatz: VisitorSupporting {}

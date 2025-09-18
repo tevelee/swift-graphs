@@ -18,9 +18,9 @@ struct Yen<
     }
     
     struct Visitor {
-        func onPathFound(_ path: Path<Vertex, Edge>) {}
-        func onCandidateAdded(_ path: Path<Vertex, Edge>, cost: Cost<Weight>) {}
-        func onPathSelected(_ path: Path<Vertex, Edge>, cost: Cost<Weight>) {}
+        var onPathFound: (Path<Vertex, Edge>) -> Void = { _ in }
+        var onCandidateAdded: (Path<Vertex, Edge>, Cost<Weight>) -> Void = { _, _ in }
+        var onPathSelected: (Path<Vertex, Edge>, Cost<Weight>) -> Void = { _, _ in }
     }
     
     init(
@@ -37,7 +37,8 @@ struct Yen<
         from source: Vertex,
         to destination: Vertex,
         k: Int,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor? = nil
     ) -> [Path<Vertex, Edge>] {
         var result: [Path<Vertex, Edge>] = []
         var candidates: [PriorityItem] = []
@@ -48,6 +49,7 @@ struct Yen<
         }
         
         result.append(shortestPath)
+        visitor?.onPathFound(shortestPath)
         
         // Find k-1 additional paths
         for i in 1 ..< k {
@@ -90,6 +92,7 @@ struct Yen<
                     if !result.contains(where: { $0.vertices == totalPath.vertices }) {
                         let cost = calculatePathCost(totalPath, in: graph)
                         candidates.append(PriorityItem(path: totalPath, cost: cost))
+                        visitor?.onCandidateAdded(totalPath, cost)
                     }
                 }
                 
@@ -103,6 +106,8 @@ struct Yen<
             }
             
             result.append(nextPath)
+            let cost = calculatePathCost(nextPath, in: graph)
+            visitor?.onPathSelected(nextPath, cost)
         }
         
         return result

@@ -22,18 +22,15 @@ struct Kruskal<
         let vertices: Set<Vertex>
     }
     
-    private let graph: Graph
     private let edgeWeight: CostDefinition<Graph, Weight>
     
     init(
-        on graph: Graph,
         edgeWeight: CostDefinition<Graph, Weight>
     ) {
-        self.graph = graph
         self.edgeWeight = edgeWeight
     }
     
-    func minimumSpanningTree(visitor: Visitor? = nil) -> Result {
+    func minimumSpanningTree(on graph: Graph, visitor: Visitor? = nil) -> Result {
         var parent: [Vertex: Vertex] = [:]
         var rank: [Vertex: Int] = [:]
         

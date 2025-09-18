@@ -9,14 +9,24 @@ struct DFSOrderedSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.Vert
     
     func search(
         from source: Graph.VertexDescriptor,
-        in graph: Graph
-    ) -> BufferedSequence<VisitorFactoryWrapper<DepthFirstSearch<Graph>, DepthFirstSearch<Graph>.Visitor>, Graph.VertexDescriptor> {
-        .init(
-            base: DepthFirstSearch(on: graph, from: source).withVisitor { .init() }
-        ) { buffer, _ in
-            let visitor: DepthFirstSearch<Graph>.Visitor = order.makeVisitor(graph, buffer)
-            return DepthFirstSearch(on: graph, from: source).withVisitor { visitor }
+        in graph: Graph,
+        visitor: DepthFirstSearch<Graph>.Visitor?
+    ) -> AnySequence<Graph.VertexDescriptor> {
+        let base = DepthFirstSearch(on: graph, from: source)
+        return AnySequence {
+            let buffer = SharedBuffer<Graph.VertexDescriptor>()
+            var iterator = base.makeIterator(visitor: order.makeVisitor(graph, buffer).combined(with: visitor))
+            return AnyIterator {
+                if !buffer.elements.isEmpty {
+                    return buffer.elements.removeFirst()
+                }
+                while iterator.next() != nil {
+                    if !buffer.elements.isEmpty {
+                        return buffer.elements.removeFirst()
+                    }
+                }
+                return nil
+            }
         }
     }
 }
-

@@ -14,10 +14,14 @@ struct FloydWarshallAllPairs<
 >: ShortestPathsForAllPairsAlgorithm where
     Graph.VertexDescriptor: Hashable
 {
+    typealias Visitor = FloydWarshall<Graph, Weight>.Visitor
+    
     let weight: CostDefinition<Graph, Weight>
     
-    func shortestPathsForAllPairs(in graph: Graph) -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
+    func shortestPathsForAllPairs(in graph: Graph, visitor: Visitor?) -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
         let floydWarshall = FloydWarshall(on: graph, edgeWeight: weight)
-        return floydWarshall.shortestPathsForAllPairs()
+        return floydWarshall.shortestPathsForAllPairs(visitor: visitor)
     }
 }
+
+extension FloydWarshallAllPairs: VisitorSupporting {}

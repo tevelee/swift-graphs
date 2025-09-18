@@ -30,8 +30,8 @@ struct AStarShortestPathUntil<
     func shortestPath(
         from source: Graph.VertexDescriptor,
         until condition: @escaping (Graph.VertexDescriptor) -> Bool,
-        
-        in graph: Graph
+        in graph: Graph,
+        visitor: AStar<Graph, Weight, HScore, FScore>.Visitor?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let sequence = AStar(
             on: graph,
@@ -51,4 +51,5 @@ struct AStarShortestPathUntil<
     }
 }
 
+extension AStarShortestPathUntil: VisitorSupporting {}
 

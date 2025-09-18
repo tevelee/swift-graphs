@@ -424,8 +424,7 @@ struct IsomorphismAlgorithmTests {
         )
         
         let algorithm = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
-        let wrapper = algorithm.withVisitor(visitor)
-        let result = wrapper.base.areIsomorphic(graph1, graph2, visitor: wrapper.visitor)
+        let result = algorithm.areIsomorphic(graph1, graph2, visitor: visitor)
         
         #expect(result)
         #expect(!examinedVertices.isEmpty)
@@ -464,8 +463,7 @@ struct IsomorphismAlgorithmTests {
         )
         
         let algorithm = EnhancedWeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
-        let wrapper = algorithm.withVisitor(visitor)
-        let result = wrapper.base.areIsomorphic(graph1, graph2, visitor: wrapper.visitor)
+        let result = algorithm.areIsomorphic(graph1, graph2, visitor: visitor)
         
         #expect(result)
         #expect(!examinedVertices.isEmpty)

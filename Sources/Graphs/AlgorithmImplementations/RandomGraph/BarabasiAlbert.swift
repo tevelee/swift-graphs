@@ -85,3 +85,5 @@ struct BarabasiAlbert<
         return vertices.last
     }
 }
+
+extension BarabasiAlbert: VisitorSupporting {}

@@ -14,15 +14,18 @@ struct BellmanFordShortestPath<
 >: ShortestPathAlgorithm where
     Graph.VertexDescriptor: Hashable
 {
+    typealias Visitor = BellmanFord<Graph, Weight>.Visitor
+    
     let weight: CostDefinition<Graph, Weight>
     
     func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let bellmanFord = BellmanFord(on: graph, edgeWeight: weight)
-        let result = bellmanFord.shortestPathsFromSource(source)
+        let result = bellmanFord.shortestPathsFromSource(source, visitor: visitor)
         
         // Check if there's a negative cycle
         guard !result.hasNegativeCycle else { return nil }
@@ -67,3 +70,5 @@ struct BellmanFordShortestPath<
         )
     }
 }
+
+extension BellmanFordShortestPath: VisitorSupporting {}

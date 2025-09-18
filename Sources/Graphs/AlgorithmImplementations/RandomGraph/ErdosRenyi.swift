@@ -55,3 +55,5 @@ struct ErdosRenyi<
         }
     }
 }
+
+extension ErdosRenyi: VisitorSupporting {}

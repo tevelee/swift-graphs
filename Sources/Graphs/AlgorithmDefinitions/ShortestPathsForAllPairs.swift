@@ -3,8 +3,9 @@ import Foundation
 protocol ShortestPathsForAllPairsAlgorithm<Graph, Weight> {
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
     associatedtype Weight: AdditiveArithmetic & Comparable
+    associatedtype Visitor
     
-    func shortestPathsForAllPairs(in graph: Graph) -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>
+    func shortestPathsForAllPairs(in graph: Graph, visitor: Visitor?) -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>
 }
 
 struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: AdditiveArithmetic & Comparable> {
@@ -58,6 +59,15 @@ extension IncidenceGraph where Self: VertexListGraph {
     func shortestPathsForAllPairs<Weight: AdditiveArithmetic & Comparable>(
         using algorithm: some ShortestPathsForAllPairsAlgorithm<Self, Weight>
     ) -> AllPairsShortestPaths<VertexDescriptor, EdgeDescriptor, Weight> {
-        algorithm.shortestPathsForAllPairs(in: self)
+        algorithm.shortestPathsForAllPairs(in: self, visitor: nil)
+    }
+}
+
+extension VisitorWrapper: ShortestPathsForAllPairsAlgorithm where Base: ShortestPathsForAllPairsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+    typealias Graph = Base.Graph
+    typealias Weight = Base.Weight
+    
+    func shortestPathsForAllPairs(in graph: Base.Graph, visitor: Base.Visitor?) -> AllPairsShortestPaths<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Weight> {
+        base.shortestPathsForAllPairs(in: graph, visitor: self.visitor.combined(with: visitor))
     }
 }

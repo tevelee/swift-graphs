@@ -5,9 +5,12 @@ extension TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
 }
 
 struct BFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
+    typealias Visitor = BreadthFirstSearch<Graph>.Visitor
+    
     func traverse(
         from source: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
         var vertices: [Graph.VertexDescriptor] = []
         var edges: [Graph.EdgeDescriptor] = []
@@ -23,6 +26,9 @@ struct BFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.Verte
                     }
                 )
             }
+            .withVisitor {
+                visitor
+            }
             .forEach { _ in }
         
         return TraversalResult(
@@ -31,3 +37,5 @@ struct BFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.Verte
         )
     }
 }
+
+extension BFSTraversal: VisitorSupporting {}

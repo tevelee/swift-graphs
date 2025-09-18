@@ -65,11 +65,7 @@ struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescriptor: H
         self.makeQueue = makeQueue
     }
     
-    func makeIterator(visitor: Visitor) -> Iterator {
-        _makeIterator(visitor: visitor)
-    }
-    
-    private func _makeIterator(visitor: Visitor?) -> Iterator {
+    func makeIterator(visitor: Visitor?) -> Iterator {
         Iterator(graph: graph, source: source, visitor: visitor, queue: makeQueue())
     }
     
@@ -161,7 +157,7 @@ extension BreadthFirstSearch.Iterator: IteratorProtocol {}
 
 extension BreadthFirstSearch: Sequence {
     func makeIterator() -> Iterator {
-        _makeIterator(visitor: nil)
+        makeIterator(visitor: nil)
     }
 }
 
@@ -269,5 +265,4 @@ extension BreadthFirstSearch.Distance: ExpressibleByNilLiteral {
     }
 }
 
-extension BreadthFirstSearch: SequenceVisitorFactorySupporting, VisitorIteratorSupporting {}
-
+extension BreadthFirstSearch: VisitorSupportingSequence {}

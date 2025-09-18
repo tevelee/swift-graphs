@@ -20,10 +20,13 @@ struct BidirectionalDijkstraShortestPath<
     func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: BidirectionalDijkstra<Graph, Weight>.Visitor?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let bidirectionalDijkstra = BidirectionalDijkstra(on: graph, edgeWeight: weight)
         let result = bidirectionalDijkstra.shortestPath(from: source, to: destination)
         return result.path
     }
 }
+
+extension BidirectionalDijkstraShortestPath: VisitorSupporting {}

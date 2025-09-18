@@ -2,6 +2,14 @@ struct DFSOrder<Graph: IncidenceGraph> where Graph.VertexDescriptor: Hashable {
     let makeVisitor: (Graph, SharedBuffer<Graph.VertexDescriptor>) -> DepthFirstSearch<Graph>.Visitor
 }
 
+final class SharedBuffer<Element> {
+    var elements: [Element] = []
+    
+    func append(_ element: Element) {
+        elements.append(element)
+    }
+}
+
 extension DFSOrder {
     static var preorder: DFSOrder {
         DFSOrder { graph, buffer in

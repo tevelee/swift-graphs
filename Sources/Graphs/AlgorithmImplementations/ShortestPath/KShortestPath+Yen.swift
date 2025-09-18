@@ -14,15 +14,20 @@ struct YenKShortestPath<
 >: KShortestPathsAlgorithm where
     Graph.VertexDescriptor: Hashable
 {
+    typealias Visitor = Yen<Graph, Weight>.Visitor
+    
     let weight: CostDefinition<Graph, Weight>
     
     func kShortestPaths(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         k: Int,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>] {
         let yen = Yen(edgeWeight: weight)
-        return yen.kShortestPaths(from: source, to: destination, k: k, in: graph)
+        return yen.kShortestPaths(from: source, to: destination, k: k, in: graph, visitor: visitor)
     }
 }
+
+extension YenKShortestPath: VisitorSupporting {}

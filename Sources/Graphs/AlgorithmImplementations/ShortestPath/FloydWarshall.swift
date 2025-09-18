@@ -89,7 +89,7 @@ struct FloydWarshall<
 }
 
 extension FloydWarshall: ShortestPathsForAllPairsAlgorithm {
-    func shortestPathsForAllPairs(in graph: Graph) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
+    func shortestPathsForAllPairs(in graph: Graph, visitor: Visitor?) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
         shortestPathsForAllPairs()
     }
 }

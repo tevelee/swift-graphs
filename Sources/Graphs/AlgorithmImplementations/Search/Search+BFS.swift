@@ -5,10 +5,15 @@ extension SearchAlgorithm {
 }
 
 struct BFSSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
+    typealias Visitor = BreadthFirstSearch<Graph>.Visitor
+    
     func search(
         from source: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> BreadthFirstSearch<Graph> {
         BreadthFirstSearch(on: graph, from: source)
     }
 }
+
+extension BFSSearch: VisitorSupporting {}

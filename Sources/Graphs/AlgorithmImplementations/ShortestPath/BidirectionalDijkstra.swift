@@ -267,7 +267,8 @@ extension BidirectionalDijkstra: ShortestPathAlgorithm {
     func shortestPath(
         from source: Vertex,
         to destination: Vertex,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Path<Vertex, Edge>? {
         shortestPath(from: source, to: destination).path
     }
@@ -287,6 +288,3 @@ extension BidirectionalDijkstra.PriorityItem: Comparable {
 }
 
 extension BidirectionalDijkstra: VisitorSupporting {}
-
-
-

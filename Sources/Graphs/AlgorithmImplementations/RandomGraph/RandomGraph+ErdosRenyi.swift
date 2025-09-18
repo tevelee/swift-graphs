@@ -1,14 +1,6 @@
 import Foundation
 
-extension ErdosRenyi: RandomGraphAlgorithm {
-    func appendRandomGraph<RNG: RandomNumberGenerator>(
-        into graph: inout Graph,
-        vertexCount: Int,
-        using generator: inout RNG
-    ) {
-        appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &generator, visitor: nil)
-    }
-}
+extension ErdosRenyi: RandomGraphAlgorithm {}
 
 extension RandomGraphAlgorithm {
     static func erdosRenyi<Graph: RandomGraphConstructible>(

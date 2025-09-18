@@ -3,20 +3,34 @@ extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
         from source: VertexDescriptor,
         using algorithm: some TraversalAlgorithm<Self>
     ) -> TraversalResult<VertexDescriptor, EdgeDescriptor> {
-        algorithm.traverse(from: source, in: self)
+        algorithm.traverse(from: source, in: self, visitor: nil)
     }
 }
 
 protocol TraversalAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph
+    associatedtype Visitor
 
     func traverse(
         from source: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor>
 }
 
 struct TraversalResult<Vertex, Edge> {
     let vertices: [Vertex]
     let edges: [Edge]
+}
+
+extension VisitorWrapper: TraversalAlgorithm where Base: TraversalAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+    typealias Graph = Base.Graph
+    
+    func traverse(
+        from source: Base.Graph.VertexDescriptor,
+        in graph: Base.Graph,
+        visitor: Base.Visitor?
+    ) -> TraversalResult<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor> {
+        base.traverse(from: source, in: graph, visitor: self.visitor.combined(with: visitor))
+    }
 }

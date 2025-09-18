@@ -13,12 +13,15 @@ struct DijkstraShortestPath<
     Weight.Magnitude == Weight,
     Graph.VertexDescriptor: Hashable
 {
+    typealias Visitor = Dijkstra<Graph, Weight>.Visitor
+    
     let weight: CostDefinition<Graph, Weight>
 
     func shortestPath(
         from source: Graph.VertexDescriptor,
         until condition: @escaping (Graph.VertexDescriptor) -> Bool,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let sequence = Dijkstra(on: graph, from: source, edgeWeight: weight)
         guard let result = sequence.first(where: { condition($0.currentVertex) }) else { return nil }
@@ -31,3 +34,5 @@ struct DijkstraShortestPath<
         )
     }
 }
+
+extension DijkstraShortestPath: VisitorSupporting {}

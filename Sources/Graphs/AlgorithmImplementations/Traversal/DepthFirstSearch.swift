@@ -82,11 +82,7 @@ struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescriptor: Has
         self.makeStack = makeStack
     }
 
-    func makeIterator(visitor: Visitor) -> Iterator {
-        _makeIterator(visitor: visitor)
-    }
-
-    private func _makeIterator(visitor: Visitor?) -> Iterator {
+    func makeIterator(visitor: Visitor?) -> Iterator {
         Iterator(graph: graph, source: source, visitor: visitor, stack: makeStack())
     }
 
@@ -204,7 +200,7 @@ extension DepthFirstSearch.Iterator: IteratorProtocol {}
 
 extension DepthFirstSearch: Sequence {
     func makeIterator() -> Iterator {
-        _makeIterator(visitor: nil)
+        makeIterator(visitor: nil)
     }
 }
 
@@ -282,9 +278,4 @@ extension DepthFirstSearch.Time: ExpressibleByNilLiteral {
     }
 }
 
-extension DepthFirstSearch: SequenceVisitorFactorySupporting, VisitorIteratorSupporting {}
-
-
-// DFSOrder has been moved to Search+DFSOrders.swift as a unified type for all DFS traversals
-
-
+extension DepthFirstSearch: VisitorSupportingSequence {}

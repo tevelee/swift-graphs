@@ -3,8 +3,15 @@ import Foundation
 protocol ColoringAlgorithm<Graph, Color> {
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
     associatedtype Color: Hashable & Equatable
+    associatedtype Visitor
     
-    func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color>
+    func color(graph: Graph, visitor: Visitor?) -> GraphColoring<Graph.VertexDescriptor, Color>
+}
+
+extension VisitorWrapper: ColoringAlgorithm where Base: ColoringAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+    func color(graph: Base.Graph, visitor: Base.Visitor?) -> GraphColoring<Base.Graph.VertexDescriptor, Base.Color> {
+        base.color(graph: graph, visitor: self.visitor.combined(with: visitor))
+    }
 }
 
 struct GraphColoring<Vertex: Hashable, Color: Hashable & Equatable> {
@@ -37,7 +44,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     func colorGraph<Color: Hashable & Equatable>(
         using algorithm: some ColoringAlgorithm<Self, Color>
     ) -> GraphColoring<VertexDescriptor, Color> {
-        algorithm.color(graph: self)
+        algorithm.color(graph: self, visitor: nil)
     }
 }
 

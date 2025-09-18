@@ -12,11 +12,14 @@ struct BestFirstTraversal<
 >: TraversalAlgorithm where
     Graph.VertexDescriptor: Hashable
 {
+    typealias Visitor = AStar<Graph, Int, HScore, HScore>.Visitor
+    
     let heuristic: Heuristic<Graph, HScore>
 
     func traverse(
         from source: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
         var vertices: [Graph.VertexDescriptor] = []
         var edges: [Graph.EdgeDescriptor] = []
@@ -38,10 +41,13 @@ struct BestFirstTraversal<
                 }
             )
         }
+        .withVisitor {
+            visitor
+        }
         .forEach { _ in }
 
         return TraversalResult(vertices: vertices, edges: edges)
     }
 }
 
-
+extension BestFirstTraversal: VisitorSupporting {}

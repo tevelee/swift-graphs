@@ -13,6 +13,8 @@ struct DijkstraSearch<
     Graph.VertexDescriptor: Hashable,
     Weight.Magnitude == Weight
 {
+    typealias Visitor = Dijkstra<Graph, Weight>.Visitor
+    
     let edgeWeight: CostDefinition<Graph, Weight>
     
     init(edgeWeight: CostDefinition<Graph, Weight>) {
@@ -21,8 +23,11 @@ struct DijkstraSearch<
     
     func search(
         from source: Graph.VertexDescriptor,
-        in graph: Graph
+        in graph: Graph,
+        visitor: Visitor?
     ) -> Dijkstra<Graph, Weight> {
         Dijkstra(on: graph, from: source, edgeWeight: edgeWeight)
     }
 }
+
+extension DijkstraSearch: VisitorSupporting {}
