@@ -5,6 +5,8 @@ struct AdjacencyMatrix {
     private var matrix: [[Bool]] = []
     private var verticesStore: OrderedSet<Vertex> = []
     private var edgesStore: OrderedDictionary<Edge, (source: Vertex, destination: Vertex)> = [:]
+    // Performance optimization: O(1) edge lookup by (source, destination) pair
+    private var edgeLookup: [Vertex: [Vertex: Edge]] = [:]
     private var nextVertexId: Int = 0
     private var nextEdgeId: Int = 0
     // Property maps
@@ -33,9 +35,8 @@ extension AdjacencyMatrix: EdgeLookupGraph {
     func edge(from source: Vertex, to destination: Vertex) -> Edge? {
         guard let i = index(of: source), let j = index(of: destination) else { return nil }
         guard matrix[i][j] else { return nil }
-        // Linear search to return stable edge descriptor
-        for (e, ep) in edgesStore where ep.source == source && ep.destination == destination { return e }
-        return nil
+        // O(1) edge lookup using the optimized lookup table
+        return edgeLookup[source]?[destination]
     }
 }
 
@@ -86,18 +87,25 @@ extension AdjacencyMatrix: MutableGraph {
         guard let i = index(of: source), let j = index(of: destination) else { return nil }
         if matrix[i][j] {
             // Already exists; return the existing edge id
-            if let e = edge(from: source, to: destination) { return e }
+            if let e = edgeLookup[source]?[destination] { return e }
         }
         matrix[i][j] = true
         let e = Edge(_id: nextEdgeId)
         nextEdgeId &+= 1
         edgesStore[e] = (source, destination)
+        // Update the O(1) lookup table
+        edgeLookup[source, default: [:]][destination] = e
         return e
     }
 
     mutating func remove(edge: consuming Edge) {
         guard let ep = edgesStore.removeValue(forKey: edge) else { return }
         if let i = index(of: ep.source), let j = index(of: ep.destination) { matrix[i][j] = false }
+        // Update the O(1) lookup table
+        edgeLookup[ep.source]?[ep.destination] = nil
+        if edgeLookup[ep.source]?.isEmpty == true {
+            edgeLookup[ep.source] = nil
+        }
     }
 
     mutating func addVertex() -> Vertex {
@@ -116,6 +124,16 @@ extension AdjacencyMatrix: MutableGraph {
         // Remove incident edges
         for e in outgoingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
         for e in incomingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
+        // Clean up the O(1) lookup table
+        edgeLookup[vertex] = nil
+        for (source, var destinations) in edgeLookup {
+            destinations[vertex] = nil
+            if destinations.isEmpty {
+                edgeLookup[source] = nil
+            } else {
+                edgeLookup[source] = destinations
+            }
+        }
         // Remove row and column
         matrix.remove(at: idx)
         for i in 0 ..< matrix.count { matrix[i].remove(at: idx) }

@@ -3,16 +3,18 @@ import Foundation
 extension ShortestPathAlgorithm where Weight: AdditiveArithmetic {
     static func yen<Graph: IncidenceGraph & EdgePropertyGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
-    ) -> Self where Self == YenShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable {
+    ) -> Self where Self == YenShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable {
         .init(weight: weight)
     }
 }
 
 struct YenShortestPath<
     Graph: IncidenceGraph & EdgePropertyGraph,
-    Weight: AdditiveArithmetic & Comparable
+    Weight: Numeric & Comparable
 >: ShortestPathAlgorithm where
-    Graph.VertexDescriptor: Hashable
+    Graph.VertexDescriptor: Hashable,
+    Graph.EdgeDescriptor: Hashable,
+    Weight.Magnitude == Weight
 {
     typealias Visitor = Yen<Graph, Weight>.Visitor
     

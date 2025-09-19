@@ -125,12 +125,15 @@ struct BellmanFord<
             guard let validEdge = edge else { break }
             pathEdges.insert(validEdge, at: 0)
             guard let predecessor = graph.source(of: validEdge) else { break }
-            if predecessor == source { break }
             pathVertices.insert(predecessor, at: 0)
             currentVertex = predecessor
+            if predecessor == source { break }
         }
         
-        pathVertices.insert(source, at: 0)
+        // Only add source if it's not already the first vertex
+        if pathVertices.first != source {
+            pathVertices.insert(source, at: 0)
+        }
         
         return Path(
             source: source,

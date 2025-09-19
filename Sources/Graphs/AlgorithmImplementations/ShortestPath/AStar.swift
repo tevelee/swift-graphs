@@ -135,7 +135,7 @@ struct AStar<
                 let storedG = propertyMap[popped.vertex][gScoreProperty]
                 // Recompute f from current best g to ensure consistency
                 let currentF = calculateTotalCost(storedG, heuristic.estimatedCost(popped.vertex, graph))
-                if popped.totalCost > currentF { continue }
+                if popped.totalCost != currentF { continue }
                 current = popped.vertex
                 break
             }

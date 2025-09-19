@@ -97,7 +97,7 @@ struct KShortestPathsTests {
         
         let paths = graph.kShortestPaths(from: a, to: d, k: 3, using: .yen(weight: .property(\.weight)))
         
-        #expect(paths.count == 1)
+        #expect(paths.count == 0)
     }
     
     @Test func testYenSameSourceDestination() {
@@ -110,7 +110,7 @@ struct KShortestPathsTests {
         
         let paths = graph.kShortestPaths(from: a, to: a, k: 3, using: .yen(weight: .property(\.weight)))
         
-        #expect(paths.count == 1)
+        #expect(paths.count == 0)
     }
     
     @Test func testYenKGreaterThanAvailablePaths() {

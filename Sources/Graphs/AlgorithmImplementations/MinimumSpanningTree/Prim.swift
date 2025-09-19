@@ -4,7 +4,8 @@ struct Prim<
     Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph,
     Weight: AdditiveArithmetic & Comparable
 > where
-    Graph.VertexDescriptor: Hashable
+    Graph.VertexDescriptor: Hashable,
+    Graph.EdgeDescriptor: Equatable
 {
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
@@ -41,7 +42,7 @@ struct Prim<
     }
     
     func minimumSpanningTree(on graph: Graph, visitor: Visitor? = nil) -> Result {
-        var priorityQueue: [PriorityItem] = []
+        var priorityQueue = PriorityQueue<PriorityItem>()
         var inMST: Set<Vertex> = []
         var mstEdges: [Edge] = []
         var totalWeight = Weight.zero
@@ -57,7 +58,7 @@ struct Prim<
             if let destination = graph.destination(of: edge) {
                 visitor?.examineEdge?(edge)
                 let currentEdgeWeight = edgeWeight.costToExplore(edge, graph)
-                priorityQueue.append(PriorityItem(
+                priorityQueue.enqueue(PriorityItem(
                     weight: currentEdgeWeight,
                     edge: edge,
                     source: startVertex,
@@ -66,10 +67,8 @@ struct Prim<
             }
         }
         
-        priorityQueue.sort { $0.weight < $1.weight }
-        
         while !priorityQueue.isEmpty && inMST.count < graph.vertexCount {
-            let currentItem = priorityQueue.removeFirst()
+            guard let currentItem = priorityQueue.dequeue() else { break }
             
             visitor?.examineEdge?(currentItem.edge)
             
@@ -94,7 +93,7 @@ struct Prim<
                    !inMST.contains(newDestination) {
                     visitor?.examineEdge?(newEdge)
                     let newEdgeWeight = edgeWeight.costToExplore(newEdge, graph)
-                    priorityQueue.append(PriorityItem(
+                    priorityQueue.enqueue(PriorityItem(
                         weight: newEdgeWeight,
                         edge: newEdge,
                         source: currentItem.destination,
@@ -102,8 +101,6 @@ struct Prim<
                     ))
                 }
             }
-            
-            priorityQueue.sort { $0.weight < $1.weight }
         }
         
         for vertex in graph.vertices() {
@@ -119,3 +116,14 @@ struct Prim<
 }
 
 extension Prim: VisitorSupporting {}
+
+extension Prim.PriorityItem: Comparable {
+    static func < (lhs: Self, rhs: Self) -> Bool {
+        lhs.weight < rhs.weight
+    }
+    
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.weight == rhs.weight && lhs.edge == rhs.edge
+    }
+}
+

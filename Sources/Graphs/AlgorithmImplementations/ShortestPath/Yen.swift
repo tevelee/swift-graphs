@@ -2,9 +2,11 @@ import Foundation
 
 struct Yen<
     Graph: IncidenceGraph & EdgePropertyGraph,
-    Weight: AdditiveArithmetic & Comparable
+    Weight: Numeric & Comparable
 > where
-    Graph.VertexDescriptor: Hashable
+    Graph.VertexDescriptor: Hashable,
+    Graph.EdgeDescriptor: Hashable,
+    Weight.Magnitude == Weight
 {
     typealias Vertex = Graph.VertexDescriptor
     typealias Edge = Graph.EdgeDescriptor
@@ -40,64 +42,55 @@ struct Yen<
         in graph: Graph,
         visitor: Visitor? = nil
     ) -> [Path<Vertex, Edge>] {
+        // Handle edge cases
+        if source == destination {
+            return []
+        }
+        
         var result: [Path<Vertex, Edge>] = []
         var candidates: [PriorityItem] = []
         
-        // Find the shortest path using Dijkstra
-        guard let shortestPath = findShortestPath(from: source, to: destination, in: graph) else {
+        // Step 1: Find the shortest path using Dijkstra
+        guard let shortestPath = graph.shortestPath(from: source, to: destination, using: .dijkstra(weight: edgeWeight)) else {
             return []
         }
         
         result.append(shortestPath)
         visitor?.onPathFound(shortestPath)
         
-        // Find k-1 additional paths
-        for i in 1 ..< k {
+        // Step 2: Find k-1 additional paths using Yen's algorithm
+        for i in 1..<k {
             let previousPath = result[i-1]
             
-            // For each vertex in the previous path, find alternative paths
-            for j in 0 ..< previousPath.vertices.count - 1 {
+            // For each vertex in the previous path (except the last one)
+            for j in 0..<(previousPath.vertices.count - 1) {
                 let spurNode = previousPath.vertices[j]
-                let rootPath = previousPath.vertices[0 ... j]
+                let rootPath = Array(previousPath.vertices[0...j])
                 
-                // Remove edges used in previous paths
-                var removedEdges: [Edge] = []
-                for path in result {
-                    if path.vertices.count > j && Array(path.vertices[0 ... j]) == Array(rootPath) {
-                        if j + 1 < path.vertices.count {
-                            // Find and remove the edge from spurNode to next vertex
-                            for edge in graph.outgoingEdges(of: spurNode) {
-                                if let nextVertex = graph.destination(of: edge),
-                                   nextVertex == path.vertices[j + 1] {
-                                    removedEdges.append(edge)
-                                    break
-                                }
-                            }
-                        }
-                    }
-                }
+                // Create a temporary graph with removed edges
+                var tempGraph = createTemporaryGraph(from: graph)
                 
-                // Temporarily remove these edges
-                // Note: This is a simplified implementation - in practice, you'd need
-                // a way to temporarily modify the graph or work with a copy
+                // Remove edges used in previous paths that share the same root path
+                removeEdgesForRootPath(
+                    in: &tempGraph,
+                    previousPaths: result,
+                    rootPath: rootPath,
+                    spurNode: spurNode
+                )
                 
                 // Find spur path from spurNode to destination
-                if let spurPath = findShortestPath(from: spurNode, to: destination, in: graph),
+                if let spurPath = findShortestPathInTemporaryGraph(from: spurNode, to: destination, in: tempGraph),
                    let totalPath = createTotalPath(
-                       rootPath: Array(rootPath),
-                       spurPath: spurPath,
-                       in: graph
+                       rootPath: rootPath,
+                       spurPath: spurPath
                    ) {
-                    
-                    if !result.contains(where: { $0.vertices == totalPath.vertices }) {
+                    // Check if this path is already in results or candidates
+                    if !isPathAlreadyFound(totalPath, in: result, candidates: candidates) {
                         let cost = calculatePathCost(totalPath, in: graph)
                         candidates.append(PriorityItem(path: totalPath, cost: cost))
                         visitor?.onCandidateAdded(totalPath, cost)
                     }
                 }
-                
-                // Restore removed edges
-                // Note: In practice, you'd restore the edges here
             }
             
             // Select the shortest candidate path
@@ -113,44 +106,83 @@ struct Yen<
         return result
     }
     
-    private func findShortestPath(from source: Vertex, to destination: Vertex, in graph: Graph) -> Path<Vertex, Edge>? {
+    // MARK: - Temporary Graph Management
+    
+    private func createTemporaryGraph(from graph: Graph) -> TemporaryGraph<Graph> {
+        TemporaryGraph(originalGraph: graph)
+    }
+    
+    private func removeEdgesForRootPath(
+        in tempGraph: inout TemporaryGraph<Graph>,
+        previousPaths: [Path<Vertex, Edge>],
+        rootPath: [Vertex],
+        spurNode: Vertex
+    ) {
+        for path in previousPaths {
+            // Check if this path shares the same root path
+            if path.vertices.count > rootPath.count &&
+               Array(path.vertices[0..<rootPath.count]) == rootPath {
+                
+                // Find the edge from spurNode to the next vertex in the path
+                if rootPath.count < path.vertices.count {
+                    let nextVertex = path.vertices[rootPath.count]
+                    
+                    // Find and remove the edge from spurNode to nextVertex
+                    for edge in tempGraph.originalGraph.outgoingEdges(of: spurNode) {
+                        if let destination = tempGraph.originalGraph.destination(of: edge),
+                           destination == nextVertex {
+                            tempGraph.removeEdge(edge)
+                            break
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    
+    
+    
+    private func findShortestPathInTemporaryGraph(
+        from source: Vertex,
+        to destination: Vertex,
+        in tempGraph: TemporaryGraph<Graph>
+    ) -> Path<Vertex, Edge>? {
         var distances: [Vertex: Cost<Weight>] = [:]
         var predecessors: [Vertex: Edge?] = [:]
         var visited: Set<Vertex> = []
         
-        var queue = makePriorityQueue()
-        queue.enqueue(PriorityItem(path: Path(source: source, destination: source, vertices: [source], edges: []), cost: .finite(.zero)))
-        
+        var queue: [(Vertex, Cost<Weight>)] = [(source, .finite(.zero))]
         distances[source] = .finite(.zero)
         predecessors[source] = nil
         
-        while let item = queue.dequeue() {
-            let current = item.path.destination
-            let currentCost = item.cost
+        while !queue.isEmpty {
+            queue.sort { $0.1 < $1.1 }
+            let (current, currentCost) = queue.removeFirst()
             
             if visited.contains(current) { continue }
             if current == destination { break }
             
             visited.insert(current)
             
-            for edge in graph.outgoingEdges(of: current) {
-                guard let next = graph.destination(of: edge) else { continue }
+            for edge in tempGraph.outgoingEdges(of: current) {
+                guard let next = tempGraph.destination(of: edge) else { continue }
                 if visited.contains(next) { continue }
                 
-                let weight = edgeWeight.costToExplore(edge, graph)
+                let weight = edgeWeight.costToExplore(edge, tempGraph.originalGraph)
                 let newCost = currentCost + weight
                 
                 let currentBestCost = distances[next]
                 if currentBestCost == nil || newCost < (currentBestCost ?? .infinite) {
                     distances[next] = newCost
                     predecessors[next] = edge
-                    queue.enqueue(PriorityItem(path: Path(source: source, destination: next, vertices: [source, next], edges: [edge]), cost: newCost))
+                    queue.append((next, newCost))
                 }
             }
         }
         
         // Reconstruct path
-        return reconstructPath(from: source, to: destination, predecessors: predecessors, in: graph)
+        return reconstructPath(from: source, to: destination, predecessors: predecessors, in: tempGraph.originalGraph)
     }
     
     private func reconstructPath(
@@ -181,11 +213,19 @@ struct Yen<
         )
     }
     
+    // MARK: - Path Management
+    
     private func createTotalPath(
         rootPath: [Vertex],
-        spurPath: Path<Vertex, Edge>,
-        in graph: Graph
+        spurPath: Path<Vertex, Edge>
     ) -> Path<Vertex, Edge>? {
+        // Ensure the spur path starts from the last vertex of the root path
+        guard let rootLast = rootPath.last,
+              let spurFirst = spurPath.vertices.first,
+              rootLast == spurFirst else {
+            return nil
+        }
+        
         let totalVertices = rootPath + spurPath.vertices.dropFirst()
         let totalEdges = spurPath.edges
         
@@ -199,6 +239,27 @@ struct Yen<
             vertices: totalVertices,
             edges: totalEdges
         )
+    }
+    
+    private func isPathAlreadyFound(
+        _ path: Path<Vertex, Edge>,
+        in results: [Path<Vertex, Edge>],
+        candidates: [PriorityItem]
+    ) -> Bool {
+        // Validate path first - must have at least one edge
+        guard !path.edges.isEmpty else { return true }
+        
+        // Check if path is already in results
+        if results.contains(where: { $0.vertices == path.vertices && $0.edges == path.edges }) {
+            return true
+        }
+        
+        // Check if path is already in candidates
+        if candidates.contains(where: { $0.path.vertices == path.vertices && $0.path.edges == path.edges }) {
+            return true
+        }
+        
+        return false
     }
     
     private func calculatePathCost(_ path: Path<Vertex, Edge>, in graph: Graph) -> Cost<Weight> {
@@ -215,9 +276,38 @@ struct Yen<
             return nil
         }
         
-        candidates.removeAll { $0.path.vertices == shortest.path.vertices }
+        candidates.removeAll { $0.path.vertices == shortest.path.vertices && $0.path.edges == shortest.path.edges }
         return shortest.path
     }
+    
+    private func getEdgesToRemove(
+        from graph: Graph,
+        previousPaths: [Path<Vertex, Edge>],
+        rootPath: [Vertex],
+        spurNode: Vertex
+    ) -> [Edge] {
+        var edgesToRemove: [Edge] = []
+        
+        for path in previousPaths {
+            if path.vertices.count > rootPath.count && 
+               Array(path.vertices[0..<rootPath.count]) == rootPath {
+                if rootPath.count < path.vertices.count {
+                    let nextVertex = path.vertices[rootPath.count]
+                    // Find the edge from spurNode to nextVertex
+                    for edge in graph.outgoingEdges(of: spurNode) {
+                        if let destination = graph.destination(of: edge),
+                           destination == nextVertex {
+                            edgesToRemove.append(edge)
+                            break
+                        }
+                    }
+                }
+            }
+        }
+        
+        return edgesToRemove
+    }
+    
 }
 
 extension Yen: KShortestPathsAlgorithm, VisitorSupporting {}
@@ -233,3 +323,77 @@ extension Yen.PriorityItem: Comparable {
         lhs.cost < rhs.cost
     }
 }
+
+// MARK: - Temporary Graph for Edge Removal
+
+private struct TemporaryGraph<BaseGraph: IncidenceGraph & EdgePropertyGraph>: IncidenceGraph & EdgePropertyGraph where BaseGraph.EdgeDescriptor: Hashable {
+    typealias VertexDescriptor = BaseGraph.VertexDescriptor
+    typealias EdgeDescriptor = BaseGraph.EdgeDescriptor
+    typealias OutgoingEdges = FilteredEdges<BaseGraph.OutgoingEdges>
+    typealias EdgeProperties = BaseGraph.EdgeProperties
+    typealias EdgePropertyMap = BaseGraph.EdgePropertyMap
+    
+    let originalGraph: BaseGraph
+    private var removedEdges: Set<EdgeDescriptor> = []
+    
+    var edgePropertyMap: EdgePropertyMap {
+        originalGraph.edgePropertyMap
+    }
+    
+    init(originalGraph: BaseGraph) {
+        self.originalGraph = originalGraph
+    }
+    
+    mutating func removeEdge(_ edge: EdgeDescriptor) {
+        removedEdges.insert(edge)
+    }
+    
+    func outgoingEdges(of vertex: VertexDescriptor) -> OutgoingEdges {
+        FilteredEdges(
+            base: originalGraph.outgoingEdges(of: vertex),
+            removedEdges: removedEdges
+        )
+    }
+    
+    func source(of edge: EdgeDescriptor) -> VertexDescriptor? {
+        originalGraph.source(of: edge)
+    }
+    
+    func destination(of edge: EdgeDescriptor) -> VertexDescriptor? {
+        originalGraph.destination(of: edge)
+    }
+    
+    func outDegree(of vertex: VertexDescriptor) -> Int {
+        originalGraph.outgoingEdges(of: vertex).filter { !removedEdges.contains($0) }.count
+    }
+    
+    // MARK: - EdgePropertyGraph conformance
+    // The protocol only requires edgePropertyMap, which is already provided
+}
+
+private struct FilteredEdges<BaseEdges: Sequence>: Sequence where BaseEdges.Element: Hashable {
+    let base: BaseEdges
+    let removedEdges: Set<BaseEdges.Element>
+    
+    func makeIterator() -> FilteredIterator<BaseEdges.Iterator> {
+        FilteredIterator(
+            base: base.makeIterator(),
+            removedEdges: removedEdges
+        )
+    }
+}
+
+private struct FilteredIterator<BaseIterator: IteratorProtocol>: IteratorProtocol where BaseIterator.Element: Hashable {
+    var base: BaseIterator
+    let removedEdges: Set<BaseIterator.Element>
+    
+    mutating func next() -> BaseIterator.Element? {
+        while let element = base.next() {
+            if !removedEdges.contains(element) {
+                return element
+            }
+        }
+        return nil
+    }
+}
+
