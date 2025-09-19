@@ -4,7 +4,7 @@ struct UnionFindConnectedComponentsAlgorithm<Graph: IncidenceGraph & VertexListG
     func connectedComponents(
         in graph: Graph,
         visitor: Visitor?
-    ) -> [[Graph.VertexDescriptor]] {
+    ) -> ConnectedComponentsResult<Graph.VertexDescriptor> {
         let unionFind = UnionFindConnectedComponents(on: graph)
         return unionFind.connectedComponents(visitor: visitor)
     }

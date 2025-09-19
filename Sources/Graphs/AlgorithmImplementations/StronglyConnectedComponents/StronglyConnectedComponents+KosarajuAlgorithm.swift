@@ -4,7 +4,7 @@ struct KosarajuStronglyConnectedComponentsAlgorithm<Graph: BidirectionalGraph & 
     func stronglyConnectedComponents(
         in graph: Graph,
         visitor: Visitor?
-    ) -> [[Graph.VertexDescriptor]] {
+    ) -> StronglyConnectedComponentsResult<Graph.VertexDescriptor> {
         let kosaraju = Kosaraju(on: graph)
         return kosaraju.stronglyConnectedComponents(visitor: visitor)
     }

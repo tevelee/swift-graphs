@@ -16,11 +16,11 @@ struct StronglyConnectedComponentsTests {
         graph.addEdge(from: c, to: a)
         
         let tarjan = Tarjan(on: graph)
-        let components = tarjan.stronglyConnectedComponents(visitor: nil)
+        let result = tarjan.stronglyConnectedComponents(visitor: nil)
         
         // Should have one SCC containing all three vertices
-        #expect(components.count == 1)
-        #expect(components[0].count == 3)
+        #expect(result.componentCount == 1)
+        #expect(result.components[0].count == 3)
     }
     
     @Test func testKosarajuBasic() {
@@ -36,11 +36,11 @@ struct StronglyConnectedComponentsTests {
         graph.addEdge(from: c, to: a)
         
         let kosaraju = Kosaraju(on: graph)
-        let components = kosaraju.stronglyConnectedComponents(visitor: nil)
+        let result = kosaraju.stronglyConnectedComponents(visitor: nil)
         
         // Should have one SCC containing all three vertices
-        #expect(components.count == 1)
-        #expect(components[0].count == 3)
+        #expect(result.componentCount == 1)
+        #expect(result.components[0].count == 3)
     }
     
     @Test func testTarjanDisconnected() {
@@ -52,12 +52,12 @@ struct StronglyConnectedComponentsTests {
         
         // No edges - each vertex is its own SCC
         let tarjan = Tarjan(on: graph)
-        let components = tarjan.stronglyConnectedComponents(visitor: nil)
+        let result = tarjan.stronglyConnectedComponents(visitor: nil)
         
         // Each vertex should be its own SCC
-        #expect(components.count == 3)
+        #expect(result.componentCount == 3)
         
-        for component in components {
+        for component in result.components {
             #expect(component.count == 1)
         }
     }
@@ -71,12 +71,12 @@ struct StronglyConnectedComponentsTests {
         
         // No edges - each vertex is its own SCC
         let kosaraju = Kosaraju(on: graph)
-        let components = kosaraju.stronglyConnectedComponents(visitor: nil)
+        let result = kosaraju.stronglyConnectedComponents(visitor: nil)
         
         // Each vertex should be its own SCC
-        #expect(components.count == 3)
+        #expect(result.componentCount == 3)
         
-        for component in components {
+        for component in result.components {
             #expect(component.count == 1)
         }
     }
@@ -108,15 +108,15 @@ struct StronglyConnectedComponentsTests {
         graph.addEdge(from: c, to: f)
         
         let tarjan = Tarjan(on: graph)
-        let components = tarjan.stronglyConnectedComponents(visitor: nil)
+        let result = tarjan.stronglyConnectedComponents(visitor: nil)
         
         // Should have three SCCs
-        #expect(components.count == 3)
+        #expect(result.componentCount == 3)
         
         // Find components by size
-        let singleVertexComponent = components.first { $0.count == 1 }!
-        let twoVertexComponent = components.first { $0.count == 2 }!
-        let threeVertexComponent = components.first { $0.count == 3 }!
+        let singleVertexComponent = result.components.first { $0.count == 1 }!
+        let twoVertexComponent = result.components.first { $0.count == 2 }!
+        let threeVertexComponent = result.components.first { $0.count == 3 }!
         
         // Verify component sizes
         #expect(singleVertexComponent.count == 1)
@@ -151,15 +151,15 @@ struct StronglyConnectedComponentsTests {
         graph.addEdge(from: c, to: f)
         
         let kosaraju = Kosaraju(on: graph)
-        let components = kosaraju.stronglyConnectedComponents(visitor: nil)
+        let result = kosaraju.stronglyConnectedComponents(visitor: nil)
         
         // Should have three SCCs
-        #expect(components.count == 3)
+        #expect(result.componentCount == 3)
         
         // Find components by size
-        let singleVertexComponent = components.first { $0.count == 1 }!
-        let twoVertexComponent = components.first { $0.count == 2 }!
-        let threeVertexComponent = components.first { $0.count == 3 }!
+        let singleVertexComponent = result.components.first { $0.count == 1 }!
+        let twoVertexComponent = result.components.first { $0.count == 2 }!
+        let threeVertexComponent = result.components.first { $0.count == 3 }!
         
         // Verify component sizes
         #expect(singleVertexComponent.count == 1)

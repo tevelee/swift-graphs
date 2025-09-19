@@ -4,7 +4,7 @@ struct DFSConnectedComponentsAlgorithm<Graph: IncidenceGraph & VertexListGraph>:
     func connectedComponents(
         in graph: Graph,
         visitor: Visitor?
-    ) -> [[Graph.VertexDescriptor]] {
+    ) -> ConnectedComponentsResult<Graph.VertexDescriptor> {
         let dfs = DFSConnectedComponents(on: graph)
         return dfs.connectedComponents(visitor: visitor)
     }

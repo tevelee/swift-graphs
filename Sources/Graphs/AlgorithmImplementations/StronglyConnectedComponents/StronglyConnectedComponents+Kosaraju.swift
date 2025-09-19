@@ -1,7 +1,7 @@
 extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     func stronglyConnectedComponents(
         using algorithm: KosarajuStronglyConnectedComponentsAlgorithm<Self>
-    ) -> [[VertexDescriptor]] {
-        algorithm.stronglyConnectedComponents(in: self, visitor: nil)
+    ) -> StronglyConnectedComponentsResult<VertexDescriptor> {
+        algorithm.stronglyConnectedComponents(in: self, visitor: nil as Kosaraju<Self>.Visitor?)
     }
 }

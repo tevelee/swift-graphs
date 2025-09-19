@@ -15,11 +15,11 @@ struct ConnectedComponentsTests {
         graph.addEdge(from: b, to: c)
         
         let unionFind = UnionFindConnectedComponents(on: graph)
-        let components = unionFind.connectedComponents(visitor: nil)
+        let result = unionFind.connectedComponents(visitor: nil)
         
         // Should have one connected component containing all three vertices
-        #expect(components.count == 1)
-        #expect(components[0].count == 3)
+        #expect(result.componentCount == 1)
+        #expect(result.components[0].count == 3)
     }
     
     @Test func testDFSBasic() {
@@ -34,11 +34,11 @@ struct ConnectedComponentsTests {
         graph.addEdge(from: b, to: c)
         
         let dfs = DFSConnectedComponents(on: graph)
-        let components = dfs.connectedComponents(visitor: nil)
+        let result = dfs.connectedComponents(visitor: nil)
         
         // Should have one connected component containing all three vertices
-        #expect(components.count == 1)
-        #expect(components[0].count == 3)
+        #expect(result.componentCount == 1)
+        #expect(result.components[0].count == 3)
     }
     
     @Test func testUnionFindDisconnected() {
@@ -54,13 +54,13 @@ struct ConnectedComponentsTests {
         graph.addEdge(from: c, to: d)
         
         let unionFind = UnionFindConnectedComponents(on: graph)
-        let components = unionFind.connectedComponents(visitor: nil)
+        let result = unionFind.connectedComponents(visitor: nil)
         
         // Should have two connected components
-        #expect(components.count == 2)
+        #expect(result.componentCount == 2)
         
         // Each component should have 2 vertices
-        for component in components {
+        for component in result.components {
             #expect(component.count == 2)
         }
     }
@@ -78,13 +78,13 @@ struct ConnectedComponentsTests {
         graph.addEdge(from: c, to: d)
         
         let dfs = DFSConnectedComponents(on: graph)
-        let components = dfs.connectedComponents(visitor: nil)
+        let result = dfs.connectedComponents(visitor: nil)
         
         // Should have two connected components
-        #expect(components.count == 2)
+        #expect(result.componentCount == 2)
         
         // Each component should have 2 vertices
-        for component in components {
+        for component in result.components {
             #expect(component.count == 2)
         }
     }
@@ -110,15 +110,15 @@ struct ConnectedComponentsTests {
         // No edges for F
         
         let unionFind = UnionFindConnectedComponents(on: graph)
-        let components = unionFind.connectedComponents(visitor: nil)
+        let result = unionFind.connectedComponents(visitor: nil)
         
         // Should have three connected components
-        #expect(components.count == 3)
+        #expect(result.componentCount == 3)
         
         // Find components by size
-        let singleVertexComponent = components.first { $0.count == 1 }!
-        let twoVertexComponent = components.first { $0.count == 2 }!
-        let threeVertexComponent = components.first { $0.count == 3 }!
+        let singleVertexComponent = result.components.first { $0.count == 1 }!
+        let twoVertexComponent = result.components.first { $0.count == 2 }!
+        let threeVertexComponent = result.components.first { $0.count == 3 }!
         
         // Verify component sizes
         #expect(singleVertexComponent.count == 1)
@@ -147,15 +147,15 @@ struct ConnectedComponentsTests {
         // No edges for F
         
         let dfs = DFSConnectedComponents(on: graph)
-        let components = dfs.connectedComponents(visitor: nil)
+        let result = dfs.connectedComponents(visitor: nil)
         
         // Should have three connected components
-        #expect(components.count == 3)
+        #expect(result.componentCount == 3)
         
         // Find components by size
-        let singleVertexComponent = components.first { $0.count == 1 }!
-        let twoVertexComponent = components.first { $0.count == 2 }!
-        let threeVertexComponent = components.first { $0.count == 3 }!
+        let singleVertexComponent = result.components.first { $0.count == 1 }!
+        let twoVertexComponent = result.components.first { $0.count == 2 }!
+        let threeVertexComponent = result.components.first { $0.count == 3 }!
         
         // Verify component sizes
         #expect(singleVertexComponent.count == 1)
@@ -169,11 +169,11 @@ struct ConnectedComponentsTests {
         graph.addVertex { $0.label = "A" }
         
         let unionFind = UnionFindConnectedComponents(on: graph)
-        let components = unionFind.connectedComponents(visitor: nil)
+        let result = unionFind.connectedComponents(visitor: nil)
         
         // Should have one connected component with one vertex
-        #expect(components.count == 1)
-        #expect(components[0].count == 1)
+        #expect(result.componentCount == 1)
+        #expect(result.components[0].count == 1)
     }
     
     @Test func testDFSSingleVertex() {
@@ -182,11 +182,11 @@ struct ConnectedComponentsTests {
         graph.addVertex { $0.label = "A" }
         
         let dfs = DFSConnectedComponents(on: graph)
-        let components = dfs.connectedComponents(visitor: nil)
+        let result = dfs.connectedComponents(visitor: nil)
         
         // Should have one connected component with one vertex
-        #expect(components.count == 1)
-        #expect(components[0].count == 1)
+        #expect(result.componentCount == 1)
+        #expect(result.components[0].count == 1)
     }
     
     @Test func testUnionFindVisitor() {
@@ -198,11 +198,11 @@ struct ConnectedComponentsTests {
         graph.addEdge(from: a, to: b)
         
         let unionFind = UnionFindConnectedComponents(on: graph)
-        let components = unionFind.connectedComponents(visitor: nil)
+        let result = unionFind.connectedComponents(visitor: nil)
         
         // Basic functionality test
-        #expect(components.count == 1)
-        #expect(components[0].count == 2)
+        #expect(result.componentCount == 1)
+        #expect(result.components[0].count == 2)
     }
     
     @Test func testDFSVisitor() {
@@ -214,11 +214,11 @@ struct ConnectedComponentsTests {
         graph.addEdge(from: a, to: b)
         
         let dfs = DFSConnectedComponents(on: graph)
-        let components = dfs.connectedComponents(visitor: nil)
+        let result = dfs.connectedComponents(visitor: nil)
         
         // Basic functionality test
-        #expect(components.count == 1)
-        #expect(components[0].count == 2)
+        #expect(result.componentCount == 1)
+        #expect(result.components[0].count == 2)
     }
     
     @Test func testUnionFindConsistency() {
@@ -233,15 +233,15 @@ struct ConnectedComponentsTests {
         graph.addEdge(from: c, to: d)
         
         let unionFind = UnionFindConnectedComponents(on: graph)
-        let components1 = unionFind.connectedComponents(visitor: nil)
-        let components2 = unionFind.connectedComponents(visitor: nil)
+        let result1 = unionFind.connectedComponents(visitor: nil)
+        let result2 = unionFind.connectedComponents(visitor: nil)
         
         // Results should be consistent across multiple runs
-        #expect(components1.count == components2.count)
+        #expect(result1.componentCount == result2.componentCount)
         
         // Each component should have the same size
-        let sizes1 = components1.map { $0.count }.sorted()
-        let sizes2 = components2.map { $0.count }.sorted()
+        let sizes1 = result1.components.map { $0.count }.sorted()
+        let sizes2 = result2.components.map { $0.count }.sorted()
         #expect(sizes1 == sizes2)
     }
     
@@ -257,15 +257,15 @@ struct ConnectedComponentsTests {
         graph.addEdge(from: c, to: d)
         
         let dfs = DFSConnectedComponents(on: graph)
-        let components1 = dfs.connectedComponents(visitor: nil)
-        let components2 = dfs.connectedComponents(visitor: nil)
+        let result1 = dfs.connectedComponents(visitor: nil)
+        let result2 = dfs.connectedComponents(visitor: nil)
         
         // Results should be consistent across multiple runs
-        #expect(components1.count == components2.count)
+        #expect(result1.componentCount == result2.componentCount)
         
         // Each component should have the same size
-        let sizes1 = components1.map { $0.count }.sorted()
-        let sizes2 = components2.map { $0.count }.sorted()
+        let sizes1 = result1.components.map { $0.count }.sorted()
+        let sizes2 = result2.components.map { $0.count }.sorted()
         #expect(sizes1 == sizes2)
     }
 }

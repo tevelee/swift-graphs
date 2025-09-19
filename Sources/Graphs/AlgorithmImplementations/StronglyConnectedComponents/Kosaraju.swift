@@ -28,7 +28,7 @@ struct Kosaraju<Graph: BidirectionalGraph & VertexListGraph> where Graph.VertexD
         self.graph = graph
     }
 
-    func stronglyConnectedComponents(visitor: Visitor?) -> [[Vertex]] {
+    func stronglyConnectedComponents(visitor: Visitor?) -> StronglyConnectedComponentsResult<Vertex> {
         var propertyMap = graph.makeVertexPropertyMap()
         let colorProperty = ColorProperty.self
 
@@ -98,7 +98,7 @@ struct Kosaraju<Graph: BidirectionalGraph & VertexListGraph> where Graph.VertexD
             }
         }
 
-        return components
+        return StronglyConnectedComponentsResult(components: components)
     }
 }
 

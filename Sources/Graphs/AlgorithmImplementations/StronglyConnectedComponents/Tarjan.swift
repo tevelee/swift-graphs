@@ -42,7 +42,7 @@ struct Tarjan<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescrip
         self.graph = graph
     }
 
-    func stronglyConnectedComponents(visitor: Visitor?) -> [[Vertex]] {
+    func stronglyConnectedComponents(visitor: Visitor?) -> StronglyConnectedComponentsResult<Vertex> {
         var propertyMap = graph.makeVertexPropertyMap()
         let colorProperty = ColorProperty.self
         let indexProperty = IndexProperty.self
@@ -122,7 +122,7 @@ struct Tarjan<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescrip
             }
         }
 
-        return components
+        return StronglyConnectedComponentsResult(components: components)
     }
 }
 

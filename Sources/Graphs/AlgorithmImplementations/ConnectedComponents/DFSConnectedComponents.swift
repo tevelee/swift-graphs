@@ -26,7 +26,7 @@ struct DFSConnectedComponents<Graph: IncidenceGraph & VertexListGraph> where Gra
         self.graph = graph
     }
 
-    func connectedComponents(visitor: Visitor?) -> [[Vertex]] {
+    func connectedComponents(visitor: Visitor?) -> ConnectedComponentsResult<Vertex> {
         var propertyMap = graph.makeVertexPropertyMap()
         let colorProperty = ColorProperty.self
         var components: [[Vertex]] = []
@@ -58,7 +58,7 @@ struct DFSConnectedComponents<Graph: IncidenceGraph & VertexListGraph> where Gra
             }
         }
 
-        return components
+        return ConnectedComponentsResult(components: components)
     }
 }
 
@@ -66,7 +66,7 @@ extension DFSConnectedComponents: ConnectedComponentsAlgorithm {
     func connectedComponents(
         in graph: Graph,
         visitor: Visitor?
-    ) -> [[Graph.VertexDescriptor]] {
+    ) -> ConnectedComponentsResult<Graph.VertexDescriptor> {
         connectedComponents(visitor: visitor)
     }
 }

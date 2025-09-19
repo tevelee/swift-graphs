@@ -16,7 +16,7 @@ struct UnionFindConnectedComponents<Graph: IncidenceGraph & VertexListGraph> whe
         self.graph = graph
     }
 
-    func connectedComponents(visitor: Visitor?) -> [[Vertex]] {
+    func connectedComponents(visitor: Visitor?) -> ConnectedComponentsResult<Vertex> {
         var parent: [Vertex: Vertex] = [:]
         var rank: [Vertex: Int] = [:]
         
@@ -79,7 +79,7 @@ struct UnionFindConnectedComponents<Graph: IncidenceGraph & VertexListGraph> whe
             visitor?.finishComponent?(component)
         }
         
-        return result
+        return ConnectedComponentsResult(components: result)
     }
 }
 
@@ -87,7 +87,7 @@ extension UnionFindConnectedComponents: ConnectedComponentsAlgorithm {
     func connectedComponents(
         in graph: Graph,
         visitor: Visitor?
-    ) -> [[Graph.VertexDescriptor]] {
+    ) -> ConnectedComponentsResult<Graph.VertexDescriptor> {
         connectedComponents(visitor: visitor)
     }
 }
