@@ -82,4 +82,28 @@ extension ComplementGraphView: IncidenceGraph {
     }
 }
 
+// MARK: - Convenience Methods for Creating ComplementGraphView
+
+extension EdgeLookupGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+    /// Returns a view of this graph representing its complement.
+    /// 
+    /// The complement graph contains all possible edges that are not present in the original graph.
+    /// - Returns: A `ComplementGraphView` that represents the complement graph
+    @inlinable
+    func complement() -> ComplementGraphView<Self> {
+        ComplementGraphView(base: self)
+    }
+}
+
+// MARK: - Chaining Support for ComplementGraphView
+
+extension ComplementGraphView {
+    /// Returns the complement of this complement graph (back to original).
+    /// 
+    /// - Returns: The original graph
+    @inlinable
+    func complement() -> Base {
+        base
+    }
+}
 

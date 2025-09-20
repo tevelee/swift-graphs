@@ -76,4 +76,29 @@ extension UndirectedGraphView: BidirectionalGraph {
     func inDegree(of vertex: VertexDescriptor) -> Int { outDegree(of: vertex) }
 }
 
+// MARK: - Convenience Methods for Creating UndirectedGraphView
+
+extension BidirectionalGraph where EdgeDescriptor: Hashable {
+    /// Returns an undirected view of this bidirectional graph.
+    /// 
+    /// In the undirected view, each edge can be traversed in both directions,
+    /// effectively treating the graph as undirected.
+    /// - Returns: An `UndirectedGraphView` that represents the undirected graph
+    @inlinable
+    func undirected() -> UndirectedGraphView<Self> {
+        UndirectedGraphView(base: self)
+    }
+}
+
+// MARK: - Chaining Support for UndirectedGraphView
+
+extension UndirectedGraphView {
+    /// Returns a directed view of this undirected graph.
+    /// 
+    /// - Returns: The original bidirectional graph
+    @inlinable
+    func directed() -> Base {
+        base
+    }
+}
 

@@ -30,4 +30,45 @@ extension ReversedGraphView: BidirectionalGraph where Base: BidirectionalGraph {
     func inDegree(of vertex: VertexDescriptor) -> Int { base.outDegree(of: vertex) }
 }
 
+// MARK: - Convenience Methods for Creating ReversedGraphView
+
+extension IncidenceGraph where Self: BidirectionalGraph {
+    /// Returns a view of this graph with all edges reversed (transposed).
+    /// 
+    /// This is equivalent to the transpose of the graph's adjacency matrix.
+    /// - Returns: A `ReversedGraphView` that represents the transposed graph
+    @inlinable
+    func reversed() -> ReversedGraphView<Self> {
+        ReversedGraphView(base: self)
+    }
+    
+    /// Returns a view of this graph with all edges reversed (transposed).
+    /// 
+    /// This is an alias for `reversed()` that uses the more common "transpose" terminology.
+    /// - Returns: A `ReversedGraphView` that represents the transposed graph
+    @inlinable
+    func transpose() -> ReversedGraphView<Self> {
+        ReversedGraphView(base: self)
+    }
+}
+
+// MARK: - Chaining Support for ReversedGraphView
+
+extension ReversedGraphView {
+    /// Returns a view of this reversed graph with all edges reversed again (back to original).
+    /// 
+    /// - Returns: The original graph
+    @inlinable
+    func reversed() -> Base {
+        base
+    }
+    
+    /// Returns a view of this reversed graph with all edges reversed again (back to original).
+    /// 
+    /// - Returns: The original graph
+    @inlinable
+    func transpose() -> Base {
+        base
+    }
+}
 

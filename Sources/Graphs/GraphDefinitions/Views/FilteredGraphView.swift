@@ -87,4 +87,61 @@ extension FilteredGraphView: IncidenceGraph {
     }
 }
 
+// MARK: - Convenience Methods for Creating FilteredGraphView
+
+extension IncidenceGraph {
+    /// Returns a filtered view of this graph based on vertex and edge predicates.
+    /// 
+    /// - Parameters:
+    ///   - includeVertex: Predicate to determine which vertices to include
+    ///   - includeEdge: Predicate to determine which edges to include
+    /// - Returns: A `FilteredGraphView` with the specified filtering applied
+    @inlinable
+    func filtered(
+        includeVertex: @escaping (VertexDescriptor) -> Bool = { _ in true },
+        includeEdge: @escaping (EdgeDescriptor) -> Bool = { _ in true }
+    ) -> FilteredGraphView<Self> {
+        FilteredGraphView(base: self, includeVertex: includeVertex, includeEdge: includeEdge)
+    }
+    
+    /// Returns a view containing only vertices that satisfy the given predicate.
+    /// 
+    /// - Parameter predicate: The condition that vertices must satisfy
+    /// - Returns: A `FilteredGraphView` with only the specified vertices
+    @inlinable
+    func filterVertices(where predicate: @escaping (VertexDescriptor) -> Bool) -> FilteredGraphView<Self> {
+        filtered(includeVertex: predicate)
+    }
+    
+    /// Returns a view containing only edges that satisfy the given predicate.
+    /// 
+    /// - Parameter predicate: The condition that edges must satisfy
+    /// - Returns: A `FilteredGraphView` with only the specified edges
+    @inlinable
+    func filterEdges(where predicate: @escaping (EdgeDescriptor) -> Bool) -> FilteredGraphView<Self> {
+        filtered(includeEdge: predicate)
+    }
+}
+
+// MARK: - Chaining Support for FilteredGraphView
+
+extension FilteredGraphView {
+    /// Returns a further filtered view of this filtered graph.
+    /// 
+    /// - Parameters:
+    ///   - includeVertex: Additional vertex predicate (combined with existing)
+    ///   - includeEdge: Additional edge predicate (combined with existing)
+    /// - Returns: A `FilteredGraphView` with combined filtering
+    @inlinable
+    func filtered(
+        includeVertex: @escaping (VertexDescriptor) -> Bool = { _ in true },
+        includeEdge: @escaping (EdgeDescriptor) -> Bool = { _ in true }
+    ) -> FilteredGraphView<Base> {
+        FilteredGraphView(
+            base: base,
+            includeVertex: { self.includeVertex($0) && includeVertex($0) },
+            includeEdge: { self.includeEdge($0) && includeEdge($0) }
+        )
+    }
+}
 
