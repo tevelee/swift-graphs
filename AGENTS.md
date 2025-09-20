@@ -148,13 +148,13 @@ gridGraph.hamiltonianPath(from: GridPosition(x: 0, y: 0), to: GridPosition(x: 4,
     [x] Instead of a BGL like API, let's expose the traversal as an iterable Sequence. And search becomes just a filter on the sequence.
   [ ] topological sort
   [ ] computing graph properties
-    [ ] is cyclic
-    [ ] is connected
-    [ ] is tree
-    [ ] has eulerian path
-    [ ] has eulerian cycle
-    [ ] satisfied dirac / ore
-    [ ] is planar
+    [x] is cyclic
+    [x] is connected
+    [x] is tree
+    [x] has eulerian path
+    [x] has eulerian cycle
+    [ ] satisfies dirac / ore
+    [x] is planar
   [ ] minimum spanning tree
     [ ] Prim
     [ ] Kruskal
