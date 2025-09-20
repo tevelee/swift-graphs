@@ -52,7 +52,7 @@ struct BarabasiAlbert<
                         visitor: visitor,
                         graph: graph
                     ) {
-                        _ = graph.addEdge(from: newVertex, to: target)
+                        graph.addEdge(from: newVertex, to: target)
                         visitor?.addEdge?(newVertex, target)
                     }
                 }

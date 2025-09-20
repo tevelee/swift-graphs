@@ -314,10 +314,10 @@ struct IsomorphismAlgorithmTests {
     
     @Test func testSingleVertexGraphs() {
         var graph1 = DefaultAdjacencyList()
-        _ = graph1.addVertex { $0.label = "A" }
+        graph1.addVertex { $0.label = "A" }
         
         var graph2 = DefaultAdjacencyList()
-        _ = graph2.addVertex { $0.label = "B" }
+        graph2.addVertex { $0.label = "B" }
         
         let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
         

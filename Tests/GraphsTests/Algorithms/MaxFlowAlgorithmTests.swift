@@ -15,11 +15,11 @@ struct MaxFlowAlgorithmTests {
         let v2 = graph.addVertex { $0.label = "v2" }
         
         // Add edges with capacities (using weight property)
-        let _ = graph.addEdge(from: s, to: v1) { $0.weight = 10.0 }
-        let _ = graph.addEdge(from: s, to: v2) { $0.weight = 5.0 }
-        let _ = graph.addEdge(from: v1, to: t) { $0.weight = 8.0 }
-        let _ = graph.addEdge(from: v2, to: t) { $0.weight = 3.0 }
-        let _ = graph.addEdge(from: v1, to: v2) { $0.weight = 2.0 }
+        graph.addEdge(from: s, to: v1) { $0.weight = 10.0 }
+        graph.addEdge(from: s, to: v2) { $0.weight = 5.0 }
+        graph.addEdge(from: v1, to: t) { $0.weight = 8.0 }
+        graph.addEdge(from: v2, to: t) { $0.weight = 3.0 }
+        graph.addEdge(from: v1, to: v2) { $0.weight = 2.0 }
         
         // Test Ford-Fulkerson
         let fordFulkersonResult = graph.maximumFlow(
@@ -61,13 +61,13 @@ struct MaxFlowAlgorithmTests {
         let d = graph.addVertex { $0.label = "d" }
         
         // Add edges with capacities (using weight property)
-        let _ = graph.addEdge(from: s, to: a) { $0.weight = 10.0 }
-        let _ = graph.addEdge(from: s, to: b) { $0.weight = 5.0 }
-        let _ = graph.addEdge(from: a, to: c) { $0.weight = 8.0 }
-        let _ = graph.addEdge(from: a, to: d) { $0.weight = 2.0 }
-        let _ = graph.addEdge(from: b, to: d) { $0.weight = 3.0 }
-        let _ = graph.addEdge(from: c, to: t) { $0.weight = 6.0 }
-        let _ = graph.addEdge(from: d, to: t) { $0.weight = 4.0 }
+        graph.addEdge(from: s, to: a) { $0.weight = 10.0 }
+        graph.addEdge(from: s, to: b) { $0.weight = 5.0 }
+        graph.addEdge(from: a, to: c) { $0.weight = 8.0 }
+        graph.addEdge(from: a, to: d) { $0.weight = 2.0 }
+        graph.addEdge(from: b, to: d) { $0.weight = 3.0 }
+        graph.addEdge(from: c, to: t) { $0.weight = 6.0 }
+        graph.addEdge(from: d, to: t) { $0.weight = 4.0 }
         
         // Test Ford-Fulkerson
         let fordFulkersonResult = graph.maximumFlow(
@@ -107,10 +107,10 @@ struct MaxFlowAlgorithmTests {
         let b = graph.addVertex { $0.label = "b" }
         
         // Add edges with capacities (using weight property)
-        let _ = graph.addEdge(from: s, to: a) { $0.weight = 10.0 }
-        let _ = graph.addEdge(from: s, to: b) { $0.weight = 5.0 }
-        let _ = graph.addEdge(from: a, to: t) { $0.weight = 8.0 }
-        let _ = graph.addEdge(from: b, to: t) { $0.weight = 3.0 }
+        graph.addEdge(from: s, to: a) { $0.weight = 10.0 }
+        graph.addEdge(from: s, to: b) { $0.weight = 5.0 }
+        graph.addEdge(from: a, to: t) { $0.weight = 8.0 }
+        graph.addEdge(from: b, to: t) { $0.weight = 3.0 }
         
         let result = graph.maximumFlow(
             from: s,
@@ -134,7 +134,7 @@ struct MaxFlowAlgorithmTests {
         let isolated = graph.addVertex { $0.label = "isolated" }
         
         // Add edge that doesn't connect s to t
-        let _ = graph.addEdge(from: s, to: isolated) { $0.weight = 10.0 }
+        graph.addEdge(from: s, to: isolated) { $0.weight = 10.0 }
         
         let result = graph.maximumFlow(
             from: s,
@@ -151,7 +151,7 @@ struct MaxFlowAlgorithmTests {
         let s = graph.addVertex { $0.label = "s" }
         let t = graph.addVertex { $0.label = "t" }
         
-        let _ = graph.addEdge(from: s, to: t) { $0.weight = 5.0 }
+        graph.addEdge(from: s, to: t) { $0.weight = 5.0 }
         
         let result = graph.maximumFlow(
             from: s,
@@ -168,7 +168,7 @@ struct MaxFlowAlgorithmTests {
         let s = graph.addVertex { $0.label = "s" }
         let t = graph.addVertex { $0.label = "t" }
         
-        let _ = graph.addEdge(from: s, to: t) { $0.weight = 0.0 }
+        graph.addEdge(from: s, to: t) { $0.weight = 0.0 }
         
         let result = graph.maximumFlow(
             from: s,
@@ -242,23 +242,23 @@ struct MaxFlowAlgorithmTests {
         
         // Connect source to first row
         for j in 0..<size {
-            let _ = graph.addEdge(from: s, to: vertices[0][j]) { $0.weight = Double.random(in: 1...10) }
+            graph.addEdge(from: s, to: vertices[0][j]) { $0.weight = Double.random(in: 1...10) }
         }
         
         // Connect last row to sink
         for j in 0..<size {
-            let _ = graph.addEdge(from: vertices[size-1][j], to: t) { $0.weight = Double.random(in: 1...10) }
+            graph.addEdge(from: vertices[size-1][j], to: t) { $0.weight = Double.random(in: 1...10) }
         }
         
         // Connect grid vertices
         for i in 0..<size-1 {
             for j in 0..<size {
                 // Downward edges
-                let _ = graph.addEdge(from: vertices[i][j], to: vertices[i+1][j]) { $0.weight = Double.random(in: 1...5) }
+                graph.addEdge(from: vertices[i][j], to: vertices[i+1][j]) { $0.weight = Double.random(in: 1...5) }
                 
                 // Rightward edges (if not last column)
                 if j < size - 1 {
-                    let _ = graph.addEdge(from: vertices[i][j], to: vertices[i][j+1]) { $0.weight = Double.random(in: 1...5) }
+                    graph.addEdge(from: vertices[i][j], to: vertices[i][j+1]) { $0.weight = Double.random(in: 1...5) }
                 }
             }
         }

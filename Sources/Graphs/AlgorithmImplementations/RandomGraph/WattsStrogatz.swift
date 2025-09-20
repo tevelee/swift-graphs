@@ -53,7 +53,7 @@ struct WattsStrogatz<
                 let targetIndex = (i + j) % vertexCount
                 let source = vertices[i]
                 let target = vertices[targetIndex]
-                _ = graph.addEdge(from: source, to: target)
+                graph.addEdge(from: source, to: target)
                 visitor?.createRingLattice?(source, target)
                 initialEdges.append((source, target))
             }
@@ -64,7 +64,7 @@ struct WattsStrogatz<
             if Double.random(in: 0...1, using: &generator) < rewiringProbability {
                 let source = edge.0
                 if let randomTarget = vertices.randomElement(using: &generator), randomTarget != source {
-                    _ = graph.addEdge(from: source, to: randomTarget)
+                    graph.addEdge(from: source, to: randomTarget)
                     visitor?.rewireEdge?(source, edge.1, randomTarget)
                 } else {
                     visitor?.skipRewiring?(source, edge.1, "Self-loop avoided or no target")

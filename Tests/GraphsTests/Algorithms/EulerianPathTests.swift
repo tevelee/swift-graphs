@@ -53,7 +53,7 @@ struct EulerianPathTests {
     
     func createSingleVertexGraph() -> some AdjacencyListProtocol {
         var graph = AdjacencyList()
-        _ = graph.addVertex { $0.label = "A" }
+        graph.addVertex { $0.label = "A" }
         return graph
     }
     

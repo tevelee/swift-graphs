@@ -97,7 +97,7 @@ struct ConnectedComponentsTests {
         let c = graph.addVertex { $0.label = "C" }
         let d = graph.addVertex { $0.label = "D" }
         let e = graph.addVertex { $0.label = "E" }
-        _ = graph.addVertex { $0.label = "F" }
+        graph.addVertex { $0.label = "F" }
         
         // Component 1: A - B - C
         graph.addEdge(from: a, to: b)
@@ -134,7 +134,7 @@ struct ConnectedComponentsTests {
         let c = graph.addVertex { $0.label = "C" }
         let d = graph.addVertex { $0.label = "D" }
         let e = graph.addVertex { $0.label = "E" }
-        _ = graph.addVertex { $0.label = "F" }
+        graph.addVertex { $0.label = "F" }
         
         // Component 1: A - B - C
         graph.addEdge(from: a, to: b)

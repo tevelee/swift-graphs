@@ -46,9 +46,9 @@ struct StronglyConnectedComponentsTests {
     @Test func testTarjanDisconnected() {
         var graph = AdjacencyList()
         
-        _ = graph.addVertex { $0.label = "A" }
-        _ = graph.addVertex { $0.label = "B" }
-        _ = graph.addVertex { $0.label = "C" }
+        graph.addVertex { $0.label = "A" }
+        graph.addVertex { $0.label = "B" }
+        graph.addVertex { $0.label = "C" }
         
         // No edges - each vertex is its own SCC
         let tarjan = Tarjan(on: graph)
@@ -65,9 +65,9 @@ struct StronglyConnectedComponentsTests {
     @Test func testKosarajuDisconnected() {
         var graph = AdjacencyList()
         
-        _ = graph.addVertex { $0.label = "A" }
-        _ = graph.addVertex { $0.label = "B" }
-        _ = graph.addVertex { $0.label = "C" }
+        graph.addVertex { $0.label = "A" }
+        graph.addVertex { $0.label = "B" }
+        graph.addVertex { $0.label = "C" }
         
         // No edges - each vertex is its own SCC
         let kosaraju = Kosaraju(on: graph)

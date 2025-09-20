@@ -46,7 +46,7 @@ struct ErdosRenyi<
             for j in (i + 1)..<newVertices.count {
                 visitor?.examineVertexPair?(newVertices[i], newVertices[j])
                 if Double.random(in: 0...1, using: &generator) < edgeProbability {
-                    _ = graph.addEdge(from: newVertices[i], to: newVertices[j])
+                    graph.addEdge(from: newVertices[i], to: newVertices[j])
                     visitor?.addEdge?(newVertices[i], newVertices[j])
                 } else {
                     visitor?.skipEdge?(newVertices[i], newVertices[j], "Probability check failed")
