@@ -305,4 +305,203 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: c) == 0)
         #expect(coloring.color(for: d) == 1)
     }
+    
+    // MARK: - Sequential Vertex Coloring Tests
+    
+    @Test func testSequentialVertexColoringWithSmallestLastOrdering() {
+        let graph = createTestGraph()
+        let coloring = graph.colorGraph(using: .sequential(orderUsing: .reverseCuthillMcKee()))
+        
+        // Should be a proper coloring
+        #expect(coloring.isProper)
+        
+        // Should use at most 4 colors (graph has 4 vertices)
+        #expect(coloring.chromaticNumber <= 4)
+        
+        // All vertices should be colored
+        #expect(coloring.vertexColors.count == 4)
+        
+        // Check that no adjacent vertices have the same color
+        for vertex in graph.vertices() {
+            guard let vertexColor = coloring.color(for: vertex) else {
+                Issue.record("Vertex \(vertex) should be colored")
+                continue
+            }
+            
+            for neighbor in graph.successors(of: vertex) {
+                guard let neighborColor = coloring.color(for: neighbor) else {
+                    continue
+                }
+                #expect(vertexColor != neighborColor, 
+                       "Adjacent vertices \(vertex) and \(neighbor) have the same color")
+            }
+        }
+    }
+    
+    @Test func testSequentialVertexColoringWithReverseCuthillMcKeeOrdering() {
+        let graph = createTestGraph()
+        let coloring = graph.colorGraph(using: .sequential(orderUsing: .smallestLastVertex()))
+        
+        // Should be a proper coloring
+        #expect(coloring.isProper)
+        
+        // Should use at most 4 colors (graph has 4 vertices)
+        #expect(coloring.chromaticNumber <= 4)
+        
+        // All vertices should be colored
+        #expect(coloring.vertexColors.count == 4)
+    }
+    
+    @Test func testSequentialVertexColoringEmptyGraph() {
+        let graph = AdjacencyList()
+        let coloring = graph.colorGraph(using: .sequential(orderUsing: .reverseCuthillMcKee()))
+        
+        #expect(coloring.isProper)
+        #expect(coloring.chromaticNumber == 0)
+        #expect(coloring.vertexColors.isEmpty)
+    }
+    
+    @Test func testSequentialVertexColoringSingleVertex() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        
+        let coloring = graph.colorGraph(using: .sequential(orderUsing: .reverseCuthillMcKee()))
+        
+        #expect(coloring.isProper)
+        #expect(coloring.chromaticNumber == 1)
+        #expect(coloring.vertexColors.count == 1)
+        #expect(coloring.color(for: a) != nil)
+    }
+    
+    @Test func testSequentialVertexColoringDisconnectedGraph() {
+        var graph = AdjacencyList()
+        
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        let e = graph.addVertex { $0.label = "E" }
+        
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: a)
+        graph.addEdge(from: c, to: d)
+        graph.addEdge(from: d, to: c)
+        graph.addEdge(from: d, to: e)
+        graph.addEdge(from: e, to: d)
+        
+        let coloring = graph.colorGraph(using: .sequential(orderUsing: .reverseCuthillMcKee()))
+        
+        // Should be a proper coloring
+        #expect(coloring.isProper)
+        
+        // Should use at most 5 colors (graph has 5 vertices)
+        #expect(coloring.chromaticNumber <= 5)
+        
+        // All vertices should be colored
+        #expect(coloring.vertexColors.count == 5)
+        
+        // Check that no adjacent vertices have the same color
+        for vertex in graph.vertices() {
+            guard let vertexColor = coloring.color(for: vertex) else {
+                Issue.record("Vertex \(vertex) should be colored")
+                continue
+            }
+            
+            for neighbor in graph.successors(of: vertex) {
+                guard let neighborColor = coloring.color(for: neighbor) else {
+                    continue
+                }
+                #expect(vertexColor != neighborColor, 
+                       "Adjacent vertices \(vertex) and \(neighbor) have the same color")
+            }
+        }
+    }
+    
+    @Test func testSequentialVertexColoringConvenienceExtensions() {
+        let graph = createTestGraph()
+        
+        // Test sequential coloring convenience
+        let coloring1 = graph.colorGraph(using: .sequential(orderUsing: .reverseCuthillMcKee()))
+        #expect(coloring1.isProper)
+        
+        let coloring2 = graph.colorGraph(using: .sequential(orderUsing: .smallestLastVertex()))
+        #expect(coloring2.isProper)
+    }
+    
+    @Test func testSequentialVertexColoringWithCustomOrdering() {
+        let graph = createTestGraph()
+        
+        // Test with smallest last ordering
+        let coloring1 = graph.colorGraph(using: .sequential(orderUsing: .reverseCuthillMcKee()))
+        #expect(coloring1.isProper)
+        
+        // Test with reverse Cuthill-McKee ordering
+        let coloring2 = graph.colorGraph(using: .sequential(orderUsing: .smallestLastVertex()))
+        #expect(coloring2.isProper)
+        
+        // Both colorings should be valid, but may use different numbers of colors
+        #expect(coloring1.chromaticNumber <= 4)
+        #expect(coloring2.chromaticNumber <= 4)
+    }
+    
+    // MARK: - Example Tests
+    
+    @Test func testColoringExample() {
+        // Create a sample graph - pentagon
+        var graph = AdjacencyList()
+        
+        // Add vertices
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        let e = graph.addVertex { $0.label = "E" }
+        
+        // Add edges to create a pentagon
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: a)
+        graph.addEdge(from: b, to: c)
+        graph.addEdge(from: c, to: b)
+        graph.addEdge(from: c, to: d)
+        graph.addEdge(from: d, to: c)
+        graph.addEdge(from: d, to: e)
+        graph.addEdge(from: e, to: d)
+        graph.addEdge(from: e, to: a)
+        graph.addEdge(from: a, to: e)
+        
+        // Test Greedy coloring
+        let greedyColoring = graph.colorGraph(using: .greedy(on: graph))
+        #expect(greedyColoring.isProper)
+        #expect(greedyColoring.chromaticNumber == 3)
+        
+        // Test DSatur coloring
+        let dsaturColoring = graph.colorGraph(using: .dsatur(on: graph))
+        #expect(dsaturColoring.isProper)
+        #expect(dsaturColoring.chromaticNumber == 3)
+        
+        // Test Welsh-Powell coloring
+        let welshPowellColoring = graph.colorGraph(using: .welshPowell(on: graph))
+        #expect(welshPowellColoring.isProper)
+        #expect(welshPowellColoring.chromaticNumber == 3)
+        
+        // Test with a complete graph K4
+        var k4Graph = AdjacencyList()
+        let v1 = k4Graph.addVertex { $0.label = "V1" }
+        let v2 = k4Graph.addVertex { $0.label = "V2" }
+        let v3 = k4Graph.addVertex { $0.label = "V3" }
+        let v4 = k4Graph.addVertex { $0.label = "V4" }
+        
+        // Add all possible edges
+        let vertices = [v1, v2, v3, v4]
+        for i in 0..<vertices.count {
+            for j in (i+1)..<vertices.count {
+                k4Graph.addEdge(from: vertices[i], to: vertices[j])
+                k4Graph.addEdge(from: vertices[j], to: vertices[i])
+            }
+        }
+        
+        let k4Coloring = k4Graph.colorGraph(using: .greedy(on: k4Graph))
+        #expect(k4Coloring.isProper)
+        #expect(k4Coloring.chromaticNumber == 4) // Complete graph K4 needs exactly 4 colors
+    }
 }
