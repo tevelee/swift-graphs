@@ -8,6 +8,16 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+    /// Checks if the graph is cyclic using DFS-based algorithm as the default.
+    /// This is the most commonly used and efficient algorithm for cycle detection.
+    func isCyclic() -> Bool {
+        isCyclic(using: .dfs())
+    }
+}
+
 protocol CyclicPropertyAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
     associatedtype Visitor

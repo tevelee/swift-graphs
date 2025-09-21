@@ -85,3 +85,23 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDescriptor: Hashable {
+    /// Checks if this graph is isomorphic to another graph using VF2 algorithm as the default.
+    /// VF2 is a well-known and efficient algorithm for graph isomorphism.
+    func isIsomorphic(to other: Self) -> Bool {
+        isIsomorphic(to: other, using: .vf2())
+    }
+    
+    /// Finds an isomorphism mapping to another graph using VF2 algorithm as the default.
+    func findIsomorphism(to other: Self) -> [VertexDescriptor: VertexDescriptor]? {
+        findIsomorphism(to: other, using: .vf2())
+    }
+    
+    /// Checks isomorphism and returns detailed result using VF2 algorithm as the default.
+    func isomorphismResult(with other: Self) -> IsomorphismResult<VertexDescriptor> {
+        isomorphismResult(with: other, using: .vf2())
+    }
+}
+

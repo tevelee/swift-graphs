@@ -7,6 +7,14 @@ extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
     }
 }
 
+// MARK: - Default Implementations
+
+extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
+    func traverse(from source: VertexDescriptor) -> TraversalResult<VertexDescriptor, EdgeDescriptor> {
+        traverse(from: source, using: .dfs())
+    }
+}
+
 protocol TraversalAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph
     associatedtype Visitor

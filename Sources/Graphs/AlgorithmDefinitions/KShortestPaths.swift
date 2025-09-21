@@ -25,6 +25,21 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: EdgePropertyGraph, VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
+    /// Finds the k shortest paths using Yen's algorithm as the default.
+    /// This is the most commonly used algorithm for finding k shortest paths.
+    func kShortestPaths<Weight: Numeric & Comparable>(
+        from source: VertexDescriptor,
+        to destination: VertexDescriptor,
+        k: Int,
+        weight: CostDefinition<Self, Weight>
+    ) -> [Path<VertexDescriptor, EdgeDescriptor>] where Weight.Magnitude == Weight {
+        kShortestPaths(from: source, to: destination, k: k, using: .yen(weight: weight))
+    }
+}
+
 extension VisitorWrapper: KShortestPathsAlgorithm where Base: KShortestPathsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     typealias Graph = Base.Graph
     typealias Weight = Base.Weight

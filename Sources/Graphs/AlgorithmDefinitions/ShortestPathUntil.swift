@@ -8,6 +8,20 @@ extension IncidenceGraph {
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: EdgePropertyGraph, VertexDescriptor: Hashable {
+    /// Finds the shortest path from source until a condition is met using Dijkstra's algorithm as the default.
+    /// This is useful for finding paths to the first vertex that satisfies a condition.
+    func shortestPath<Weight: Numeric & Comparable>(
+        from source: VertexDescriptor,
+        until condition: @escaping (VertexDescriptor) -> Bool,
+        weight: CostDefinition<Self, Weight>
+    ) -> Path<VertexDescriptor, EdgeDescriptor>? where Weight.Magnitude == Weight {
+        shortestPath(from: source, until: condition, using: .dijkstra(weight: weight))
+    }
+}
+
 protocol ShortestPathUntilAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph
     associatedtype Visitor

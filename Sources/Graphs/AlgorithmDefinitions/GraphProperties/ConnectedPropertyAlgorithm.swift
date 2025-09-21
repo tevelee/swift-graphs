@@ -8,6 +8,16 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+    /// Checks if the graph is connected using DFS-based algorithm as the default.
+    /// This is the most commonly used and efficient algorithm for connectivity checking.
+    func isConnected() -> Bool {
+        isConnected(using: .dfs())
+    }
+}
+
 protocol ConnectedPropertyAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
     associatedtype Visitor

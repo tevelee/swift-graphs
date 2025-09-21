@@ -76,7 +76,7 @@ struct ColoringAlgorithmTests {
     @Test func testGreedyColoring() {
         let graph = createTestGraph()
         
-        let coloring = graph.colorGraph(using: .greedy(on: graph))
+        let coloring = graph.colorGraph(using: .greedy())
         
         #expect(coloring.isProper)
         #expect(coloring.chromaticNumber == 2)
@@ -91,7 +91,7 @@ struct ColoringAlgorithmTests {
     @Test func testGreedyColoringCompleteGraph() {
         let graph = createCompleteGraph()
         
-        let coloring = graph.colorGraph(using: .greedy(on: graph))
+        let coloring = graph.colorGraph(using: .greedy())
         
         #expect(coloring.isProper)
         #expect(coloring.chromaticNumber == 4)
@@ -106,7 +106,7 @@ struct ColoringAlgorithmTests {
     @Test func testGreedyColoringBipartiteGraph() {
         let graph = createBipartiteGraph()
         
-        let coloring = graph.colorGraph(using: .greedy(on: graph))
+        let coloring = graph.colorGraph(using: .greedy())
         
         #expect(coloring.isProper)
         #expect(coloring.chromaticNumber == 2)
@@ -123,7 +123,7 @@ struct ColoringAlgorithmTests {
     @Test func testDSaturColoring() {
         let graph = createTestGraph()
         
-        let coloring = graph.colorGraph(using: .dsatur(on: graph))
+        let coloring = graph.colorGraph(using: .dsatur())
         
         #expect(coloring.isProper)
         #expect(coloring.chromaticNumber == 2)
@@ -138,7 +138,7 @@ struct ColoringAlgorithmTests {
     @Test func testDSaturColoringCompleteGraph() {
         let graph = createCompleteGraph()
         
-        let coloring = graph.colorGraph(using: .dsatur(on: graph))
+        let coloring = graph.colorGraph(using: .dsatur())
         
         #expect(coloring.isProper)
         #expect(coloring.chromaticNumber == 4)
@@ -153,7 +153,7 @@ struct ColoringAlgorithmTests {
     @Test func testDSaturColoringBipartiteGraph() {
         let graph = createBipartiteGraph()
         
-        let coloring = graph.colorGraph(using: .dsatur(on: graph))
+        let coloring = graph.colorGraph(using: .dsatur())
         
         #expect(coloring.isProper)
         #expect(coloring.chromaticNumber == 2)
@@ -170,7 +170,7 @@ struct ColoringAlgorithmTests {
     @Test func testWelshPowellColoring() {
         let graph = createTestGraph()
         
-        let coloring = graph.colorGraph(using: .welshPowell(on: graph))
+        let coloring = graph.colorGraph(using: .welshPowell())
         
         #expect(coloring.isProper)
         #expect(coloring.chromaticNumber == 2)
@@ -185,7 +185,7 @@ struct ColoringAlgorithmTests {
     @Test func testWelshPowellColoringCompleteGraph() {
         let graph = createCompleteGraph()
         
-        let coloring = graph.colorGraph(using: .welshPowell(on: graph))
+        let coloring = graph.colorGraph(using: .welshPowell())
         
         #expect(coloring.isProper)
         #expect(coloring.chromaticNumber == 4)
@@ -200,7 +200,7 @@ struct ColoringAlgorithmTests {
     @Test func testWelshPowellColoringBipartiteGraph() {
         let graph = createBipartiteGraph()
         
-        let coloring = graph.colorGraph(using: .welshPowell(on: graph))
+        let coloring = graph.colorGraph(using: .welshPowell())
         
         #expect(coloring.isProper)
         #expect(coloring.chromaticNumber == 2)
@@ -217,9 +217,9 @@ struct ColoringAlgorithmTests {
     @Test func testAllAlgorithmsProduceProperColoring() {
         let graph = createTestGraph()
         
-        let greedyColoring = graph.colorGraph(using: .greedy(on: graph))
-        let dsaturColoring = graph.colorGraph(using: .dsatur(on: graph))
-        let welshPowellColoring = graph.colorGraph(using: .welshPowell(on: graph))
+        let greedyColoring = graph.colorGraph(using: .greedy())
+        let dsaturColoring = graph.colorGraph(using: .dsatur())
+        let welshPowellColoring = graph.colorGraph(using: .welshPowell())
         
         #expect(greedyColoring.isProper)
         #expect(dsaturColoring.isProper)
@@ -245,7 +245,7 @@ struct ColoringAlgorithmTests {
     @Test func testEmptyGraph() {
         let graph = AdjacencyList()
         
-        let coloring = graph.colorGraph(using: .greedy(on: graph))
+        let coloring = graph.colorGraph(using: .greedy())
         
         #expect(coloring.chromaticNumber == 0)
         #expect(coloring.isProper)
@@ -257,7 +257,7 @@ struct ColoringAlgorithmTests {
         
         let vertex = graph.addVertex { $0.label = "A" }
         
-        let coloring = graph.colorGraph(using: .greedy(on: graph))
+        let coloring = graph.colorGraph(using: .greedy())
         
         #expect(coloring.chromaticNumber == 1)
         #expect(coloring.isProper)
@@ -273,7 +273,7 @@ struct ColoringAlgorithmTests {
         graph.addEdge(from: a, to: b)
         graph.addEdge(from: b, to: a)
         
-        let coloring = graph.colorGraph(using: .greedy(on: graph))
+        let coloring = graph.colorGraph(using: .greedy())
         
         #expect(coloring.chromaticNumber == 2)
         #expect(coloring.isProper)
@@ -295,7 +295,7 @@ struct ColoringAlgorithmTests {
         graph.addEdge(from: c, to: d)
         graph.addEdge(from: d, to: c)
         
-        let coloring = graph.colorGraph(using: .greedy(on: graph))
+        let coloring = graph.colorGraph(using: .greedy())
         
         #expect(coloring.chromaticNumber == 2)
         #expect(coloring.isProper)
@@ -470,17 +470,17 @@ struct ColoringAlgorithmTests {
         graph.addEdge(from: a, to: e)
         
         // Test Greedy coloring
-        let greedyColoring = graph.colorGraph(using: .greedy(on: graph))
+        let greedyColoring = graph.colorGraph(using: .greedy())
         #expect(greedyColoring.isProper)
         #expect(greedyColoring.chromaticNumber == 3)
         
         // Test DSatur coloring
-        let dsaturColoring = graph.colorGraph(using: .dsatur(on: graph))
+        let dsaturColoring = graph.colorGraph(using: .dsatur())
         #expect(dsaturColoring.isProper)
         #expect(dsaturColoring.chromaticNumber == 3)
         
         // Test Welsh-Powell coloring
-        let welshPowellColoring = graph.colorGraph(using: .welshPowell(on: graph))
+        let welshPowellColoring = graph.colorGraph(using: .welshPowell())
         #expect(welshPowellColoring.isProper)
         #expect(welshPowellColoring.chromaticNumber == 3)
         
@@ -500,7 +500,7 @@ struct ColoringAlgorithmTests {
             }
         }
         
-        let k4Coloring = k4Graph.colorGraph(using: .greedy(on: k4Graph))
+        let k4Coloring = k4Graph.colorGraph(using: .greedy())
         #expect(k4Coloring.isProper)
         #expect(k4Coloring.chromaticNumber == 4) // Complete graph K4 needs exactly 4 colors
     }

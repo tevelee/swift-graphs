@@ -8,6 +8,20 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: EdgePropertyGraph, VertexDescriptor: Hashable {
+    /// Finds the shortest path between two vertices using Dijkstra's algorithm as the default.
+    /// This is the most commonly used and efficient algorithm for non-negative edge weights.
+    func shortestPath<Weight: Numeric & Comparable>(
+        from source: VertexDescriptor,
+        to destination: VertexDescriptor,
+        weight: CostDefinition<Self, Weight>
+    ) -> Path<VertexDescriptor, EdgeDescriptor>? where Weight.Magnitude == Weight {
+        shortestPath(from: source, to: destination, using: .dijkstra(weight: weight))
+    }
+}
+
 protocol ShortestPathAlgorithm<Graph, Weight> {
     associatedtype Graph: IncidenceGraph
     associatedtype Weight: AdditiveArithmetic & Comparable

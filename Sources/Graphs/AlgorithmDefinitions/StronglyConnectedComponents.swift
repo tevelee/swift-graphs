@@ -14,6 +14,16 @@ extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hash
     }
 }
 
+// MARK: - Default Implementations
+
+extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+    /// Finds strongly connected components using Kosaraju's algorithm as the default.
+    /// This is a well-known and efficient algorithm for finding SCCs.
+    func stronglyConnectedComponents() -> StronglyConnectedComponentsResult<VertexDescriptor> {
+        stronglyConnectedComponents(using: .kosaraju())
+    }
+}
+
 protocol StronglyConnectedComponentsAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
     associatedtype Visitor

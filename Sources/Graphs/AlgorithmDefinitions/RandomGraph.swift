@@ -58,6 +58,38 @@ extension RandomGraphConstructible where VertexDescriptor: Hashable {
     }
 }
 
+// MARK: - Default Implementations
+
+extension RandomGraphConstructible where VertexDescriptor: Hashable {
+    /// Creates a random graph using Erdos-Renyi model as the default.
+    /// This is the most commonly used random graph model with uniform edge probability.
+    static func randomGraph(
+        vertexCount: Int,
+        edgeProbability: Double = 0.5
+    ) -> Self {
+        randomGraph(vertexCount: vertexCount, using: .erdosRenyi(edgeProbability: edgeProbability))
+    }
+    
+    /// Creates a random graph using Barabasi-Albert model for scale-free networks.
+    /// This generates graphs with power-law degree distribution.
+    static func randomScaleFreeGraph(
+        vertexCount: Int,
+        averageDegree: Double = 2.0
+    ) -> Self where Self: BidirectionalGraph {
+        randomGraph(vertexCount: vertexCount, using: .barabasiAlbert(averageDegree: averageDegree))
+    }
+    
+    /// Creates a random graph using Watts-Strogatz model for small-world networks.
+    /// This generates graphs with high clustering and short path lengths.
+    static func randomSmallWorldGraph(
+        vertexCount: Int,
+        averageDegree: Double = 4.0,
+        rewiringProbability: Double = 0.1
+    ) -> Self {
+        randomGraph(vertexCount: vertexCount, using: .wattsStrogatz(averageDegree: averageDegree, rewiringProbability: rewiringProbability))
+    }
+}
+
 extension MutableGraph where VertexDescriptor: Hashable {
     mutating func appendRandom<Algorithm: RandomGraphAlgorithm<Self>>(vertexCount: Int, using algorithm: Algorithm) {
         var rng = SystemRandomNumberGenerator()

@@ -8,6 +8,16 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDescriptor: Hashable {
+    /// Checks if the graph is a tree using DFS-based algorithm as the default.
+    /// A graph is a tree if it's connected and has no cycles.
+    func isTree() -> Bool {
+        isTree(using: .dfs())
+    }
+}
+
 protocol TreePropertyAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph & EdgeListGraph where Graph.VertexDescriptor: Hashable
     associatedtype Visitor

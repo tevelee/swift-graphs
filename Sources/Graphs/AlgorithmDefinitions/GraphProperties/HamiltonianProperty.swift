@@ -70,6 +70,22 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, VertexDescriptor: Hashable {
+    /// Checks if the graph satisfies Dirac's theorem using standard algorithm as the default.
+    /// This is the most commonly used algorithm for checking Dirac's condition.
+    func satisfiesDirac() -> Bool {
+        satisfiesDirac(using: .standard())
+    }
+    
+    /// Checks if the graph satisfies Ore's theorem using standard algorithm as the default.
+    /// This is the most commonly used algorithm for checking Ore's condition.
+    func satisfiesOre() -> Bool {
+        satisfiesOre(using: .standard())
+    }
+}
+
 protocol DiracPropertyAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph & BidirectionalGraph where Graph.VertexDescriptor: Hashable
     associatedtype Visitor

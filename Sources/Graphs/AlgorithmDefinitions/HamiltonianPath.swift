@@ -27,6 +27,32 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+    /// Finds a Hamiltonian path using backtracking algorithm as the default.
+    /// This is a general-purpose algorithm that works for most graphs.
+    func hamiltonianPath() -> Path<VertexDescriptor, EdgeDescriptor>? {
+        hamiltonianPath(using: .backtracking())
+    }
+    
+    /// Finds a Hamiltonian cycle using backtracking algorithm as the default.
+    /// This is a general-purpose algorithm that works for most graphs.
+    func hamiltonianCycle() -> Path<VertexDescriptor, EdgeDescriptor>? {
+        hamiltonianCycle(using: .backtracking())
+    }
+    
+    /// Finds a Hamiltonian path from a specific source using backtracking algorithm as the default.
+    func hamiltonianPath(from source: VertexDescriptor) -> Path<VertexDescriptor, EdgeDescriptor>? {
+        hamiltonianPath(from: source, using: .backtracking())
+    }
+    
+    /// Finds a Hamiltonian path between two specific vertices using backtracking algorithm as the default.
+    func hamiltonianPath(from source: VertexDescriptor, to destination: VertexDescriptor) -> Path<VertexDescriptor, EdgeDescriptor>? {
+        hamiltonianPath(from: source, to: destination, using: .backtracking())
+    }
+}
+
 protocol HamiltonianPathAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
     associatedtype Visitor

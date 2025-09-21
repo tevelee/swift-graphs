@@ -96,3 +96,17 @@ extension IncidenceGraph where Self: EdgePropertyGraph {
         algorithm.maximumFlow(from: source, to: sink, in: self, visitor: nil)
     }
 }
+
+// MARK: - Default Implementations
+
+extension BidirectionalGraph where Self: EdgePropertyGraph & EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
+    /// Finds the maximum flow using Edmonds-Karp algorithm as the default.
+    /// This is a well-known and efficient algorithm for maximum flow problems.
+    func maximumFlow<Flow: AdditiveArithmetic & Comparable & FloatingPoint>(
+        from source: VertexDescriptor,
+        to sink: VertexDescriptor,
+        capacity: CostDefinition<Self, Flow>
+    ) -> MaxFlowResult<VertexDescriptor, EdgeDescriptor, Flow> {
+        maximumFlow(from: source, to: sink, using: .edmondsKarp(capacityCost: capacity))
+    }
+}

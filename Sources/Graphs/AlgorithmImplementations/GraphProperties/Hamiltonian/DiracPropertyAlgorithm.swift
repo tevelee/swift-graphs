@@ -34,7 +34,3 @@ struct StandardDiracPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & 
         return true
     }
 }
-
-extension StandardDiracPropertyAlgorithm: DiracPropertyAlgorithm {
-    // Protocol conformance is already satisfied by the struct
-}

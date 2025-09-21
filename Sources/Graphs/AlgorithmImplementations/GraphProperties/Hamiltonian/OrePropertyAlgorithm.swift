@@ -46,7 +46,3 @@ struct StandardOrePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & Bi
         return true
     }
 }
-
-extension StandardOrePropertyAlgorithm: OrePropertyAlgorithm {
-    // Protocol conformance is already satisfied by the struct
-}

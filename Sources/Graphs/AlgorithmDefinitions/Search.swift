@@ -7,6 +7,14 @@ extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
     }
 }
 
+// MARK: - Default Implementations
+
+extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
+    func search(from source: VertexDescriptor) -> DepthFirstSearch<Self> {
+        search(from: source, using: .dfs())
+    }
+}
+
 protocol SearchAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
     associatedtype SearchSequence: Sequence

@@ -262,7 +262,7 @@ final class VisitorPatternTests {
         graph.addEdge(from: a, to: c)
         
         var visitedVertices: [String] = []
-        let result = graph.colorGraph(using: .greedy(on: graph).withVisitor(.init(
+        let result = graph.colorGraph(using: .greedy().withVisitor(.init(
             examineVertex: { vertex in
                 visitedVertices.append(graph[vertex].label)
             }
@@ -287,7 +287,7 @@ final class VisitorPatternTests {
         graph.addEdge(from: a, to: c)
         
         var visitedVertices: [String] = []
-        let result = graph.colorGraph(using: .dsatur(on: graph).withVisitor(.init(
+        let result = graph.colorGraph(using: .dsatur().withVisitor(.init(
             examineVertex: { vertex in
                 visitedVertices.append(graph[vertex].label)
             }

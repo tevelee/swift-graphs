@@ -55,6 +55,22 @@ extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hash
     }
 }
 
+// MARK: - Default Implementations
+
+extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+    /// Finds an Eulerian path using Hierholzer's algorithm as the default.
+    /// This is the most efficient algorithm for finding Eulerian paths.
+    func eulerianPath() -> Path<VertexDescriptor, EdgeDescriptor>? {
+        eulerianPath(using: .hierholzer())
+    }
+    
+    /// Finds an Eulerian cycle using Hierholzer's algorithm as the default.
+    /// This is the most efficient algorithm for finding Eulerian cycles.
+    func eulerianCycle() -> Path<VertexDescriptor, EdgeDescriptor>? {
+        eulerianCycle(using: .hierholzer())
+    }
+}
+
 protocol EulerianPathAlgorithm<Graph> {
     associatedtype Graph: BidirectionalGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
     associatedtype Visitor

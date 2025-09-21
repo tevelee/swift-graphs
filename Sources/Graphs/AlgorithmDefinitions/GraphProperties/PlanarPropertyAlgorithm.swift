@@ -8,6 +8,16 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDescriptor: Hashable {
+    /// Checks if the graph is planar using Boyer-Myrvold algorithm as the default.
+    /// This is a well-known and efficient algorithm for planarity testing.
+    func isPlanar() -> Bool {
+        isPlanar(using: .boyerMyrvold())
+    }
+}
+
 protocol PlanarPropertyAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph & EdgeListGraph where Graph.VertexDescriptor: Hashable
     associatedtype Visitor

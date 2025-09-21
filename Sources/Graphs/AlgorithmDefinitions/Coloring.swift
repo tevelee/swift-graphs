@@ -48,6 +48,16 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+    /// Colors the graph using the Greedy algorithm as the default.
+    /// This is a simple and efficient algorithm that works well for most graphs.
+    func colorGraph() -> GraphColoring<VertexDescriptor, Int> {
+        colorGraph(using: .greedy())
+    }
+}
+
 protocol IntegerBasedColor: Hashable & Equatable {
     init(integerValue value: Int)
     var integerValue: Int { get }

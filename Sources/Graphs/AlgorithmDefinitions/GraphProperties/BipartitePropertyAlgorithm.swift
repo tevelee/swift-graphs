@@ -8,6 +8,16 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+    /// Checks if the graph is bipartite using DFS-based algorithm as the default.
+    /// This is the most commonly used and efficient algorithm for bipartiteness checking.
+    func isBipartite() -> Bool {
+        isBipartite(using: .dfs())
+    }
+}
+
 protocol BipartitePropertyAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
     associatedtype Visitor

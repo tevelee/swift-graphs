@@ -8,6 +8,12 @@ extension CostDefinition {
     }
 }
 
+extension CostDefinition where Cost == Int {
+    static var unit: Self {
+        .uniform(1)
+    }
+}
+
 extension CostDefinition where Graph: EdgePropertyGraph {
     static func property(_ extract: @escaping (EdgeProperties) -> Cost) -> Self {
         .init { edge, graph in

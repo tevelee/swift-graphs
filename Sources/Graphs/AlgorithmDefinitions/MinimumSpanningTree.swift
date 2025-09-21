@@ -52,3 +52,15 @@ extension IncidenceGraph where Self: EdgePropertyGraph {
         algorithm.minimumSpanningTree(in: self, visitor: nil)
     }
 }
+
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: EdgePropertyGraph & EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable {
+    /// Finds the minimum spanning tree using Kruskal's algorithm as the default.
+    /// This is a well-known and efficient algorithm for finding MSTs.
+    func minimumSpanningTree<Weight: AdditiveArithmetic & Comparable>(
+        weight: CostDefinition<Self, Weight>
+    ) -> MinimumSpanningTree<VertexDescriptor, EdgeDescriptor, Weight> {
+        minimumSpanningTree(using: .kruskal(weight: weight))
+    }
+}

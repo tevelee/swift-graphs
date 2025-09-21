@@ -6,6 +6,16 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+    /// Finds connected components using DFS-based algorithm as the default.
+    /// This is the most commonly used and efficient algorithm for finding connected components.
+    func connectedComponents() -> ConnectedComponentsResult<VertexDescriptor> {
+        connectedComponents(using: .dfs())
+    }
+}
+
 protocol ConnectedComponentsAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
     associatedtype Visitor

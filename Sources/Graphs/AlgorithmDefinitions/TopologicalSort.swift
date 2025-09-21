@@ -6,6 +6,16 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+    /// Performs topological sort using DFS-based algorithm as the default.
+    /// This is the most commonly used and efficient algorithm for topological sorting.
+    func topologicalSort() -> TopologicalSortResult<VertexDescriptor> {
+        topologicalSort(using: .dfs())
+    }
+}
+
 protocol TopologicalSortAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
     associatedtype Visitor

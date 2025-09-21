@@ -63,6 +63,18 @@ extension IncidenceGraph where Self: VertexListGraph {
     }
 }
 
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: VertexListGraph & EdgePropertyGraph, VertexDescriptor: Hashable {
+    /// Finds shortest paths between all pairs of vertices using Floyd-Warshall algorithm as the default.
+    /// This is efficient for dense graphs and when you need all-pairs shortest paths.
+    func shortestPathsForAllPairs<Weight: AdditiveArithmetic & Comparable>(
+        weight: CostDefinition<Self, Weight>
+    ) -> AllPairsShortestPaths<VertexDescriptor, EdgeDescriptor, Weight> {
+        shortestPathsForAllPairs(using: .floydWarshall(weight: weight))
+    }
+}
+
 extension VisitorWrapper: ShortestPathsForAllPairsAlgorithm where Base: ShortestPathsForAllPairsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     typealias Graph = Base.Graph
     typealias Weight = Base.Weight

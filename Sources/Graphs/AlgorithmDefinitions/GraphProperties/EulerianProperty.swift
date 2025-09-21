@@ -50,3 +50,19 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
         return true
     }
 }
+
+// MARK: - Default Implementations
+
+extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, VertexDescriptor: Hashable {
+    /// Checks if the graph has an Eulerian path using DFS-based connectivity algorithm as the default.
+    /// This is the most commonly used and efficient algorithm for Eulerian path checking.
+    func hasEulerianPath() -> Bool {
+        hasEulerianPath(using: .dfs())
+    }
+    
+    /// Checks if the graph has an Eulerian cycle using DFS-based connectivity algorithm as the default.
+    /// This is the most commonly used and efficient algorithm for Eulerian cycle checking.
+    func hasEulerianCycle() -> Bool {
+        hasEulerianCycle(using: .dfs())
+    }
+}
