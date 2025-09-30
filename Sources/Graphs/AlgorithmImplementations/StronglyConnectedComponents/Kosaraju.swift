@@ -84,25 +84,30 @@ public struct Kosaraju<Graph: BidirectionalGraph & VertexListGraph> where Graph.
         // Step 1: Perform DFS on the original graph to get finish times
         var finishOrder: [Vertex] = []
         
-        /// First DFS pass to get finish times.
+        /// First DFS pass to get finish times using the existing DFS algorithm.
         ///
         /// - Parameter vertex: The vertex to start DFS from.
         func dfs1(_ vertex: Vertex) {
-            propertyMap[vertex][colorProperty] = .gray
-            visitor?.discoverVertex?(vertex)
-
-            for edge in graph.outgoingEdges(of: vertex) {
-                visitor?.examineEdge?(edge)
-                guard let destination = graph.destination(of: edge) else { continue }
-                
-                if propertyMap[destination][colorProperty] == .white {
-                    dfs1(destination)
+            // Use the existing DFS algorithm but manage shared state manually
+            let dfs = DepthFirstSearch(on: graph, from: vertex)
+            let finishTimeVisitor = DepthFirstSearch<Graph>.Visitor(
+                discoverVertex: { v in
+                    if propertyMap[v][colorProperty] == .white {
+                        propertyMap[v][colorProperty] = .gray
+                        visitor?.discoverVertex?(v)
+                    }
+                },
+                examineEdge: { edge in
+                    visitor?.examineEdge?(edge)
+                },
+                finishVertex: { v in
+                    propertyMap[v][colorProperty] = .black
+                    visitor?.finishVertex?(v)
+                    finishOrder.append(v)
                 }
-            }
-
-            propertyMap[vertex][colorProperty] = .black
-            visitor?.finishVertex?(vertex)
-            finishOrder.append(vertex)
+            )
+            
+            dfs.withVisitor { finishTimeVisitor }.forEach { _ in }
         }
 
         // First pass: DFS on original graph
@@ -119,29 +124,38 @@ public struct Kosaraju<Graph: BidirectionalGraph & VertexListGraph> where Graph.
 
         var components: [[Vertex]] = []
 
-        /// Second DFS pass on the transpose graph.
+        /// Second DFS pass on the transpose graph using the existing DFS algorithm.
         ///
         /// - Parameters:
         ///   - vertex: The vertex to start DFS from.
         ///   - component: The current component being built.
         func dfs2(_ vertex: Vertex, component: inout [Vertex]) {
-            propertyMap[vertex][colorProperty] = .gray
-            visitor?.discoverVertex?(vertex)
-            component.append(vertex)
-
-            // For Kosaraju's algorithm, we need to traverse the transpose graph
-            // We use incoming edges to simulate the transpose
-            for edge in graph.incomingEdges(of: vertex) {
-                visitor?.examineEdge?(edge)
-                guard let source = graph.source(of: edge) else { continue }
-                
-                if propertyMap[source][colorProperty] == .white {
-                    dfs2(source, component: &component)
+            // Use the existing DFS algorithm on the transpose graph
+            let transposeGraph = graph.transpose()
+            var localComponent: [Vertex] = []
+            
+            let dfs = DepthFirstSearch(on: transposeGraph, from: vertex)
+            let componentVisitor = DepthFirstSearch<ReversedGraphView<Graph>>.Visitor(
+                discoverVertex: { v in
+                    if propertyMap[v][colorProperty] == .white {
+                        propertyMap[v][colorProperty] = .gray
+                        visitor?.discoverVertex?(v)
+                        localComponent.append(v)
+                    }
+                },
+                examineEdge: { edge in
+                    visitor?.examineEdge?(edge)
+                },
+                finishVertex: { v in
+                    propertyMap[v][colorProperty] = .black
+                    visitor?.finishVertex?(v)
                 }
-            }
-
-            propertyMap[vertex][colorProperty] = .black
-            visitor?.finishVertex?(vertex)
+            )
+            
+            dfs.withVisitor { componentVisitor }.forEach { _ in }
+            
+            // Append the collected vertices to the component
+            component.append(contentsOf: localComponent)
         }
 
         // Second pass: DFS on transpose graph in reverse finish order

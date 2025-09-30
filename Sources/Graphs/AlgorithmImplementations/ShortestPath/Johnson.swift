@@ -236,28 +236,3 @@ extension Johnson: ShortestPathsForAllPairsAlgorithm {
 
 extension Johnson: VisitorSupporting {}
 
-extension Johnson {
-    /// Creates a new Johnson algorithm instance.
-    ///
-    /// - Parameter edgeWeight: The cost definition for edge weights.
-    /// - Returns: A new Johnson algorithm instance.
-    @inlinable
-    public static func create<G: IncidenceGraph & VertexListGraph & EdgePropertyGraph, W: AdditiveArithmetic & Comparable>(
-        edgeWeight: CostDefinition<G, W>
-    ) -> Johnson<G, W> where G.VertexDescriptor: Hashable {
-        Johnson<G, W>(edgeWeight: edgeWeight)
-    }
-}
-
-extension ShortestPathsForAllPairsAlgorithm {
-    /// Creates a Johnson algorithm for computing all-pairs shortest paths.
-    ///
-    /// - Parameter edgeWeight: The cost definition for edge weights.
-    /// - Returns: A Johnson algorithm instance.
-    @inlinable
-    public static func johnson<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: AdditiveArithmetic & Comparable>(
-        edgeWeight: CostDefinition<Graph, Weight>
-    ) -> Johnson<Graph, Weight> where Self == Johnson<Graph, Weight>, Graph.VertexDescriptor: Hashable {
-        Johnson(edgeWeight: edgeWeight)
-    }
-}

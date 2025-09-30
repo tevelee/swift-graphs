@@ -186,6 +186,8 @@ extension Dijkstra.Iterator: IteratorProtocol {
         let currentDistance = currentVertex.cost
         propertyMap[currentVertex.vertex][distanceProperty] = currentDistance
         
+        visitor?.examineVertex?(currentVertex.vertex)
+        
         for edge in graph.outgoingEdges(of: currentVertex.vertex) {
             guard let destination = graph.destination(of: edge) else { continue }
             let edgeWeight = self.edgeWeight.costToExplore(edge, graph)
