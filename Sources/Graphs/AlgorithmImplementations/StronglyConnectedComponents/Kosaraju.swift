@@ -1,40 +1,92 @@
 import Collections
 
-struct Kosaraju<Graph: BidirectionalGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+/// Kosaraju's algorithm for finding strongly connected components.
+///
+/// Kosaraju's algorithm finds strongly connected components in a directed graph
+/// by performing two depth-first searches: first on the original graph to get
+/// finish times, then on the transposed graph in reverse finish time order.
+///
+/// - Complexity: O(V + E) where V is the number of vertices and E is the number of edges
+public struct Kosaraju<Graph: BidirectionalGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
 
-    struct Visitor {
-        var discoverVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var finishVertex: ((Vertex) -> Void)?
-        var startComponent: ((Vertex) -> Void)?
-        var finishComponent: (([Vertex]) -> Void)?
+    /// A visitor that can be used to observe Kosaraju's algorithm progress.
+    public struct Visitor {
+        /// Called when discovering a vertex.
+        public var discoverVertex: ((Vertex) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge) -> Void)?
+        /// Called when finishing a vertex.
+        public var finishVertex: ((Vertex) -> Void)?
+        /// Called when starting a new component.
+        public var startComponent: ((Vertex) -> Void)?
+        /// Called when finishing a component.
+        public var finishComponent: (([Vertex]) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            discoverVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            finishVertex: ((Vertex) -> Void)? = nil,
+            startComponent: ((Vertex) -> Void)? = nil,
+            finishComponent: (([Vertex]) -> Void)? = nil
+        ) {
+            self.discoverVertex = discoverVertex
+            self.examineEdge = examineEdge
+            self.finishVertex = finishVertex
+            self.startComponent = startComponent
+            self.finishComponent = finishComponent
+        }
     }
 
-    private enum Color {
-        case white // Undiscovered
-        case gray // Discovered but not fully processed
-        case black // Fully processed
+    /// The color of a vertex in the algorithm.
+    @usableFromInline
+    enum Color {
+        /// Undiscovered vertex.
+        case white
+        /// Discovered but not fully processed vertex.
+        case gray
+        /// Fully processed vertex.
+        case black
     }
 
-    private enum ColorProperty: VertexProperty {
+    @usableFromInline
+    enum ColorProperty: VertexProperty {
+        @usableFromInline
         static var defaultValue: Color { .white }
     }
 
-    private let graph: Graph
+    /// The graph to find strongly connected components in.
+    @usableFromInline
+    let graph: Graph
 
-    init(on graph: Graph) {
+    /// Creates a new Kosaraju algorithm instance.
+    ///
+    /// - Parameter graph: The graph to find strongly connected components in.
+    @inlinable
+    public init(on graph: Graph) {
         self.graph = graph
     }
 
-    func stronglyConnectedComponents(visitor: Visitor?) -> StronglyConnectedComponentsResult<Vertex> {
+    /// Finds strongly connected components in the graph.
+    ///
+    /// - Parameter visitor: An optional visitor to observe the algorithm's progress.
+    /// - Returns: The strongly connected components result.
+    @inlinable
+    public func stronglyConnectedComponents(visitor: Visitor?) -> StronglyConnectedComponentsResult<Vertex> {
         var propertyMap = graph.makeVertexPropertyMap()
         let colorProperty = ColorProperty.self
 
         // Step 1: Perform DFS on the original graph to get finish times
         var finishOrder: [Vertex] = []
         
+        /// First DFS pass to get finish times.
+        ///
+        /// - Parameter vertex: The vertex to start DFS from.
         func dfs1(_ vertex: Vertex) {
             propertyMap[vertex][colorProperty] = .gray
             visitor?.discoverVertex?(vertex)
@@ -67,6 +119,11 @@ struct Kosaraju<Graph: BidirectionalGraph & VertexListGraph> where Graph.VertexD
 
         var components: [[Vertex]] = []
 
+        /// Second DFS pass on the transpose graph.
+        ///
+        /// - Parameters:
+        ///   - vertex: The vertex to start DFS from.
+        ///   - component: The current component being built.
         func dfs2(_ vertex: Vertex, component: inout [Vertex]) {
             propertyMap[vertex][colorProperty] = .gray
             visitor?.discoverVertex?(vertex)

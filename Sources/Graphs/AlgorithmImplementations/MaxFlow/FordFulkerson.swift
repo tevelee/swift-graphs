@@ -1,6 +1,13 @@
 import Foundation
 
-struct FordFulkerson<
+/// Ford-Fulkerson algorithm for computing maximum flow.
+///
+/// This algorithm finds the maximum flow in a flow network by repeatedly finding
+/// augmenting paths and increasing the flow along them until no more augmenting
+/// paths exist.
+///
+/// - Complexity: O(E * max_flow) where E is the number of edges
+public struct FordFulkerson<
     Graph: IncidenceGraph & EdgePropertyGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
     Flow: AdditiveArithmetic & Comparable & Numeric & FloatingPoint
 > where
@@ -8,23 +15,59 @@ struct FordFulkerson<
     Graph.EdgeDescriptor: Hashable,
     Flow.Magnitude == Flow
 {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var examineEdge: ((Edge, Flow) -> Void)?
-        var augmentPath: (([Edge], Flow) -> Void)?
-        var updateFlow: ((Edge, Flow) -> Void)?
-        var findPath: ((Vertex, Vertex) -> Void)?
+    /// A visitor that can be used to observe Ford-Fulkerson algorithm progress.
+    public struct Visitor {
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge, Flow) -> Void)?
+        /// Called when augmenting a path.
+        public var augmentPath: (([Edge], Flow) -> Void)?
+        /// Called when updating flow on an edge.
+        public var updateFlow: ((Edge, Flow) -> Void)?
+        /// Called when finding a path.
+        public var findPath: ((Vertex, Vertex) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            examineEdge: ((Edge, Flow) -> Void)? = nil,
+            augmentPath: (([Edge], Flow) -> Void)? = nil,
+            updateFlow: ((Edge, Flow) -> Void)? = nil,
+            findPath: ((Vertex, Vertex) -> Void)? = nil
+        ) {
+            self.examineEdge = examineEdge
+            self.augmentPath = augmentPath
+            self.updateFlow = updateFlow
+            self.findPath = findPath
+        }
     }
     
-    private let capacityCost: CostDefinition<Graph, Flow>
+    /// The capacity cost definition for edge capacities.
+    @usableFromInline
+    let capacityCost: CostDefinition<Graph, Flow>
     
-    init(capacityCost: CostDefinition<Graph, Flow>) {
+    /// Creates a new Ford-Fulkerson algorithm.
+    ///
+    /// - Parameter capacityCost: The capacity cost definition for edge capacities.
+    @inlinable
+    public init(capacityCost: CostDefinition<Graph, Flow>) {
         self.capacityCost = capacityCost
     }
     
-    func maximumFlow(
+    /// Computes the maximum flow using Ford-Fulkerson algorithm.
+    ///
+    /// - Parameters:
+    ///   - source: The source vertex
+    ///   - sink: The sink vertex
+    ///   - graph: The flow network graph
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: The maximum flow result
+    @inlinable
+    public func maximumFlow(
         from source: Vertex,
         to sink: Vertex,
         in graph: Graph,
@@ -94,7 +137,8 @@ struct FordFulkerson<
         )
     }
     
-    private func findAugmentingPath(
+    @usableFromInline
+    func findAugmentingPath(
         from source: Vertex,
         to sink: Vertex,
         in graph: Graph,
@@ -150,7 +194,8 @@ struct FordFulkerson<
         return nil
     }
     
-    private func findReverseEdge(_ edge: Edge, in graph: Graph) -> Edge? {
+    @usableFromInline
+    func findReverseEdge(_ edge: Edge, in graph: Graph) -> Edge? {
         guard let source = graph.source(of: edge),
               let destination = graph.destination(of: edge) else { return nil }
         
@@ -164,7 +209,8 @@ struct FordFulkerson<
         return nil
     }
     
-    private func findMinimumCut(
+    @usableFromInline
+    func findMinimumCut(
         from source: Vertex,
         to sink: Vertex,
         in graph: Graph,
@@ -206,8 +252,11 @@ struct FordFulkerson<
         return (minCutEdges, sourceSide, sinkSide)
     }
     
-    private struct AugmentingPath {
+    @usableFromInline
+    struct AugmentingPath {
+        @usableFromInline
         let edges: [Edge]
+        @usableFromInline
         let bottleneck: Flow
     }
 }

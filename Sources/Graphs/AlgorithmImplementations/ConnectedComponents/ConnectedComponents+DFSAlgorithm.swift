@@ -1,7 +1,13 @@
-struct DFSConnectedComponentsAlgorithm<Graph: IncidenceGraph & VertexListGraph>: ConnectedComponentsAlgorithm where Graph.VertexDescriptor: Hashable {
-    typealias Visitor = DFSConnectedComponents<Graph>.Visitor
+/// DFS-based connected components algorithm implementation.
+public struct DFSConnectedComponentsAlgorithm<Graph: IncidenceGraph & VertexListGraph>: ConnectedComponentsAlgorithm where Graph.VertexDescriptor: Hashable {
+    public typealias Visitor = DFSConnectedComponents<Graph>.Visitor
     
-    func connectedComponents(
+    /// Creates a new DFS connected components algorithm.
+    @inlinable
+    public init() {}
+    
+    @inlinable
+    public func connectedComponents(
         in graph: Graph,
         visitor: Visitor?
     ) -> ConnectedComponentsResult<Graph.VertexDescriptor> {
@@ -11,7 +17,11 @@ struct DFSConnectedComponentsAlgorithm<Graph: IncidenceGraph & VertexListGraph>:
 }
 
 extension ConnectedComponentsAlgorithm {
-    static func dfs<Graph: IncidenceGraph & VertexListGraph>() -> Self where Self == DFSConnectedComponentsAlgorithm<Graph>, Graph.VertexDescriptor: Hashable {
+    /// Creates a DFS connected components algorithm.
+    ///
+    /// - Returns: A new DFS connected components algorithm
+    @inlinable
+    public static func dfs<Graph: IncidenceGraph & VertexListGraph>() -> Self where Self == DFSConnectedComponentsAlgorithm<Graph>, Graph.VertexDescriptor: Hashable {
         .init()
     }
 }

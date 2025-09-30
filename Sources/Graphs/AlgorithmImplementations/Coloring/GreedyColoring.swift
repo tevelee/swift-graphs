@@ -1,18 +1,54 @@
 import Foundation
 
-struct GreedyColoringAlgorithm<
+/// A greedy graph coloring algorithm.
+///
+/// This algorithm colors vertices one by one, assigning each vertex the smallest
+/// available color that doesn't conflict with its already colored neighbors.
+///
+/// - Complexity: O(V^2) where V is the number of vertices
+public struct GreedyColoringAlgorithm<
     Graph: IncidenceGraph & VertexListGraph,
     Color: IntegerBasedColor
 > where Graph.VertexDescriptor: Hashable {
     
-    struct Visitor {
-        var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-        var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
-        var assignColor: ((Graph.VertexDescriptor, Color) -> Void)?
-        var skipVertex: ((Graph.VertexDescriptor, String) -> Void)?
+    /// A visitor that can be used to observe greedy coloring progress.
+    public struct Visitor {
+        /// Called when examining a vertex.
+        public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
+        /// Called when assigning a color to a vertex.
+        public var assignColor: ((Graph.VertexDescriptor, Color) -> Void)?
+        /// Called when skipping a vertex.
+        public var skipVertex: ((Graph.VertexDescriptor, String) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
+            examineEdge: ((Graph.EdgeDescriptor) -> Void)? = nil,
+            assignColor: ((Graph.VertexDescriptor, Color) -> Void)? = nil,
+            skipVertex: ((Graph.VertexDescriptor, String) -> Void)? = nil
+        ) {
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.assignColor = assignColor
+            self.skipVertex = skipVertex
+        }
     }
     
-    func color(graph: Graph, visitor: Visitor? = nil) -> GraphColoring<Graph.VertexDescriptor, Color> {
+    /// Creates a new greedy coloring algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Colors the graph using the greedy algorithm.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to color.
+    ///   - visitor: An optional visitor to observe the algorithm progress.
+    /// - Returns: The graph coloring result.
+    @inlinable
+    public func color(graph: Graph, visitor: Visitor? = nil) -> GraphColoring<Graph.VertexDescriptor, Color> {
         var vertexColors: [Graph.VertexDescriptor: Color] = [:]
         var usedColors: Set<Color> = []
         
@@ -76,7 +112,8 @@ struct GreedyColoringAlgorithm<
         return GraphColoring(vertexColors: vertexColors, isProper: isProper)
     }
     
-    private func checkProperColoring(
+    @usableFromInline
+    func checkProperColoring(
         in graph: Graph,
         vertexColors: [Graph.VertexDescriptor: Color]
     ) -> Bool {

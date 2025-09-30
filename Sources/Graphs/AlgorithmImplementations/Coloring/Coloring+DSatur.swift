@@ -1,13 +1,18 @@
 import Foundation
 
 extension ColoringAlgorithm where Color == Int {
-    static func dsatur<Graph: IncidenceGraph & VertexListGraph>() -> Self where Self == DSaturColoringAlgorithm<Graph, Int>, Graph.VertexDescriptor: Hashable {
+    /// Creates a DSatur coloring algorithm.
+    ///
+    /// - Returns: A DSatur coloring algorithm instance.
+    @inlinable
+    public static func dsatur<Graph: IncidenceGraph & VertexListGraph>() -> Self where Self == DSaturColoringAlgorithm<Graph, Int>, Graph.VertexDescriptor: Hashable {
         .init()
     }
 }
 
 extension DSaturColoringAlgorithm: ColoringAlgorithm {
-    func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
+    @inlinable
+    public func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
         color(graph: graph, visitor: nil)
     }
 }

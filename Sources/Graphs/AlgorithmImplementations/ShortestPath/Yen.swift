@@ -1,6 +1,13 @@
 import Foundation
 
-struct Yen<
+/// Yen's algorithm for finding K shortest paths between two vertices.
+///
+/// Yen's algorithm finds the K shortest paths between a source and destination vertex
+/// by iteratively finding the shortest path and then finding alternative paths
+/// by removing edges from previous paths.
+///
+/// - Complexity: O(K * V * (E + V log V)) where K is the number of paths, V is the number of vertices, and E is the number of edges
+public struct Yen<
     Graph: IncidenceGraph & EdgePropertyGraph,
     Weight: Numeric & Comparable
 > where
@@ -8,24 +15,60 @@ struct Yen<
     Graph.EdgeDescriptor: Hashable,
     Weight.Magnitude == Weight
 {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
     
-    private let edgeWeight: CostDefinition<Graph, Weight>
-    private let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
+    @usableFromInline
+    let edgeWeight: CostDefinition<Graph, Weight>
+    @usableFromInline
+    let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
     
-    struct PriorityItem {
-        let path: Path<Vertex, Edge>
-        let cost: Cost<Weight>
+    /// A priority queue item for Yen's algorithm.
+    public struct PriorityItem {
+        /// The path.
+        public let path: Path<Vertex, Edge>
+        /// The cost of the path.
+        public let cost: Cost<Weight>
+        
+        /// Creates a new priority item.
+        @inlinable
+        public init(path: Path<Vertex, Edge>, cost: Cost<Weight>) {
+            self.path = path
+            self.cost = cost
+        }
     }
     
-    struct Visitor {
-        var onPathFound: (Path<Vertex, Edge>) -> Void = { _ in }
-        var onCandidateAdded: (Path<Vertex, Edge>, Cost<Weight>) -> Void = { _, _ in }
-        var onPathSelected: (Path<Vertex, Edge>, Cost<Weight>) -> Void = { _, _ in }
+    /// A visitor that can be used to observe Yen's algorithm progress.
+    public struct Visitor {
+        /// Called when a path is found.
+        public var onPathFound: (Path<Vertex, Edge>) -> Void = { _ in }
+        /// Called when a candidate path is added.
+        public var onCandidateAdded: (Path<Vertex, Edge>, Cost<Weight>) -> Void = { _, _ in }
+        /// Called when a path is selected.
+        public var onPathSelected: (Path<Vertex, Edge>, Cost<Weight>) -> Void = { _, _ in }
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            onPathFound: @escaping (Path<Vertex, Edge>) -> Void = { _ in },
+            onCandidateAdded: @escaping (Path<Vertex, Edge>, Cost<Weight>) -> Void = { _, _ in },
+            onPathSelected: @escaping (Path<Vertex, Edge>, Cost<Weight>) -> Void = { _, _ in }
+        ) {
+            self.onPathFound = onPathFound
+            self.onCandidateAdded = onCandidateAdded
+            self.onPathSelected = onPathSelected
+        }
     }
     
-    init(
+    /// Creates a new Yen algorithm instance.
+    ///
+    /// - Parameters:
+    ///   - edgeWeight: The cost definition for edge weights.
+    ///   - makePriorityQueue: A factory for creating priority queues.
+    @inlinable
+    public init(
         edgeWeight: CostDefinition<Graph, Weight>,
         makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
             PriorityQueue()
@@ -35,7 +78,17 @@ struct Yen<
         self.makePriorityQueue = makePriorityQueue
     }
     
-    func kShortestPaths(
+    /// Finds the K shortest paths between two vertices.
+    ///
+    /// - Parameters:
+    ///   - source: The source vertex.
+    ///   - destination: The destination vertex.
+    ///   - k: The number of shortest paths to find.
+    ///   - graph: The graph to search in.
+    ///   - visitor: An optional visitor to observe the algorithm's progress.
+    /// - Returns: An array of the K shortest paths.
+    @inlinable
+    public func kShortestPaths(
         from source: Vertex,
         to destination: Vertex,
         k: Int,
@@ -108,11 +161,24 @@ struct Yen<
     
     // MARK: - Temporary Graph Management
     
-    private func createTemporaryGraph(from graph: Graph) -> TemporaryGraph<Graph> {
+    /// Creates a temporary graph for edge removal.
+    ///
+    /// - Parameter graph: The original graph.
+    /// - Returns: A temporary graph.
+    @usableFromInline
+    func createTemporaryGraph(from graph: Graph) -> TemporaryGraph<Graph> {
         TemporaryGraph(originalGraph: graph)
     }
     
-    private func removeEdgesForRootPath(
+    /// Removes edges for a root path.
+    ///
+    /// - Parameters:
+    ///   - tempGraph: The temporary graph to modify.
+    ///   - previousPaths: The previous paths.
+    ///   - rootPath: The root path.
+    ///   - spurNode: The spur node.
+    @usableFromInline
+    func removeEdgesForRootPath(
         in tempGraph: inout TemporaryGraph<Graph>,
         previousPaths: [Path<Vertex, Edge>],
         rootPath: [Vertex],
@@ -143,7 +209,15 @@ struct Yen<
     
     
     
-    private func findShortestPathInTemporaryGraph(
+    /// Finds the shortest path in a temporary graph.
+    ///
+    /// - Parameters:
+    ///   - source: The source vertex.
+    ///   - destination: The destination vertex.
+    ///   - tempGraph: The temporary graph.
+    /// - Returns: The shortest path, if one exists.
+    @usableFromInline
+    func findShortestPathInTemporaryGraph(
         from source: Vertex,
         to destination: Vertex,
         in tempGraph: TemporaryGraph<Graph>
@@ -185,7 +259,16 @@ struct Yen<
         return reconstructPath(from: source, to: destination, predecessors: predecessors, in: tempGraph.originalGraph)
     }
     
-    private func reconstructPath(
+    /// Reconstructs a path from predecessors.
+    ///
+    /// - Parameters:
+    ///   - source: The source vertex.
+    ///   - destination: The destination vertex.
+    ///   - predecessors: The predecessors dictionary.
+    ///   - graph: The graph.
+    /// - Returns: The reconstructed path, if one exists.
+    @usableFromInline
+    func reconstructPath(
         from source: Vertex,
         to destination: Vertex,
         predecessors: [Vertex: Edge?],
@@ -215,7 +298,14 @@ struct Yen<
     
     // MARK: - Path Management
     
-    private func createTotalPath(
+    /// Creates a total path from a root path and spur path.
+    ///
+    /// - Parameters:
+    ///   - rootPath: The root path.
+    ///   - spurPath: The spur path.
+    /// - Returns: The total path, if valid.
+    @usableFromInline
+    func createTotalPath(
         rootPath: [Vertex],
         spurPath: Path<Vertex, Edge>
     ) -> Path<Vertex, Edge>? {
@@ -241,7 +331,15 @@ struct Yen<
         )
     }
     
-    private func isPathAlreadyFound(
+    /// Checks if a path is already found.
+    ///
+    /// - Parameters:
+    ///   - path: The path to check.
+    ///   - results: The results array.
+    ///   - candidates: The candidates array.
+    /// - Returns: `true` if the path is already found, `false` otherwise.
+    @usableFromInline
+    func isPathAlreadyFound(
         _ path: Path<Vertex, Edge>,
         in results: [Path<Vertex, Edge>],
         candidates: [PriorityItem]
@@ -262,7 +360,14 @@ struct Yen<
         return false
     }
     
-    private func calculatePathCost(_ path: Path<Vertex, Edge>, in graph: Graph) -> Cost<Weight> {
+    /// Calculates the cost of a path.
+    ///
+    /// - Parameters:
+    ///   - path: The path to calculate the cost for.
+    ///   - graph: The graph.
+    /// - Returns: The cost of the path.
+    @usableFromInline
+    func calculatePathCost(_ path: Path<Vertex, Edge>, in graph: Graph) -> Cost<Weight> {
         var totalCost: Weight = .zero
         for edge in path.edges {
             let weight = edgeWeight.costToExplore(edge, graph)
@@ -271,7 +376,12 @@ struct Yen<
         return .finite(totalCost)
     }
     
-    private func selectShortestCandidate(_ candidates: inout [PriorityItem]) -> Path<Vertex, Edge>? {
+    /// Selects the shortest candidate path.
+    ///
+    /// - Parameter candidates: The candidates array to modify.
+    /// - Returns: The shortest candidate path, if one exists.
+    @usableFromInline
+    func selectShortestCandidate(_ candidates: inout [PriorityItem]) -> Path<Vertex, Edge>? {
         guard let shortest = candidates.min(by: { $0.cost < $1.cost }) else {
             return nil
         }
@@ -280,7 +390,16 @@ struct Yen<
         return shortest.path
     }
     
-    private func getEdgesToRemove(
+    /// Gets edges to remove for a root path.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph.
+    ///   - previousPaths: The previous paths.
+    ///   - rootPath: The root path.
+    ///   - spurNode: The spur node.
+    /// - Returns: The edges to remove.
+    @usableFromInline
+    func getEdgesToRemove(
         from graph: Graph,
         previousPaths: [Path<Vertex, Edge>],
         rootPath: [Vertex],
@@ -313,41 +432,56 @@ struct Yen<
 extension Yen: KShortestPathsAlgorithm, VisitorSupporting {}
 
 extension Yen.PriorityItem: Equatable {
-    static func == (lhs: Self, rhs: Self) -> Bool {
+    @inlinable
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.path.vertices == rhs.path.vertices
     }
 }
 
 extension Yen.PriorityItem: Comparable {
-    static func < (lhs: Self, rhs: Self) -> Bool {
+    @inlinable
+    public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.cost < rhs.cost
     }
 }
 
 // MARK: - Temporary Graph for Edge Removal
 
-private struct TemporaryGraph<BaseGraph: IncidenceGraph & EdgePropertyGraph>: IncidenceGraph & EdgePropertyGraph where BaseGraph.EdgeDescriptor: Hashable {
+/// A temporary graph that allows edge removal for Yen's algorithm.
+@usableFromInline
+struct TemporaryGraph<BaseGraph: IncidenceGraph & EdgePropertyGraph>: IncidenceGraph & EdgePropertyGraph where BaseGraph.EdgeDescriptor: Hashable {
+    @usableFromInline
     typealias VertexDescriptor = BaseGraph.VertexDescriptor
+    @usableFromInline
     typealias EdgeDescriptor = BaseGraph.EdgeDescriptor
+    @usableFromInline
     typealias OutgoingEdges = FilteredEdges<BaseGraph.OutgoingEdges>
+    @usableFromInline
     typealias EdgeProperties = BaseGraph.EdgeProperties
+    @usableFromInline
     typealias EdgePropertyMap = BaseGraph.EdgePropertyMap
     
+    @usableFromInline
     let originalGraph: BaseGraph
-    private var removedEdges: Set<EdgeDescriptor> = []
+    @usableFromInline
+    var removedEdges: Set<EdgeDescriptor> = []
     
+    @usableFromInline
     var edgePropertyMap: EdgePropertyMap {
         originalGraph.edgePropertyMap
     }
     
+    @inlinable
     init(originalGraph: BaseGraph) {
         self.originalGraph = originalGraph
     }
     
+    @inlinable
     mutating func removeEdge(_ edge: EdgeDescriptor) {
         removedEdges.insert(edge)
     }
     
+    @inlinable
     func outgoingEdges(of vertex: VertexDescriptor) -> OutgoingEdges {
         FilteredEdges(
             base: originalGraph.outgoingEdges(of: vertex),
@@ -355,14 +489,17 @@ private struct TemporaryGraph<BaseGraph: IncidenceGraph & EdgePropertyGraph>: In
         )
     }
     
+    @inlinable
     func source(of edge: EdgeDescriptor) -> VertexDescriptor? {
         originalGraph.source(of: edge)
     }
     
+    @inlinable
     func destination(of edge: EdgeDescriptor) -> VertexDescriptor? {
         originalGraph.destination(of: edge)
     }
     
+    @inlinable
     func outDegree(of vertex: VertexDescriptor) -> Int {
         originalGraph.outgoingEdges(of: vertex).filter { !removedEdges.contains($0) }.count
     }
@@ -371,10 +508,20 @@ private struct TemporaryGraph<BaseGraph: IncidenceGraph & EdgePropertyGraph>: In
     // The protocol only requires edgePropertyMap, which is already provided
 }
 
-private struct FilteredEdges<BaseEdges: Sequence>: Sequence where BaseEdges.Element: Hashable {
+@usableFromInline
+struct FilteredEdges<BaseEdges: Sequence>: Sequence where BaseEdges.Element: Hashable {
+    @usableFromInline
     let base: BaseEdges
+    @usableFromInline
     let removedEdges: Set<BaseEdges.Element>
     
+    @inlinable
+    init(base: BaseEdges, removedEdges: Set<BaseEdges.Element>) {
+        self.base = base
+        self.removedEdges = removedEdges
+    }
+    
+    @inlinable
     func makeIterator() -> FilteredIterator<BaseEdges.Iterator> {
         FilteredIterator(
             base: base.makeIterator(),
@@ -383,10 +530,20 @@ private struct FilteredEdges<BaseEdges: Sequence>: Sequence where BaseEdges.Elem
     }
 }
 
-private struct FilteredIterator<BaseIterator: IteratorProtocol>: IteratorProtocol where BaseIterator.Element: Hashable {
+@usableFromInline
+struct FilteredIterator<BaseIterator: IteratorProtocol>: IteratorProtocol where BaseIterator.Element: Hashable {
+    @usableFromInline
     var base: BaseIterator
+    @usableFromInline
     let removedEdges: Set<BaseIterator.Element>
     
+    @inlinable
+    init(base: BaseIterator, removedEdges: Set<BaseIterator.Element>) {
+        self.base = base
+        self.removedEdges = removedEdges
+    }
+    
+    @inlinable
     mutating func next() -> BaseIterator.Element? {
         while let element = base.next() {
             if !removedEdges.contains(element) {

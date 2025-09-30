@@ -1,45 +1,113 @@
 import Foundation
 
-struct BidirectionalDijkstra<
+/// Bidirectional Dijkstra's algorithm for finding shortest paths between two vertices.
+///
+/// Bidirectional Dijkstra's algorithm searches from both the source and destination
+/// simultaneously, meeting in the middle. This can be more efficient than standard
+/// Dijkstra's algorithm for point-to-point shortest path queries.
+///
+/// - Complexity: O(E log V) where E is the number of edges and V is the number of vertices
+public struct BidirectionalDijkstra<
     Graph: IncidenceGraph & BidirectionalGraph & EdgePropertyGraph,
     Weight: Numeric & Comparable
 > where
     Graph.VertexDescriptor: Hashable,
     Weight.Magnitude == Weight
 {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var examineVertex: ((Vertex, Direction) -> Void)?
-        var examineEdge: ((Edge, Direction) -> Void)?
-        var edgeRelaxed: ((Edge, Direction) -> Void)?
-        var edgeNotRelaxed: ((Edge, Direction) -> Void)?
-        var meetingFound: ((Vertex, Cost<Weight>) -> Void)?
+    /// A visitor that can be used to observe the bidirectional Dijkstra algorithm's progress.
+    public struct Visitor {
+        /// Called when examining a vertex.
+        public var examineVertex: ((Vertex, Direction) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge, Direction) -> Void)?
+        /// Called when an edge is relaxed.
+        public var edgeRelaxed: ((Edge, Direction) -> Void)?
+        /// Called when an edge is not relaxed.
+        public var edgeNotRelaxed: ((Edge, Direction) -> Void)?
+        /// Called when a meeting point is found.
+        public var meetingFound: ((Vertex, Cost<Weight>) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            examineVertex: ((Vertex, Direction) -> Void)? = nil,
+            examineEdge: ((Edge, Direction) -> Void)? = nil,
+            edgeRelaxed: ((Edge, Direction) -> Void)? = nil,
+            edgeNotRelaxed: ((Edge, Direction) -> Void)? = nil,
+            meetingFound: ((Vertex, Cost<Weight>) -> Void)? = nil
+        ) {
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.edgeRelaxed = edgeRelaxed
+            self.edgeNotRelaxed = edgeNotRelaxed
+            self.meetingFound = meetingFound
+        }
     }
     
-    enum Direction {
+    /// The direction of search in bidirectional Dijkstra.
+    public enum Direction {
+        /// Forward search from source to destination.
         case forward
+        /// Backward search from destination to source.
         case backward
     }
     
-    struct Result {
-        let path: Path<Vertex, Edge>?
-        let totalDistance: Cost<Weight>
-        let meetingVertex: Vertex?
+    /// The result of a bidirectional Dijkstra search.
+    public struct Result {
+        /// The shortest path, if one exists.
+        public let path: Path<Vertex, Edge>?
+        /// The total distance of the shortest path.
+        public let totalDistance: Cost<Weight>
+        /// The vertex where the forward and backward searches met.
+        public let meetingVertex: Vertex?
+        
+        /// Creates a new result.
+        @inlinable
+        public init(path: Path<Vertex, Edge>?, totalDistance: Cost<Weight>, meetingVertex: Vertex?) {
+            self.path = path
+            self.totalDistance = totalDistance
+            self.meetingVertex = meetingVertex
+        }
     }
     
-    private let graph: Graph
-    private let edgeWeight: CostDefinition<Graph, Weight>
-    private let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
+    @usableFromInline
+    let graph: Graph
+    @usableFromInline
+    let edgeWeight: CostDefinition<Graph, Weight>
+    @usableFromInline
+    let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
     
-    struct PriorityItem {
-        let vertex: Vertex
-        let cost: Cost<Weight>
-        let direction: Direction
+    /// A priority queue item for bidirectional Dijkstra.
+    public struct PriorityItem {
+        /// The vertex.
+        public let vertex: Vertex
+        /// The cost to reach this vertex.
+        public let cost: Cost<Weight>
+        /// The search direction.
+        public let direction: Direction
+        
+        /// Creates a new priority item.
+        @inlinable
+        public init(vertex: Vertex, cost: Cost<Weight>, direction: Direction) {
+            self.vertex = vertex
+            self.cost = cost
+            self.direction = direction
+        }
     }
     
-    init(
+    /// Creates a new bidirectional Dijkstra algorithm instance.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to search in.
+    ///   - edgeWeight: The cost definition for edge weights.
+    ///   - makePriorityQueue: A factory for creating priority queues.
+    @inlinable
+    public init(
         on graph: Graph,
         edgeWeight: CostDefinition<Graph, Weight>,
         makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
@@ -51,7 +119,15 @@ struct BidirectionalDijkstra<
         self.makePriorityQueue = makePriorityQueue
     }
     
-    func shortestPath(from source: Vertex, to destination: Vertex, visitor: Visitor? = nil) -> Result {
+    /// Finds the shortest path between two vertices.
+    ///
+    /// - Parameters:
+    ///   - source: The source vertex.
+    ///   - destination: The destination vertex.
+    ///   - visitor: An optional visitor to observe the algorithm's progress.
+    /// - Returns: The shortest path result.
+    @inlinable
+    public func shortestPath(from source: Vertex, to destination: Vertex, visitor: Visitor? = nil) -> Result {
         var forwardDistances: [Vertex: Cost<Weight>] = [:]
         var backwardDistances: [Vertex: Cost<Weight>] = [:]
         var forwardPredecessors: [Vertex: Edge?] = [:]
@@ -164,7 +240,17 @@ struct BidirectionalDijkstra<
         )
     }
     
-    private func exploreForward(
+    /// Explores forward from a vertex.
+    ///
+    /// - Parameters:
+    ///   - currentVertex: The current vertex.
+    ///   - currentCost: The current cost to reach the vertex.
+    ///   - distances: The distances dictionary to update.
+    ///   - predecessors: The predecessors dictionary to update.
+    ///   - queue: The priority queue to add new items to.
+    ///   - visitor: An optional visitor.
+    @usableFromInline
+    func exploreForward(
         from currentVertex: Vertex,
         currentCost: Cost<Weight>,
         distances: inout [Vertex: Cost<Weight>],
@@ -192,7 +278,17 @@ struct BidirectionalDijkstra<
         }
     }
     
-    private func exploreBackward(
+    /// Explores backward from a vertex.
+    ///
+    /// - Parameters:
+    ///   - currentVertex: The current vertex.
+    ///   - currentCost: The current cost to reach the vertex.
+    ///   - distances: The distances dictionary to update.
+    ///   - predecessors: The predecessors dictionary to update.
+    ///   - queue: The priority queue to add new items to.
+    ///   - visitor: An optional visitor.
+    @usableFromInline
+    func exploreBackward(
         from currentVertex: Vertex,
         currentCost: Cost<Weight>,
         distances: inout [Vertex: Cost<Weight>],
@@ -220,7 +316,17 @@ struct BidirectionalDijkstra<
         }
     }
     
-    private func reconstructPath(
+    /// Reconstructs the shortest path from the meeting point.
+    ///
+    /// - Parameters:
+    ///   - source: The source vertex.
+    ///   - destination: The destination vertex.
+    ///   - meetingVertex: The vertex where the searches met.
+    ///   - forwardPredecessors: The forward predecessors.
+    ///   - backwardPredecessors: The backward predecessors.
+    /// - Returns: The reconstructed path.
+    @usableFromInline
+    func reconstructPath(
         from source: Vertex,
         to destination: Vertex,
         meetingVertex: Vertex,
@@ -264,7 +370,8 @@ struct BidirectionalDijkstra<
 }
 
 extension BidirectionalDijkstra: ShortestPathAlgorithm {
-    func shortestPath(
+    @inlinable
+    public func shortestPath(
         from source: Vertex,
         to destination: Vertex,
         in graph: Graph,
@@ -276,13 +383,15 @@ extension BidirectionalDijkstra: ShortestPathAlgorithm {
 
 
 extension BidirectionalDijkstra.PriorityItem: Equatable {
-    static func == (lhs: Self, rhs: Self) -> Bool {
+    @inlinable
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.vertex == rhs.vertex && lhs.direction == rhs.direction
     }
 }
 
 extension BidirectionalDijkstra.PriorityItem: Comparable {
-    static func < (lhs: Self, rhs: Self) -> Bool {
+    @inlinable
+    public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.cost < rhs.cost
     }
 }

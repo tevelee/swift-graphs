@@ -1,33 +1,71 @@
 import Foundation
 
-struct BellmanFord<
+/// The Bellman-Ford algorithm for finding shortest paths in graphs with negative edge weights.
+///
+/// Bellman-Ford can handle graphs with negative edge weights and detects negative cycles.
+/// It has a time complexity of O(VE) where V is the number of vertices and E is the number of edges.
+public struct BellmanFord<
     Graph: IncidenceGraph & EdgeListGraph & EdgePropertyGraph & VertexListGraph,
     Weight: AdditiveArithmetic & Comparable
 > where
     Graph.VertexDescriptor: Hashable
 {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+    public typealias Vertex = Graph.VertexDescriptor
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var examineVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var edgeRelaxed: ((Edge) -> Void)?
-        var edgeNotRelaxed: ((Edge) -> Void)?
-        var detectNegativeCycle: ((Edge) -> Void)?
-        var completeRelaxationIteration: ((Int) -> Void)?
+    /// A visitor for Bellman-Ford algorithm events.
+    ///
+    /// Visitors can observe the algorithm's progress including edge relaxations,
+    /// negative cycle detection, and iteration completion.
+    public struct Visitor {
+        public var examineVertex: ((Vertex) -> Void)?
+        public var examineEdge: ((Edge) -> Void)?
+        public var edgeRelaxed: ((Edge) -> Void)?
+        public var edgeNotRelaxed: ((Edge) -> Void)?
+        public var detectNegativeCycle: ((Edge) -> Void)?
+        public var completeRelaxationIteration: ((Int) -> Void)?
+        
+        @inlinable
+        public init(
+            examineVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            edgeRelaxed: ((Edge) -> Void)? = nil,
+            edgeNotRelaxed: ((Edge) -> Void)? = nil,
+            detectNegativeCycle: ((Edge) -> Void)? = nil,
+            completeRelaxationIteration: ((Int) -> Void)? = nil
+        ) {
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.edgeRelaxed = edgeRelaxed
+            self.edgeNotRelaxed = edgeNotRelaxed
+            self.detectNegativeCycle = detectNegativeCycle
+            self.completeRelaxationIteration = completeRelaxationIteration
+        }
     }
     
-    struct Result {
-        let distances: [Vertex: Cost<Weight>]
-        let predecessors: [Vertex: Edge?]
-        let hasNegativeCycle: Bool
+    /// A result from the Bellman-Ford algorithm.
+    ///
+    /// Contains the computed distances, predecessor edges, and whether a negative cycle was detected.
+    public struct Result {
+        public let distances: [Vertex: Cost<Weight>]
+        public let predecessors: [Vertex: Edge?]
+        public let hasNegativeCycle: Bool
+        
+        @inlinable
+        public init(distances: [Vertex: Cost<Weight>], predecessors: [Vertex: Edge?], hasNegativeCycle: Bool) {
+            self.distances = distances
+            self.predecessors = predecessors
+            self.hasNegativeCycle = hasNegativeCycle
+        }
     }
     
-    private let graph: Graph
-    private let edgeWeight: CostDefinition<Graph, Weight>
+    @usableFromInline
+    let graph: Graph
+    @usableFromInline
+    let edgeWeight: CostDefinition<Graph, Weight>
     
-    init(
+    @inlinable
+    public init(
         on graph: Graph,
         edgeWeight: CostDefinition<Graph, Weight>
     ) {
@@ -35,7 +73,8 @@ struct BellmanFord<
         self.edgeWeight = edgeWeight
     }
     
-    func shortestPathsFromSource(_ source: Vertex, visitor: Visitor? = nil) -> Result {
+    @inlinable
+    public func shortestPathsFromSource(_ source: Vertex, visitor: Visitor? = nil) -> Result {
         var distances: [Vertex: Cost<Weight>] = [:]
         var predecessors: [Vertex: Edge?] = [:]
         
@@ -106,7 +145,8 @@ struct BellmanFord<
         )
     }
     
-    func shortestPath(from source: Vertex, to destination: Vertex, visitor: Visitor? = nil) -> Path<Vertex, Edge>? {
+    @inlinable
+    public func shortestPath(from source: Vertex, to destination: Vertex, visitor: Visitor? = nil) -> Path<Vertex, Edge>? {
         let result = shortestPathsFromSource(source, visitor: visitor)
         
         guard !result.hasNegativeCycle else {
@@ -145,7 +185,8 @@ struct BellmanFord<
 }
 
 extension BellmanFord: ShortestPathAlgorithm {
-    func shortestPath(
+    @inlinable
+    public func shortestPath(
         from source: Vertex,
         to destination: Vertex,
         in graph: Graph,
@@ -154,7 +195,6 @@ extension BellmanFord: ShortestPathAlgorithm {
         shortestPath(from: source, to: destination)
     }
 }
-
 
 extension BellmanFord: VisitorSupporting {}
 

@@ -1,36 +1,59 @@
 import Collections
 
-struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
-    struct Edge: Identifiable, Hashable {
-        let id: Int
+/// A compressed sparse row (CSR) format edge storage implementation.
+///
+/// CSREdgeStorage provides efficient storage for sparse graphs using the CSR format,
+/// which is optimized for graph algorithms that need to iterate over outgoing edges
+/// of vertices. This format provides excellent cache locality for traversal operations.
+public struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
+    /// An edge descriptor for CSR format edges.
+    public struct Edge: Identifiable, Hashable {
+        public let id: Int
+        
+        @inlinable
+        public init(id: Int) {
+            self.id = id
+        }
     }
 
-    private var vertexIndex: OrderedDictionary<Vertex, Int> = [:]
-    private var rowOffsets: [Int] = [0]
-    private var flatEdgeIds: [Int] = []
-    private var edgeSources: [Vertex] = []
-    private var edgeDestinations: [Vertex] = []
-    private var alive: OrderedSet<Int> = []
-    private var freeList: [Int] = []
-    private var incomingBuckets: OrderedDictionary<Vertex, OrderedSet<Int>> = [:]
+    @usableFromInline
+    var vertexIndex: OrderedDictionary<Vertex, Int> = [:]
+    @usableFromInline
+    var rowOffsets: [Int] = [0]
+    @usableFromInline
+    var flatEdgeIds: [Int] = []
+    @usableFromInline
+    var edgeSources: [Vertex] = []
+    @usableFromInline
+    var edgeDestinations: [Vertex] = []
+    @usableFromInline
+    var alive: OrderedSet<Int> = []
+    @usableFromInline
+    var freeList: [Int] = []
+    @usableFromInline
+    var incomingBuckets: OrderedDictionary<Vertex, OrderedSet<Int>> = [:]
 
-    var edgeCount: Int { alive.count }
+    @inlinable
+    public var edgeCount: Int { alive.count }
 
-    func edges() -> OrderedSet<Edge> {
+    @inlinable
+    public func edges() -> OrderedSet<Edge> {
         var result: OrderedSet<Edge> = []
         result.reserveCapacity(alive.count)
         for id in alive { result.updateOrAppend(Edge(id: id)) }
         return result
     }
 
-    func endpoints(of edge: Edge) -> (source: Vertex, destination: Vertex)? {
+    @inlinable
+    public func endpoints(of edge: Edge) -> (source: Vertex, destination: Vertex)? {
         let id = edge.id
         guard id >= 0 && id < edgeSources.count else { return nil }
         if !alive.contains(id) { return nil }
         return (edgeSources[id], edgeDestinations[id])
     }
 
-    func outgoingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
+    @inlinable
+    public func outgoingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
         guard let vertexIndex = vertexIndex[vertex] else { return [] }
         let startIndex = rowOffsets[vertexIndex]
         let endIndex = rowOffsets[vertexIndex + 1]
@@ -45,12 +68,14 @@ struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
         return result
     }
 
-    func outDegree(of vertex: Vertex) -> Int {
+    @inlinable
+    public func outDegree(of vertex: Vertex) -> Int {
         guard let vertexIndex = vertexIndex[vertex] else { return 0 }
         return rowOffsets[vertexIndex + 1] - rowOffsets[vertexIndex]
     }
 
-    func incomingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
+    @inlinable
+    public func incomingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
         guard let bucket = incomingBuckets[vertex] else { return [] }
         var result: OrderedSet<Edge> = []
         result.reserveCapacity(bucket.count)
@@ -60,11 +85,13 @@ struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
         return result
     }
 
-    func inDegree(of vertex: Vertex) -> Int {
+    @inlinable
+    public func inDegree(of vertex: Vertex) -> Int {
         incomingBuckets[vertex]?.count ?? 0
     }
 
-    private mutating func ensureIndex(for vertex: Vertex) -> Int {
+    @usableFromInline
+    mutating func ensureIndex(for vertex: Vertex) -> Int {
         if let existingIndex = vertexIndex[vertex] { return existingIndex }
         let newIndex = vertexIndex.count
         vertexIndex[vertex] = newIndex
@@ -72,7 +99,8 @@ struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
         return newIndex
     }
 
-    mutating func addEdge(from source: Vertex, to destination: Vertex) -> Edge {
+    @inlinable
+    public mutating func addEdge(from source: Vertex, to destination: Vertex) -> Edge {
         let edgeId: Int
         if let reusedId = freeList.popLast() {
             edgeId = reusedId
@@ -100,7 +128,8 @@ struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
         return Edge(id: edgeId)
     }
 
-    mutating func remove(edge: Edge) {
+    @inlinable
+    public mutating func remove(edge: Edge) {
         let edgeId = edge.id
         guard edgeId >= 0 && edgeId < edgeSources.count else { return }
         if !alive.contains(edgeId) { return }

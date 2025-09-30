@@ -1,6 +1,13 @@
 import Foundation
 
-struct Johnson<
+/// Johnson's algorithm for computing shortest paths between all pairs of vertices.
+///
+/// Johnson's algorithm is a method for finding shortest paths between all pairs of vertices
+/// in a sparse graph. It works by reweighting the graph to eliminate negative edges,
+/// then running Dijkstra's algorithm from each vertex.
+///
+/// - Complexity: O(V² log V + VE) where V is the number of vertices and E is the number of edges
+public struct Johnson<
     Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
     Weight: AdditiveArithmetic & Comparable
 > where
@@ -8,27 +15,66 @@ struct Johnson<
     Weight: Numeric,
     Weight.Magnitude == Weight
 {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var examineVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var reweightEdge: ((Edge, Weight) -> Void)?
-        var startDijkstraFromSource: ((Vertex) -> Void)?
-        var completeDijkstraFromSource: ((Vertex) -> Void)?
-        var detectNegativeCycle: (() -> Void)?
+    /// A visitor that can be used to observe Johnson's algorithm progress.
+    public struct Visitor {
+        /// Called when examining a vertex.
+        public var examineVertex: ((Vertex) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge) -> Void)?
+        /// Called when reweighting an edge.
+        public var reweightEdge: ((Edge, Weight) -> Void)?
+        /// Called when starting Dijkstra from a source vertex.
+        public var startDijkstraFromSource: ((Vertex) -> Void)?
+        /// Called when completing Dijkstra from a source vertex.
+        public var completeDijkstraFromSource: ((Vertex) -> Void)?
+        /// Called when a negative cycle is detected.
+        public var detectNegativeCycle: (() -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            examineVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            reweightEdge: ((Edge, Weight) -> Void)? = nil,
+            startDijkstraFromSource: ((Vertex) -> Void)? = nil,
+            completeDijkstraFromSource: ((Vertex) -> Void)? = nil,
+            detectNegativeCycle: (() -> Void)? = nil
+        ) {
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.reweightEdge = reweightEdge
+            self.startDijkstraFromSource = startDijkstraFromSource
+            self.completeDijkstraFromSource = completeDijkstraFromSource
+            self.detectNegativeCycle = detectNegativeCycle
+        }
     }
     
-    private let edgeWeight: CostDefinition<Graph, Weight>
+    @usableFromInline
+    let edgeWeight: CostDefinition<Graph, Weight>
     
-    init(
+    /// Creates a new Johnson algorithm instance.
+    ///
+    /// - Parameter edgeWeight: The cost definition for edge weights.
+    @inlinable
+    public init(
         edgeWeight: CostDefinition<Graph, Weight>
     ) {
         self.edgeWeight = edgeWeight
     }
     
-    func shortestPathsForAllPairs(in graph: Graph, visitor: Visitor? = nil) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
+    /// Computes shortest paths between all pairs of vertices.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to compute shortest paths for.
+    ///   - visitor: An optional visitor to observe the algorithm's progress.
+    /// - Returns: The shortest paths between all pairs of vertices.
+    @inlinable
+    public func shortestPathsForAllPairs(in graph: Graph, visitor: Visitor? = nil) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
         let reweightingValues = computeReweightingValues(in: graph)
         
         guard !reweightingValues.isEmpty else {
@@ -94,7 +140,12 @@ struct Johnson<
         )
     }
     
-    private func computeReweightingValues(in graph: Graph) -> [Vertex: Weight] {
+    /// Computes reweighting values for the graph.
+    ///
+    /// - Parameter graph: The graph to compute reweighting values for.
+    /// - Returns: A dictionary mapping vertices to their reweighting values.
+    @usableFromInline
+    func computeReweightingValues(in graph: Graph) -> [Vertex: Weight] {
         let vertices = Array(graph.vertices())
         var distances: [Vertex: Cost<Weight>] = [:]
         
@@ -156,7 +207,12 @@ struct Johnson<
         )
     }
     
-    private func createReweightedCostDefinition(reweightingValues: [Vertex: Weight]) -> CostDefinition<Graph, Weight> {
+    /// Creates a reweighted cost definition.
+    ///
+    /// - Parameter reweightingValues: The reweighting values for vertices.
+    /// - Returns: A cost definition that applies reweighting.
+    @usableFromInline
+    func createReweightedCostDefinition(reweightingValues: [Vertex: Weight]) -> CostDefinition<Graph, Weight> {
         return CostDefinition { edge, graph in
             guard let source = graph.source(of: edge),
                   let destination = graph.destination(of: edge) else {
@@ -172,7 +228,8 @@ struct Johnson<
 }
 
 extension Johnson: ShortestPathsForAllPairsAlgorithm {
-    func shortestPathsForAllPairs(in graph: Graph) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
+    @inlinable
+    public func shortestPathsForAllPairs(in graph: Graph) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
         shortestPathsForAllPairs(in: graph, visitor: nil)
     }
 }
@@ -180,7 +237,12 @@ extension Johnson: ShortestPathsForAllPairsAlgorithm {
 extension Johnson: VisitorSupporting {}
 
 extension Johnson {
-    static func create<G: IncidenceGraph & VertexListGraph & EdgePropertyGraph, W: AdditiveArithmetic & Comparable>(
+    /// Creates a new Johnson algorithm instance.
+    ///
+    /// - Parameter edgeWeight: The cost definition for edge weights.
+    /// - Returns: A new Johnson algorithm instance.
+    @inlinable
+    public static func create<G: IncidenceGraph & VertexListGraph & EdgePropertyGraph, W: AdditiveArithmetic & Comparable>(
         edgeWeight: CostDefinition<G, W>
     ) -> Johnson<G, W> where G.VertexDescriptor: Hashable {
         Johnson<G, W>(edgeWeight: edgeWeight)
@@ -188,7 +250,12 @@ extension Johnson {
 }
 
 extension ShortestPathsForAllPairsAlgorithm {
-    static func johnson<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: AdditiveArithmetic & Comparable>(
+    /// Creates a Johnson algorithm for computing all-pairs shortest paths.
+    ///
+    /// - Parameter edgeWeight: The cost definition for edge weights.
+    /// - Returns: A Johnson algorithm instance.
+    @inlinable
+    public static func johnson<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight: AdditiveArithmetic & Comparable>(
         edgeWeight: CostDefinition<Graph, Weight>
     ) -> Johnson<Graph, Weight> where Self == Johnson<Graph, Weight>, Graph.VertexDescriptor: Hashable {
         Johnson(edgeWeight: edgeWeight)

@@ -1,13 +1,15 @@
 import Foundation
 
-protocol Composable {
+/// A protocol for types that can be combined with other types.
+public protocol Composable {
     associatedtype Other
     
     func combined(with other: Other) -> Self
 }
 
 extension Composable where Other == Self {
-    func combined(with other: Self?) -> Self {
+    @inlinable
+    public func combined(with other: Self?) -> Self {
         if let other {
             combined(with: other)
         } else {
@@ -17,5 +19,6 @@ extension Composable where Other == Self {
 }
 
 extension Never: Composable {
-    func combined(with other: Never) -> Never {}
+    @inlinable
+    public func combined(with other: Never) -> Never {}
 }

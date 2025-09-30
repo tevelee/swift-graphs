@@ -1,5 +1,13 @@
 extension IncidenceGraph where VertexDescriptor: Equatable {
-    func shortestPath<Weight: AdditiveArithmetic & Comparable>(
+    /// Finds the shortest path between two vertices using the specified algorithm.
+    ///
+    /// - Parameters:
+    ///   - source: The starting vertex
+    ///   - destination: The target vertex
+    ///   - algorithm: The shortest path algorithm to use
+    /// - Returns: The shortest path, or `nil` if no path exists
+    @inlinable
+    public func shortestPath<Weight: AdditiveArithmetic & Comparable>(
         from source: VertexDescriptor,
         to destination: VertexDescriptor,
         using algorithm: some ShortestPathAlgorithm<Self, Weight>
@@ -13,7 +21,14 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
 extension IncidenceGraph where Self: EdgePropertyGraph, VertexDescriptor: Hashable {
     /// Finds the shortest path between two vertices using Dijkstra's algorithm as the default.
     /// This is the most commonly used and efficient algorithm for non-negative edge weights.
-    func shortestPath<Weight: Numeric & Comparable>(
+    ///
+    /// - Parameters:
+    ///   - source: The starting vertex
+    ///   - destination: The target vertex
+    ///   - weight: The cost definition for edge weights
+    /// - Returns: The shortest path, or `nil` if no path exists
+    @inlinable
+    public func shortestPath<Weight: Numeric & Comparable>(
         from source: VertexDescriptor,
         to destination: VertexDescriptor,
         weight: CostDefinition<Self, Weight>
@@ -22,11 +37,28 @@ extension IncidenceGraph where Self: EdgePropertyGraph, VertexDescriptor: Hashab
     }
 }
 
-protocol ShortestPathAlgorithm<Graph, Weight> {
+/// A protocol for shortest path algorithms.
+///
+/// Shortest path algorithms find the path with minimum total weight between two vertices
+/// in a weighted graph. Different algorithms have different characteristics and requirements.
+public protocol ShortestPathAlgorithm<Graph, Weight> {
+    /// The type of graph this algorithm operates on.
     associatedtype Graph: IncidenceGraph
+    
+    /// The type used for edge weights.
     associatedtype Weight: AdditiveArithmetic & Comparable
+    
+    /// The type of visitor used for algorithm events.
     associatedtype Visitor
 
+    /// Finds the shortest path between two vertices.
+    ///
+    /// - Parameters:
+    ///   - source: The starting vertex
+    ///   - destination: The target vertex
+    ///   - graph: The graph to search
+    ///   - visitor: Optional visitor for algorithm events
+    /// - Returns: The shortest path, or `nil` if no path exists
     func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
@@ -36,7 +68,16 @@ protocol ShortestPathAlgorithm<Graph, Weight> {
 }
 
 extension ShortestPathAlgorithm where Self: ShortestPathUntilAlgorithm, Graph.VertexDescriptor: Equatable {
-    func shortestPath(
+    /// Default implementation using the until-based algorithm.
+    ///
+    /// - Parameters:
+    ///   - source: The starting vertex
+    ///   - destination: The target vertex
+    ///   - graph: The graph to search
+    ///   - visitor: Optional visitor for algorithm events
+    /// - Returns: The shortest path, or `nil` if no path exists
+    @inlinable
+    public func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         in graph: Graph,
@@ -47,10 +88,11 @@ extension ShortestPathAlgorithm where Self: ShortestPathUntilAlgorithm, Graph.Ve
 }
 
 extension VisitorWrapper: ShortestPathAlgorithm where Base: ShortestPathAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
-    typealias Graph = Base.Graph
-    typealias Weight = Base.Weight
+    public typealias Graph = Base.Graph
+    public typealias Weight = Base.Weight
 
-    func shortestPath(
+    @inlinable
+    public func shortestPath(
         from source: Base.Graph.VertexDescriptor,
         to destination: Base.Graph.VertexDescriptor,
         in graph: Base.Graph,

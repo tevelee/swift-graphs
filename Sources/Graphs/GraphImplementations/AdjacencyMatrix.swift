@@ -1,38 +1,61 @@
 import Collections
 
-struct AdjacencyMatrix {
+/// An adjacency matrix implementation of a graph.
+///
+/// This implementation uses a square boolean matrix to represent graph connectivity,
+/// where `matrix[i][j]` is `true` if there is an edge from vertex `i` to vertex `j`.
+/// This provides O(1) edge existence checks but O(V²) space complexity.
+///
+/// - Note: This implementation is optimized for dense graphs where most vertex pairs
+///   are connected. For sparse graphs, consider using `AdjacencyList` instead.
+public struct AdjacencyMatrix {
     // Square matrix (bool presence). For multigraphs, switch to Int counts or edge lists per cell.
-    private var matrix: [[Bool]] = []
-    private var verticesStore: OrderedSet<Vertex> = []
-    private var edgesStore: OrderedDictionary<Edge, (source: Vertex, destination: Vertex)> = [:]
+    @usableFromInline
+    internal var matrix: [[Bool]] = []
+    @usableFromInline
+    internal var verticesStore: OrderedSet<Vertex> = []
+    @usableFromInline
+    internal var edgesStore: OrderedDictionary<Edge, (source: Vertex, destination: Vertex)> = [:]
     // Performance optimization: O(1) edge lookup by (source, destination) pair
-    private var edgeLookup: [Vertex: [Vertex: Edge]] = [:]
-    private var nextVertexId: Int = 0
-    private var nextEdgeId: Int = 0
+    @usableFromInline
+    internal var edgeLookup: [Vertex: [Vertex: Edge]] = [:]
+    @usableFromInline
+    internal var nextVertexId: Int = 0
+    @usableFromInline
+    internal var nextEdgeId: Int = 0
     // Property maps
-    var vertexPropertyMap: DictionaryPropertyMap<Vertex, VertexPropertyValues> = .init(defaultValue: .init())
-    var edgePropertyMap: DictionaryPropertyMap<Edge, EdgePropertyValues> = .init(defaultValue: .init())
+    public var vertexPropertyMap: DictionaryPropertyMap<Vertex, VertexPropertyValues> = .init(defaultValue: .init())
+    public var edgePropertyMap: DictionaryPropertyMap<Edge, EdgePropertyValues> = .init(defaultValue: .init())
+    
+    /// Creates a new empty adjacency matrix.
+    @inlinable
+    public init() {}
 }
 
 extension AdjacencyMatrix: Graph {
-    struct Vertex: Identifiable, Hashable {
+    /// A vertex in the adjacency matrix graph.
+    public struct Vertex: Identifiable, Hashable {
         private let _id: Int
-        var id: some Hashable { _id }
-        fileprivate init(_id: Int) { self._id = _id }
+        public var id: some Hashable { _id }
+        @usableFromInline
+        init(_id: Int) { self._id = _id }
     }
 
-    struct Edge: Identifiable, Hashable {
+    /// An edge in the adjacency matrix graph.
+    public struct Edge: Identifiable, Hashable {
         private let _id: Int
-        var id: some Hashable { _id }
-        fileprivate init(_id: Int) { self._id = _id }
+        public var id: some Hashable { _id }
+        @usableFromInline
+        init(_id: Int) { self._id = _id }
     }
 
-    typealias VertexDescriptor = Vertex
-    typealias EdgeDescriptor = Edge
+    public typealias VertexDescriptor = Vertex
+    public typealias EdgeDescriptor = Edge
 }
 
 extension AdjacencyMatrix: EdgeLookupGraph {
-    func edge(from source: Vertex, to destination: Vertex) -> Edge? {
+    @inlinable
+    public func edge(from source: Vertex, to destination: Vertex) -> Edge? {
         guard let i = index(of: source), let j = index(of: destination) else { return nil }
         guard matrix[i][j] else { return nil }
         // O(1) edge lookup using the optimized lookup table
@@ -41,17 +64,24 @@ extension AdjacencyMatrix: EdgeLookupGraph {
 }
 
 extension AdjacencyMatrix: VertexListGraph {
-    func vertices() -> OrderedSet<Vertex> { verticesStore }
-    var vertexCount: Int { verticesStore.count }
+    @inlinable
+    public func vertices() -> OrderedSet<Vertex> { verticesStore }
+    
+    @inlinable
+    public var vertexCount: Int { verticesStore.count }
 }
 
 extension AdjacencyMatrix: EdgeListGraph {
-    func edges() -> OrderedSet<Edge> { edgesStore.keys }
-    var edgeCount: Int { edgesStore.count }
+    @inlinable
+    public func edges() -> OrderedSet<Edge> { edgesStore.keys }
+    
+    @inlinable
+    public var edgeCount: Int { edgesStore.count }
 }
 
 extension AdjacencyMatrix: IncidenceGraph {
-    func outgoingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
+    @inlinable
+    public func outgoingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
         guard let i = index(of: vertex) else { return [] }
         var result: OrderedSet<Edge> = []
         for j in 0 ..< matrix.count {
@@ -62,13 +92,19 @@ extension AdjacencyMatrix: IncidenceGraph {
         return result
     }
 
-    func source(of edge: Edge) -> Vertex? { edgesStore[edge]?.source }
-    func destination(of edge: Edge) -> Vertex? { edgesStore[edge]?.destination }
-    func outDegree(of vertex: Vertex) -> Int { outgoingEdges(of: vertex).count }
+    @inlinable
+    public func source(of edge: Edge) -> Vertex? { edgesStore[edge]?.source }
+    
+    @inlinable
+    public func destination(of edge: Edge) -> Vertex? { edgesStore[edge]?.destination }
+    
+    @inlinable
+    public func outDegree(of vertex: Vertex) -> Int { outgoingEdges(of: vertex).count }
 }
 
 extension AdjacencyMatrix: BidirectionalGraph {
-    func incomingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
+    @inlinable
+    public func incomingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
         guard let j = index(of: vertex) else { return [] }
         var result: OrderedSet<Edge> = []
         for i in 0 ..< matrix.count {
@@ -78,12 +114,15 @@ extension AdjacencyMatrix: BidirectionalGraph {
         }
         return result
     }
-    func inDegree(of vertex: Vertex) -> Int { incomingEdges(of: vertex).count }
+    
+    @inlinable
+    public func inDegree(of vertex: Vertex) -> Int { incomingEdges(of: vertex).count }
 }
 
 extension AdjacencyMatrix: MutableGraph {
     @discardableResult
-    mutating func addEdge(from source: Vertex, to destination: Vertex) -> Edge? {
+    @inlinable
+    public mutating func addEdge(from source: Vertex, to destination: Vertex) -> Edge? {
         guard let i = index(of: source), let j = index(of: destination) else { return nil }
         if matrix[i][j] {
             // Already exists; return the existing edge id
@@ -98,7 +137,8 @@ extension AdjacencyMatrix: MutableGraph {
         return e
     }
 
-    mutating func remove(edge: consuming Edge) {
+    @inlinable
+    public mutating func remove(edge: consuming Edge) {
         guard let ep = edgesStore.removeValue(forKey: edge) else { return }
         if let i = index(of: ep.source), let j = index(of: ep.destination) { matrix[i][j] = false }
         // Update the O(1) lookup table
@@ -108,7 +148,8 @@ extension AdjacencyMatrix: MutableGraph {
         }
     }
 
-    mutating func addVertex() -> Vertex {
+    @inlinable
+    public mutating func addVertex() -> Vertex {
         let v = Vertex(_id: nextVertexId)
         nextVertexId &+= 1
         verticesStore.updateOrAppend(v)
@@ -119,7 +160,8 @@ extension AdjacencyMatrix: MutableGraph {
         return v
     }
 
-    mutating func remove(vertex: consuming Vertex) {
+    @inlinable
+    public mutating func remove(vertex: consuming Vertex) {
         guard let idx = index(of: vertex) else { return }
         // Remove incident edges
         for e in outgoingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
@@ -142,7 +184,8 @@ extension AdjacencyMatrix: MutableGraph {
 }
 
 extension AdjacencyMatrix: AdjacencyGraph {
-    func adjacentVertices(of vertex: Vertex) -> OrderedSet<Vertex> {
+    @inlinable
+    public func adjacentVertices(of vertex: Vertex) -> OrderedSet<Vertex> {
         guard let idx = index(of: vertex) else { return [] }
         var result: OrderedSet<Vertex> = []
         // Outgoing neighbors: row scan
@@ -158,13 +201,14 @@ extension AdjacencyMatrix: AdjacencyGraph {
 }
 
 extension AdjacencyMatrix: PropertyGraph {
-    typealias VertexPropertyMap = DictionaryPropertyMap<Vertex, VertexPropertyValues>
-    typealias EdgePropertyMap = DictionaryPropertyMap<Edge, EdgePropertyValues>
+    public typealias VertexPropertyMap = DictionaryPropertyMap<Vertex, VertexPropertyValues>
+    public typealias EdgePropertyMap = DictionaryPropertyMap<Edge, EdgePropertyValues>
 }
 
 extension AdjacencyMatrix: MutablePropertyGraph {}
 
-private extension AdjacencyMatrix {
+extension AdjacencyMatrix {
+    @usableFromInline
     func index(of v: Vertex) -> Int? { verticesStore.firstIndex(of: v) }
 }
 

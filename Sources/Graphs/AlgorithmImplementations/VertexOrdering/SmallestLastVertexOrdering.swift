@@ -1,20 +1,28 @@
 import Foundation
 
-/// Smallest Last Vertex Ordering algorithm
+/// Smallest Last Vertex Ordering algorithm.
 /// 
 /// This algorithm orders vertices by repeatedly removing the vertex with the smallest degree
 /// and placing it last in the sequence. This ordering is particularly effective for graph
 /// coloring algorithms as it tends to reduce the number of colors needed.
-struct SmallestLastVertexOrderingAlgorithm<
+///
+/// - Complexity: O(V²) where V is the number of vertices
+public struct SmallestLastVertexOrderingAlgorithm<
     Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph
 > where Graph.VertexDescriptor: Hashable {
     
-    struct Visitor {
-        var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-        var removeVertex: ((Graph.VertexDescriptor, Int) -> Void)?
-        var updateDegree: ((Graph.VertexDescriptor, Int, Int) -> Void)?
+    /// A visitor that can be used to observe the Smallest Last Vertex algorithm progress.
+    public struct Visitor {
+        /// Called when examining a vertex.
+        public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
+        /// Called when removing a vertex.
+        public var removeVertex: ((Graph.VertexDescriptor, Int) -> Void)?
+        /// Called when updating a vertex's degree.
+        public var updateDegree: ((Graph.VertexDescriptor, Int, Int) -> Void)?
         
-        init(
+        /// Creates a new visitor.
+        @inlinable
+        public init(
             examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
             removeVertex: ((Graph.VertexDescriptor, Int) -> Void)? = nil,
             updateDegree: ((Graph.VertexDescriptor, Int, Int) -> Void)? = nil
@@ -25,9 +33,18 @@ struct SmallestLastVertexOrderingAlgorithm<
         }
     }
     
-    init() {}
+    /// Creates a new Smallest Last Vertex Ordering algorithm.
+    @inlinable
+    public init() {}
     
-    func orderVertices(in graph: Graph, visitor: Visitor? = nil) -> [Graph.VertexDescriptor] {
+    /// Orders vertices using the Smallest Last Vertex algorithm.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to order vertices for
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: An array of vertex descriptors in the computed order
+    @inlinable
+    public func orderVertices(in graph: Graph, visitor: Visitor? = nil) -> [Graph.VertexDescriptor] {
         var remainingVertices = Set(graph.vertices())
         var degrees: [Graph.VertexDescriptor: Int] = [:]
         var ordering: [Graph.VertexDescriptor] = []

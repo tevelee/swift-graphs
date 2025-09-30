@@ -1,10 +1,19 @@
-struct TraversalBasedConnectedPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph, Traversal: TraversalAlgorithm> where Graph.VertexDescriptor: Hashable, Traversal.Graph == Graph {
-    typealias Visitor = Traversal.Visitor
+/// A connected property algorithm based on graph traversal.
+public struct TraversalBasedConnectedPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph, Traversal: TraversalAlgorithm> where Graph.VertexDescriptor: Hashable, Traversal.Graph == Graph {
+    public typealias Visitor = Traversal.Visitor
     
+    @usableFromInline
     let using: Traversal
+    @usableFromInline
     let startingVertex: (Graph) -> Graph.VertexDescriptor?
     
-    init(
+    /// Creates a new traversal-based connected property algorithm.
+    ///
+    /// - Parameters:
+    ///   - traversalAlgorithm: The traversal algorithm to use
+    ///   - startingVertex: A function that selects the starting vertex for traversal
+    @inlinable
+    public init(
         using traversalAlgorithm: Traversal,
         startingVertex: @escaping (Graph) -> Graph.VertexDescriptor?
     ) {
@@ -12,7 +21,14 @@ struct TraversalBasedConnectedPropertyAlgorithm<Graph: IncidenceGraph & VertexLi
         self.startingVertex = startingVertex
     }
     
-    func isConnected(
+    /// Checks if the graph is connected using traversal.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to check
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: `true` if the graph is connected, `false` otherwise
+    @inlinable
+    public func isConnected(
         in graph: Graph,
         visitor: Visitor?
     ) -> Bool {

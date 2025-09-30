@@ -1,7 +1,13 @@
 import Foundation
 
+/// Extension providing composition support for Hopcroft-Tarjan planar property algorithm visitors.
 extension HopcroftTarjanPlanarPropertyAlgorithm.Visitor: Composable {
-    func combined(with other: HopcroftTarjanPlanarPropertyAlgorithm.Visitor) -> HopcroftTarjanPlanarPropertyAlgorithm.Visitor {
+    /// Combines this visitor with another visitor.
+    ///
+    /// - Parameter other: The other visitor to combine with.
+    /// - Returns: A new visitor that calls both visitors' callbacks.
+    @inlinable
+    public func combined(with other: HopcroftTarjanPlanarPropertyAlgorithm.Visitor) -> HopcroftTarjanPlanarPropertyAlgorithm.Visitor {
         HopcroftTarjanPlanarPropertyAlgorithm.Visitor(
             startDFS: {
                 self.startDFS?()

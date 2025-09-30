@@ -1,9 +1,21 @@
 import Foundation
 
-struct DFSTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Visitor = DFSTreeProperty<Graph>.Visitor
+/// Single-pass DFS-based algorithm for checking if a graph is a tree.
+public struct DFSTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Visitor = DFSTreeProperty<Graph>.Visitor
     
-    func isTree(
+    /// Creates a new single-pass DFS-based tree property algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Checks if the graph is a tree using a single DFS pass.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to check
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: `true` if the graph is a tree, `false` otherwise
+    @inlinable
+    public func isTree(
         in graph: Graph,
         visitor: Visitor?
     ) -> Bool {
@@ -67,18 +79,36 @@ struct DFSTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeLi
 
 // MARK: - Visitor Support
 
-struct DFSTreeProperty<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+public struct DFSTreeProperty<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Vertex = Graph.VertexDescriptor
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var checkEdgeCount: ((Int, Int) -> Void)?
-        var edgeCountMismatch: ((Int, Int) -> Void)?
-        var discoverVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var backEdge: ((Edge) -> Void)?
-        var connectivityResult: ((Bool) -> Void)?
-        var acyclicityResult: ((Bool) -> Void)?
+    public struct Visitor {
+        public var checkEdgeCount: ((Int, Int) -> Void)?
+        public var edgeCountMismatch: ((Int, Int) -> Void)?
+        public var discoverVertex: ((Vertex) -> Void)?
+        public var examineEdge: ((Edge) -> Void)?
+        public var backEdge: ((Edge) -> Void)?
+        public var connectivityResult: ((Bool) -> Void)?
+        public var acyclicityResult: ((Bool) -> Void)?
+        
+        public init(
+            checkEdgeCount: ((Int, Int) -> Void)? = nil,
+            edgeCountMismatch: ((Int, Int) -> Void)? = nil,
+            discoverVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            backEdge: ((Edge) -> Void)? = nil,
+            connectivityResult: ((Bool) -> Void)? = nil,
+            acyclicityResult: ((Bool) -> Void)? = nil
+        ) {
+            self.checkEdgeCount = checkEdgeCount
+            self.edgeCountMismatch = edgeCountMismatch
+            self.discoverVertex = discoverVertex
+            self.examineEdge = examineEdge
+            self.backEdge = backEdge
+            self.connectivityResult = connectivityResult
+            self.acyclicityResult = acyclicityResult
+        }
     }
 }
 

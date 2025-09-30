@@ -1,7 +1,12 @@
 import Foundation
 
 extension MaxFlowAlgorithm {
-    static func edmondsKarp<Graph, Flow>(
+    /// Creates an Edmonds-Karp maximum flow algorithm.
+    ///
+    /// - Parameter capacityCost: The capacity cost definition for edge capacities.
+    /// - Returns: An Edmonds-Karp maximum flow algorithm instance.
+    @inlinable
+    public static func edmondsKarp<Graph, Flow>(
         capacityCost: CostDefinition<Graph, Flow>
     ) -> EdmondsKarp<Graph, Flow> where
         Graph: IncidenceGraph & EdgePropertyGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,

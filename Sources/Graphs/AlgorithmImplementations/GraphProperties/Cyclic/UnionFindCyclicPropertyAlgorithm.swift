@@ -1,9 +1,21 @@
 import Foundation
 
-struct UnionFindCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Visitor = UnionFindCyclicProperty<Graph>.Visitor
+/// Union-Find-based algorithm for checking if a graph is cyclic.
+public struct UnionFindCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Visitor = UnionFindCyclicProperty<Graph>.Visitor
     
-    func isCyclic(
+    /// Creates a new Union-Find-based cyclic property algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Checks if the graph is cyclic using Union-Find.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to check
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: `true` if the graph is cyclic, `false` otherwise
+    @inlinable
+    public func isCyclic(
         in graph: Graph,
         visitor: Visitor?
     ) -> Bool {
@@ -78,15 +90,27 @@ struct UnionFindCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph 
 
 // MARK: - Union-Find Data Structure
 
-struct UnionFindCyclicProperty<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+public struct UnionFindCyclicProperty<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Vertex = Graph.VertexDescriptor
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var examineEdge: ((Edge) -> Void)?
-        var findRoot: ((Vertex, Vertex) -> Void)?
-        var unionVertices: ((Vertex, Vertex) -> Void)?
-        var cycleDetected: ((Edge) -> Void)?
+    public struct Visitor {
+        public var examineEdge: ((Edge) -> Void)?
+        public var findRoot: ((Vertex, Vertex) -> Void)?
+        public var unionVertices: ((Vertex, Vertex) -> Void)?
+        public var cycleDetected: ((Edge) -> Void)?
+        
+        public init(
+            examineEdge: ((Edge) -> Void)? = nil,
+            findRoot: ((Vertex, Vertex) -> Void)? = nil,
+            unionVertices: ((Vertex, Vertex) -> Void)? = nil,
+            cycleDetected: ((Edge) -> Void)? = nil
+        ) {
+            self.examineEdge = examineEdge
+            self.findRoot = findRoot
+            self.unionVertices = unionVertices
+            self.cycleDetected = cycleDetected
+        }
     }
     
     private let graph: Graph

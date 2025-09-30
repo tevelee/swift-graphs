@@ -1,9 +1,21 @@
 import Foundation
 
-struct BFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Visitor = BFSBipartiteProperty<Graph>.Visitor
+/// BFS-based algorithm for checking if a graph is bipartite.
+public struct BFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Visitor = BFSBipartiteProperty<Graph>.Visitor
     
-    func isBipartite(
+    /// Creates a new BFS-based bipartite property algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Checks if the graph is bipartite using BFS.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to check
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: `true` if the graph is bipartite, `false` otherwise
+    @inlinable
+    public func isBipartite(
         in graph: Graph,
         visitor: Visitor?
     ) -> Bool {
@@ -64,20 +76,33 @@ struct BFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> wh
 
 // MARK: - Visitor Support
 
-struct BFSBipartiteProperty<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+public struct BFSBipartiteProperty<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Vertex = Graph.VertexDescriptor
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var assignColor: ((Vertex, Int) -> Void)?
-        var examineVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var colorConflict: ((Vertex, Vertex, Int) -> Void)?
+    public struct Visitor {
+        public var assignColor: ((Vertex, Int) -> Void)?
+        public var examineVertex: ((Vertex) -> Void)?
+        public var examineEdge: ((Edge) -> Void)?
+        public var colorConflict: ((Vertex, Vertex, Int) -> Void)?
+        
+        public init(
+            assignColor: ((Vertex, Int) -> Void)? = nil,
+            examineVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            colorConflict: ((Vertex, Vertex, Int) -> Void)? = nil
+        ) {
+            self.assignColor = assignColor
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.colorConflict = colorConflict
+        }
     }
 }
 
 extension BFSBipartiteProperty.Visitor: Composable {
-    func combined(with other: Self) -> Self {
+    @inlinable
+    public func combined(with other: Self) -> Self {
         .init(
             assignColor: { vertex, color in
                 self.assignColor?(vertex, color)

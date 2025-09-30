@@ -1,9 +1,21 @@
 import Foundation
 
-struct DFSCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Visitor = DepthFirstSearch<Graph>.Visitor
+/// DFS-based algorithm for checking if a graph is cyclic.
+public struct DFSCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Visitor = DepthFirstSearch<Graph>.Visitor
     
-    func isCyclic(
+    /// Creates a new DFS-based cyclic property algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Checks if the graph is cyclic using DFS.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to check
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: `true` if the graph is cyclic, `false` otherwise
+    @inlinable
+    public func isCyclic(
         in graph: Graph,
         visitor: Visitor?
     ) -> Bool {

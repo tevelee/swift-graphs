@@ -4,38 +4,93 @@ import Collections
 /// 
 /// This algorithm uses depth-first search and processes vertices in reverse finish time order.
 /// If a back edge is detected during DFS, the graph contains a cycle.
-struct DFSTopologicalSort<Graph: IncidenceGraph & VertexListGraph>: TopologicalSortAlgorithm where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+///
+/// - Complexity: O(V + E) where V is the number of vertices and E is the number of edges
+public struct DFSTopologicalSort<Graph: IncidenceGraph & VertexListGraph>: TopologicalSortAlgorithm where Graph.VertexDescriptor: Hashable {
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var discoverVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var treeEdge: ((Edge) -> Void)?
-        var backEdge: ((Edge) -> Void)?
-        var forwardEdge: ((Edge) -> Void)?
-        var crossEdge: ((Edge) -> Void)?
-        var finishVertex: ((Vertex) -> Void)?
-        var detectCycle: (([Vertex]) -> Void)?
+    /// A visitor that can be used to observe DFS topological sort progress.
+    public struct Visitor {
+        /// Called when discovering a vertex.
+        public var discoverVertex: ((Vertex) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge) -> Void)?
+        /// Called when traversing a tree edge.
+        public var treeEdge: ((Edge) -> Void)?
+        /// Called when detecting a back edge (indicates a cycle).
+        public var backEdge: ((Edge) -> Void)?
+        /// Called when traversing a forward edge.
+        public var forwardEdge: ((Edge) -> Void)?
+        /// Called when traversing a cross edge.
+        public var crossEdge: ((Edge) -> Void)?
+        /// Called when finishing a vertex.
+        public var finishVertex: ((Vertex) -> Void)?
+        /// Called when detecting a cycle.
+        public var detectCycle: (([Vertex]) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            discoverVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            treeEdge: ((Edge) -> Void)? = nil,
+            backEdge: ((Edge) -> Void)? = nil,
+            forwardEdge: ((Edge) -> Void)? = nil,
+            crossEdge: ((Edge) -> Void)? = nil,
+            finishVertex: ((Vertex) -> Void)? = nil,
+            detectCycle: (([Vertex]) -> Void)? = nil
+        ) {
+            self.discoverVertex = discoverVertex
+            self.examineEdge = examineEdge
+            self.treeEdge = treeEdge
+            self.backEdge = backEdge
+            self.forwardEdge = forwardEdge
+            self.crossEdge = crossEdge
+            self.finishVertex = finishVertex
+            self.detectCycle = detectCycle
+        }
     }
     
-    private enum Color {
-        case white // Undiscovered
-        case gray  // Discovered but not fully processed
-        case black // Fully processed
+    /// The color of a vertex in the algorithm.
+    @usableFromInline
+    enum Color {
+        /// Undiscovered vertex.
+        case white
+        /// Discovered but not fully processed vertex.
+        case gray
+        /// Fully processed vertex.
+        case black
     }
     
-    private enum ColorProperty: VertexProperty {
+    @usableFromInline
+    enum ColorProperty: VertexProperty {
+        @usableFromInline
         static var defaultValue: Color { .white }
     }
     
-    private let makeStack: () -> any StackProtocol<Vertex>
+    /// The stack factory for DFS traversal.
+    @usableFromInline
+    let makeStack: () -> any StackProtocol<Vertex>
     
-    init(makeStack: @escaping () -> any StackProtocol<Vertex> = { Array() }) {
+    /// Creates a new DFS topological sort algorithm.
+    ///
+    /// - Parameter makeStack: A factory for creating the stack used in DFS traversal.
+    @inlinable
+    public init(makeStack: @escaping () -> any StackProtocol<Vertex> = { Array() }) {
         self.makeStack = makeStack
     }
     
-    func topologicalSort(
+    /// Performs topological sort using DFS.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to sort topologically.
+    ///   - visitor: An optional visitor to observe the algorithm progress.
+    /// - Returns: The topological sort result.
+    @inlinable
+    public func topologicalSort(
         in graph: Graph,
         visitor: Visitor?
     ) -> TopologicalSortResult<Graph.VertexDescriptor> {
@@ -75,7 +130,8 @@ struct DFSTopologicalSort<Graph: IncidenceGraph & VertexListGraph>: TopologicalS
         )
     }
     
-    private func dfsVisit(
+    @usableFromInline
+    func dfsVisit(
         from vertex: Vertex,
         in graph: Graph,
         propertyMap: inout any MutablePropertyMap<Vertex, VertexPropertyValues>,

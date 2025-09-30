@@ -1,37 +1,92 @@
 import Foundation
 
-struct Boruvka<
+/// Borůvka's algorithm for finding minimum spanning trees.
+///
+/// This algorithm finds the MST by repeatedly finding the minimum weight edge
+/// for each component and adding them to the MST, then merging components.
+///
+/// - Complexity: O(E log V) where E is the number of edges and V is the number of vertices
+public struct Boruvka<
     Graph: EdgeListGraph & IncidenceGraph & EdgePropertyGraph & VertexListGraph,
     Weight: AdditiveArithmetic & Comparable
 > where
     Graph.VertexDescriptor: Hashable
 {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var examineEdge: ((Edge) -> Void)?
-        var addEdge: ((Edge, Weight) -> Void)?
-        var skipEdge: ((Edge, String) -> Void)?
-        var unionVertices: ((Vertex, Vertex) -> Void)?
-        var completeComponentMerge: ((Int) -> Void)?
+    /// A visitor that can be used to observe Borůvka's algorithm progress.
+    public struct Visitor {
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge) -> Void)?
+        /// Called when adding an edge to the MST.
+        public var addEdge: ((Edge, Weight) -> Void)?
+        /// Called when skipping an edge.
+        public var skipEdge: ((Edge, String) -> Void)?
+        /// Called when unioning two vertices.
+        public var unionVertices: ((Vertex, Vertex) -> Void)?
+        /// Called when completing a component merge.
+        public var completeComponentMerge: ((Int) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            examineEdge: ((Edge) -> Void)? = nil,
+            addEdge: ((Edge, Weight) -> Void)? = nil,
+            skipEdge: ((Edge, String) -> Void)? = nil,
+            unionVertices: ((Vertex, Vertex) -> Void)? = nil,
+            completeComponentMerge: ((Int) -> Void)? = nil
+        ) {
+            self.examineEdge = examineEdge
+            self.addEdge = addEdge
+            self.skipEdge = skipEdge
+            self.unionVertices = unionVertices
+            self.completeComponentMerge = completeComponentMerge
+        }
     }
     
+    /// The result of Borůvka's algorithm.
+    @usableFromInline
     struct Result {
+        @usableFromInline
         let edges: [Edge]
+        @usableFromInline
         let totalWeight: Weight
+        @usableFromInline
         let vertices: Set<Vertex>
+        
+        @usableFromInline
+        init(edges: [Edge], totalWeight: Weight, vertices: Set<Vertex>) {
+            self.edges = edges
+            self.totalWeight = totalWeight
+            self.vertices = vertices
+        }
     }
     
-    private let edgeWeight: CostDefinition<Graph, Weight>
+    /// The edge weight definition.
+    @usableFromInline
+    let edgeWeight: CostDefinition<Graph, Weight>
     
-    init(
+    /// Creates a new Borůvka's algorithm.
+    ///
+    /// - Parameter edgeWeight: The cost definition for edge weights
+    @inlinable
+    public init(
         edgeWeight: CostDefinition<Graph, Weight>
     ) {
         self.edgeWeight = edgeWeight
     }
     
-    func minimumSpanningTree(on graph: Graph, visitor: Visitor? = nil) -> Result {
+    /// Computes the minimum spanning tree using Borůvka's algorithm.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to find the MST for
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: The minimum spanning tree result
+    @inlinable
+    public func minimumSpanningTree(on graph: Graph, visitor: Visitor? = nil) -> MinimumSpanningTree<Vertex, Edge, Weight> {
         // Union-Find data structure
         var parent: [Vertex: Vertex] = [:]
         var rank: [Vertex: Int] = [:]
@@ -163,7 +218,7 @@ struct Boruvka<
             mstVertices.insert(vertex)
         }
         
-        let result = Result(
+        let result = MinimumSpanningTree(
             edges: mstEdges,
             totalWeight: totalWeight,
             vertices: mstVertices

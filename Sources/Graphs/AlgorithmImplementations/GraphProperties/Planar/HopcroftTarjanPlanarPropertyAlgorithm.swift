@@ -1,29 +1,73 @@
 import Foundation
 
-/// Hopcroft-Tarjan algorithm for planar graph detection
-/// This is a classic O(V) algorithm that uses DFS and lowpoint calculations
-struct HopcroftTarjanPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+/// Hopcroft-Tarjan algorithm for planar graph detection.
+/// This is a classic O(V) algorithm that uses DFS and lowpoint calculations.
+public struct HopcroftTarjanPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Vertex = Graph.VertexDescriptor
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var startDFS: (() -> Void)?
-        var discoverVertex: ((Vertex, Int) -> Void)?
-        var examineEdge: ((Edge, EdgeType) -> Void)?
-        var calculateLowpoint: ((Vertex, Int) -> Void)?
-        var checkPlanarity: (() -> Void)?
-        var planarityViolation: ((String) -> Void)?
-        var planaritySuccess: (() -> Void)?
+    /// A visitor that can be used to observe the Hopcroft-Tarjan algorithm progress.
+    public struct Visitor {
+        /// Called when starting DFS.
+        public var startDFS: (() -> Void)?
+        /// Called when discovering a vertex.
+        public var discoverVertex: ((Vertex, Int) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge, EdgeType) -> Void)?
+        /// Called when calculating lowpoint values.
+        public var calculateLowpoint: ((Vertex, Int) -> Void)?
+        /// Called when checking planarity.
+        public var checkPlanarity: (() -> Void)?
+        /// Called when a planarity violation is detected.
+        public var planarityViolation: ((String) -> Void)?
+        /// Called when planarity check succeeds.
+        public var planaritySuccess: (() -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            startDFS: (() -> Void)? = nil,
+            discoverVertex: ((Vertex, Int) -> Void)? = nil,
+            examineEdge: ((Edge, EdgeType) -> Void)? = nil,
+            calculateLowpoint: ((Vertex, Int) -> Void)? = nil,
+            checkPlanarity: (() -> Void)? = nil,
+            planarityViolation: ((String) -> Void)? = nil,
+            planaritySuccess: (() -> Void)? = nil
+        ) {
+            self.startDFS = startDFS
+            self.discoverVertex = discoverVertex
+            self.examineEdge = examineEdge
+            self.calculateLowpoint = calculateLowpoint
+            self.checkPlanarity = checkPlanarity
+            self.planarityViolation = planarityViolation
+            self.planaritySuccess = planaritySuccess
+        }
     }
     
-    enum EdgeType {
+    /// Types of edges in the DFS tree.
+    public enum EdgeType {
+        /// Tree edge (part of the DFS tree).
         case tree
+        /// Back edge (connects to ancestor).
         case back
+        /// Forward edge (connects to descendant).
         case forward
+        /// Cross edge (connects across subtrees).
         case cross
     }
     
-    func isPlanar(
+    /// Creates a new Hopcroft-Tarjan planar property algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Checks if the graph is planar using the Hopcroft-Tarjan algorithm.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to check
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: `true` if the graph is planar, `false` otherwise
+    @inlinable
+    public func isPlanar(
         in graph: Graph,
         visitor: Visitor?
     ) -> Bool {
@@ -70,7 +114,8 @@ struct HopcroftTarjanPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListG
         return hopcroftTarjan(from: startVertex, in: graph, adjacency: adjacency, visitor: visitor)
     }
     
-    private func hopcroftTarjan(
+    @usableFromInline
+    func hopcroftTarjan(
         from startVertex: Vertex,
         in graph: Graph,
         adjacency: [Vertex: [Vertex]],

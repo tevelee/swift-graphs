@@ -1,12 +1,21 @@
 import Foundation
 
-struct CompositeTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Visitor = CompositeTreeProperty<Graph>.Visitor
+/// Composite algorithm for checking if a graph is a tree using separate connected and cyclic algorithms.
+public struct CompositeTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Visitor = CompositeTreeProperty<Graph>.Visitor
     
+    @usableFromInline
     let connectedAlgorithm: any ConnectedPropertyAlgorithm<Graph>
+    @usableFromInline
     let cyclicAlgorithm: any CyclicPropertyAlgorithm<Graph>
     
-    init(
+    /// Creates a new composite tree property algorithm.
+    ///
+    /// - Parameters:
+    ///   - connectedAlgorithm: The connected property algorithm to use
+    ///   - cyclicAlgorithm: The cyclic property algorithm to use
+    @inlinable
+    public init(
         connectedAlgorithm: any ConnectedPropertyAlgorithm<Graph>,
         cyclicAlgorithm: any CyclicPropertyAlgorithm<Graph>
     ) {
@@ -14,7 +23,14 @@ struct CompositeTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & 
         self.cyclicAlgorithm = cyclicAlgorithm
     }
     
-    func isTree(
+    /// Checks if the graph is a tree using composite algorithms.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to check
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: `true` if the graph is a tree, `false` otherwise
+    @inlinable
+    public func isTree(
         in graph: Graph,
         visitor: Visitor?
     ) -> Bool {
@@ -57,7 +73,8 @@ struct CompositeTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & 
         return !isCyclic
     }
     
-    private func checkConnectivity(_ graph: Graph) -> Bool {
+    @usableFromInline
+    func checkConnectivity(_ graph: Graph) -> Bool {
         // Use DFS to check connectivity
         var visitedVertices = Set<Graph.VertexDescriptor>()
         
@@ -72,7 +89,8 @@ struct CompositeTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & 
         return visitedVertices.count == graph.vertexCount
     }
     
-    private func checkAcyclicity(_ graph: Graph) -> Bool {
+    @usableFromInline
+    func checkAcyclicity(_ graph: Graph) -> Bool {
         // Use DFS to check for cycles
         var hasCycle = false
         
@@ -95,17 +113,33 @@ struct CompositeTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & 
 
 // MARK: - Visitor Support
 
-struct CompositeTreeProperty<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+public struct CompositeTreeProperty<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Vertex = Graph.VertexDescriptor
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var checkEdgeCount: ((Int, Int) -> Void)?
-        var edgeCountMismatch: ((Int, Int) -> Void)?
-        var checkConnectivity: (() -> Void)?
-        var connectivityResult: ((Bool) -> Void)?
-        var checkAcyclicity: (() -> Void)?
-        var acyclicityResult: ((Bool) -> Void)?
+    public struct Visitor {
+        public var checkEdgeCount: ((Int, Int) -> Void)?
+        public var edgeCountMismatch: ((Int, Int) -> Void)?
+        public var checkConnectivity: (() -> Void)?
+        public var connectivityResult: ((Bool) -> Void)?
+        public var checkAcyclicity: (() -> Void)?
+        public var acyclicityResult: ((Bool) -> Void)?
+        
+        public init(
+            checkEdgeCount: ((Int, Int) -> Void)? = nil,
+            edgeCountMismatch: ((Int, Int) -> Void)? = nil,
+            checkConnectivity: (() -> Void)? = nil,
+            connectivityResult: ((Bool) -> Void)? = nil,
+            checkAcyclicity: (() -> Void)? = nil,
+            acyclicityResult: ((Bool) -> Void)? = nil
+        ) {
+            self.checkEdgeCount = checkEdgeCount
+            self.edgeCountMismatch = edgeCountMismatch
+            self.checkConnectivity = checkConnectivity
+            self.connectivityResult = connectivityResult
+            self.checkAcyclicity = checkAcyclicity
+            self.acyclicityResult = acyclicityResult
+        }
     }
 }
 

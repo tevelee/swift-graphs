@@ -1,7 +1,13 @@
 import Foundation
 
+/// Extension providing composition support for Boyer-Myrvold planar property algorithm visitors.
 extension BoyerMyrvoldPlanarPropertyAlgorithm.Visitor: Composable {
-    func combined(with other: BoyerMyrvoldPlanarPropertyAlgorithm.Visitor) -> BoyerMyrvoldPlanarPropertyAlgorithm.Visitor {
+    /// Combines this visitor with another visitor.
+    ///
+    /// - Parameter other: The other visitor to combine with.
+    /// - Returns: A new visitor that calls both visitors' callbacks.
+    @inlinable
+    public func combined(with other: BoyerMyrvoldPlanarPropertyAlgorithm.Visitor) -> BoyerMyrvoldPlanarPropertyAlgorithm.Visitor {
         BoyerMyrvoldPlanarPropertyAlgorithm.Visitor(
             startEmbedding: {
                 self.startEmbedding?()

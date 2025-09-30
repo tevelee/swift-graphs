@@ -1,23 +1,71 @@
 import Collections
-struct GridGraph: Graph {
-    struct Vertex: Hashable {
-        let x: Int
-        let y: Int
+
+/// A grid graph implementation where vertices are arranged in a rectangular grid.
+///
+/// Grid graphs are useful for pathfinding in 2D environments like game maps,
+/// image processing, or any scenario where movement is constrained to a grid.
+/// Each vertex represents a grid cell, and edges connect adjacent cells.
+public struct GridGraph: Graph {
+    /// A vertex in the grid graph representing a grid cell.
+    public struct Vertex: Hashable {
+        /// The x-coordinate of the grid cell.
+        public let x: Int
+        
+        /// The y-coordinate of the grid cell.
+        public let y: Int
+        
+        /// Creates a new grid vertex.
+        ///
+        /// - Parameters:
+        ///   - x: The x-coordinate
+        ///   - y: The y-coordinate
+        @inlinable
+        public init(x: Int, y: Int) {
+            self.x = x
+            self.y = y
+        }
     }
 
-    struct Edge: Hashable {
-        let source: Vertex
-        let destination: Vertex
+    /// An edge in the grid graph connecting two adjacent grid cells.
+    public struct Edge: Hashable {
+        /// The source vertex of the edge.
+        public let source: Vertex
+        
+        /// The destination vertex of the edge.
+        public let destination: Vertex
+        
+        /// Creates a new grid edge.
+        ///
+        /// - Parameters:
+        ///   - source: The source vertex
+        ///   - destination: The destination vertex
+        @inlinable
+        public init(source: Vertex, destination: Vertex) {
+            self.source = source
+            self.destination = destination
+        }
     }
 
-    typealias VertexDescriptor = Vertex
-    typealias EdgeDescriptor = Edge
+    public typealias VertexDescriptor = Vertex
+    public typealias EdgeDescriptor = Edge
 
-    let width: Int
-    let height: Int
-    let allowedDirections: OrderedSet<GridDirection>
+    /// The width of the grid (number of columns).
+    public let width: Int
+    
+    /// The height of the grid (number of rows).
+    public let height: Int
+    
+    /// The allowed movement directions in the grid.
+    public let allowedDirections: OrderedSet<GridDirection>
 
-    init(width: Int, height: Int, allowedDirections: OrderedSet<GridDirection> = .orthogonal) {
+    /// Creates a new grid graph.
+    ///
+    /// - Parameters:
+    ///   - width: The width of the grid
+    ///   - height: The height of the grid
+    ///   - allowedDirections: The allowed movement directions (defaults to orthogonal)
+    @inlinable
+    public init(width: Int, height: Int, allowedDirections: OrderedSet<GridDirection> = .orthogonal) {
         self.width = width
         self.height = height
         self.allowedDirections = allowedDirections
@@ -25,20 +73,42 @@ struct GridGraph: Graph {
 }
 
 extension GridGraph: VertexListGraph {
-    struct Vertices: Sequence {
+    /// A collection of vertices in the grid graph.
+    public struct Vertices: Sequence {
+        @usableFromInline
         let width: Int
+        @usableFromInline
         let height: Int
-        func makeIterator() -> Iterator {
+        
+        @inlinable
+        public init(width: Int, height: Int) {
+            self.width = width
+            self.height = height
+        }
+        
+        @inlinable
+        public func makeIterator() -> Iterator {
             Iterator(width: width, height: height)
         }
 
-        struct Iterator: IteratorProtocol {
+        public struct Iterator: IteratorProtocol {
+            @usableFromInline
             let width: Int
+            @usableFromInline
             let height: Int
+            @usableFromInline
             var currentX: Int = 0
+            @usableFromInline
             var currentY: Int = 0
             
-            mutating func next() -> GridGraph.Vertex? {
+            @inlinable
+            public init(width: Int, height: Int) {
+                self.width = width
+                self.height = height
+            }
+            
+            @inlinable
+            public mutating func next() -> GridGraph.Vertex? {
                 guard currentY < height else { return nil }
                 let vertex = GridGraph.Vertex(x: currentX, y: currentY)
                 currentX += 1
@@ -51,28 +121,60 @@ extension GridGraph: VertexListGraph {
         }
     }
 
-    func vertices() -> Vertices { .init(width: width, height: height) }
-    var vertexCount: Int { width * height }
+    @inlinable
+    public func vertices() -> Vertices { .init(width: width, height: height) }
+    
+    @inlinable
+    public var vertexCount: Int { width * height }
 }
 
 extension GridGraph: IncidenceGraph {
-    struct OutgoingEdges: Sequence {
+    /// A collection of outgoing edges from a vertex in the grid graph.
+    public struct OutgoingEdges: Sequence {
+        @usableFromInline
         let vertex: GridGraph.Vertex
+        @usableFromInline
         let width: Int
+        @usableFromInline
         let height: Int
+        @usableFromInline
         let directions: OrderedSet<GridDirection>
-        func makeIterator() -> Iterator {
+        
+        @inlinable
+        public init(vertex: GridGraph.Vertex, width: Int, height: Int, directions: OrderedSet<GridDirection>) {
+            self.vertex = vertex
+            self.width = width
+            self.height = height
+            self.directions = directions
+        }
+        
+        @inlinable
+        public func makeIterator() -> Iterator {
             Iterator(vertex: vertex, width: width, height: height, directions: directions)
         }
 
-        struct Iterator: IteratorProtocol {
+        public struct Iterator: IteratorProtocol {
+            @usableFromInline
             let vertex: GridGraph.Vertex
+            @usableFromInline
             let width: Int
+            @usableFromInline
             let height: Int
+            @usableFromInline
             let directions: OrderedSet<GridDirection>
+            @usableFromInline
             var currentIndex: Int = 0
             
-            mutating func next() -> GridGraph.Edge? {
+            @inlinable
+            public init(vertex: GridGraph.Vertex, width: Int, height: Int, directions: OrderedSet<GridDirection>) {
+                self.vertex = vertex
+                self.width = width
+                self.height = height
+                self.directions = directions
+            }
+            
+            @inlinable
+            public mutating func next() -> GridGraph.Edge? {
                 while currentIndex < directions.count {
                     defer { currentIndex += 1 }
                     let direction = directions[directions.index(directions.startIndex, offsetBy: currentIndex)]
@@ -88,13 +190,19 @@ extension GridGraph: IncidenceGraph {
         }
     }
 
-    func outgoingEdges(of vertex: VertexDescriptor) -> OutgoingEdges {
+    @inlinable
+    public func outgoingEdges(of vertex: VertexDescriptor) -> OutgoingEdges {
         .init(vertex: vertex, width: width, height: height, directions: allowedDirections)
     }
 
-    func source(of edge: EdgeDescriptor) -> VertexDescriptor? { edge.source }
-    func destination(of edge: EdgeDescriptor) -> VertexDescriptor? { edge.destination }
-    func outDegree(of vertex: VertexDescriptor) -> Int {
+    @inlinable
+    public func source(of edge: EdgeDescriptor) -> VertexDescriptor? { edge.source }
+    
+    @inlinable
+    public func destination(of edge: EdgeDescriptor) -> VertexDescriptor? { edge.destination }
+    
+    @inlinable
+    public func outDegree(of vertex: VertexDescriptor) -> Int {
         var degree = 0
         for direction in allowedDirections {
             let (deltaX, deltaY) = GridGraph.delta(for: direction)
@@ -109,21 +217,50 @@ extension GridGraph: IncidenceGraph {
 }
 
 extension GridGraph: BidirectionalGraph {
-    struct IncomingEdges: Sequence {
+    /// A collection of incoming edges to a vertex in the grid graph.
+    public struct IncomingEdges: Sequence {
+        @usableFromInline
         let vertex: GridGraph.Vertex
+        @usableFromInline
         let width: Int
+        @usableFromInline
         let height: Int
+        @usableFromInline
         let directions: OrderedSet<GridDirection>
-        func makeIterator() -> Iterator { Iterator(vertex: vertex, width: width, height: height, directions: directions) }
+        
+        @inlinable
+        public init(vertex: GridGraph.Vertex, width: Int, height: Int, directions: OrderedSet<GridDirection>) {
+            self.vertex = vertex
+            self.width = width
+            self.height = height
+            self.directions = directions
+        }
+        
+        @inlinable
+        public func makeIterator() -> Iterator { Iterator(vertex: vertex, width: width, height: height, directions: directions) }
 
-        struct Iterator: IteratorProtocol {
+        public struct Iterator: IteratorProtocol {
+            @usableFromInline
             let vertex: GridGraph.Vertex
+            @usableFromInline
             let width: Int
+            @usableFromInline
             let height: Int
+            @usableFromInline
             let directions: OrderedSet<GridDirection>
+            @usableFromInline
             var currentIndex: Int = 0
             
-            mutating func next() -> GridGraph.Edge? {
+            @inlinable
+            public init(vertex: GridGraph.Vertex, width: Int, height: Int, directions: OrderedSet<GridDirection>) {
+                self.vertex = vertex
+                self.width = width
+                self.height = height
+                self.directions = directions
+            }
+            
+            @inlinable
+            public mutating func next() -> GridGraph.Edge? {
                 while currentIndex < directions.count {
                     defer { currentIndex += 1 }
                     let direction = directions[directions.index(directions.startIndex, offsetBy: currentIndex)]
@@ -139,11 +276,13 @@ extension GridGraph: BidirectionalGraph {
         }
     }
 
-    func incomingEdges(of vertex: VertexDescriptor) -> IncomingEdges {
+    @inlinable
+    public func incomingEdges(of vertex: VertexDescriptor) -> IncomingEdges {
         .init(vertex: vertex, width: width, height: height, directions: allowedDirections)
     }
 
-    func inDegree(of vertex: VertexDescriptor) -> Int {
+    @inlinable
+    public func inDegree(of vertex: VertexDescriptor) -> Int {
         var degree = 0
         for direction in allowedDirections {
             let (deltaX, deltaY) = GridGraph.delta(for: direction)
@@ -158,21 +297,48 @@ extension GridGraph: BidirectionalGraph {
 }
 
 extension GridGraph: EdgeListGraph {
-    struct Edges: Sequence {
+    /// A collection of all edges in the grid graph.
+    public struct Edges: Sequence {
+        @usableFromInline
         let width: Int
+        @usableFromInline
         let height: Int
+        @usableFromInline
         let directions: OrderedSet<GridDirection>
-        func makeIterator() -> Iterator { Iterator(width: width, height: height, directions: directions) }
+        
+        @inlinable
+        public init(width: Int, height: Int, directions: OrderedSet<GridDirection>) {
+            self.width = width
+            self.height = height
+            self.directions = directions
+        }
+        
+        @inlinable
+        public func makeIterator() -> Iterator { Iterator(width: width, height: height, directions: directions) }
 
-        struct Iterator: IteratorProtocol {
+        public struct Iterator: IteratorProtocol {
+            @usableFromInline
             let width: Int
+            @usableFromInline
             let height: Int
+            @usableFromInline
             let directions: OrderedSet<GridDirection>
+            @usableFromInline
             var currentX: Int = 0
+            @usableFromInline
             var currentY: Int = 0
+            @usableFromInline
             var edgeIterator: GridGraph.OutgoingEdges.Iterator? = nil
 
-            mutating func next() -> GridGraph.Edge? {
+            @inlinable
+            public init(width: Int, height: Int, directions: OrderedSet<GridDirection>) {
+                self.width = width
+                self.height = height
+                self.directions = directions
+            }
+
+            @inlinable
+            public mutating func next() -> GridGraph.Edge? {
                 while true {
                     if var iterator = edgeIterator {
                         if let edge = iterator.next() {
@@ -195,9 +361,11 @@ extension GridGraph: EdgeListGraph {
         }
     }
 
-    func edges() -> Edges { .init(width: width, height: height, directions: allowedDirections) }
+    @inlinable
+    public func edges() -> Edges { .init(width: width, height: height, directions: allowedDirections) }
 
-    var edgeCount: Int {
+    @inlinable
+    public var edgeCount: Int {
         var totalEdges = 0
         for vertex in vertices() {
             totalEdges += outDegree(of: vertex)
@@ -207,7 +375,8 @@ extension GridGraph: EdgeListGraph {
 }
 
 extension GridGraph: EdgeLookupGraph {
-    func edge(from source: VertexDescriptor, to destination: VertexDescriptor) -> EdgeDescriptor? {
+    @inlinable
+    public func edge(from source: VertexDescriptor, to destination: VertexDescriptor) -> EdgeDescriptor? {
         let deltaX = destination.x - source.x
         let deltaY = destination.y - source.y
         var isAllowed = false
@@ -225,8 +394,9 @@ extension GridGraph: EdgeLookupGraph {
     }
 }
 
-private extension GridGraph {
-    static func delta(for direction: GridDirection) -> (Int, Int) {
+extension GridGraph {
+    @inlinable
+    public static func delta(for direction: GridDirection) -> (Int, Int) {
         switch direction {
         case .up: return (0, -1)
         case .right: return (1, 0)
@@ -240,17 +410,27 @@ private extension GridGraph {
     }
 }
 
-enum GridDirection: CaseIterable, Hashable, Sendable {
+/// Represents the possible movement directions in a grid graph.
+public enum GridDirection: CaseIterable, Hashable, Sendable {
     case up, right, down, left
     case upRight, downRight, downLeft, upLeft
 }
 
 extension OrderedSet<GridDirection> {
-    static let horizontal: Self = [.left, .right]
-    static let vertical: Self = [.up, .down]
-    static let orthogonal: Self = horizontal + vertical
-    static let diagonal: Self = [.upRight, .downRight, .downLeft, .upLeft]
-    static let all: Self = orthogonal + diagonal
+    /// Horizontal movement directions (left and right).
+    public static let horizontal: Self = [.left, .right]
+    
+    /// Vertical movement directions (up and down).
+    public static let vertical: Self = [.up, .down]
+    
+    /// Orthogonal movement directions (horizontal + vertical).
+    public static let orthogonal: Self = horizontal + vertical
+    
+    /// Diagonal movement directions.
+    public static let diagonal: Self = [.upRight, .downRight, .downLeft, .upLeft]
+    
+    /// All possible movement directions.
+    public static let all: Self = orthogonal + diagonal
 
     static func + (lhs: Self, rhs: Self) -> Self {
         lhs.union(rhs)

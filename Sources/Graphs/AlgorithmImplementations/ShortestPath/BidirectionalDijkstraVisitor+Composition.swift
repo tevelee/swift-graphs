@@ -1,7 +1,13 @@
 import Foundation
 
+/// Extension providing composition support for bidirectional Dijkstra algorithm visitors.
 extension BidirectionalDijkstra.Visitor: Composable {
-    func combined(with other: Self) -> Self {
+    /// Combines this visitor with another visitor.
+    ///
+    /// - Parameter other: The other visitor to combine with.
+    /// - Returns: A new visitor that calls both visitors' callbacks.
+    @inlinable
+    public func combined(with other: Self) -> Self {
         .init(
             examineVertex: { vertex, direction in
                 self.examineVertex?(vertex, direction)

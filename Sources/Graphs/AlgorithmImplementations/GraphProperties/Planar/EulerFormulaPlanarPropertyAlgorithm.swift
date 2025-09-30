@@ -1,19 +1,57 @@
 import Foundation
 
-struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+/// Euler formula-based algorithm for planar graph detection.
+/// This algorithm uses Euler's formula and Kuratowski's theorem for planarity testing.
+public struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Vertex = Graph.VertexDescriptor
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var checkEulerFormula: ((Int, Int, Int) -> Void)?
-        var examineVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var checkKuratowski: (() -> Void)?
-        var kuratowskiViolation: ((String) -> Void)?
-        var eulerFormulaViolation: ((Int, Int, Int) -> Void)?
+    /// A visitor that can be used to observe the Euler formula algorithm progress.
+    public struct Visitor {
+        /// Called when checking Euler's formula.
+        public var checkEulerFormula: ((Int, Int, Int) -> Void)?
+        /// Called when examining a vertex.
+        public var examineVertex: ((Vertex) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge) -> Void)?
+        /// Called when checking Kuratowski's theorem.
+        public var checkKuratowski: (() -> Void)?
+        /// Called when a Kuratowski violation is detected.
+        public var kuratowskiViolation: ((String) -> Void)?
+        /// Called when Euler's formula is violated.
+        public var eulerFormulaViolation: ((Int, Int, Int) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            checkEulerFormula: ((Int, Int, Int) -> Void)? = nil,
+            examineVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            checkKuratowski: (() -> Void)? = nil,
+            kuratowskiViolation: ((String) -> Void)? = nil,
+            eulerFormulaViolation: ((Int, Int, Int) -> Void)? = nil
+        ) {
+            self.checkEulerFormula = checkEulerFormula
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.checkKuratowski = checkKuratowski
+            self.kuratowskiViolation = kuratowskiViolation
+            self.eulerFormulaViolation = eulerFormulaViolation
+        }
     }
     
-    func isPlanar(
+    /// Creates a new Euler formula planar property algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Checks if the graph is planar using Euler's formula and Kuratowski's theorem.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to check
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: `true` if the graph is planar, `false` otherwise
+    @inlinable
+    public func isPlanar(
         in graph: Graph,
         visitor: Visitor?
     ) -> Bool {
@@ -67,7 +105,8 @@ struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGra
         return true
     }
     
-    private func checkForK5(in graph: Graph, visitor: Visitor?) -> Bool {
+    @usableFromInline
+    func checkForK5(in graph: Graph, visitor: Visitor?) -> Bool {
         let vertices = Array(graph.vertices())
         
         // Check all combinations of 5 vertices
@@ -88,7 +127,8 @@ struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGra
         return false
     }
     
-    private func checkForK33(in graph: Graph, visitor: Visitor?) -> Bool {
+    @usableFromInline
+    func checkForK33(in graph: Graph, visitor: Visitor?) -> Bool {
         let vertices = Array(graph.vertices())
         
         // Check all combinations of 6 vertices for K₃,₃ structure
@@ -204,7 +244,8 @@ struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGra
         return combinations
     }
     
-    private func checkSmallGraphPlanarity(in graph: Graph, visitor: Visitor?) -> Bool {
+    @usableFromInline
+    func checkSmallGraphPlanarity(in graph: Graph, visitor: Visitor?) -> Bool {
         let vertices = graph.vertexCount
         let edges = graph.edgeCount
         
@@ -232,8 +273,14 @@ struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGra
     }
 }
 
+/// Extension providing composition support for Euler formula planar property algorithm visitors.
 extension EulerFormulaPlanarPropertyAlgorithm.Visitor: Composable {
-    func combined(with other: Self) -> Self {
+    /// Combines this visitor with another visitor.
+    ///
+    /// - Parameter other: The other visitor to combine with.
+    /// - Returns: A new visitor that calls both visitors' callbacks.
+    @inlinable
+    public func combined(with other: Self) -> Self {
         .init(
             checkEulerFormula: { vertices, edges, faces in
                 self.checkEulerFormula?(vertices, edges, faces)

@@ -1,23 +1,33 @@
 import Foundation
 
-/// Sequential Vertex Coloring algorithm that uses vertex ordering
+/// Sequential Vertex Coloring algorithm that uses vertex ordering.
 /// 
 /// This algorithm assigns colors to vertices in a specific order, ensuring that no two
 /// adjacent vertices share the same color. The efficiency and effectiveness of this method
 /// is heavily influenced by the chosen vertex ordering.
-struct SequentialVertexColoringAlgorithm<
+///
+/// - Complexity: O(V^2) where V is the number of vertices
+public struct SequentialVertexColoringAlgorithm<
     Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph,
     Color: IntegerBasedColor
 > where Graph.VertexDescriptor: Hashable {
     
-    struct Visitor {
-        var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-        var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
-        var assignColor: ((Graph.VertexDescriptor, Color) -> Void)?
-        var skipVertex: ((Graph.VertexDescriptor, String) -> Void)?
-        var useOrdering: ((any VertexOrderingAlgorithm<Graph>) -> Void)?
+    /// A visitor that can be used to observe the Sequential Vertex Coloring algorithm progress.
+    public struct Visitor {
+        /// Called when examining a vertex.
+        public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
+        /// Called when assigning a color to a vertex.
+        public var assignColor: ((Graph.VertexDescriptor, Color) -> Void)?
+        /// Called when skipping a vertex.
+        public var skipVertex: ((Graph.VertexDescriptor, String) -> Void)?
+        /// Called when using an ordering algorithm.
+        public var useOrdering: ((any VertexOrderingAlgorithm<Graph>) -> Void)?
         
-        init(
+        /// Creates a new visitor.
+        @inlinable
+        public init(
             examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
             examineEdge: ((Graph.EdgeDescriptor) -> Void)? = nil,
             assignColor: ((Graph.VertexDescriptor, Color) -> Void)? = nil,
@@ -32,13 +42,26 @@ struct SequentialVertexColoringAlgorithm<
         }
     }
     
-    private let orderingAlgorithm: any VertexOrderingAlgorithm<Graph>
+    /// The vertex ordering algorithm to use.
+    @usableFromInline
+    let orderingAlgorithm: any VertexOrderingAlgorithm<Graph>
     
-    init(using orderingAlgorithm: any VertexOrderingAlgorithm<Graph>) {
+    /// Creates a new Sequential Vertex Coloring algorithm.
+    ///
+    /// - Parameter orderingAlgorithm: The vertex ordering algorithm to use
+    @inlinable
+    public init(using orderingAlgorithm: any VertexOrderingAlgorithm<Graph>) {
         self.orderingAlgorithm = orderingAlgorithm
     }
     
-    func color(graph: Graph, visitor: Visitor? = nil) -> GraphColoring<Graph.VertexDescriptor, Color> {
+    /// Colors the graph using the sequential vertex coloring algorithm.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to color
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: The graph coloring result
+    @inlinable
+    public func color(graph: Graph, visitor: Visitor? = nil) -> GraphColoring<Graph.VertexDescriptor, Color> {
         var vertexColors: [Graph.VertexDescriptor: Color] = [:]
         var usedColors: Set<Color> = []
         
@@ -105,7 +128,8 @@ struct SequentialVertexColoringAlgorithm<
         return GraphColoring(vertexColors: vertexColors, isProper: isProper)
     }
     
-    private func checkProperColoring(
+    @usableFromInline
+    func checkProperColoring(
         in graph: Graph,
         vertexColors: [Graph.VertexDescriptor: Color]
     ) -> Bool {

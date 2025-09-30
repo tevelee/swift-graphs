@@ -1,5 +1,13 @@
 extension ShortestPathUntilAlgorithm {
-    static func aStar<Graph: IncidenceGraph, Weight: AdditiveArithmetic, HScore, FScore>(
+    /// Creates an A* shortest path until algorithm with custom cost calculation.
+    ///
+    /// - Parameters:
+    ///   - weight: The cost definition for edge weights
+    ///   - heuristic: The heuristic function for estimating remaining cost
+    ///   - calculateTotalCost: A function to combine g-score and h-score
+    /// - Returns: An A* shortest path until algorithm
+    @inlinable
+    public static func aStar<Graph: IncidenceGraph, Weight: AdditiveArithmetic, HScore, FScore>(
         weight: CostDefinition<Graph, Weight>,
         heuristic: Heuristic<Graph, HScore>,
         calculateTotalCost: @escaping (Weight, HScore) -> FScore
@@ -7,7 +15,14 @@ extension ShortestPathUntilAlgorithm {
         .init(weight: weight, heuristic: heuristic, calculateTotalCost: calculateTotalCost)
     }
     
-    static func aStar<Graph: IncidenceGraph, Weight: AdditiveArithmetic>(
+    /// Creates an A* shortest path until algorithm with simple addition for cost calculation.
+    ///
+    /// - Parameters:
+    ///   - weight: The cost definition for edge weights
+    ///   - heuristic: The heuristic function for estimating remaining cost
+    /// - Returns: An A* shortest path until algorithm
+    @inlinable
+    public static func aStar<Graph: IncidenceGraph, Weight: AdditiveArithmetic>(
         weight: CostDefinition<Graph, Weight>,
         heuristic: Heuristic<Graph, Weight>
     ) -> Self where Self == AStarShortestPathUntil<Graph, Weight, Weight, Weight> {
@@ -15,7 +30,13 @@ extension ShortestPathUntilAlgorithm {
     }
 }
 
-struct AStarShortestPathUntil<
+/// An A* shortest path until algorithm implementation for the ShortestPathUntilAlgorithm protocol.
+///
+/// This struct wraps the core A* algorithm to provide a ShortestPathUntilAlgorithm interface,
+/// making it easy to use A* for finding shortest paths until a condition is met.
+///
+/// - Complexity: O((V + E) log V) where V is the number of vertices and E is the number of edges
+public struct AStarShortestPathUntil<
     Graph: IncidenceGraph & EdgePropertyGraph,
     Weight: AdditiveArithmetic & Comparable,
     HScore: AdditiveArithmetic,
@@ -23,11 +44,40 @@ struct AStarShortestPathUntil<
 >: ShortestPathUntilAlgorithm where
     Graph.VertexDescriptor: Hashable
 {
-    let weight: CostDefinition<Graph, Weight>
-    let heuristic: Heuristic<Graph, HScore>
-    let calculateTotalCost: (Weight, HScore) -> FScore
+    /// The cost definition for edge weights.
+    public let weight: CostDefinition<Graph, Weight>
+    /// The heuristic function for estimating remaining cost.
+    public let heuristic: Heuristic<Graph, HScore>
+    /// The function to combine g-score and h-score.
+    public let calculateTotalCost: (Weight, HScore) -> FScore
 
-    func shortestPath(
+    /// Creates a new A* shortest path until algorithm.
+    ///
+    /// - Parameters:
+    ///   - weight: The cost definition for edge weights
+    ///   - heuristic: The heuristic function for estimating remaining cost
+    ///   - calculateTotalCost: A function to combine g-score and h-score
+    @inlinable
+    public init(
+        weight: CostDefinition<Graph, Weight>,
+        heuristic: Heuristic<Graph, HScore>,
+        calculateTotalCost: @escaping (Weight, HScore) -> FScore
+    ) {
+        self.weight = weight
+        self.heuristic = heuristic
+        self.calculateTotalCost = calculateTotalCost
+    }
+    
+    /// Finds the shortest path from source until a condition is met using A*.
+    ///
+    /// - Parameters:
+    ///   - source: The source vertex
+    ///   - condition: The condition that determines when to stop
+    ///   - graph: The graph to search in
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: The shortest path to the first vertex that satisfies the condition, if one exists
+    @inlinable
+    public func shortestPath(
         from source: Graph.VertexDescriptor,
         until condition: @escaping (Graph.VertexDescriptor) -> Bool,
         in graph: Graph,

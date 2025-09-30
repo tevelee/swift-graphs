@@ -1,33 +1,62 @@
-struct ReversedGraphView<Base: IncidenceGraph>: Graph {
-    typealias VertexDescriptor = Base.VertexDescriptor
-    typealias EdgeDescriptor = Base.EdgeDescriptor
-    let base: Base
+/// A view of a graph with all edges reversed (transposed).
+///
+/// This view provides a reversed perspective of the underlying graph by swapping
+/// the source and destination of all edges. This is useful for algorithms that
+/// need to traverse the graph in the opposite direction.
+public struct ReversedGraphView<Base: IncidenceGraph>: Graph {
+    public typealias VertexDescriptor = Base.VertexDescriptor
+    public typealias EdgeDescriptor = Base.EdgeDescriptor
+    public let base: Base
+    
+    /// Creates a new reversed graph view.
+    ///
+    /// - Parameter base: The underlying graph to reverse
+    @inlinable
+    public init(base: Base) {
+        self.base = base
+    }
 }
 
 extension ReversedGraphView: VertexListGraph where Base: VertexListGraph {
-    typealias Vertices = Base.Vertices
-    func vertices() -> Vertices { base.vertices() }
-    var vertexCount: Int { base.vertexCount }
+    public typealias Vertices = Base.Vertices
+    @inlinable
+    public func vertices() -> Vertices { base.vertices() }
+    
+    @inlinable
+    public var vertexCount: Int { base.vertexCount }
 }
 
 extension ReversedGraphView: EdgeListGraph where Base: EdgeListGraph {
-    typealias Edges = Base.Edges
-    func edges() -> Edges { base.edges() }
-    var edgeCount: Int { base.edgeCount }
+    public typealias Edges = Base.Edges
+    @inlinable
+    public func edges() -> Edges { base.edges() }
+    
+    @inlinable
+    public var edgeCount: Int { base.edgeCount }
 }
 
 extension ReversedGraphView: IncidenceGraph where Base: BidirectionalGraph {
-    typealias OutgoingEdges = Base.IncomingEdges
-    func outgoingEdges(of vertex: VertexDescriptor) -> OutgoingEdges { base.incomingEdges(of: vertex) }
-    func source(of edge: EdgeDescriptor) -> VertexDescriptor? { base.destination(of: edge) }
-    func destination(of edge: EdgeDescriptor) -> VertexDescriptor? { base.source(of: edge) }
-    func outDegree(of vertex: VertexDescriptor) -> Int { base.inDegree(of: vertex) }
+    public typealias OutgoingEdges = Base.IncomingEdges
+    @inlinable
+    public func outgoingEdges(of vertex: VertexDescriptor) -> OutgoingEdges { base.incomingEdges(of: vertex) }
+    
+    @inlinable
+    public func source(of edge: EdgeDescriptor) -> VertexDescriptor? { base.destination(of: edge) }
+    
+    @inlinable
+    public func destination(of edge: EdgeDescriptor) -> VertexDescriptor? { base.source(of: edge) }
+    
+    @inlinable
+    public func outDegree(of vertex: VertexDescriptor) -> Int { base.inDegree(of: vertex) }
 }
 
 extension ReversedGraphView: BidirectionalGraph where Base: BidirectionalGraph {
-    typealias IncomingEdges = Base.OutgoingEdges
-    func incomingEdges(of vertex: VertexDescriptor) -> IncomingEdges { base.outgoingEdges(of: vertex) }
-    func inDegree(of vertex: VertexDescriptor) -> Int { base.outDegree(of: vertex) }
+    public typealias IncomingEdges = Base.OutgoingEdges
+    @inlinable
+    public func incomingEdges(of vertex: VertexDescriptor) -> IncomingEdges { base.outgoingEdges(of: vertex) }
+    
+    @inlinable
+    public func inDegree(of vertex: VertexDescriptor) -> Int { base.outDegree(of: vertex) }
 }
 
 // MARK: - Convenience Methods for Creating ReversedGraphView
@@ -38,7 +67,7 @@ extension IncidenceGraph where Self: BidirectionalGraph {
     /// This is equivalent to the transpose of the graph's adjacency matrix.
     /// - Returns: A `ReversedGraphView` that represents the transposed graph
     @inlinable
-    func reversed() -> ReversedGraphView<Self> {
+    public func reversed() -> ReversedGraphView<Self> {
         ReversedGraphView(base: self)
     }
     
@@ -47,7 +76,7 @@ extension IncidenceGraph where Self: BidirectionalGraph {
     /// This is an alias for `reversed()` that uses the more common "transpose" terminology.
     /// - Returns: A `ReversedGraphView` that represents the transposed graph
     @inlinable
-    func transpose() -> ReversedGraphView<Self> {
+    public func transpose() -> ReversedGraphView<Self> {
         ReversedGraphView(base: self)
     }
 }

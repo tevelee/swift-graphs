@@ -1,6 +1,7 @@
 import Collections
 
-protocol QueueProtocol<Element> {
+/// A protocol for queue-like data structures.
+public protocol QueueProtocol<Element> {
     associatedtype Element
 
     var isEmpty: Bool { get }
@@ -9,27 +10,37 @@ protocol QueueProtocol<Element> {
 }
 
 extension Deque: QueueProtocol {
-    mutating func enqueue(_ element: Element) {
+    @inlinable
+    public mutating func enqueue(_ element: Element) {
         append(element)
     }
     
-    mutating func dequeue() -> Element? {
+    @inlinable
+    public mutating func dequeue() -> Element? {
         popFirst()
     }
 }
 
-struct PriorityQueue<Element: Comparable>: QueueProtocol {
-    private var heap = Heap<Element>()
+/// A priority queue implementation using a heap.
+public struct PriorityQueue<Element: Comparable>: QueueProtocol {
+    @usableFromInline
+    var heap = Heap<Element>()
 
-    var isEmpty: Bool {
+    @inlinable
+    public init() {}
+
+    @inlinable
+    public var isEmpty: Bool {
         heap.isEmpty
     }
 
-    mutating func enqueue(_ element: Element) {
+    @inlinable
+    public mutating func enqueue(_ element: Element) {
         heap.insert(element)
     }
 
-    mutating func dequeue() -> Element? {
+    @inlinable
+    public mutating func dequeue() -> Element? {
         heap.popMin()
     }
 }

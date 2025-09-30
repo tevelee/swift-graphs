@@ -1,13 +1,18 @@
 import Foundation
 
 extension ColoringAlgorithm where Color == Int {
-    static func welshPowell<Graph: IncidenceGraph & VertexListGraph>() -> Self where Self == WelshPowellColoringAlgorithm<Graph, Int>, Graph.VertexDescriptor: Hashable {
+    /// Creates a Welsh-Powell coloring algorithm.
+    ///
+    /// - Returns: A Welsh-Powell coloring algorithm instance.
+    @inlinable
+    public static func welshPowell<Graph: IncidenceGraph & VertexListGraph>() -> Self where Self == WelshPowellColoringAlgorithm<Graph, Int>, Graph.VertexDescriptor: Hashable {
         .init()
     }
 }
 
 extension WelshPowellColoringAlgorithm: ColoringAlgorithm {
-    func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
+    @inlinable
+    public func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
         color(graph: graph, visitor: nil)
     }
 }

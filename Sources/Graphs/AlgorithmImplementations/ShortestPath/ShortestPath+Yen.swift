@@ -1,14 +1,25 @@
 import Foundation
 
 extension ShortestPathAlgorithm where Weight: AdditiveArithmetic {
-    static func yen<Graph: IncidenceGraph & EdgePropertyGraph, Weight>(
+    /// Creates a Yen shortest path algorithm.
+    ///
+    /// - Parameter weight: The cost definition for edge weights.
+    /// - Returns: A Yen shortest path algorithm instance.
+    @inlinable
+    public static func yen<Graph: IncidenceGraph & EdgePropertyGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == YenShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable {
         .init(weight: weight)
     }
 }
 
-struct YenShortestPath<
+/// A Yen shortest path algorithm implementation for the ShortestPathAlgorithm protocol.
+///
+/// This struct wraps the core Yen algorithm to provide a ShortestPathAlgorithm interface,
+/// making it easy to use Yen for finding the shortest path (first of k shortest paths).
+///
+/// - Complexity: O(k * V * (E + V log V)) where k is the number of paths, V is vertices, E is edges
+public struct YenShortestPath<
     Graph: IncidenceGraph & EdgePropertyGraph,
     Weight: Numeric & Comparable
 >: ShortestPathAlgorithm where
@@ -16,11 +27,30 @@ struct YenShortestPath<
     Graph.EdgeDescriptor: Hashable,
     Weight.Magnitude == Weight
 {
-    typealias Visitor = Yen<Graph, Weight>.Visitor
+    /// The visitor type for observing algorithm progress.
+    public typealias Visitor = Yen<Graph, Weight>.Visitor
     
-    let weight: CostDefinition<Graph, Weight>
+    /// The cost definition for edge weights.
+    public let weight: CostDefinition<Graph, Weight>
     
-    func shortestPath(
+    /// Creates a new Yen shortest path algorithm.
+    ///
+    /// - Parameter weight: The cost definition for edge weights.
+    @inlinable
+    public init(weight: CostDefinition<Graph, Weight>) {
+        self.weight = weight
+    }
+    
+    /// Finds the shortest path from source to destination using Yen's algorithm.
+    ///
+    /// - Parameters:
+    ///   - source: The source vertex
+    ///   - destination: The destination vertex
+    ///   - graph: The graph to search in
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: The shortest path, if one exists
+    @inlinable
+    public func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         in graph: Graph,

@@ -5,24 +5,60 @@ import Collections
 /// This algorithm works by repeatedly removing vertices with no incoming edges.
 /// If all vertices are processed, the graph is acyclic and the order is a valid topological sort.
 /// If some vertices remain, the graph contains a cycle.
-struct Kahn<Graph: IncidenceGraph & VertexListGraph>: TopologicalSortAlgorithm where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+///
+/// - Complexity: O(V + E) where V is the number of vertices and E is the number of edges
+public struct Kahn<Graph: IncidenceGraph & VertexListGraph>: TopologicalSortAlgorithm where Graph.VertexDescriptor: Hashable {
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
 
-    struct Visitor {
-        var discoverVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var finishVertex: ((Vertex) -> Void)?
-        var detectCycle: (([Vertex]) -> Void)?
+    /// A visitor that can be used to observe Kahn's algorithm progress.
+    public struct Visitor {
+        /// Called when discovering a vertex.
+        public var discoverVertex: ((Vertex) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge) -> Void)?
+        /// Called when finishing a vertex.
+        public var finishVertex: ((Vertex) -> Void)?
+        /// Called when detecting a cycle.
+        public var detectCycle: (([Vertex]) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            discoverVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            finishVertex: ((Vertex) -> Void)? = nil,
+            detectCycle: (([Vertex]) -> Void)? = nil
+        ) {
+            self.discoverVertex = discoverVertex
+            self.examineEdge = examineEdge
+            self.finishVertex = finishVertex
+            self.detectCycle = detectCycle
+        }
     }
 
-    private let makeQueue: () -> any QueueProtocol<Vertex>
+    /// The queue factory for Kahn's algorithm.
+    @usableFromInline
+    let makeQueue: () -> any QueueProtocol<Vertex>
 
-    init(makeQueue: @escaping () -> any QueueProtocol<Vertex> = { Deque() }) {
+    /// Creates a new Kahn's algorithm instance.
+    ///
+    /// - Parameter makeQueue: A factory for creating the queue used in the algorithm.
+    @inlinable
+    public init(makeQueue: @escaping () -> any QueueProtocol<Vertex> = { Deque() }) {
         self.makeQueue = makeQueue
     }
 
-    func topologicalSort(
+    /// Performs topological sort using Kahn's algorithm.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to sort topologically.
+    ///   - visitor: An optional visitor to observe the algorithm progress.
+    /// - Returns: The topological sort result.
+    @inlinable
+    public func topologicalSort(
         in graph: Graph,
         visitor: Visitor?
     ) -> TopologicalSortResult<Graph.VertexDescriptor> {

@@ -1,22 +1,52 @@
 extension TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
-    static func bestFirst<Graph, HScore>(
+    /// Creates a best-first traversal algorithm.
+    ///
+    /// - Parameter heuristic: The heuristic function to guide the traversal.
+    /// - Returns: A best-first traversal algorithm instance.
+    @inlinable
+    public static func bestFirst<Graph, HScore>(
         heuristic: Heuristic<Graph, HScore>
     ) -> Self where Self == BestFirstTraversal<Graph, HScore> {
         .init(heuristic: heuristic)
     }
 }
 
-struct BestFirstTraversal<
+/// A best-first traversal algorithm that uses a heuristic to guide exploration.
+///
+/// Best-first traversal explores vertices in order of their heuristic value,
+/// making it useful for informed search strategies. It uses A* with uniform
+/// edge weights and the provided heuristic function.
+///
+/// - Complexity: O(b^d) where b is the branching factor and d is the depth
+public struct BestFirstTraversal<
     Graph: IncidenceGraph & EdgePropertyGraph,
     HScore: AdditiveArithmetic & Comparable
 >: TraversalAlgorithm where
     Graph.VertexDescriptor: Hashable
 {
-    typealias Visitor = AStar<Graph, Int, HScore, HScore>.Visitor
+    /// The visitor type for observing traversal progress.
+    public typealias Visitor = AStar<Graph, Int, HScore, HScore>.Visitor
     
-    let heuristic: Heuristic<Graph, HScore>
+    /// The heuristic function used to guide the traversal.
+    public let heuristic: Heuristic<Graph, HScore>
+    
+    /// Creates a new best-first traversal algorithm.
+    ///
+    /// - Parameter heuristic: The heuristic function to guide the traversal.
+    @inlinable
+    public init(heuristic: Heuristic<Graph, HScore>) {
+        self.heuristic = heuristic
+    }
 
-    func traverse(
+    /// Performs a best-first traversal from the source vertex.
+    ///
+    /// - Parameters:
+    ///   - source: The vertex to start traversal from.
+    ///   - graph: The graph to traverse.
+    ///   - visitor: An optional visitor to observe the traversal progress.
+    /// - Returns: The traversal result containing vertices and edges.
+    @inlinable
+    public func traverse(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
         visitor: Visitor?

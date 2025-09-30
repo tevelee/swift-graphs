@@ -1,5 +1,10 @@
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
-    func topologicalSort(
+    /// Performs topological sort using the specified algorithm.
+    ///
+    /// - Parameter algorithm: The algorithm to use for topological sorting.
+    /// - Returns: The topological sort result.
+    @inlinable
+    public func topologicalSort(
         using algorithm: some TopologicalSortAlgorithm<Self>
     ) -> TopologicalSortResult<VertexDescriptor> {
         algorithm.topologicalSort(in: self, visitor: nil)
@@ -11,15 +16,27 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Performs topological sort using DFS-based algorithm as the default.
     /// This is the most commonly used and efficient algorithm for topological sorting.
-    func topologicalSort() -> TopologicalSortResult<VertexDescriptor> {
+    ///
+    /// - Returns: The topological sort result.
+    @inlinable
+    public func topologicalSort() -> TopologicalSortResult<VertexDescriptor> {
         topologicalSort(using: .dfs())
     }
 }
 
-protocol TopologicalSortAlgorithm<Graph> {
+/// A protocol for algorithms that perform topological sorting.
+public protocol TopologicalSortAlgorithm<Graph> {
+    /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
+    /// The visitor type for observing algorithm progress.
     associatedtype Visitor
 
+    /// Performs topological sort on the graph.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to sort topologically.
+    ///   - visitor: An optional visitor to observe the algorithm progress.
+    /// - Returns: The topological sort result.
     func topologicalSort(
         in graph: Graph,
         visitor: Visitor?
@@ -27,9 +44,10 @@ protocol TopologicalSortAlgorithm<Graph> {
 }
 
 extension VisitorWrapper: TopologicalSortAlgorithm where Base: TopologicalSortAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
-    typealias Graph = Base.Graph
+    public typealias Graph = Base.Graph
     
-    func topologicalSort(
+    @inlinable
+    public func topologicalSort(
         in graph: Base.Graph,
         visitor: Base.Visitor?
     ) -> TopologicalSortResult<Base.Graph.VertexDescriptor> {

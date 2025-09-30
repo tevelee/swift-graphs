@@ -1,6 +1,10 @@
 import Collections
 
-protocol StackProtocol<Element> {
+/// A protocol for stack-like data structures.
+///
+/// Stack protocols define the interface for last-in-first-out (LIFO) data structures.
+/// This is useful for algorithms that need to maintain a stack of elements.
+public protocol StackProtocol<Element> {
     associatedtype Element
 
     var isEmpty: Bool { get }
@@ -9,21 +13,25 @@ protocol StackProtocol<Element> {
 }
 
 extension Array: StackProtocol {
-    mutating func push(_ element: Element) {
+    @inlinable
+    public mutating func push(_ element: Element) {
         append(element)
     }
     
-    mutating func pop() -> Element? {
+    @inlinable
+    public mutating func pop() -> Element? {
         popLast()
     }
 }
 
 extension Deque: StackProtocol {
-    mutating func push(_ element: Element) {
+    @inlinable
+    public mutating func push(_ element: Element) {
         append(element)
     }
     
-    mutating func pop() -> Element? {
+    @inlinable
+    public mutating func pop() -> Element? {
         popLast()
     }
 }

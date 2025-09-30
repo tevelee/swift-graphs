@@ -1,17 +1,56 @@
 import Foundation
 
-struct BacktrackingHamiltonian<Graph: IncidenceGraph & VertexListGraph> 
+/// Backtracking algorithm for finding Hamiltonian paths and cycles.
+///
+/// This algorithm uses backtracking to systematically explore all possible
+/// paths and cycles in the graph to find Hamiltonian ones.
+///
+/// - Complexity: O(V!) in the worst case where V is the number of vertices
+public struct BacktrackingHamiltonian<Graph: IncidenceGraph & VertexListGraph> 
 where Graph.VertexDescriptor: Hashable {
     
-    struct Visitor {
-        var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-        var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
-        var addToPath: ((Graph.VertexDescriptor) -> Void)?
-        var removeFromPath: ((Graph.VertexDescriptor) -> Void)?
-        var backtrack: ((Graph.VertexDescriptor) -> Void)?
+    /// A visitor that can be used to observe the backtracking Hamiltonian algorithm progress.
+    public struct Visitor {
+        /// Called when examining a vertex.
+        public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
+        /// Called when adding a vertex to the path.
+        public var addToPath: ((Graph.VertexDescriptor) -> Void)?
+        /// Called when removing a vertex from the path.
+        public var removeFromPath: ((Graph.VertexDescriptor) -> Void)?
+        /// Called when backtracking.
+        public var backtrack: ((Graph.VertexDescriptor) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
+            examineEdge: ((Graph.EdgeDescriptor) -> Void)? = nil,
+            addToPath: ((Graph.VertexDescriptor) -> Void)? = nil,
+            removeFromPath: ((Graph.VertexDescriptor) -> Void)? = nil,
+            backtrack: ((Graph.VertexDescriptor) -> Void)? = nil
+        ) {
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.addToPath = addToPath
+            self.removeFromPath = removeFromPath
+            self.backtrack = backtrack
+        }
     }
     
-    func hamiltonianPath(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+    /// Creates a new backtracking Hamiltonian algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Finds a Hamiltonian path in the graph.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to search in
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: A Hamiltonian path if one exists, nil otherwise
+    @inlinable
+    public func hamiltonianPath(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let vertices = Array(graph.vertices())
         guard !vertices.isEmpty else { return nil }
         
@@ -26,15 +65,39 @@ where Graph.VertexDescriptor: Hashable {
         return nil
     }
     
-    func hamiltonianPath(from source: Graph.VertexDescriptor, in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+    /// Finds a Hamiltonian path starting from a specific vertex.
+    ///
+    /// - Parameters:
+    ///   - source: The starting vertex
+    ///   - graph: The graph to search in
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: A Hamiltonian path if one exists, nil otherwise
+    @inlinable
+    public func hamiltonianPath(from source: Graph.VertexDescriptor, in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         return findHamiltonianPath(from: source, in: graph, visitor: visitor)
     }
     
-    func hamiltonianPath(from source: Graph.VertexDescriptor, to destination: Graph.VertexDescriptor, in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+    /// Finds a Hamiltonian path between two specific vertices.
+    ///
+    /// - Parameters:
+    ///   - source: The starting vertex
+    ///   - destination: The ending vertex
+    ///   - graph: The graph to search in
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: A Hamiltonian path if one exists, nil otherwise
+    @inlinable
+    public func hamiltonianPath(from source: Graph.VertexDescriptor, to destination: Graph.VertexDescriptor, in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         return findHamiltonianPath(from: source, to: destination, in: graph, visitor: visitor)
     }
     
-    func hamiltonianCycle(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+    /// Finds a Hamiltonian cycle in the graph.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to search in
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: A Hamiltonian cycle if one exists, nil otherwise
+    @inlinable
+    public func hamiltonianCycle(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         let vertices = Array(graph.vertices())
         guard !vertices.isEmpty else { return nil }
         
@@ -49,7 +112,8 @@ where Graph.VertexDescriptor: Hashable {
         return nil
     }
     
-    private func findHamiltonianPath(
+    @usableFromInline
+    func findHamiltonianPath(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
         visitor: Visitor?
@@ -72,7 +136,8 @@ where Graph.VertexDescriptor: Hashable {
         return nil
     }
     
-    private func findHamiltonianPath(
+    @usableFromInline
+    func findHamiltonianPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         in graph: Graph,
@@ -96,7 +161,8 @@ where Graph.VertexDescriptor: Hashable {
         return nil
     }
     
-    private func findHamiltonianCycle(
+    @usableFromInline
+    func findHamiltonianCycle(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
         visitor: Visitor?

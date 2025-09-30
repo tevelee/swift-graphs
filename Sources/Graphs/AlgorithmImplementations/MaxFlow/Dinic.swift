@@ -1,6 +1,12 @@
 import Foundation
 
-struct Dinic<
+/// Dinic's algorithm for computing maximum flow.
+///
+/// This algorithm finds the maximum flow in a flow network by building level graphs
+/// and finding blocking flows, which provides better time complexity than Edmonds-Karp.
+///
+/// - Complexity: O(V^2 * E) where V is the number of vertices and E is the number of edges
+public struct Dinic<
     Graph: IncidenceGraph & EdgePropertyGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
     Flow: AdditiveArithmetic & Comparable & Numeric & FloatingPoint
 > where
@@ -8,26 +14,71 @@ struct Dinic<
     Graph.EdgeDescriptor: Hashable,
     Flow.Magnitude == Flow
 {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var examineEdge: ((Edge, Flow) -> Void)?
-        var augmentPath: (([Edge], Flow) -> Void)?
-        var updateFlow: ((Edge, Flow) -> Void)?
-        var buildLevelGraph: (() -> Void)?
-        var findBlockingFlow: (() -> Void)?
-        var levelAssigned: ((Vertex, Int) -> Void)?
-        var edgeBlocked: ((Edge) -> Void)?
+    /// A visitor that can be used to observe Dinic's algorithm progress.
+    public struct Visitor {
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge, Flow) -> Void)?
+        /// Called when augmenting a path.
+        public var augmentPath: (([Edge], Flow) -> Void)?
+        /// Called when updating flow on an edge.
+        public var updateFlow: ((Edge, Flow) -> Void)?
+        /// Called when building the level graph.
+        public var buildLevelGraph: (() -> Void)?
+        /// Called when finding a blocking flow.
+        public var findBlockingFlow: (() -> Void)?
+        /// Called when assigning a level to a vertex.
+        public var levelAssigned: ((Vertex, Int) -> Void)?
+        /// Called when an edge is blocked.
+        public var edgeBlocked: ((Edge) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            examineEdge: ((Edge, Flow) -> Void)? = nil,
+            augmentPath: (([Edge], Flow) -> Void)? = nil,
+            updateFlow: ((Edge, Flow) -> Void)? = nil,
+            buildLevelGraph: (() -> Void)? = nil,
+            findBlockingFlow: (() -> Void)? = nil,
+            levelAssigned: ((Vertex, Int) -> Void)? = nil,
+            edgeBlocked: ((Edge) -> Void)? = nil
+        ) {
+            self.examineEdge = examineEdge
+            self.augmentPath = augmentPath
+            self.updateFlow = updateFlow
+            self.buildLevelGraph = buildLevelGraph
+            self.findBlockingFlow = findBlockingFlow
+            self.levelAssigned = levelAssigned
+            self.edgeBlocked = edgeBlocked
+        }
     }
     
-    private let capacityCost: CostDefinition<Graph, Flow>
+    /// The capacity cost definition for edge capacities.
+    @usableFromInline
+    let capacityCost: CostDefinition<Graph, Flow>
     
-    init(capacityCost: CostDefinition<Graph, Flow>) {
+    /// Creates a new Dinic's algorithm.
+    ///
+    /// - Parameter capacityCost: The capacity cost definition for edge capacities.
+    @inlinable
+    public init(capacityCost: CostDefinition<Graph, Flow>) {
         self.capacityCost = capacityCost
     }
     
-    func maximumFlow(
+    /// Computes the maximum flow using Dinic's algorithm.
+    ///
+    /// - Parameters:
+    ///   - source: The source vertex
+    ///   - sink: The sink vertex
+    ///   - graph: The flow network graph
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: The maximum flow result
+    @inlinable
+    public func maximumFlow(
         from source: Vertex,
         to sink: Vertex,
         in graph: Graph,
@@ -102,7 +153,8 @@ struct Dinic<
         )
     }
     
-    private func buildLevelGraph(
+    @usableFromInline
+    func buildLevelGraph(
         from source: Vertex,
         to sink: Vertex,
         in graph: Graph,
@@ -138,7 +190,8 @@ struct Dinic<
         return nil // No path to sink
     }
     
-    private func findBlockingFlow(
+    @usableFromInline
+    func findBlockingFlow(
         from source: Vertex,
         to sink: Vertex,
         in graph: Graph,
@@ -204,7 +257,8 @@ struct Dinic<
         return totalFlow
     }
     
-    private func updateFlows(
+    @usableFromInline
+    func updateFlows(
         in graph: Graph,
         edgeFlows: inout [Edge: Flow],
         residualCapacities: [Edge: Flow],
@@ -233,7 +287,8 @@ struct Dinic<
         return nil
     }
     
-    private func findMinimumCut(
+    @usableFromInline
+    func findMinimumCut(
         from source: Vertex,
         to sink: Vertex,
         in graph: Graph,

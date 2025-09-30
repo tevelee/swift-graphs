@@ -1,4 +1,9 @@
-struct AStar<
+/// An A* search algorithm implementation.
+///
+/// A* is an informed search algorithm that uses a heuristic function to estimate
+/// the cost from the current vertex to the goal, making it more efficient than
+/// Dijkstra's algorithm for finding shortest paths in many cases.
+public struct AStar<
     Graph: IncidenceGraph & EdgePropertyGraph,
     Weight: AdditiveArithmetic & Comparable,
     HScore: AdditiveArithmetic,
@@ -6,27 +11,68 @@ struct AStar<
 > where
     Graph.VertexDescriptor: Hashable
 {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
-    typealias GScore = Cost<Weight>
+    public typealias Vertex = Graph.VertexDescriptor
+    public typealias Edge = Graph.EdgeDescriptor
+    public typealias GScore = Cost<Weight>
 
-    struct Visitor {
-        var examineVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var edgeRelaxed: ((Edge) -> Void)?
-        var edgeNotRelaxed: ((Edge) -> Void)?
-        var finishVertex: ((Vertex) -> Void)?
+    /// A visitor for A* algorithm events.
+    ///
+    /// Visitors can be used to observe and react to different events during
+    /// the A* search process, such as vertex examination and edge relaxation.
+    public struct Visitor {
+        public var examineVertex: ((Vertex) -> Void)?
+        public var examineEdge: ((Edge) -> Void)?
+        public var edgeRelaxed: ((Edge) -> Void)?
+        public var edgeNotRelaxed: ((Edge) -> Void)?
+        public var finishVertex: ((Vertex) -> Void)?
+        
+        @inlinable
+        public init(
+            examineVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            edgeRelaxed: ((Edge) -> Void)? = nil,
+            edgeNotRelaxed: ((Edge) -> Void)? = nil,
+            finishVertex: ((Vertex) -> Void)? = nil
+        ) {
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.edgeRelaxed = edgeRelaxed
+            self.edgeNotRelaxed = edgeNotRelaxed
+            self.finishVertex = finishVertex
+        }
     }
 
-    struct Result {
-        typealias Vertex = Graph.VertexDescriptor
-        typealias Edge = Graph.EdgeDescriptor
-        typealias GScore = AStar.GScore
-        fileprivate let source: Vertex
-        let currentVertex: Vertex
-        let gScoreProperty: any VertexProperty<GScore>.Type
-        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
+    /// A result from the A* search algorithm.
+    ///
+    /// Contains information about the current state of the search, including
+    /// the current vertex, distance properties, and path reconstruction data.
+    public struct Result {
+        public typealias Vertex = Graph.VertexDescriptor
+        public typealias Edge = Graph.EdgeDescriptor
+        public typealias GScore = AStar.GScore
+        
+        @usableFromInline
+        let source: Vertex
+        public let currentVertex: Vertex
+        public let gScoreProperty: any VertexProperty<GScore>.Type
+        public let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
+        @usableFromInline
         let propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
+        
+        @inlinable
+        public init(
+            source: Vertex,
+            currentVertex: Vertex,
+            gScoreProperty: any VertexProperty<GScore>.Type,
+            predecessorEdgeProperty: any VertexProperty<Edge?>.Type,
+            propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
+        ) {
+            self.source = source
+            self.currentVertex = currentVertex
+            self.gScoreProperty = gScoreProperty
+            self.predecessorEdgeProperty = predecessorEdgeProperty
+            self.propertyMap = propertyMap
+        }
     }
 
     private enum GScoreProperty: VertexProperty {
@@ -37,20 +83,36 @@ struct AStar<
         static var defaultValue: Edge? { nil }
     }
 
-    struct PriorityItem {
-        typealias Vertex = Graph.VertexDescriptor
-        let vertex: Vertex
-        let totalCost: FScore
+    /// A priority queue item for A* search.
+    ///
+    /// Contains a vertex and its total cost (g + h) for priority queue ordering.
+    public struct PriorityItem {
+        public typealias Vertex = Graph.VertexDescriptor
+        public let vertex: Vertex
+        public let totalCost: FScore
+        
+        @inlinable
+        public init(vertex: Vertex, totalCost: FScore) {
+            self.vertex = vertex
+            self.totalCost = totalCost
+        }
     }
 
-    private let graph: Graph
-    private let source: Vertex
-    private let edgeWeight: CostDefinition<Graph, Weight>
-    private let heuristic: Heuristic<Graph, HScore>
-    private let calculateTotalCost: (GScore, HScore) -> FScore
-    private let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
+    @usableFromInline
+    let graph: Graph
+    @usableFromInline
+    let source: Vertex
+    @usableFromInline
+    let edgeWeight: CostDefinition<Graph, Weight>
+    @usableFromInline
+    let heuristic: Heuristic<Graph, HScore>
+    @usableFromInline
+    let calculateTotalCost: (GScore, HScore) -> FScore
+    @usableFromInline
+    let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
 
-    init(
+    @inlinable
+    public init(
         on graph: Graph,
         from source: Vertex,
         edgeWeight: CostDefinition<Graph, Weight>,
@@ -76,7 +138,8 @@ struct AStar<
         self.makePriorityQueue = makePriorityQueue
     }
 
-    func makeIterator(visitor: Visitor?) -> Iterator {
+    @inlinable
+    public func makeIterator(visitor: Visitor?) -> Iterator {
         Iterator(
             graph: graph,
             source: source,
@@ -88,21 +151,37 @@ struct AStar<
         )
     }
 
-    struct Iterator {
-        private let graph: Graph
-        private let source: Vertex
-        private let edgeWeight: CostDefinition<Graph, Weight>
-        private let heuristic: Heuristic<Graph, HScore>
-        private let calculateTotalCost: (GScore, HScore) -> FScore
-        private let visitor: Visitor?
-        private var queue: any QueueProtocol<PriorityItem>
-        private var visited: Set<Vertex> = []
+    /// An iterator for A* search results.
+    ///
+    /// Provides sequential access to A* search results, yielding one vertex
+    /// at a time in the order they are processed by the algorithm.
+    public struct Iterator {
+        @usableFromInline
+        let graph: Graph
+        @usableFromInline
+        let source: Vertex
+        @usableFromInline
+        let edgeWeight: CostDefinition<Graph, Weight>
+        @usableFromInline
+        let heuristic: Heuristic<Graph, HScore>
+        @usableFromInline
+        let calculateTotalCost: (GScore, HScore) -> FScore
+        @usableFromInline
+        let visitor: Visitor?
+        @usableFromInline
+        var queue: any QueueProtocol<PriorityItem>
+        @usableFromInline
+        var visited: Set<Vertex> = []
 
-        private var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
-        private let gScoreProperty: any VertexProperty<GScore>.Type = GScoreProperty.self
-        private let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
+        @usableFromInline
+        var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
+        @usableFromInline
+        let gScoreProperty: any VertexProperty<GScore>.Type = GScoreProperty.self
+        @usableFromInline
+        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
 
-        init(
+        @inlinable
+        public init(
             graph: Graph,
             source: Vertex,
             edgeWeight: CostDefinition<Graph, Weight>,
@@ -127,7 +206,8 @@ struct AStar<
             self.queue.enqueue(.init(vertex: source, totalCost: fScore))
         }
 
-        mutating func next() -> Result? {
+        @inlinable
+        public mutating func next() -> Result? {
             // Find next valid vertex to process
             var current: Vertex?
             while let popped = queue.dequeue() {
@@ -183,7 +263,8 @@ struct AStar<
 extension AStar.Iterator: IteratorProtocol {}
 
 extension AStar: Sequence {
-    func makeIterator() -> Iterator {
+    @inlinable
+    public func makeIterator() -> Iterator {
         makeIterator(visitor: nil)
     }
 }
@@ -191,19 +272,22 @@ extension AStar: Sequence {
 extension AStar: VisitorSupporting {}
 
 extension AStar.PriorityItem: Equatable {
-    static func == (lhs: Self, rhs: Self) -> Bool {
+    @inlinable
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.vertex == rhs.vertex
     }
 }
 
 extension AStar.PriorityItem: Comparable {
-    static func < (lhs: Self, rhs: Self) -> Bool {
+    @inlinable
+    public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.totalCost < rhs.totalCost
     }
 }
 
 extension AStar.Result {
-    func currentDistance() -> Weight {
+    @inlinable
+    public func currentDistance() -> Weight {
         switch gScore(of: currentVertex) {
             case .finite(let value):
                 return value
@@ -213,51 +297,62 @@ extension AStar.Result {
         }
     }
 
-    func predecessor(in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex {
+    @inlinable
+    public func predecessor(in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex {
         predecessor(of: currentVertex, in: graph).unwrap(
             orReport: "The currently examined vertex should always have a predecessor"
         )
     }
 
-    func predecessorEdge() -> Edge {
+    @inlinable
+    public func predecessorEdge() -> Edge {
         predecessorEdge(of: currentVertex).unwrap(
             orReport: "The currently examined vertex should always have a predecessor edge"
         )
     }
 
-    func vertices(in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
+    @inlinable
+    public func vertices(in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
         vertices(to: currentVertex, in: graph)
     }
 
-    func edges(in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
+    @inlinable
+    public func edges(in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
         edges(to: currentVertex, in: graph)
     }
 
-    func path(in graph: some IncidenceGraph<Vertex, Edge>) -> [(vertex: Vertex, edge: Edge)] {
+    @inlinable
+    public func path(in graph: some IncidenceGraph<Vertex, Edge>) -> [(vertex: Vertex, edge: Edge)] {
         path(to: currentVertex, in: graph)
     }
 
-    func gScore(of vertex: Vertex) -> GScore {
+    @inlinable
+    public func gScore(of vertex: Vertex) -> GScore {
         propertyMap[vertex][gScoreProperty]
     }
 
-    func predecessor(of vertex: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex? {
+    @inlinable
+    public func predecessor(of vertex: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex? {
         predecessorEdge(of: vertex).flatMap(graph.source)
     }
 
-    func predecessorEdge(of vertex: Vertex) -> Edge? {
+    @inlinable
+    public func predecessorEdge(of vertex: Vertex) -> Edge? {
         propertyMap[vertex][predecessorEdgeProperty]
     }
 
-    func vertices(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
+    @inlinable
+    public func vertices(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
         [source] + path(to: destination, in: graph).map(\.vertex)
     }
 
-    func edges(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
+    @inlinable
+    public func edges(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
         path(to: destination, in: graph).map(\.edge)
     }
 
-    func path(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [(vertex: Vertex, edge: Edge)] {
+    @inlinable
+    public func path(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [(vertex: Vertex, edge: Edge)] {
         var current = destination
         var result: [(Vertex, Edge)] = []
         while let predecessorEdge = predecessorEdge(of: current) {
@@ -268,23 +363,45 @@ extension AStar.Result {
         return result
     }
 
-    func hasPath(to vertex: Vertex) -> Bool {
+    @inlinable
+    public func hasPath(to vertex: Vertex) -> Bool {
         propertyMap[vertex][gScoreProperty] != .infinite
     }
 }
 
-struct Heuristic<Graph: Graphs.Graph, EstimatedCost> {
-    let estimatedCost: (Graph.VertexDescriptor, Graph) -> EstimatedCost
+/// A heuristic function for A* search.
+///
+/// Heuristics provide estimates of the cost from a given vertex to the goal,
+/// helping A* find optimal paths more efficiently than uninformed search algorithms.
+public struct Heuristic<Graph: Graphs.Graph, EstimatedCost> {
+    public let estimatedCost: (Graph.VertexDescriptor, Graph) -> EstimatedCost
+    
+    @inlinable
+    public init(estimatedCost: @escaping (Graph.VertexDescriptor, Graph) -> EstimatedCost) {
+        self.estimatedCost = estimatedCost
+    }
 }
 
 extension Heuristic {
-    static func uniform(_ value: EstimatedCost) -> Self {
+    /// Creates a uniform heuristic that returns the same value for all vertices.
+    ///
+    /// - Parameter value: The constant value to return for all vertices
+    /// - Returns: A uniform heuristic
+    @inlinable
+    public static func uniform(_ value: EstimatedCost) -> Self {
         .init { _, _ in
             value
         }
     }
     
-    static func distance(
+    /// Creates a distance-based heuristic using a distance algorithm.
+    ///
+    /// - Parameters:
+    ///   - destination: The target vertex
+    ///   - distance: The distance algorithm to use
+    /// - Returns: A distance-based heuristic
+    @inlinable
+    public static func distance(
         to destination: Graph.VertexDescriptor,
         using distance: DistanceAlgorithm<Graph.VertexDescriptor, EstimatedCost>
     ) -> Self {
@@ -295,7 +412,14 @@ extension Heuristic {
 }
 
 extension Heuristic where Graph: PropertyGraph {
-    static func euclideanDistance<Coordinate: SIMD>(
+    /// Creates a Euclidean distance heuristic for vertices with coordinate properties.
+    ///
+    /// - Parameters:
+    ///   - destination: The target vertex
+    ///   - coordinates: A function that extracts coordinates from vertex properties
+    /// - Returns: A Euclidean distance heuristic
+    @inlinable
+    public static func euclideanDistance<Coordinate: SIMD>(
         to destination: Graph.VertexDescriptor,
         of coordinates: @escaping (VertexProperties) -> Coordinate
     ) -> Self where EstimatedCost == Coordinate.Scalar, Coordinate.Scalar: FloatingPoint {
@@ -304,7 +428,14 @@ extension Heuristic where Graph: PropertyGraph {
         }
     }
     
-    static func manhattanDistance<Coordinate: SIMD>(
+    /// Creates a Manhattan distance heuristic for vertices with coordinate properties.
+    ///
+    /// - Parameters:
+    ///   - destination: The target vertex
+    ///   - coordinates: A function that extracts coordinates from vertex properties
+    /// - Returns: A Manhattan distance heuristic
+    @inlinable
+    public static func manhattanDistance<Coordinate: SIMD>(
         to destination: Graph.VertexDescriptor,
         of coordinates: @escaping (VertexProperties) -> Coordinate
     ) -> Self where EstimatedCost == Coordinate.Scalar, Coordinate.Scalar: FloatingPoint {

@@ -1,25 +1,71 @@
 import Foundation
 
-/// VF2 (Vento-Foggia) algorithm for graph isomorphism
+/// VF2 (Vento-Foggia) algorithm for graph isomorphism.
 /// This is a state-space search algorithm that explores possible vertex mappings
 /// between two graphs in a systematic way.
-struct VF2Isomorphism<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+///
+/// - Complexity: O(V! * V) in the worst case, but much better in practice
+public struct VF2Isomorphism<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var examineVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var tryMapping: ((Vertex, Vertex) -> Void)?
-        var mappingFound: (([Vertex: Vertex]) -> Void)?
-        var backtrack: ((Vertex, Vertex) -> Void)?
+    /// A visitor that can be used to observe the VF2 algorithm progress.
+    public struct Visitor {
+        /// Called when examining a vertex.
+        public var examineVertex: ((Vertex) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge) -> Void)?
+        /// Called when trying a vertex mapping.
+        public var tryMapping: ((Vertex, Vertex) -> Void)?
+        /// Called when a mapping is found.
+        public var mappingFound: (([Vertex: Vertex]) -> Void)?
+        /// Called when backtracking.
+        public var backtrack: ((Vertex, Vertex) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            examineVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            tryMapping: ((Vertex, Vertex) -> Void)? = nil,
+            mappingFound: (([Vertex: Vertex]) -> Void)? = nil,
+            backtrack: ((Vertex, Vertex) -> Void)? = nil
+        ) {
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.tryMapping = tryMapping
+            self.mappingFound = mappingFound
+            self.backtrack = backtrack
+        }
     }
     
-    func areIsomorphic(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> Bool {
+    /// Creates a new VF2 isomorphism algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Determines if two graphs are isomorphic using VF2 algorithm.
+    ///
+    /// - Parameters:
+    ///   - graph1: The first graph
+    ///   - graph2: The second graph
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: True if the graphs are isomorphic, false otherwise
+    @inlinable
+    public func areIsomorphic(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> Bool {
         return findIsomorphism(graph1, graph2, visitor: visitor) != nil
     }
     
-    func findIsomorphism(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> [Vertex: Vertex]? {
+    /// Finds an isomorphism mapping between two graphs using VF2 algorithm.
+    ///
+    /// - Parameters:
+    ///   - graph1: The first graph
+    ///   - graph2: The second graph
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: A mapping from vertices of graph1 to vertices of graph2, or nil if not isomorphic
+    @inlinable
+    public func findIsomorphism(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> [Vertex: Vertex]? {
         // Quick checks for basic isomorphism requirements
         guard graph1.vertexCount == graph2.vertexCount else { return nil }
         guard graph1.edgeCount == graph2.edgeCount else { return nil }
@@ -48,7 +94,8 @@ struct VF2Isomorphism<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> w
         return nil
     }
     
-    private func findMapping(
+    @usableFromInline
+    func findMapping(
         graph1: Graph,
         graph2: Graph,
         vertices1: [Vertex],

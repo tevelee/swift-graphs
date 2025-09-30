@@ -1,5 +1,10 @@
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
-    func stronglyConnectedComponents(
+    /// Finds strongly connected components using the specified algorithm.
+    ///
+    /// - Parameter algorithm: The SCC algorithm to use
+    /// - Returns: The strongly connected components result
+    @inlinable
+    public func stronglyConnectedComponents(
         using algorithm: some StronglyConnectedComponentsAlgorithm<Self>
     ) -> StronglyConnectedComponentsResult<VertexDescriptor> {
         algorithm.stronglyConnectedComponents(in: self, visitor: nil)
@@ -7,7 +12,12 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 }
 
 extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
-    func stronglyConnectedComponents(
+    /// Finds strongly connected components using the specified algorithm.
+    ///
+    /// - Parameter algorithm: The SCC algorithm to use
+    /// - Returns: The strongly connected components result
+    @inlinable
+    public func stronglyConnectedComponents(
         using algorithm: some StronglyConnectedComponentsAlgorithm<Self>
     ) -> StronglyConnectedComponentsResult<VertexDescriptor> {
         algorithm.stronglyConnectedComponents(in: self, visitor: nil)
@@ -19,15 +29,27 @@ extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hash
 extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Finds strongly connected components using Kosaraju's algorithm as the default.
     /// This is a well-known and efficient algorithm for finding SCCs.
-    func stronglyConnectedComponents() -> StronglyConnectedComponentsResult<VertexDescriptor> {
+    ///
+    /// - Returns: The strongly connected components result
+    @inlinable
+    public func stronglyConnectedComponents() -> StronglyConnectedComponentsResult<VertexDescriptor> {
         stronglyConnectedComponents(using: .kosaraju())
     }
 }
 
-protocol StronglyConnectedComponentsAlgorithm<Graph> {
+/// A protocol for strongly connected components algorithms.
+public protocol StronglyConnectedComponentsAlgorithm<Graph> {
+    /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
+    /// The visitor type for observing algorithm progress.
     associatedtype Visitor
 
+    /// Finds strongly connected components in the graph.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to find SCCs in
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: The strongly connected components result
     func stronglyConnectedComponents(
         in graph: Graph,
         visitor: Visitor?
@@ -35,9 +57,10 @@ protocol StronglyConnectedComponentsAlgorithm<Graph> {
 }
 
 extension VisitorWrapper: StronglyConnectedComponentsAlgorithm where Base: StronglyConnectedComponentsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
-    typealias Graph = Base.Graph
+    public typealias Graph = Base.Graph
     
-    func stronglyConnectedComponents(
+    @inlinable
+    public func stronglyConnectedComponents(
         in graph: Base.Graph,
         visitor: Base.Visitor?
     ) -> StronglyConnectedComponentsResult<Base.Graph.VertexDescriptor> {

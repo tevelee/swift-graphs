@@ -1,7 +1,11 @@
 import Foundation
 
 extension BipartitePropertyAlgorithm {
-    static func dfs<Graph: IncidenceGraph & VertexListGraph>() -> Self where Self == DFSBipartitePropertyAlgorithm<Graph>, Graph.VertexDescriptor: Hashable {
+    /// Creates a DFS-based bipartite property algorithm.
+    ///
+    /// - Returns: A new DFS-based bipartite property algorithm
+    @inlinable
+    public static func dfs<Graph: IncidenceGraph & VertexListGraph>() -> Self where Self == DFSBipartitePropertyAlgorithm<Graph>, Graph.VertexDescriptor: Hashable {
         .init()
     }
 }

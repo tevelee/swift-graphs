@@ -1,7 +1,16 @@
-struct VertexPropertyValues: VertexProperties {
+/// A container for vertex property values.
+///
+/// This type provides type-safe storage for vertex properties using a dynamic
+/// property system. It allows storing different types of properties associated
+/// with vertices in a single container.
+public struct VertexPropertyValues: VertexProperties {
     private var storage = PropertyValues()
 
-    subscript<P: VertexProperty>(property: P.Type) -> P.Value {
+    /// Accesses the value of a specific vertex property.
+    ///
+    /// - Parameter property: The type of property to access
+    /// - Returns: The current value of the property
+    public subscript<P: VertexProperty>(property: P.Type) -> P.Value {
         set { storage[property] = newValue }
         _read {
             yield storage[property]
@@ -12,12 +21,25 @@ struct VertexPropertyValues: VertexProperties {
             yield &value
         }
     }
+    
+    /// Creates a new empty vertex property values container.
+    @inlinable
+    public init() {}
 }
 
-struct EdgePropertyValues: EdgeProperties {
+/// A container for edge property values.
+///
+/// This type provides type-safe storage for edge properties using a dynamic
+/// property system. It allows storing different types of properties associated
+/// with edges in a single container.
+public struct EdgePropertyValues: EdgeProperties {
     private var storage = PropertyValues()
 
-    subscript<P: EdgeProperty>(property: P.Type) -> P.Value {
+    /// Accesses the value of a specific edge property.
+    ///
+    /// - Parameter property: The type of property to access
+    /// - Returns: The current value of the property
+    public subscript<P: EdgeProperty>(property: P.Type) -> P.Value {
         set { storage[property] = newValue }
         _read {
             yield storage[property]
@@ -28,6 +50,10 @@ struct EdgePropertyValues: EdgeProperties {
             yield &value
         }
     }
+    
+    /// Creates a new empty edge property values container.
+    @inlinable
+    public init() {}
 }
 
 private struct PropertyValues {

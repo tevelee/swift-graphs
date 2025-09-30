@@ -1,9 +1,21 @@
 import Foundation
 
-struct DFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Visitor = DFSBipartiteProperty<Graph>.Visitor
+/// DFS-based algorithm for checking if a graph is bipartite.
+public struct DFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Visitor = DFSBipartiteProperty<Graph>.Visitor
     
-    func isBipartite(
+    /// Creates a new DFS-based bipartite property algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Checks if the graph is bipartite using DFS.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to check
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: `true` if the graph is bipartite, `false` otherwise
+    @inlinable
+    public func isBipartite(
         in graph: Graph,
         visitor: Visitor?
     ) -> Bool {
@@ -39,7 +51,8 @@ struct DFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> wh
         return isBipartite
     }
     
-    private func dfsBipartiteCheck(
+    @usableFromInline
+    func dfsBipartiteCheck(
         from vertex: Graph.VertexDescriptor,
         in graph: Graph,
         color: inout [Graph.VertexDescriptor: Int],
@@ -83,20 +96,33 @@ struct DFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> wh
 
 // MARK: - Visitor Support
 
-struct DFSBipartiteProperty<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+public struct DFSBipartiteProperty<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Vertex = Graph.VertexDescriptor
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var assignColor: ((Vertex, Int) -> Void)?
-        var examineVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var colorConflict: ((Vertex, Vertex, Int) -> Void)?
+    public struct Visitor {
+        public var assignColor: ((Vertex, Int) -> Void)?
+        public var examineVertex: ((Vertex) -> Void)?
+        public var examineEdge: ((Edge) -> Void)?
+        public var colorConflict: ((Vertex, Vertex, Int) -> Void)?
+        
+        public init(
+            assignColor: ((Vertex, Int) -> Void)? = nil,
+            examineVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            colorConflict: ((Vertex, Vertex, Int) -> Void)? = nil
+        ) {
+            self.assignColor = assignColor
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.colorConflict = colorConflict
+        }
     }
 }
 
 extension DFSBipartiteProperty.Visitor: Composable {
-    func combined(with other: Self) -> Self {
+    @inlinable
+    public func combined(with other: Self) -> Self {
         .init(
             assignColor: { vertex, color in
                 self.assignColor?(vertex, color)

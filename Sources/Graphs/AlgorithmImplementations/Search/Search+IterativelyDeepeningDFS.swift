@@ -1,15 +1,44 @@
 extension SearchAlgorithm {
-    static func iterativelyDeepeningDFS<Graph>(maxDepth: UInt? = nil) -> Self where Self == IterativelyDeepeningDFSSearch<Graph> {
+    /// Creates an iteratively deepening DFS search algorithm.
+    ///
+    /// - Parameter maxDepth: The maximum depth to search, or nil for unlimited.
+    /// - Returns: An iteratively deepening DFS search algorithm instance.
+    @inlinable
+    public static func iterativelyDeepeningDFS<Graph>(maxDepth: UInt? = nil) -> Self where Self == IterativelyDeepeningDFSSearch<Graph> {
         .init(maxDepth: maxDepth)
     }
 }
 
-struct IterativelyDeepeningDFSSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
-    typealias Visitor = DepthFirstSearch<Graph>.Visitor
+/// An iteratively deepening DFS search algorithm implementation for the SearchAlgorithm protocol.
+///
+/// This struct wraps the core iteratively deepening DFS algorithm to provide a
+/// SearchAlgorithm interface, making it easy to use IDDFS as a general search algorithm.
+///
+/// - Complexity: O(b^d) where b is the branching factor and d is the depth
+public struct IterativelyDeepeningDFSSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
+    /// The visitor type for observing search progress.
+    public typealias Visitor = DepthFirstSearch<Graph>.Visitor
     
-    let maxDepth: UInt?
+    /// The maximum depth to search, or nil for unlimited.
+    public let maxDepth: UInt?
     
-    func search(
+    /// Creates a new iteratively deepening DFS search algorithm.
+    ///
+    /// - Parameter maxDepth: The maximum depth to search, or nil for unlimited.
+    @inlinable
+    public init(maxDepth: UInt? = nil) {
+        self.maxDepth = maxDepth
+    }
+    
+    /// Performs an iteratively deepening DFS search from the source vertex.
+    ///
+    /// - Parameters:
+    ///   - source: The vertex to start search from.
+    ///   - graph: The graph to search in.
+    ///   - visitor: An optional visitor to observe the search progress.
+    /// - Returns: An iteratively deepening DFS search iterator.
+    @inlinable
+    public func search(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
         visitor: Visitor?
@@ -23,15 +52,21 @@ struct IterativelyDeepeningDFSSearch<Graph: IncidenceGraph>: SearchAlgorithm whe
     }
 }
 
-struct IterativelyDeepeningDFSSearchIterator<Graph: IncidenceGraph>: Sequence where Graph.VertexDescriptor: Hashable {
-    typealias Iterator = IterativelyDeepeningDFSIterator<Graph>
+/// An iterator for iteratively deepening DFS search results.
+public struct IterativelyDeepeningDFSSearchIterator<Graph: IncidenceGraph>: Sequence where Graph.VertexDescriptor: Hashable {
+    public typealias Iterator = IterativelyDeepeningDFSIterator<Graph>
     
-    private let graph: Graph
-    private let source: Graph.VertexDescriptor
-    private let visitor: DepthFirstSearch<Graph>.Visitor?
-    private let maxDepth: UInt?
+    @usableFromInline
+    let graph: Graph
+    @usableFromInline
+    let source: Graph.VertexDescriptor
+    @usableFromInline
+    let visitor: DepthFirstSearch<Graph>.Visitor?
+    @usableFromInline
+    let maxDepth: UInt?
     
-    init(
+    @inlinable
+    public init(
         graph: Graph,
         source: Graph.VertexDescriptor,
         visitor: DepthFirstSearch<Graph>.Visitor?,
@@ -43,7 +78,8 @@ struct IterativelyDeepeningDFSSearchIterator<Graph: IncidenceGraph>: Sequence wh
         self.maxDepth = maxDepth
     }
     
-    func makeIterator() -> Iterator {
+    @inlinable
+    public func makeIterator() -> Iterator {
         Iterator(
             graph: graph,
             source: source,
@@ -54,9 +90,10 @@ struct IterativelyDeepeningDFSSearchIterator<Graph: IncidenceGraph>: Sequence wh
 }
 
 extension IterativelyDeepeningDFSSearchIterator: VisitorSupportingSequence {
-    typealias Visitor = DepthFirstSearch<Graph>.Visitor
+    public typealias Visitor = DepthFirstSearch<Graph>.Visitor
     
-    func makeIterator(visitor: Visitor?) -> Iterator {
+    @inlinable
+    public func makeIterator(visitor: Visitor?) -> Iterator {
         Iterator(
             graph: graph,
             source: source,
@@ -66,20 +103,30 @@ extension IterativelyDeepeningDFSSearchIterator: VisitorSupportingSequence {
     }
 }
 
-struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorProtocol where Graph.VertexDescriptor: Hashable {
-    typealias Element = DepthFirstSearch<Graph>.Result
+/// An iterator that performs iteratively deepening DFS search.
+public struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorProtocol where Graph.VertexDescriptor: Hashable {
+    public typealias Element = DepthFirstSearch<Graph>.Result
     
-    private let graph: Graph
-    private let source: Graph.VertexDescriptor
-    private let visitor: DepthFirstSearch<Graph>.Visitor?
-    private let maxDepth: UInt?
+    @usableFromInline
+    let graph: Graph
+    @usableFromInline
+    let source: Graph.VertexDescriptor
+    @usableFromInline
+    let visitor: DepthFirstSearch<Graph>.Visitor?
+    @usableFromInline
+    let maxDepth: UInt?
     
-    private var currentDepth: UInt = 0
-    private var currentIterator: DepthFirstSearch<Graph>.Iterator?
-    private var visitedVertices = Set<Graph.VertexDescriptor>()
-    private var isComplete = false
+    @usableFromInline
+    var currentDepth: UInt = 0
+    @usableFromInline
+    var currentIterator: DepthFirstSearch<Graph>.Iterator?
+    @usableFromInline
+    var visitedVertices = Set<Graph.VertexDescriptor>()
+    @usableFromInline
+    var isComplete = false
     
-    init(
+    @inlinable
+    public init(
         graph: Graph,
         source: Graph.VertexDescriptor,
         visitor: DepthFirstSearch<Graph>.Visitor?,
@@ -91,7 +138,8 @@ struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorProtocol 
         self.maxDepth = maxDepth
     }
     
-    mutating func next() -> Element? {
+    @inlinable
+    public mutating func next() -> Element? {
         while !isComplete {
             // If we don't have a current iterator, create one for the current depth
             if currentIterator == nil {

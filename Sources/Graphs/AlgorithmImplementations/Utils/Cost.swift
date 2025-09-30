@@ -1,6 +1,7 @@
 import Foundation
 
-enum Cost<Weight> {
+/// Represents a cost that can be either finite or infinite.
+public enum Cost<Weight> {
     case infinite
     case finite(Weight)
 }
@@ -8,7 +9,8 @@ enum Cost<Weight> {
 extension Cost: Equatable where Weight: Equatable {}
 
 extension Cost: Comparable where Weight: Comparable {
-    static func < (lhs: Self, rhs: Self) -> Bool {
+    @inlinable
+    public static func < (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
             case (.infinite, _): false
             case (_, .infinite): true
@@ -18,7 +20,8 @@ extension Cost: Comparable where Weight: Comparable {
 }
 
 extension Cost where Weight: AdditiveArithmetic {
-    static func + (lhs: Self, rhs: Self) -> Self {
+    @inlinable
+    public static func + (lhs: Self, rhs: Self) -> Self {
         switch (lhs, rhs) {
             case (.infinite, _), (_, .infinite):
                 return .infinite
@@ -27,7 +30,8 @@ extension Cost where Weight: AdditiveArithmetic {
         }
     }
     
-    static func + (lhs: Self, rhs: Weight) -> Self {
+    @inlinable
+    public static func + (lhs: Self, rhs: Weight) -> Self {
         switch lhs {
         case .infinite:
             return .infinite
@@ -38,19 +42,22 @@ extension Cost where Weight: AdditiveArithmetic {
 }
 
 extension Cost: ExpressibleByIntegerLiteral where Weight == UInt {
-    init(integerLiteral value: Weight) {
+    @inlinable
+    public init(integerLiteral value: Weight) {
         self = .finite(value)
     }
 }
 
 extension Cost: ExpressibleByFloatLiteral where Weight == Double {
-    init(floatLiteral value: Weight) {
+    @inlinable
+    public init(floatLiteral value: Weight) {
         self = .finite(value)
     }
 }
 
 extension Cost: ExpressibleByNilLiteral {
-    init(nilLiteral: ()) {
+    @inlinable
+    public init(nilLiteral: ()) {
         self = .infinite
     }
 }

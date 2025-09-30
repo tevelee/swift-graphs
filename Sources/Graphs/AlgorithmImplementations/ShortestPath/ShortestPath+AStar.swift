@@ -1,5 +1,13 @@
 extension ShortestPathAlgorithm {
-    static func aStar<Graph: IncidenceGraph, Weight: AdditiveArithmetic, HScore, FScore>(
+    /// Creates an A* shortest path algorithm with custom cost calculation.
+    ///
+    /// - Parameters:
+    ///   - weight: The cost definition for edge weights
+    ///   - heuristic: The heuristic function for estimating remaining cost
+    ///   - calculateTotalCost: A function to combine g-score and h-score
+    /// - Returns: An A* shortest path algorithm
+    @inlinable
+    public static func aStar<Graph: IncidenceGraph, Weight: AdditiveArithmetic, HScore, FScore>(
         weight: CostDefinition<Graph, Weight>,
         heuristic: Heuristic<Graph, HScore>,
         calculateTotalCost: @escaping (Weight, HScore) -> FScore
@@ -7,7 +15,14 @@ extension ShortestPathAlgorithm {
         .init(weight: weight, heuristic: heuristic, calculateTotalCost: calculateTotalCost)
     }
     
-    static func aStar<Graph: IncidenceGraph, Weight: AdditiveArithmetic>(
+    /// Creates an A* shortest path algorithm with simple addition for cost calculation.
+    ///
+    /// - Parameters:
+    ///   - weight: The cost definition for edge weights
+    ///   - heuristic: The heuristic function for estimating remaining cost
+    /// - Returns: An A* shortest path algorithm
+    @inlinable
+    public static func aStar<Graph: IncidenceGraph, Weight: AdditiveArithmetic>(
         weight: CostDefinition<Graph, Weight>,
         heuristic: Heuristic<Graph, Weight>
     ) -> Self where Self == AStarShortestPathAlgorithm<Graph, Weight, Weight, Weight> {
@@ -15,7 +30,13 @@ extension ShortestPathAlgorithm {
     }
 }
 
-struct AStarShortestPathAlgorithm<
+/// An A* shortest path algorithm implementation for the ShortestPathAlgorithm protocol.
+///
+/// This struct wraps the core A* algorithm to provide a ShortestPathAlgorithm interface,
+/// making it easy to use A* for finding shortest paths between specific vertices.
+///
+/// - Complexity: O((V + E) log V) where V is the number of vertices and E is the number of edges
+public struct AStarShortestPathAlgorithm<
     Graph: IncidenceGraph & EdgePropertyGraph,
     Weight: AdditiveArithmetic & Comparable,
     HScore: AdditiveArithmetic,
@@ -23,13 +44,43 @@ struct AStarShortestPathAlgorithm<
 >: ShortestPathAlgorithm where
     Graph.VertexDescriptor: Hashable
 {
-    typealias Visitor = AStar<Graph, Weight, HScore, FScore>.Visitor
+    /// The visitor type for observing algorithm progress.
+    public typealias Visitor = AStar<Graph, Weight, HScore, FScore>.Visitor
     
-    let weight: CostDefinition<Graph, Weight>
-    let heuristic: Heuristic<Graph, HScore>
-    let calculateTotalCost: (Weight, HScore) -> FScore
+    /// The cost definition for edge weights.
+    public let weight: CostDefinition<Graph, Weight>
+    /// The heuristic function for estimating remaining cost.
+    public let heuristic: Heuristic<Graph, HScore>
+    /// The function to combine g-score and h-score.
+    public let calculateTotalCost: (Weight, HScore) -> FScore
 
-    func shortestPath(
+    /// Creates a new A* shortest path algorithm.
+    ///
+    /// - Parameters:
+    ///   - weight: The cost definition for edge weights
+    ///   - heuristic: The heuristic function for estimating remaining cost
+    ///   - calculateTotalCost: A function to combine g-score and h-score
+    @inlinable
+    public init(
+        weight: CostDefinition<Graph, Weight>,
+        heuristic: Heuristic<Graph, HScore>,
+        calculateTotalCost: @escaping (Weight, HScore) -> FScore
+    ) {
+        self.weight = weight
+        self.heuristic = heuristic
+        self.calculateTotalCost = calculateTotalCost
+    }
+
+    /// Finds the shortest path from source to destination using A*.
+    ///
+    /// - Parameters:
+    ///   - source: The source vertex
+    ///   - destination: The destination vertex
+    ///   - graph: The graph to search in
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: The shortest path, if one exists
+    @inlinable
+    public func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         in graph: Graph,

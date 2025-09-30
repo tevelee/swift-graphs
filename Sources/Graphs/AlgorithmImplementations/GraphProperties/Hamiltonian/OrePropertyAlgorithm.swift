@@ -1,9 +1,21 @@
 import Foundation
 
-struct StandardOrePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Visitor = OreProperty<Graph>.Visitor
+/// Standard implementation of Ore's theorem for Hamiltonian cycles.
+public struct StandardOrePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Visitor = OreProperty<Graph>.Visitor
     
-    func satisfiesOre(
+    /// Creates a new standard Ore property algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Checks if the graph satisfies Ore's theorem for Hamiltonian cycles.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to check
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: `true` if the graph satisfies Ore's theorem, `false` otherwise
+    @inlinable
+    public func satisfiesOre(
         in graph: Graph,
         visitor: Visitor?
     ) -> Bool {

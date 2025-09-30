@@ -1,5 +1,9 @@
 extension CyclicPropertyAlgorithm {
-    static func unionFind<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph>() -> Self where Self == UnionFindCyclicPropertyAlgorithm<Graph>, Graph.VertexDescriptor: Hashable {
+    /// Creates a Union-Find-based cyclic property algorithm.
+    ///
+    /// - Returns: A new Union-Find-based cyclic property algorithm
+    @inlinable
+    public static func unionFind<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph>() -> Self where Self == UnionFindCyclicPropertyAlgorithm<Graph>, Graph.VertexDescriptor: Hashable {
         .init()
     }
 }

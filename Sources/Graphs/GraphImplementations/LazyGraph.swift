@@ -1,48 +1,74 @@
-protocol LazyEdge<Vertex> {
+/// A protocol for lazy edge representations.
+///
+/// LazyEdge defines the interface for edges that are computed on demand,
+/// allowing for efficient representation of graphs where edges are not
+/// explicitly stored but can be computed when needed.
+public protocol LazyEdge<Vertex> {
     associatedtype Vertex
 
     var source: Vertex { get }
     var destination: Vertex { get }
 }
 
-struct SimpleEdge<Vertex>: LazyEdge {
-    let source: Vertex
-    let destination: Vertex
+/// A simple edge implementation for lazy graphs.
+///
+/// SimpleEdge provides a basic implementation of LazyEdge that stores
+/// source and destination vertices directly.
+public struct SimpleEdge<Vertex>: LazyEdge {
+    public let source: Vertex
+    public let destination: Vertex
+    
+    @inlinable
+    public init(source: Vertex, destination: Vertex) {
+        self.source = source
+        self.destination = destination
+    }
 }
 
-struct LazyIncidenceGraph<Vertex, Edge: LazyEdge<Vertex>, Edges: Collection<Edge>> {
-    let edgeProvider: (VertexDescriptor) -> Edges
+/// A lazy incidence graph that computes edges on demand.
+///
+/// LazyIncidenceGraph provides an efficient way to represent graphs where
+/// edges are computed dynamically rather than stored explicitly. This is
+/// useful for large graphs or graphs with regular structure.
+public struct LazyIncidenceGraph<Vertex, Edge: LazyEdge<Vertex>, Edges: Collection<Edge>> {
+    public let edgeProvider: (VertexDescriptor) -> Edges
     
-    init(edges: @escaping (VertexDescriptor) -> Edges) {
+    @inlinable
+    public init(edges: @escaping (VertexDescriptor) -> Edges) {
         self.edgeProvider = edges
     }
 }
 
 extension LazyIncidenceGraph: Graph {
-    typealias VertexDescriptor = Vertex
-    typealias EdgeDescriptor = Edge
+    public typealias VertexDescriptor = Vertex
+    public typealias EdgeDescriptor = Edge
 }
 
 extension LazyIncidenceGraph: IncidenceGraph {
-    func outgoingEdges(of vertex: Vertex) -> Edges {
+    @inlinable
+    public func outgoingEdges(of vertex: Vertex) -> Edges {
         edgeProvider(vertex)
     }
     
-    func source(of edge: Edge) -> Vertex? {
+    @inlinable
+    public func source(of edge: Edge) -> Vertex? {
         edge.source
     }
     
-    func destination(of edge: Edge) -> Vertex? {
+    @inlinable
+    public func destination(of edge: Edge) -> Vertex? {
         edge.destination
     }
     
-    func outDegree(of vertex: Vertex) -> Int {
+    @inlinable
+    public func outDegree(of vertex: Vertex) -> Int {
         edgeProvider(vertex).count
     }
 }
 
 extension LazyIncidenceGraph {
-    init<Neighbors: Collection<Vertex>>(neighbors: @escaping (VertexDescriptor) -> Neighbors) where Edges == LazyMapCollection<Neighbors, SimpleEdge<Vertex>> {
+    @inlinable
+    public init<Neighbors: Collection<Vertex>>(neighbors: @escaping (VertexDescriptor) -> Neighbors) where Edges == LazyMapCollection<Neighbors, SimpleEdge<Vertex>> {
         self.edgeProvider = { source in
             neighbors(source).lazy.map {
                 SimpleEdge(source: source, destination: $0)

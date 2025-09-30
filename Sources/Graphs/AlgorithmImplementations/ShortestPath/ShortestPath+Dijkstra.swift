@@ -1,23 +1,30 @@
 extension ShortestPathAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
-    static func dijkstra<Graph: IncidenceGraph & EdgePropertyGraph, Weight>(
+    @inlinable
+    public static func dijkstra<Graph: IncidenceGraph & EdgePropertyGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == DijkstraShortestPathAlgorithm<Graph, Weight>, Graph.VertexDescriptor: Hashable {
         .init(weight: weight)
     }
 }
 
-struct DijkstraShortestPathAlgorithm<
+public struct DijkstraShortestPathAlgorithm<
     Graph: IncidenceGraph & EdgePropertyGraph,
     Weight: Numeric & Comparable
 >: ShortestPathAlgorithm where
     Graph.VertexDescriptor: Hashable,
     Weight.Magnitude == Weight
 {
-    typealias Visitor = Dijkstra<Graph, Weight>.Visitor
+    public typealias Visitor = Dijkstra<Graph, Weight>.Visitor
     
-    let weight: CostDefinition<Graph, Weight>
+    public let weight: CostDefinition<Graph, Weight>
     
-    func shortestPath(
+    @inlinable
+    public init(weight: CostDefinition<Graph, Weight>) {
+        self.weight = weight
+    }
+    
+    @inlinable
+    public func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         in graph: Graph,

@@ -1,32 +1,62 @@
 import Foundation
 
-/// Weisfeiler-Lehman algorithm for graph isomorphism
+/// Weisfeiler-Lehman algorithm for graph isomorphism.
 /// This algorithm uses iterative vertex labeling based on neighborhood structure
 /// to determine if two graphs are isomorphic. It's a fast heuristic that works
 /// well for many graph types but is not complete (may give false negatives).
-struct WeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+///
+/// - Complexity: O(V * E * I) where V is the number of vertices, E is the number of edges, and I is the number of iterations
+public struct WeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var examineVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var labelVertex: ((Vertex, Int) -> Void)?
-        var iterationComplete: ((Int, [Vertex: Int]) -> Void)?
-        var labelsStabilized: (([Vertex: Int]) -> Void)?
+    /// A visitor that can be used to observe the Weisfeiler-Lehman algorithm progress.
+    public struct Visitor {
+        /// Called when examining a vertex.
+        public var examineVertex: ((Vertex) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge) -> Void)?
+        /// Called when labeling a vertex.
+        public var labelVertex: ((Vertex, Int) -> Void)?
+        /// Called when an iteration is complete.
+        public var iterationComplete: ((Int, [Vertex: Int]) -> Void)?
+        /// Called when labels have stabilized.
+        public var labelsStabilized: (([Vertex: Int]) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            examineVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            labelVertex: ((Vertex, Int) -> Void)? = nil,
+            iterationComplete: ((Int, [Vertex: Int]) -> Void)? = nil,
+            labelsStabilized: (([Vertex: Int]) -> Void)? = nil
+        ) {
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.labelVertex = labelVertex
+            self.iterationComplete = iterationComplete
+            self.labelsStabilized = labelsStabilized
+        }
     }
     
-    private let maxIterations: Int
+    @usableFromInline
+    let maxIterations: Int
     
-    init(maxIterations: Int = 10) {
+    @inlinable
+    public init(maxIterations: Int = 10) {
         self.maxIterations = maxIterations
     }
     
-    func areIsomorphic(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> Bool {
+    @inlinable
+    public func areIsomorphic(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> Bool {
         return findIsomorphism(graph1, graph2, visitor: visitor) != nil
     }
     
-    func findIsomorphism(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> [Vertex: Vertex]? {
+    @inlinable
+    public func findIsomorphism(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> [Vertex: Vertex]? {
         // Quick checks for basic isomorphism requirements
         guard graph1.vertexCount == graph2.vertexCount else { return nil }
         guard graph1.edgeCount == graph2.edgeCount else { return nil }
@@ -44,7 +74,8 @@ struct WeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & VertexListGraph & Edg
         return vf2.findIsomorphism(graph1, graph2)
     }
     
-    private func computeWLLabels(graph: Graph, visitor: Visitor?) -> [Vertex: Int] {
+    @usableFromInline
+    func computeWLLabels(graph: Graph, visitor: Visitor?) -> [Vertex: Int] {
         var labels: [Vertex: Int] = [:]
         
         // Initialize with degree-based labels
@@ -106,7 +137,8 @@ struct WeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & VertexListGraph & Edg
         return labels
     }
     
-    private func areLabelMultisetsEqual(_ labels1: [Vertex: Int], _ labels2: [Vertex: Int]) -> Bool {
+    @usableFromInline
+    func areLabelMultisetsEqual(_ labels1: [Vertex: Int], _ labels2: [Vertex: Int]) -> Bool {
         // Count occurrences of each label in both graphs
         var count1: [Int: Int] = [:]
         var count2: [Int: Int] = [:]
@@ -127,29 +159,55 @@ struct WeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & VertexListGraph & Edg
 // MARK: - Enhanced Weisfeiler-Lehman with Edge Labels
 
 /// Enhanced Weisfeiler-Lehman algorithm that considers edge labels/weights
-struct EnhancedWeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+public struct EnhancedWeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Vertex = Graph.VertexDescriptor
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var examineVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var labelVertex: ((Vertex, Int) -> Void)?
-        var iterationComplete: ((Int, [Vertex: Int]) -> Void)?
-        var labelsStabilized: (([Vertex: Int]) -> Void)?
+    /// A visitor that can be used to observe the enhanced Weisfeiler-Lehman algorithm progress.
+    public struct Visitor {
+        /// Called when examining a vertex.
+        public var examineVertex: ((Vertex) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge) -> Void)?
+        /// Called when labeling a vertex.
+        public var labelVertex: ((Vertex, Int) -> Void)?
+        /// Called when an iteration is complete.
+        public var iterationComplete: ((Int, [Vertex: Int]) -> Void)?
+        /// Called when labels have stabilized.
+        public var labelsStabilized: (([Vertex: Int]) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            examineVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            labelVertex: ((Vertex, Int) -> Void)? = nil,
+            iterationComplete: ((Int, [Vertex: Int]) -> Void)? = nil,
+            labelsStabilized: (([Vertex: Int]) -> Void)? = nil
+        ) {
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.labelVertex = labelVertex
+            self.iterationComplete = iterationComplete
+            self.labelsStabilized = labelsStabilized
+        }
     }
     
-    private let maxIterations: Int
+    @usableFromInline
+    let maxIterations: Int
     
-    init(maxIterations: Int = 10) {
+    @inlinable
+    public init(maxIterations: Int = 10) {
         self.maxIterations = maxIterations
     }
     
-    func areIsomorphic(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> Bool {
+    @inlinable
+    public func areIsomorphic(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> Bool {
         return findIsomorphism(graph1, graph2, visitor: visitor) != nil
     }
     
-    func findIsomorphism(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> [Vertex: Vertex]? {
+    @inlinable
+    public func findIsomorphism(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> [Vertex: Vertex]? {
         // Quick checks for basic isomorphism requirements
         guard graph1.vertexCount == graph2.vertexCount else { return nil }
         guard graph1.edgeCount == graph2.edgeCount else { return nil }
@@ -166,7 +224,8 @@ struct EnhancedWeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & VertexListGra
         return vf2.findIsomorphism(graph1, graph2)
     }
     
-    private func computeEnhancedWLLabels(graph: Graph, visitor: Visitor?) -> [Vertex: Int] {
+    @usableFromInline
+    func computeEnhancedWLLabels(graph: Graph, visitor: Visitor?) -> [Vertex: Int] {
         var labels: [Vertex: Int] = [:]
         
         // Initialize with degree-based labels
@@ -232,7 +291,8 @@ struct EnhancedWeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & VertexListGra
         return labels
     }
     
-    private func areLabelMultisetsEqual(_ labels1: [Vertex: Int], _ labels2: [Vertex: Int]) -> Bool {
+    @usableFromInline
+    func areLabelMultisetsEqual(_ labels1: [Vertex: Int], _ labels2: [Vertex: Int]) -> Bool {
         // Count occurrences of each label in both graphs
         var count1: [Int: Int] = [:]
         var count2: [Int: Int] = [:]

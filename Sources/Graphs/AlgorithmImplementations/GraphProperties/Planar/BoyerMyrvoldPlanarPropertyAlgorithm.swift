@@ -1,30 +1,77 @@
 import Foundation
 
-/// Boyer-Myrvold algorithm for planar graph detection
-/// This is the most efficient O(V) algorithm for planarity testing
-struct BoyerMyrvoldPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+/// Boyer-Myrvold algorithm for planar graph detection.
+/// This is the most efficient O(V) algorithm for planarity testing.
+public struct BoyerMyrvoldPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Vertex = Graph.VertexDescriptor
+    public typealias Edge = Graph.EdgeDescriptor
     
-    struct Visitor {
-        var startEmbedding: (() -> Void)?
-        var examineVertex: ((Vertex, Int) -> Void)?
-        var examineEdge: ((Edge, EdgeType) -> Void)?
-        var addToEmbedding: ((Vertex, [Vertex]) -> Void)?
-        var checkBiconnected: (() -> Void)?
-        var embeddingConflict: ((Edge, Edge) -> Void)?
-        var embeddingSuccess: (() -> Void)?
-        var embeddingFailure: (() -> Void)?
+    /// A visitor that can be used to observe the Boyer-Myrvold algorithm progress.
+    public struct Visitor {
+        /// Called when starting the embedding process.
+        public var startEmbedding: (() -> Void)?
+        /// Called when examining a vertex.
+        public var examineVertex: ((Vertex, Int) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge, EdgeType) -> Void)?
+        /// Called when adding a vertex to the embedding.
+        public var addToEmbedding: ((Vertex, [Vertex]) -> Void)?
+        /// Called when checking biconnected components.
+        public var checkBiconnected: (() -> Void)?
+        /// Called when an embedding conflict is detected.
+        public var embeddingConflict: ((Edge, Edge) -> Void)?
+        /// Called when embedding succeeds.
+        public var embeddingSuccess: (() -> Void)?
+        /// Called when embedding fails.
+        public var embeddingFailure: (() -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            startEmbedding: (() -> Void)? = nil,
+            examineVertex: ((Vertex, Int) -> Void)? = nil,
+            examineEdge: ((Edge, EdgeType) -> Void)? = nil,
+            addToEmbedding: ((Vertex, [Vertex]) -> Void)? = nil,
+            checkBiconnected: (() -> Void)? = nil,
+            embeddingConflict: ((Edge, Edge) -> Void)? = nil,
+            embeddingSuccess: (() -> Void)? = nil,
+            embeddingFailure: (() -> Void)? = nil
+        ) {
+            self.startEmbedding = startEmbedding
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.addToEmbedding = addToEmbedding
+            self.checkBiconnected = checkBiconnected
+            self.embeddingConflict = embeddingConflict
+            self.embeddingSuccess = embeddingSuccess
+            self.embeddingFailure = embeddingFailure
+        }
     }
     
-    enum EdgeType {
+    /// Types of edges in the DFS tree.
+    public enum EdgeType {
+        /// Tree edge (part of the DFS tree).
         case tree
+        /// Back edge (connects to ancestor).
         case back
+        /// Forward edge (connects to descendant).
         case forward
+        /// Cross edge (connects across subtrees).
         case cross
     }
     
-    func isPlanar(
+    /// Creates a new Boyer-Myrvold planar property algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Checks if the graph is planar using the Boyer-Myrvold algorithm.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to check
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: `true` if the graph is planar, `false` otherwise
+    @inlinable
+    public func isPlanar(
         in graph: Graph,
         visitor: Visitor?
     ) -> Bool {
@@ -91,7 +138,8 @@ struct BoyerMyrvoldPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGra
         return true
     }
     
-    private func findBiconnectedComponents(
+    @usableFromInline
+    func findBiconnectedComponents(
         in graph: Graph,
         adjacency: [Vertex: [Vertex]]
     ) -> [Set<Vertex>] {
@@ -155,7 +203,8 @@ struct BoyerMyrvoldPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGra
         return components
     }
     
-    private func isComponentPlanar(
+    @usableFromInline
+    func isComponentPlanar(
         _ component: Set<Vertex>,
         in graph: Graph,
         adjacency: [Vertex: [Vertex]],
@@ -269,7 +318,8 @@ struct BoyerMyrvoldPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGra
         return true
     }
     
-    private func hasK5Structure(in graph: Graph, adjacency: [Vertex: [Vertex]]) -> Bool {
+    @usableFromInline
+    func hasK5Structure(in graph: Graph, adjacency: [Vertex: [Vertex]]) -> Bool {
         let vertices = Array(graph.vertices())
         
         // Check for K₅: 5 vertices, all connected to each other
@@ -289,7 +339,8 @@ struct BoyerMyrvoldPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGra
         return true
     }
     
-    private func hasK33Structure(in graph: Graph, adjacency: [Vertex: [Vertex]]) -> Bool {
+    @usableFromInline
+    func hasK33Structure(in graph: Graph, adjacency: [Vertex: [Vertex]]) -> Bool {
         let vertices = Array(graph.vertices())
         
         // Check for K₃,₃: 6 vertices with 3 in each partition, all connected

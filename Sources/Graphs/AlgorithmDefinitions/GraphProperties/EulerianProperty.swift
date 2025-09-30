@@ -7,7 +7,11 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
     /// A graph has an Eulerian path if and only if:
     /// 1. It's connected
     /// 2. It has exactly 0 or 2 vertices of odd degree
-    func hasEulerianPath(
+    ///
+    /// - Parameter connectivityAlgorithm: The connectivity algorithm to use
+    /// - Returns: `true` if the graph has an Eulerian path, `false` otherwise
+    @inlinable
+    public func hasEulerianPath(
         using connectivityAlgorithm: some ConnectedPropertyAlgorithm<Self>
     ) -> Bool {
         // First check connectivity
@@ -31,7 +35,11 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
     /// A graph has an Eulerian cycle if and only if:
     /// 1. It's connected
     /// 2. All vertices have even degree
-    func hasEulerianCycle(
+    ///
+    /// - Parameter connectivityAlgorithm: The connectivity algorithm to use
+    /// - Returns: `true` if the graph has an Eulerian cycle, `false` otherwise
+    @inlinable
+    public func hasEulerianCycle(
         using connectivityAlgorithm: some ConnectedPropertyAlgorithm<Self>
     ) -> Bool {
         // First check connectivity
@@ -56,13 +64,19 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
 extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, VertexDescriptor: Hashable {
     /// Checks if the graph has an Eulerian path using DFS-based connectivity algorithm as the default.
     /// This is the most commonly used and efficient algorithm for Eulerian path checking.
-    func hasEulerianPath() -> Bool {
+    ///
+    /// - Returns: `true` if the graph has an Eulerian path, `false` otherwise
+    @inlinable
+    public func hasEulerianPath() -> Bool {
         hasEulerianPath(using: .dfs())
     }
     
     /// Checks if the graph has an Eulerian cycle using DFS-based connectivity algorithm as the default.
     /// This is the most commonly used and efficient algorithm for Eulerian cycle checking.
-    func hasEulerianCycle() -> Bool {
+    ///
+    /// - Returns: `true` if the graph has an Eulerian cycle, `false` otherwise
+    @inlinable
+    public func hasEulerianCycle() -> Bool {
         hasEulerianCycle(using: .dfs())
     }
 }

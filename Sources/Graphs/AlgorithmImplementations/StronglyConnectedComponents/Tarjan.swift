@@ -1,48 +1,112 @@
 import Collections
 
-struct Tarjan<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+/// Tarjan's algorithm for finding strongly connected components.
+///
+/// Tarjan's algorithm finds strongly connected components in a directed graph
+/// using a single depth-first search with a stack to track the current path.
+///
+/// - Complexity: O(V + E) where V is the number of vertices and E is the number of edges
+public struct Tarjan<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
 
-    struct Visitor {
-        var discoverVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var backEdge: ((Edge) -> Void)?
-        var crossEdge: ((Edge) -> Void)?
-        var finishVertex: ((Vertex) -> Void)?
-        var startComponent: ((Vertex) -> Void)?
-        var finishComponent: (([Vertex]) -> Void)?
+    /// A visitor that can be used to observe Tarjan's algorithm progress.
+    public struct Visitor {
+        /// Called when discovering a vertex.
+        public var discoverVertex: ((Vertex) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge) -> Void)?
+        /// Called when encountering a back edge.
+        public var backEdge: ((Edge) -> Void)?
+        /// Called when encountering a cross edge.
+        public var crossEdge: ((Edge) -> Void)?
+        /// Called when finishing a vertex.
+        public var finishVertex: ((Vertex) -> Void)?
+        /// Called when starting a new component.
+        public var startComponent: ((Vertex) -> Void)?
+        /// Called when finishing a component.
+        public var finishComponent: (([Vertex]) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            discoverVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            backEdge: ((Edge) -> Void)? = nil,
+            crossEdge: ((Edge) -> Void)? = nil,
+            finishVertex: ((Vertex) -> Void)? = nil,
+            startComponent: ((Vertex) -> Void)? = nil,
+            finishComponent: (([Vertex]) -> Void)? = nil
+        ) {
+            self.discoverVertex = discoverVertex
+            self.examineEdge = examineEdge
+            self.backEdge = backEdge
+            self.crossEdge = crossEdge
+            self.finishVertex = finishVertex
+            self.startComponent = startComponent
+            self.finishComponent = finishComponent
+        }
     }
 
-    private enum Color {
-        case white // Undiscovered
-        case gray // Discovered but not fully processed
-        case black // Fully processed
+    /// The color of a vertex in the algorithm.
+    @usableFromInline
+    enum Color {
+        /// Undiscovered vertex.
+        case white
+        /// Discovered but not fully processed vertex.
+        case gray
+        /// Fully processed vertex.
+        case black
     }
 
-    private enum ColorProperty: VertexProperty {
+    /// Property for tracking vertex colors.
+    @usableFromInline
+    enum ColorProperty: VertexProperty {
+        @usableFromInline
         static var defaultValue: Color { .white }
     }
 
-    private enum IndexProperty: VertexProperty {
+    /// Property for tracking vertex indices.
+    @usableFromInline
+    enum IndexProperty: VertexProperty {
+        @usableFromInline
         static var defaultValue: UInt? { nil }
     }
 
-    private enum LowLinkProperty: VertexProperty {
+    /// Property for tracking vertex low links.
+    @usableFromInline
+    enum LowLinkProperty: VertexProperty {
+        @usableFromInline
         static var defaultValue: UInt? { nil }
     }
 
-    private enum OnStackProperty: VertexProperty {
+    /// Property for tracking if vertex is on stack.
+    @usableFromInline
+    enum OnStackProperty: VertexProperty {
+        @usableFromInline
         static var defaultValue: Bool { false }
     }
 
-    private let graph: Graph
+    /// The graph to find SCCs in.
+    @usableFromInline
+    let graph: Graph
 
-    init(on graph: Graph) {
+    /// Creates a new Tarjan's algorithm.
+    ///
+    /// - Parameter graph: The graph to find SCCs in
+    @inlinable
+    public init(on graph: Graph) {
         self.graph = graph
     }
 
-    func stronglyConnectedComponents(visitor: Visitor?) -> StronglyConnectedComponentsResult<Vertex> {
+    /// Finds strongly connected components using Tarjan's algorithm.
+    ///
+    /// - Parameter visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: The strongly connected components result
+    @inlinable
+    public func stronglyConnectedComponents(visitor: Visitor?) -> StronglyConnectedComponentsResult<Vertex> {
         var propertyMap = graph.makeVertexPropertyMap()
         let colorProperty = ColorProperty.self
         let indexProperty = IndexProperty.self

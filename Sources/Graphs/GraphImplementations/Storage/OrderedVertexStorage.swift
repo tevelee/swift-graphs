@@ -1,41 +1,73 @@
 import Collections
 
 extension VertexStorage {
-    static func ordered() -> OrderedVertexStorage where Self == OrderedVertexStorage {
+    @inlinable
+    public static func ordered() -> OrderedVertexStorage where Self == OrderedVertexStorage {
         OrderedVertexStorage()
     }
 }
 
-struct OrderedVertexStorage: VertexStorage {
-    struct Vertex: Identifiable, Hashable {
-        private let _id: Int
-        var id: some Hashable { _id }
-        fileprivate init(_id: Int) { self._id = _id }
+/// A vertex storage implementation using an ordered set.
+///
+/// This implementation maintains vertices in insertion order and provides
+/// efficient lookup and iteration. It's commonly used as the default
+/// vertex storage for adjacency list graphs.
+public struct OrderedVertexStorage: VertexStorage {
+    /// A vertex in the ordered vertex storage.
+    public struct Vertex: Identifiable, Hashable {
+        @usableFromInline
+        let _id: Int
+        public var id: some Hashable { _id }
+        @inlinable
+        public init(_id: Int) { self._id = _id }
     }
 
-    private var _vertices: OrderedSet<Vertex> = []
-    private var _nextId: Int = 0
+    @usableFromInline
+    var _vertices: OrderedSet<Vertex> = []
+    @usableFromInline
+    var _nextId: Int = 0
 
-    var vertexCount: Int {
+    /// The number of vertices in storage.
+    @inlinable
+    public var vertexCount: Int {
         _vertices.count
     }
 
-    func vertices() -> OrderedSet<Vertex> {
+    /// Returns all vertices in storage.
+    @inlinable
+    public func vertices() -> OrderedSet<Vertex> {
         _vertices
     }
 
-    func contains(_ vertex: Vertex) -> Bool {
+    /// Checks if a vertex exists in storage.
+    ///
+    /// - Parameter vertex: The vertex to check
+    /// - Returns: `true` if the vertex exists, `false` otherwise
+    @inlinable
+    public func contains(_ vertex: Vertex) -> Bool {
         _vertices.contains(vertex)
     }
 
-    mutating func addVertex() -> Vertex {
+    /// Adds a new vertex to storage.
+    ///
+    /// - Returns: The newly created vertex
+    @inlinable
+    public mutating func addVertex() -> Vertex {
         let vertex = Vertex(_id: _nextId)
         _nextId &+= 1
         _vertices.updateOrAppend(vertex)
         return vertex
     }
 
-    mutating func remove(vertex: Vertex) {
+    /// Removes a vertex from storage.
+    ///
+    /// - Parameter vertex: The vertex to remove
+    @inlinable
+    public mutating func remove(vertex: Vertex) {
         _vertices.remove(vertex)
     }
+    
+    /// Creates a new empty ordered vertex storage.
+    @inlinable
+    public init() {}
 }

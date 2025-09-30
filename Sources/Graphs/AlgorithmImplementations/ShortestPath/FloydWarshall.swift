@@ -1,25 +1,61 @@
 import Foundation
 
-struct FloydWarshall<
+/// Floyd-Warshall algorithm for computing shortest paths between all pairs of vertices.
+///
+/// The Floyd-Warshall algorithm is a dynamic programming algorithm that finds shortest paths
+/// between all pairs of vertices in a weighted graph. It can handle negative edge weights
+/// but cannot detect negative cycles.
+///
+/// - Complexity: O(V³) where V is the number of vertices
+public struct FloydWarshall<
     Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
     Weight: AdditiveArithmetic & Comparable
 > where
     Graph.VertexDescriptor: Hashable
 {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
 
-    struct Visitor {
-        var examineVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var updateDistance: ((Vertex, Vertex, Cost<Weight>) -> Void)?
-        var completeIntermediateVertex: ((Int) -> Void)?
+    /// A visitor that can be used to observe the Floyd-Warshall algorithm's progress.
+    public struct Visitor {
+        /// Called when examining a vertex.
+        public var examineVertex: ((Vertex) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge) -> Void)?
+        /// Called when updating a distance between two vertices.
+        public var updateDistance: ((Vertex, Vertex, Cost<Weight>) -> Void)?
+        /// Called when completing an intermediate vertex.
+        public var completeIntermediateVertex: ((Int) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            examineVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            updateDistance: ((Vertex, Vertex, Cost<Weight>) -> Void)? = nil,
+            completeIntermediateVertex: ((Int) -> Void)? = nil
+        ) {
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.updateDistance = updateDistance
+            self.completeIntermediateVertex = completeIntermediateVertex
+        }
     }
     
-    private let graph: Graph
-    private let edgeWeight: CostDefinition<Graph, Weight>
+    @usableFromInline
+    let graph: Graph
+    @usableFromInline
+    let edgeWeight: CostDefinition<Graph, Weight>
     
-    init(
+    /// Creates a new Floyd-Warshall algorithm instance.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to compute shortest paths for.
+    ///   - edgeWeight: The cost definition for edge weights.
+    @inlinable
+    public init(
         on graph: Graph,
         edgeWeight: CostDefinition<Graph, Weight>
     ) {
@@ -27,7 +63,12 @@ struct FloydWarshall<
         self.edgeWeight = edgeWeight
     }
     
-    func shortestPathsForAllPairs(visitor: Visitor? = nil) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
+    /// Computes shortest paths between all pairs of vertices.
+    ///
+    /// - Parameter visitor: An optional visitor to observe the algorithm's progress.
+    /// - Returns: The shortest paths between all pairs of vertices.
+    @inlinable
+    public func shortestPathsForAllPairs(visitor: Visitor? = nil) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
         let vertices = Array(graph.vertices())
         let vertexCount = vertices.count
         
@@ -89,7 +130,8 @@ struct FloydWarshall<
 }
 
 extension FloydWarshall: ShortestPathsForAllPairsAlgorithm {
-    func shortestPathsForAllPairs(in graph: Graph, visitor: Visitor?) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
+    @inlinable
+    public func shortestPathsForAllPairs(in graph: Graph, visitor: Visitor?) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
         shortestPathsForAllPairs()
     }
 }
@@ -97,7 +139,14 @@ extension FloydWarshall: ShortestPathsForAllPairsAlgorithm {
 extension FloydWarshall: VisitorSupporting {}
 
 extension FloydWarshall {
-    static func create<G: IncidenceGraph & VertexListGraph & EdgePropertyGraph, W: AdditiveArithmetic & Comparable>(
+    /// Creates a new Floyd-Warshall algorithm instance.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to compute shortest paths for.
+    ///   - edgeWeight: The cost definition for edge weights.
+    /// - Returns: A new Floyd-Warshall algorithm instance.
+    @inlinable
+    public static func create<G: IncidenceGraph & VertexListGraph & EdgePropertyGraph, W: AdditiveArithmetic & Comparable>(
         on graph: G,
         edgeWeight: CostDefinition<G, W>
     ) -> FloydWarshall<G, W> where G.VertexDescriptor: Hashable {

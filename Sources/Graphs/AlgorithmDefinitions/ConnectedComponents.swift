@@ -1,5 +1,10 @@
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
-    func connectedComponents(
+    /// Finds connected components using the specified algorithm.
+    ///
+    /// - Parameter algorithm: The connected components algorithm to use
+    /// - Returns: The connected components result
+    @inlinable
+    public func connectedComponents(
         using algorithm: some ConnectedComponentsAlgorithm<Self>
     ) -> ConnectedComponentsResult<VertexDescriptor> {
         algorithm.connectedComponents(in: self, visitor: nil)
@@ -11,15 +16,27 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Finds connected components using DFS-based algorithm as the default.
     /// This is the most commonly used and efficient algorithm for finding connected components.
-    func connectedComponents() -> ConnectedComponentsResult<VertexDescriptor> {
+    ///
+    /// - Returns: The connected components result
+    @inlinable
+    public func connectedComponents() -> ConnectedComponentsResult<VertexDescriptor> {
         connectedComponents(using: .dfs())
     }
 }
 
-protocol ConnectedComponentsAlgorithm<Graph> {
+/// A protocol for connected components algorithms.
+public protocol ConnectedComponentsAlgorithm<Graph> {
+    /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
+    /// The visitor type for observing algorithm progress.
     associatedtype Visitor
 
+    /// Finds connected components in the graph.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to find connected components in
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: The connected components result
     func connectedComponents(
         in graph: Graph,
         visitor: Visitor?
@@ -27,9 +44,10 @@ protocol ConnectedComponentsAlgorithm<Graph> {
 }
 
 extension VisitorWrapper: ConnectedComponentsAlgorithm where Base: ConnectedComponentsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
-    typealias Graph = Base.Graph
+    public typealias Graph = Base.Graph
     
-    func connectedComponents(
+    @inlinable
+    public func connectedComponents(
         in graph: Base.Graph,
         visitor: Base.Visitor?
     ) -> ConnectedComponentsResult<Base.Graph.VertexDescriptor> {

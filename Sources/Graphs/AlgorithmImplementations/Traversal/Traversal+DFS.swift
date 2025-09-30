@@ -1,14 +1,22 @@
 extension TraversalAlgorithm {
-    static func dfs<Graph>(order: DFSOrder<Graph> = .preorder) -> Self where Self == DFSTraversal<Graph> {
+    @inlinable
+    public static func dfs<Graph>(order: DFSOrder<Graph> = .preorder) -> Self where Self == DFSTraversal<Graph> {
         .init(order: order)
     }
 }
 
-struct DFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
-    typealias Visitor = DepthFirstSearch<Graph>.Visitor
+public struct DFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
+    public typealias Visitor = DepthFirstSearch<Graph>.Visitor
     
-    let order: DFSOrder<Graph>
-    func traverse(
+    public let order: DFSOrder<Graph>
+    
+    @inlinable
+    public init(order: DFSOrder<Graph>) {
+        self.order = order
+    }
+    
+    @inlinable
+    public func traverse(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
         visitor: Visitor?

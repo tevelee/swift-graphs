@@ -1,9 +1,21 @@
 import Foundation
 
-struct StandardDiracPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph> where Graph.VertexDescriptor: Hashable {
-    typealias Visitor = DiracProperty<Graph>.Visitor
+/// Standard implementation of Dirac's theorem for Hamiltonian cycles.
+public struct StandardDiracPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph> where Graph.VertexDescriptor: Hashable {
+    public typealias Visitor = DiracProperty<Graph>.Visitor
     
-    func satisfiesDirac(
+    /// Creates a new standard Dirac property algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Checks if the graph satisfies Dirac's theorem for Hamiltonian cycles.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to check
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: `true` if the graph satisfies Dirac's theorem, `false` otherwise
+    @inlinable
+    public func satisfiesDirac(
         in graph: Graph,
         visitor: Visitor?
     ) -> Bool {

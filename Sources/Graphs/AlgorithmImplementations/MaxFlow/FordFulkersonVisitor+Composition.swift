@@ -1,7 +1,13 @@
 import Foundation
 
+/// Extension providing composition support for Ford-Fulkerson algorithm visitors.
 extension FordFulkerson.Visitor: Composable {
-    func combined(with other: Self) -> Self {
+    /// Combines this visitor with another visitor.
+    ///
+    /// - Parameter other: The other visitor to combine with.
+    /// - Returns: A new visitor that calls both visitors' callbacks.
+    @inlinable
+    public func combined(with other: Self) -> Self {
         .init(
             examineEdge: { edge, flow in
                 self.examineEdge?(edge, flow)

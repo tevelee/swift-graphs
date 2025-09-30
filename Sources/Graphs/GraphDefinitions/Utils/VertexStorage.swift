@@ -1,4 +1,4 @@
-protocol VertexStorage {
+public protocol VertexStorage {
     associatedtype Vertex: Hashable
     associatedtype Vertices: Sequence<Vertex>
 

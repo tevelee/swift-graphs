@@ -1,7 +1,13 @@
-struct UnionFindConnectedComponentsAlgorithm<Graph: IncidenceGraph & VertexListGraph>: ConnectedComponentsAlgorithm where Graph.VertexDescriptor: Hashable {
-    typealias Visitor = UnionFindConnectedComponents<Graph>.Visitor
+/// Union-Find based connected components algorithm implementation.
+public struct UnionFindConnectedComponentsAlgorithm<Graph: IncidenceGraph & VertexListGraph>: ConnectedComponentsAlgorithm where Graph.VertexDescriptor: Hashable {
+    public typealias Visitor = UnionFindConnectedComponents<Graph>.Visitor
     
-    func connectedComponents(
+    /// Creates a new Union-Find connected components algorithm.
+    @inlinable
+    public init() {}
+    
+    @inlinable
+    public func connectedComponents(
         in graph: Graph,
         visitor: Visitor?
     ) -> ConnectedComponentsResult<Graph.VertexDescriptor> {
@@ -11,7 +17,11 @@ struct UnionFindConnectedComponentsAlgorithm<Graph: IncidenceGraph & VertexListG
 }
 
 extension ConnectedComponentsAlgorithm {
-    static func unionFind<Graph: IncidenceGraph & VertexListGraph>() -> Self where Self == UnionFindConnectedComponentsAlgorithm<Graph>, Graph.VertexDescriptor: Hashable {
+    /// Creates a Union-Find connected components algorithm.
+    ///
+    /// - Returns: A new Union-Find connected components algorithm
+    @inlinable
+    public static func unionFind<Graph: IncidenceGraph & VertexListGraph>() -> Self where Self == UnionFindConnectedComponentsAlgorithm<Graph>, Graph.VertexDescriptor: Hashable {
         .init()
     }
 }

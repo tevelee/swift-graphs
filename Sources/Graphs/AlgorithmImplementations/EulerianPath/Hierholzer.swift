@@ -1,18 +1,58 @@
 import Foundation
 
-/// Hierholzer's algorithm for finding Eulerian paths and cycles
-struct Hierholzer<Graph: BidirectionalGraph & VertexListGraph>
+/// Hierholzer's algorithm for finding Eulerian paths and cycles.
+///
+/// Hierholzer's algorithm finds an Eulerian path or cycle in a graph by building
+/// the path incrementally and backtracking when necessary. It works by starting
+/// from a vertex and following edges until no more edges are available, then
+/// backtracking to find unused edges.
+///
+/// - Complexity: O(E) where E is the number of edges
+public struct Hierholzer<Graph: BidirectionalGraph & VertexListGraph>
 where Graph.VertexDescriptor: Hashable {
     
-    struct Visitor {
-        var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-        var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
-        var addToPath: ((Graph.VertexDescriptor) -> Void)?
-        var addEdgeToPath: ((Graph.EdgeDescriptor) -> Void)?
-        var backtrack: ((Graph.VertexDescriptor) -> Void)?
+    /// Creates a new Hierholzer algorithm instance.
+    @inlinable
+    public init() {}
+    
+    /// A visitor that can be used to observe Hierholzer's algorithm progress.
+    public struct Visitor {
+        /// Called when examining a vertex.
+        public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
+        /// Called when adding a vertex to the path.
+        public var addToPath: ((Graph.VertexDescriptor) -> Void)?
+        /// Called when adding an edge to the path.
+        public var addEdgeToPath: ((Graph.EdgeDescriptor) -> Void)?
+        /// Called when backtracking.
+        public var backtrack: ((Graph.VertexDescriptor) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
+            examineEdge: ((Graph.EdgeDescriptor) -> Void)? = nil,
+            addToPath: ((Graph.VertexDescriptor) -> Void)? = nil,
+            addEdgeToPath: ((Graph.EdgeDescriptor) -> Void)? = nil,
+            backtrack: ((Graph.VertexDescriptor) -> Void)? = nil
+        ) {
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.addToPath = addToPath
+            self.addEdgeToPath = addEdgeToPath
+            self.backtrack = backtrack
+        }
     }
     
-    func eulerianPath(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+    /// Finds an Eulerian path in the graph.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to find the Eulerian path in.
+    ///   - visitor: An optional visitor to observe the algorithm's progress.
+    /// - Returns: An Eulerian path, if one exists.
+    @inlinable
+    public func eulerianPath(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         guard graph.hasEulerianPath() else { return nil }
         
         let vertices = Array(graph.vertices())
@@ -48,7 +88,14 @@ where Graph.VertexDescriptor: Hashable {
         return findEulerianPath(from: start, in: graph, visitor: visitor)
     }
     
-    func eulerianCycle(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+    /// Finds an Eulerian cycle in the graph.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to find the Eulerian cycle in.
+    ///   - visitor: An optional visitor to observe the algorithm's progress.
+    /// - Returns: An Eulerian cycle, if one exists.
+    @inlinable
+    public func eulerianCycle(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         guard graph.hasEulerianCycle() else { return nil }
         
         let vertices = Array(graph.vertices())
@@ -72,7 +119,15 @@ where Graph.VertexDescriptor: Hashable {
         return findEulerianPath(from: startVertex, in: graph, visitor: visitor)
     }
     
-    private func findEulerianPath(
+    /// Finds an Eulerian path starting from a specific vertex.
+    ///
+    /// - Parameters:
+    ///   - start: The starting vertex.
+    ///   - graph: The graph to find the path in.
+    ///   - visitor: An optional visitor to observe the algorithm's progress.
+    /// - Returns: An Eulerian path, if one exists.
+    @usableFromInline
+    func findEulerianPath(
         from start: Graph.VertexDescriptor,
         in graph: Graph,
         visitor: Visitor?

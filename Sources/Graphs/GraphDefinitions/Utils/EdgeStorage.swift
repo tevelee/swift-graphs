@@ -1,4 +1,4 @@
-protocol EdgeStorage {
+public protocol EdgeStorage {
     associatedtype Vertex: Hashable
     associatedtype Edge: Hashable
     associatedtype Edges: Sequence<Edge>
@@ -16,7 +16,7 @@ protocol EdgeStorage {
     func inDegree(of vertex: Vertex) -> Int
 }
 
-protocol BinaryEdgeStorage: EdgeStorage {
+public protocol BinaryEdgeStorage: EdgeStorage {
     func leftEdge(of v: Vertex) -> Edge?
     func rightEdge(of v: Vertex) -> Edge?
 }

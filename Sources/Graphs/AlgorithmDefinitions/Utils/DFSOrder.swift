@@ -1,17 +1,32 @@
-struct DFSOrder<Graph: IncidenceGraph> where Graph.VertexDescriptor: Hashable {
+/// A configuration for depth-first search traversal order.
+///
+/// DFSOrder allows customizing the order in which vertices are visited during
+/// depth-first search traversal. This is useful for implementing different
+/// traversal strategies like preorder, postorder, and inorder.
+public struct DFSOrder<Graph: IncidenceGraph> where Graph.VertexDescriptor: Hashable {
+    @usableFromInline
     let makeVisitor: (Graph, SharedBuffer<Graph.VertexDescriptor>) -> DepthFirstSearch<Graph>.Visitor
+    
+    @inlinable
+    public init(makeVisitor: @escaping (Graph, SharedBuffer<Graph.VertexDescriptor>) -> DepthFirstSearch<Graph>.Visitor) {
+        self.makeVisitor = makeVisitor
+    }
 }
 
-final class SharedBuffer<Element> {
-    var elements: [Element] = []
+public final class SharedBuffer<Element> {
+    public var elements: [Element] = []
     
-    func append(_ element: Element) {
+    @inlinable
+    public init() {}
+    
+    public func append(_ element: Element) {
         elements.append(element)
     }
 }
 
 extension DFSOrder {
-    static var preorder: DFSOrder {
+    @inlinable
+    public static var preorder: DFSOrder {
         DFSOrder { graph, buffer in
             .init(
                 discoverVertex: { vertex in
@@ -21,7 +36,8 @@ extension DFSOrder {
         }
     }
     
-    static var postorder: DFSOrder {
+    @inlinable
+    public static var postorder: DFSOrder {
         DFSOrder { graph, buffer in
             .init(
                 finishVertex: { vertex in
@@ -33,7 +49,8 @@ extension DFSOrder {
 }
 
 extension DFSOrder where Graph: BinaryIncidenceGraph {
-    static var inorder: DFSOrder {
+    @inlinable
+    public static var inorder: DFSOrder {
         DFSOrder { graph, buffer in
             var emitted = Set<Graph.VertexDescriptor>()
             var parent: [Graph.VertexDescriptor: Graph.VertexDescriptor] = [:]

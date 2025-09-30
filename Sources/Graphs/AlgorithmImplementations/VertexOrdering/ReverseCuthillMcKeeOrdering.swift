@@ -1,22 +1,31 @@
 import Foundation
 
-/// Reverse Cuthill-McKee Ordering algorithm
+/// Reverse Cuthill-McKee Ordering algorithm.
 /// 
 /// This algorithm reorders the vertices of a graph to reduce the bandwidth of its adjacency matrix.
 /// It uses breadth-first search starting from a vertex with minimum degree, enqueuing adjacent
 /// vertices in order of increasing degree. The reverse ordering often produces better results
 /// with less fill-in during matrix operations.
-struct ReverseCuthillMcKeeOrderingAlgorithm<
+///
+/// - Complexity: O(V + E) where V is the number of vertices and E is the number of edges
+public struct ReverseCuthillMcKeeOrderingAlgorithm<
     Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph
 > where Graph.VertexDescriptor: Hashable {
     
-    struct Visitor {
-        var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-        var enqueueVertex: ((Graph.VertexDescriptor, Int) -> Void)?
-        var dequeueVertex: ((Graph.VertexDescriptor) -> Void)?
-        var startFromVertex: ((Graph.VertexDescriptor) -> Void)?
+    /// A visitor that can be used to observe the Reverse Cuthill-McKee algorithm progress.
+    public struct Visitor {
+        /// Called when examining a vertex.
+        public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
+        /// Called when enqueuing a vertex.
+        public var enqueueVertex: ((Graph.VertexDescriptor, Int) -> Void)?
+        /// Called when dequeuing a vertex.
+        public var dequeueVertex: ((Graph.VertexDescriptor) -> Void)?
+        /// Called when starting from a vertex.
+        public var startFromVertex: ((Graph.VertexDescriptor) -> Void)?
         
-        init(
+        /// Creates a new visitor.
+        @inlinable
+        public init(
             examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
             enqueueVertex: ((Graph.VertexDescriptor, Int) -> Void)? = nil,
             dequeueVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
@@ -29,9 +38,18 @@ struct ReverseCuthillMcKeeOrderingAlgorithm<
         }
     }
     
-    init() {}
+    /// Creates a new Reverse Cuthill-McKee Ordering algorithm.
+    @inlinable
+    public init() {}
     
-    func orderVertices(in graph: Graph, visitor: Visitor? = nil) -> [Graph.VertexDescriptor] {
+    /// Orders vertices using the Reverse Cuthill-McKee algorithm.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to order vertices for
+    ///   - visitor: An optional visitor to observe the algorithm progress
+    /// - Returns: An array of vertex descriptors in the computed order
+    @inlinable
+    public func orderVertices(in graph: Graph, visitor: Visitor? = nil) -> [Graph.VertexDescriptor] {
         var visited = Set<Graph.VertexDescriptor>()
         var ordering: [Graph.VertexDescriptor] = []
 
@@ -52,7 +70,8 @@ struct ReverseCuthillMcKeeOrderingAlgorithm<
         return ordering.reversed()
     }
     
-    private func cuthillMcKeeForComponent(
+    @usableFromInline
+    func cuthillMcKeeForComponent(
         startingFrom startVertex: Graph.VertexDescriptor,
         in graph: Graph,
         visited: inout Set<Graph.VertexDescriptor>,

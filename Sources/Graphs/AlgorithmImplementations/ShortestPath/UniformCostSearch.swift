@@ -1,51 +1,132 @@
-struct UniformCostSearch<
+/// Uniform Cost Search algorithm for finding shortest paths from a source vertex.
+///
+/// Uniform Cost Search is a search algorithm that explores vertices in order of their
+/// cost from the source. It guarantees finding the shortest path in weighted graphs.
+///
+/// - Complexity: O(E + V log V) where E is the number of edges and V is the number of vertices
+public struct UniformCostSearch<
     Graph: IncidenceGraph & EdgePropertyGraph,
     Weight: Numeric & Comparable
 > where
     Graph.VertexDescriptor: Hashable,
     Weight.Magnitude == Weight
 {
-    typealias Vertex = Graph.VertexDescriptor
-    typealias Edge = Graph.EdgeDescriptor
+    /// The vertex type of the graph.
+    public typealias Vertex = Graph.VertexDescriptor
+    /// The edge type of the graph.
+    public typealias Edge = Graph.EdgeDescriptor
 
-    struct Visitor {
-        var examineVertex: ((Vertex) -> Void)?
-        var examineEdge: ((Edge) -> Void)?
-        var edgeRelaxed: ((Edge) -> Void)?
-        var edgeNotRelaxed: ((Edge) -> Void)?
-        var finishVertex: ((Vertex) -> Void)?
+    /// A visitor that can be used to observe the uniform cost search algorithm's progress.
+    public struct Visitor {
+        /// Called when examining a vertex.
+        public var examineVertex: ((Vertex) -> Void)?
+        /// Called when examining an edge.
+        public var examineEdge: ((Edge) -> Void)?
+        /// Called when an edge is relaxed.
+        public var edgeRelaxed: ((Edge) -> Void)?
+        /// Called when an edge is not relaxed.
+        public var edgeNotRelaxed: ((Edge) -> Void)?
+        /// Called when finishing a vertex.
+        public var finishVertex: ((Vertex) -> Void)?
+        
+        /// Creates a new visitor.
+        @inlinable
+        public init(
+            examineVertex: ((Vertex) -> Void)? = nil,
+            examineEdge: ((Edge) -> Void)? = nil,
+            edgeRelaxed: ((Edge) -> Void)? = nil,
+            edgeNotRelaxed: ((Edge) -> Void)? = nil,
+            finishVertex: ((Vertex) -> Void)? = nil
+        ) {
+            self.examineVertex = examineVertex
+            self.examineEdge = examineEdge
+            self.edgeRelaxed = edgeRelaxed
+            self.edgeNotRelaxed = edgeNotRelaxed
+            self.finishVertex = finishVertex
+        }
     }
 
-    struct Result {
-        typealias Vertex = Graph.VertexDescriptor
-        typealias Edge = Graph.EdgeDescriptor
-        fileprivate let source: Vertex
-        let currentVertex: Vertex
-        let distanceProperty: any VertexProperty<Cost<Weight>>.Type
-        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
-        let propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
+    /// The result of a uniform cost search iteration.
+    public struct Result {
+        /// The vertex type of the graph.
+        public typealias Vertex = Graph.VertexDescriptor
+        /// The edge type of the graph.
+        public typealias Edge = Graph.EdgeDescriptor
+        @usableFromInline
+        let source: Vertex
+        /// The current vertex being examined.
+        public let currentVertex: Vertex
+        /// The distance property type.
+        public let distanceProperty: any VertexProperty<Cost<Weight>>.Type
+        /// The predecessor edge property type.
+        public let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
+        /// The property map containing distances and predecessors.
+        public let propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
+        
+        /// Creates a new result.
+        @inlinable
+        public init(
+            source: Vertex,
+            currentVertex: Vertex,
+            distanceProperty: any VertexProperty<Cost<Weight>>.Type,
+            predecessorEdgeProperty: any VertexProperty<Edge?>.Type,
+            propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
+        ) {
+            self.source = source
+            self.currentVertex = currentVertex
+            self.distanceProperty = distanceProperty
+            self.predecessorEdgeProperty = predecessorEdgeProperty
+            self.propertyMap = propertyMap
+        }
     }
 
-    private enum DistanceProperty: VertexProperty {
+    @usableFromInline
+    enum DistanceProperty: VertexProperty {
+        @usableFromInline
         static var defaultValue: Cost<Weight> { .infinite }
     }
 
-    private enum PredecessorEdgeProperty: VertexProperty {
+    @usableFromInline
+    enum PredecessorEdgeProperty: VertexProperty {
+        @usableFromInline
         static var defaultValue: Edge? { nil }
     }
 
-    struct PriorityItem {
-        typealias Vertex = Graph.VertexDescriptor
-        let vertex: Vertex
-        let cost: Cost<Weight>
+    /// A priority queue item for uniform cost search.
+    public struct PriorityItem {
+        /// The vertex type of the graph.
+        public typealias Vertex = Graph.VertexDescriptor
+        /// The vertex.
+        public let vertex: Vertex
+        /// The cost to reach this vertex.
+        public let cost: Cost<Weight>
+        
+        /// Creates a new priority item.
+        @inlinable
+        public init(vertex: Vertex, cost: Cost<Weight>) {
+            self.vertex = vertex
+            self.cost = cost
+        }
     }
 
-    private let graph: Graph
-    private let source: Vertex
-    private let edgeWeight: CostDefinition<Graph, Weight>
-    private let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
+    @usableFromInline
+    let graph: Graph
+    @usableFromInline
+    let source: Vertex
+    @usableFromInline
+    let edgeWeight: CostDefinition<Graph, Weight>
+    @usableFromInline
+    let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
 
-    init(
+    /// Creates a new uniform cost search algorithm instance.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph to search in.
+    ///   - source: The source vertex.
+    ///   - edgeWeight: The cost definition for edge weights.
+    ///   - makePriorityQueue: A factory for creating priority queues.
+    @inlinable
+    public init(
         on graph: Graph,
         from source: Vertex,
         edgeWeight: CostDefinition<Graph, Weight>,
@@ -59,7 +140,12 @@ struct UniformCostSearch<
         self.makePriorityQueue = makePriorityQueue
     }
 
-    func makeIterator(visitor: Visitor?) -> Iterator {
+    /// Creates an iterator for the uniform cost search.
+    ///
+    /// - Parameter visitor: An optional visitor to observe the algorithm's progress.
+    /// - Returns: An iterator for the search.
+    @inlinable
+    public func makeIterator(visitor: Visitor?) -> Iterator {
         Iterator(
             graph: graph,
             source: source,
@@ -69,19 +155,38 @@ struct UniformCostSearch<
         )
     }
 
-    struct Iterator {
-        private let graph: Graph
-        private let source: Vertex
-        private let edgeWeight: CostDefinition<Graph, Weight>
-        private let visitor: Visitor?
-        private var queue: any QueueProtocol<PriorityItem>
-        private var visited: Set<Vertex> = []
+    /// An iterator for uniform cost search.
+    public struct Iterator {
+        @usableFromInline
+        let graph: Graph
+        @usableFromInline
+        let source: Vertex
+        @usableFromInline
+        let edgeWeight: CostDefinition<Graph, Weight>
+        @usableFromInline
+        let visitor: Visitor?
+        @usableFromInline
+        var queue: any QueueProtocol<PriorityItem>
+        @usableFromInline
+        var visited: Set<Vertex> = []
 
-        private var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
-        private let distanceProperty: any VertexProperty<Cost>.Type = DistanceProperty.self
-        private let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
+        @usableFromInline
+        var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
+        @usableFromInline
+        let distanceProperty: any VertexProperty<Cost>.Type = DistanceProperty.self
+        @usableFromInline
+        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
 
-        init(
+        /// Creates a new iterator.
+        ///
+        /// - Parameters:
+        ///   - graph: The graph to search in.
+        ///   - source: The source vertex.
+        ///   - edgeWeight: The cost definition for edge weights.
+        ///   - visitor: An optional visitor.
+        ///   - queue: The priority queue to use.
+        @inlinable
+        public init(
             graph: Graph,
             source: Vertex,
             edgeWeight: CostDefinition<Graph, Weight>,
@@ -100,7 +205,11 @@ struct UniformCostSearch<
             self.queue.enqueue(.init(vertex: source, cost: .finite(.zero)))
         }
 
-        mutating func next() -> Result? {
+        /// Gets the next result from the search.
+        ///
+        /// - Returns: The next result, or `nil` if the search is complete.
+        @inlinable
+        public mutating func next() -> Result? {
             var currentVertex: Vertex?
             while let popped = queue.dequeue() {
                 if visited.contains(popped.vertex) { continue }
@@ -154,25 +263,32 @@ struct UniformCostSearch<
 extension UniformCostSearch.Iterator: IteratorProtocol {}
 
 extension UniformCostSearch: Sequence {
-    func makeIterator() -> Iterator {
+    @inlinable
+    public func makeIterator() -> Iterator {
         makeIterator(visitor: nil)
     }
 }
 
 extension UniformCostSearch.PriorityItem: Equatable {
-    static func == (lhs: Self, rhs: Self) -> Bool {
+    @inlinable
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.vertex == rhs.vertex
     }
 }
 
 extension UniformCostSearch.PriorityItem: Comparable {
-    static func < (lhs: Self, rhs: Self) -> Bool {
+    @inlinable
+    public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.cost < rhs.cost
     }
 }
 
 extension UniformCostSearch.Result {
-    func currentDistance() -> Weight {
+    /// Gets the current distance.
+    ///
+    /// - Returns: The current distance.
+    @inlinable
+    public func currentDistance() -> Weight {
         switch distance(of: currentVertex) {
             case .finite(let value):
                 return value
@@ -182,51 +298,113 @@ extension UniformCostSearch.Result {
         }
     }
 
-    func predecessor(in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex {
+    /// Gets the predecessor vertex.
+    ///
+    /// - Parameter graph: The graph.
+    /// - Returns: The predecessor vertex.
+    @inlinable
+    public func predecessor(in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex {
         predecessor(of: currentVertex, in: graph).unwrap(
             orReport: "The currently examined vertex should always have a predecessor"
         )
     }
 
-    func predecessorEdge() -> Edge {
+    /// Gets the predecessor edge.
+    ///
+    /// - Returns: The predecessor edge.
+    @inlinable
+    public func predecessorEdge() -> Edge {
         predecessorEdge(of: currentVertex).unwrap(
             orReport: "The currently examined vertex should always have a predecessor edge"
         )
     }
 
-    func vertices(in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
+    /// Gets the vertices in the current path.
+    ///
+    /// - Parameter graph: The graph.
+    /// - Returns: The vertices in the current path.
+    @inlinable
+    public func vertices(in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
         vertices(to: currentVertex, in: graph)
     }
 
-    func edges(in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
+    /// Gets the edges in the current path.
+    ///
+    /// - Parameter graph: The graph.
+    /// - Returns: The edges in the current path.
+    @inlinable
+    public func edges(in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
         edges(to: currentVertex, in: graph)
     }
 
-    func path(in graph: some IncidenceGraph<Vertex, Edge>) -> [(vertex: Vertex, edge: Edge)] {
+    /// Gets the current path.
+    ///
+    /// - Parameter graph: The graph.
+    /// - Returns: The current path.
+    @inlinable
+    public func path(in graph: some IncidenceGraph<Vertex, Edge>) -> [(vertex: Vertex, edge: Edge)] {
         path(to: currentVertex, in: graph)
     }
 
-    func distance(of vertex: Vertex) -> Cost<Weight> {
+    /// Gets the distance to a vertex.
+    ///
+    /// - Parameter vertex: The vertex.
+    /// - Returns: The distance to the vertex.
+    @inlinable
+    public func distance(of vertex: Vertex) -> Cost<Weight> {
         propertyMap[vertex][distanceProperty]
     }
 
-    func predecessor(of vertex: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex? {
+    /// Gets the predecessor of a vertex.
+    ///
+    /// - Parameters:
+    ///   - vertex: The vertex.
+    ///   - graph: The graph.
+    /// - Returns: The predecessor vertex, if one exists.
+    @inlinable
+    public func predecessor(of vertex: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex? {
         predecessorEdge(of: vertex).flatMap(graph.source)
     }
 
-    func predecessorEdge(of vertex: Vertex) -> Edge? {
+    /// Gets the predecessor edge of a vertex.
+    ///
+    /// - Parameter vertex: The vertex.
+    /// - Returns: The predecessor edge, if one exists.
+    @inlinable
+    public func predecessorEdge(of vertex: Vertex) -> Edge? {
         propertyMap[vertex][predecessorEdgeProperty]
     }
 
-    func vertices(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
+    /// Gets the vertices to a destination.
+    ///
+    /// - Parameters:
+    ///   - destination: The destination vertex.
+    ///   - graph: The graph.
+    /// - Returns: The vertices to the destination.
+    @inlinable
+    public func vertices(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
         [source] + path(to: destination, in: graph).map(\.vertex)
     }
 
-    func edges(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
+    /// Gets the edges to a destination.
+    ///
+    /// - Parameters:
+    ///   - destination: The destination vertex.
+    ///   - graph: The graph.
+    /// - Returns: The edges to the destination.
+    @inlinable
+    public func edges(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
         path(to: destination, in: graph).map(\.edge)
     }
 
-    func path(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [(vertex: Vertex, edge: Edge)] {
+    /// Gets the path to a destination.
+    ///
+    /// - Parameters:
+    ///   - destination: The destination vertex.
+    ///   - graph: The graph.
+    /// - Returns: The path to the destination.
+    @inlinable
+    public func path(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [(vertex: Vertex, edge: Edge)] {
         var currentVertex = destination
         var result: [(Vertex, Edge)] = []
         while let predecessorEdge = predecessorEdge(of: currentVertex) {
@@ -237,7 +415,12 @@ extension UniformCostSearch.Result {
         return result
     }
 
-    func hasPath(to vertex: Vertex) -> Bool {
+    /// Checks if there is a path to a vertex.
+    ///
+    /// - Parameter vertex: The vertex.
+    /// - Returns: `true` if there is a path, `false` otherwise.
+    @inlinable
+    public func hasPath(to vertex: Vertex) -> Bool {
         propertyMap[vertex][distanceProperty] != .infinite
     }
 }

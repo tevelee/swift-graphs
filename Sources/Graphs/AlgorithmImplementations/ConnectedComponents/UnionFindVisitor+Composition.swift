@@ -1,7 +1,13 @@
 import Foundation
 
+/// Extension providing composition support for Union-Find connected components algorithm visitors.
 extension UnionFindConnectedComponents.Visitor: Composable {
-    func combined(with other: Self) -> Self {
+    /// Combines this visitor with another visitor.
+    ///
+    /// - Parameter other: The other visitor to combine with.
+    /// - Returns: A new visitor that calls both visitors' callbacks.
+    @inlinable
+    public func combined(with other: Self) -> Self {
         .init(
             discoverVertex: { vertex in
                 self.discoverVertex?(vertex)

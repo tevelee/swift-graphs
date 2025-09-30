@@ -1,5 +1,12 @@
 extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
-    func traverse(
+    /// Performs a graph traversal using the specified algorithm.
+    ///
+    /// - Parameters:
+    ///   - source: The starting vertex for the traversal
+    ///   - algorithm: The traversal algorithm to use
+    /// - Returns: A result containing the vertices and edges visited during traversal
+    @inlinable
+    public func traverse(
         from source: VertexDescriptor,
         using algorithm: some TraversalAlgorithm<Self>
     ) -> TraversalResult<VertexDescriptor, EdgeDescriptor> {
@@ -10,15 +17,35 @@ extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
 // MARK: - Default Implementations
 
 extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
-    func traverse(from source: VertexDescriptor) -> TraversalResult<VertexDescriptor, EdgeDescriptor> {
+    /// Performs a depth-first traversal starting from the specified vertex.
+    ///
+    /// - Parameter source: The starting vertex for the traversal
+    /// - Returns: A result containing the vertices and edges visited during traversal
+    @inlinable
+    public func traverse(from source: VertexDescriptor) -> TraversalResult<VertexDescriptor, EdgeDescriptor> {
         traverse(from: source, using: .dfs())
     }
 }
 
-protocol TraversalAlgorithm<Graph> {
+/// A protocol for graph traversal algorithms.
+///
+/// Traversal algorithms visit vertices and edges in a specific order, such as
+/// depth-first search (DFS) or breadth-first search (BFS). This protocol provides
+/// a unified interface for different traversal strategies.
+public protocol TraversalAlgorithm<Graph> {
+    /// The type of graph this algorithm operates on.
     associatedtype Graph: IncidenceGraph
+    
+    /// The type of visitor used for algorithm events.
     associatedtype Visitor
 
+    /// Performs a traversal of the graph starting from the specified vertex.
+    ///
+    /// - Parameters:
+    ///   - source: The starting vertex for the traversal
+    ///   - graph: The graph to traverse
+    ///   - visitor: Optional visitor for algorithm events
+    /// - Returns: A result containing the vertices and edges visited during traversal
     func traverse(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
@@ -26,15 +53,34 @@ protocol TraversalAlgorithm<Graph> {
     ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor>
 }
 
-struct TraversalResult<Vertex, Edge> {
-    let vertices: [Vertex]
-    let edges: [Edge]
+/// The result of a graph traversal operation.
+///
+/// Contains the vertices and edges that were visited during the traversal,
+/// in the order they were encountered.
+public struct TraversalResult<Vertex, Edge> {
+    /// The vertices visited during the traversal.
+    public let vertices: [Vertex]
+    
+    /// The edges traversed during the traversal.
+    public let edges: [Edge]
+    
+    /// Creates a new traversal result.
+    ///
+    /// - Parameters:
+    ///   - vertices: The vertices visited during the traversal
+    ///   - edges: The edges traversed during the traversal
+    @inlinable
+    public init(vertices: [Vertex], edges: [Edge]) {
+        self.vertices = vertices
+        self.edges = edges
+    }
 }
 
 extension VisitorWrapper: TraversalAlgorithm where Base: TraversalAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
-    typealias Graph = Base.Graph
+    public typealias Graph = Base.Graph
     
-    func traverse(
+    @inlinable
+    public func traverse(
         from source: Base.Graph.VertexDescriptor,
         in graph: Base.Graph,
         visitor: Base.Visitor?
