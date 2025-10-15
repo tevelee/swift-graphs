@@ -61,6 +61,10 @@ Swift Graphs is built around a powerful plugin architecture where **storage back
 - **Random Graph Generation** - Erdős-Rényi, Barabási-Albert, Watts-Strogatz models
 - **Vertex Ordering** - Various ordering strategies for graph algorithms
 
+#### **Clique & Community Detection**
+- **Clique Detection** - Bron-Kerbosch algorithm for finding maximal cliques
+- **Community Detection** - Louvain algorithm for modularity optimization
+
 ### 🎯 **Key Design Principles**
 
 - **Type Safety** - Compile-time constraints ensure algorithms only work with compatible graphs
