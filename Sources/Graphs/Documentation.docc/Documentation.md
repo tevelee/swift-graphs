@@ -39,6 +39,7 @@ Learn the fundamental concepts and design philosophy behind the library.
 
 - <doc:QuickReference>
 - <doc:CodeExamples>
+- <doc:Glossary>
 
 ### Algorithm Categories
 
@@ -55,12 +56,20 @@ Comprehensive algorithm implementations organized by problem type.
 #### Graph Analysis
 - <doc:GraphProperties>
 - <doc:GraphColoring>
+- <doc:GraphIsomorphism>
 
 #### Special Paths
 - <doc:EulerianHamiltonian>
 
 #### Graph Generation
 - <doc:RandomGraphGeneration>
+
+### Advanced Usage
+
+For developers extending the library or optimizing performance.
+
+- <doc:AdvancedTopics>
+- <doc:Troubleshooting>
 
 ### Concrete Graph Types
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-A comprehensive DocC documentation suite has been created for the Graphs library, consisting of **16 documentation files** with over **7,400 lines** of detailed content.
+A comprehensive DocC documentation suite has been created for the Graphs library, consisting of **20 documentation files** with over **9,400 lines** of detailed content.
 
 ## Documentation Structure
 
@@ -226,32 +226,45 @@ The documentation is compatible with:
 
 ```
 Sources/Graphs/Documentation.docc/
-├── Documentation.md                # Main navigation
-├── Architecture.md                 # Core design
-├── ProtocolOrientedDesign.md      # Protocol patterns
-├── StorageAndAlgorithms.md        # Separation of concerns
-├── GenericConstraints.md          # Type safety
-├── Composability.md               # Transformations
-├── TraversalAlgorithms.md         # Traversal guide
-├── ShortestPathAlgorithms.md      # Pathfinding guide
-├── MinimumSpanningTree.md         # MST guide
-├── FlowAndMatching.md             # Flow/matching guide
-├── GraphColoring.md               # Coloring guide
-├── GraphProperties.md             # Analysis guide
-├── RandomGraphGeneration.md       # Random graphs guide
-├── EulerianHamiltonian.md         # Special paths guide
-├── CodeExamples.md                # Practical examples
-└── QuickReference.md              # Fast lookup
+├── Documentation.md                # Main navigation hub
+│
+├── Philosophy & Architecture (5 files)
+│   ├── Architecture.md             # Core design principles
+│   ├── ProtocolOrientedDesign.md  # Protocol patterns
+│   ├── StorageAndAlgorithms.md    # Separation of concerns
+│   ├── GenericConstraints.md      # Type safety
+│   └── Composability.md           # Graph transformations
+│
+├── Algorithm Categories (8 files)
+│   ├── TraversalAlgorithms.md     # BFS, DFS, strategies
+│   ├── ShortestPathAlgorithms.md  # Dijkstra, A*, Bellman-Ford
+│   ├── MinimumSpanningTree.md     # Kruskal, Prim, Borůvka
+│   ├── FlowAndMatching.md         # Flow and bipartite matching
+│   ├── GraphColoring.md           # Coloring algorithms
+│   ├── GraphProperties.md         # Analysis and properties
+│   ├── GraphIsomorphism.md        # VF2, Weisfeiler-Lehman
+│   ├── EulerianHamiltonian.md     # Special paths
+│   └── RandomGraphGeneration.md   # Random graph models
+│
+├── Practical Guides (3 files)
+│   ├── CodeExamples.md            # 100+ code snippets
+│   ├── QuickReference.md          # Fast lookup guide
+│   └── Glossary.md                # Graph theory terms
+│
+└── Advanced (2 files)
+    ├── AdvancedTopics.md          # Custom implementations
+    └── Troubleshooting.md         # FAQ and solutions
 ```
 
 ## Statistics
 
-- **Total files**: 16
-- **Total lines**: 7,400+
-- **Code examples**: 100+
-- **Algorithm implementations**: 30+
-- **Cross-references**: 150+
-- **Comparison tables**: 25+
+- **Total files**: 20
+- **Total lines**: 9,400+
+- **Code examples**: 120+
+- **Algorithm implementations**: 35+
+- **Cross-references**: 200+
+- **Comparison tables**: 30+
+- **Glossary terms**: 80+
 
 ## Next Steps
 
