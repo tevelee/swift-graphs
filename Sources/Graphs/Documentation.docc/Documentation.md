@@ -1,161 +1,173 @@
 # ``Graphs``
 
-This library provides a robust and flexible foundation for working with graphs. 
+A comprehensive, protocol-oriented graph library for Swift that provides flexible abstractions, efficient algorithms, and composable graph transformations.
 
 ## Overview
 
-The package consists of a few core protocols to abstract over various types of graphs and the algorithms they support, as well as some concrete implementation of them.
-It's designed to be extensible so users of the library can bring their own algorithms and graph representations if necessary.
+The Graphs library offers a powerful, type-safe foundation for graph-based computation. Built on protocol-oriented design principles inspired by the Boost Graph Library (BGL), it separates graph storage from algorithms, enabling unprecedented flexibility and reusability.
 
-Every graph type (and their protocols) are generic over the node and edge values they hold onto. 
-This allows algorithms to be constrained over specific conditions (e.g. minimum spanning tree search works on graph with weigted edges).
+### Key Features
 
-- ``GraphComponent``: It represents graphs where each node is connected to some other node.
-- ``Graph``: A more general representation, which allows standalone nodes to be present in the graph.
-- ``BinaryGraphComponent``: A graph with dedicated representation for (optional) left and right edges. 
-- ``BipartiteGraph``: Graph with two partitions.
-- ``MutableGraph``: A graph allows for adding and removing nodes and edges dynamically.
+- **Protocol-Oriented Design**: Minimal protocols with maximum flexibility
+- **Storage Independence**: Algorithms work on any graph representation
+- **Type Safety**: Generic constraints prevent algorithm misuse at compile time
+- **Composable Transformations**: Lazy graph wrappers without data duplication
+- **Comprehensive Algorithms**: From basic traversals to advanced flow networks
+- **Multiple Implementations**: Choose the best algorithm for your use case
 
-## Concrete Graphs
+### Core Protocols
 
-### Binary graphs
+- ``GraphComponent``: Minimal graph protocol - only requires edge enumeration from a node
+- ``Graph``: Adds global node and edge access to ``GraphComponent``
+- ``BinaryGraphComponent``: Specialized protocol for binary tree operations
+- ``BipartiteGraph``: Two-partition graphs for matching problems
+- ``MutableGraph``: Dynamic graphs supporting node and edge insertion/removal
 
-Generally binary graphs have specialized APIs so they can provide binary edges.
-This allows for specific functionality such as inorder DFS traversal.
-They conform to ``Graph`` and ``GraphComponent`` too so the same algorithms are available on them.
+## Topics
 
-- ``ConnectedBinaryGraph``
-- ``ConnectedBinaryHashGraph``
-- ``DisjointBinaryGraph``
-- ``DisjointBinaryHashGraph``
+### Understanding the Library
 
-### Connected graphs
+Learn the fundamental concepts and design philosophy behind the library.
 
-They implement the ``GraphComponent`` protocol.
-They represent graphs where each node is connected to some other node.
-It doesn't necessarily mean that the graph is strongly connected.
+- <doc:Architecture>
+- <doc:ProtocolOrientedDesign>
+- <doc:StorageAndAlgorithms>
+- <doc:GenericConstraints>
+- <doc:Composability>
 
-- ``ConnectedGraph``
-- ``ConnectedBinaryGraph``
-- ``ConnectedHashGraph``
-- ``ConnectedBinaryHashGraph``
+### Getting Started
 
-### Disjoint graphs
+- <doc:QuickReference>
+- <doc:CodeExamples>
 
-They implement the ``Graph`` protocol.
-They reprensent graphs where stanadlone nodes are possible.
+### Algorithm Categories
 
-- ``DisjointGraph``
-- ``DisjointBinaryGraph``
-- ``DisjointHashGraph``
-- ``DisjointBinaryHashGraph``
+Comprehensive algorithm implementations organized by problem type.
 
-### Lazy graphs
+#### Traversal and Search
+- <doc:TraversalAlgorithms>
+- <doc:ShortestPathAlgorithms>
 
-They implement the ``GraphComponent`` protocol.
-The whole graph is not stored in memory at once, but it allows a lazy representation where the edges can be queried on demand. 
+#### Optimization Algorithms
+- <doc:MinimumSpanningTree>
+- <doc:FlowAndMatching>
 
-- ``LazyGraph``
-- ``LazyBinaryGraph``
+#### Graph Analysis
+- <doc:GraphProperties>
+- <doc:GraphColoring>
 
-### Grid graph
+#### Special Paths
+- <doc:EulerianHamiltonian>
 
-A type of graph where nodes are stored in a two dimensional array and edges connect them in orthogonal and/or diagonal directions.
+#### Graph Generation
+- <doc:RandomGraphGeneration>
 
-- ``GridGraph``
+### Concrete Graph Types
 
-### Wrappers
+The library provides multiple graph implementations, each optimized for different use cases.
 
-These concrete graph types can wrap other graphs to extend their functionality.
+#### Storage-Based Graphs
 
-- ``WeightedGraph``: Extends the edge to have a `Comparable` value.
-- ``UndirectedGraph``: Duplicated directed edges to achieve bidirectional connections.
-- ``ComplementGraph``: Represents the complement of a given base graph.
-- ``TransposedGraph``: Transposes the base graph.
-- ``ResidualGraph``: Graph to represent residual capacities of a flow network.
-- ``PartitionedGraph``: Splits nodes to implement a ``BipartiteGraph``.
+Different storage strategies for different performance characteristics.
 
-## Algorithms
+- ``ConnectedGraph`` - Array-based storage, simple and efficient for small graphs
+- ``ConnectedHashGraph`` - Hash-based storage, O(1) edge lookup for large graphs
+- ``DisjointGraph`` - Supports standalone nodes without edges
+- ``DisjointHashGraph`` - Hash-based with standalone nodes
 
-### Traversal
+#### Specialized Structures
 
-- ``GraphTraversal`` uses a ``GraphTraversalStrategy`` to visit all connected nodes.
+- ``GridGraph`` - 2D grid with orthogonal/diagonal connections, perfect for pathfinding
+- ``LazyGraph`` - On-demand edge computation, ideal for infinite or procedural graphs
+- ``ConnectedBinaryGraph`` - Binary tree with specialized traversals
+- ``LazyBinaryGraph`` - Lazy binary tree evaluation
 
-Concrete stretegies include:
+#### Graph Transformations
 
-- ``BreadthFirstSearch``: BFS
-- ``DepthFirstSearch``: DFS with support for specialized ordering
-  - ``DepthFirstSearchPreorder``
-  - ``DepthFirstSearchInorder``
-  - ``DepthFirstSearchPostorder``
-- ``UniqueTraversalStrategy``: Avoids visiting the same node twice.
+Composable wrappers that modify graph behavior without copying data.
 
-### Shortest path(s)
+- ``WeightedGraph`` - Adds weights to edges
+- ``UndirectedGraph`` - Makes all edges bidirectional
+- ``TransposedGraph`` - Reverses all edge directions
+- ``ComplementGraph`` - Represents the graph complement
+- ``ResidualGraph`` - Tracks flow network residual capacities
+- ``PartitionedGraph`` - Creates bipartite graph from partitions
 
-- ``ShortestPathAlgorithm``: Shortest path between two specific nodes.
-  - ``DijkstraAlgorithm``
-  - ``AStarAlgorithm``
-  - ``BellmanFordAlgorithm``
-- ``ShortestPathsAlgorithm``: Shortest paths from one node to all others.
-  - ``DijkstraAlgorithm``
-  - ``BellmanFordAlgorithm``
-- ``ShortestPathsForAllPairsAlgorithm``: Shortest paths between all pairs of nodes.
-  - ``FloydWarshallAlgorithm``
-  - ``JohnsonAlgorithm``
+### Algorithm Reference
 
-### Minimum spanning tree
+#### Traversal Strategies
 
-- ``MinimumSpanningTreeAlgorithm``
-  - ``PrimAlgorithm``
-  - ``KruskalAlgorithm``
-  - ``BoruvkaAlgorithm``
+- ``GraphTraversal`` - Lazy sequence for graph traversal
+- ``GraphTraversalStrategy`` - Protocol for custom traversal strategies
+- ``BreadthFirstSearch`` - Level-by-level exploration
+- ``DepthFirstSearch`` - Deep exploration with ordering variants
+  - ``DepthFirstSearchPreorder`` - Visit node before children
+  - ``DepthFirstSearchInorder`` - Binary tree inorder traversal
+  - ``DepthFirstSearchPostorder`` - Visit node after children
+- ``UniqueTraversalStrategy`` - Ensures each node visited once
 
-### Isomorphism check
+#### Shortest Path Algorithms
 
-- ``GraphIsomorphismAlgorithm``
-  - ``VF2Algorithm``
-  - ``WeisfeilerLehmanAlgorithm``
+**Single-Pair Shortest Path**
+- ``ShortestPathAlgorithm`` - Protocol for shortest path algorithms
+- ``DijkstraAlgorithm`` - O((V+E)log V), non-negative weights
+- ``AStarAlgorithm`` - Dijkstra with heuristic guidance
+- ``BellmanFordAlgorithm`` - O(VE), handles negative weights
 
-### Graph coloring
+**All-Pairs Shortest Paths**
+- ``FloydWarshallAlgorithm`` - O(V³), dense graphs
+- ``JohnsonAlgorithm`` - O(V²log V + VE), sparse graphs
 
-- ``GraphColoringAlgorithm``
-  - ``GreedyColoringAlgorithm``
-  - ``DSaturAlgorithm``
-  - ``WelshPowellAlgorithm``
+**Specialized**
+- K-shortest paths with ``YenAlgorithm``
+- Bidirectional Dijkstra for long paths
 
-### Max Flow / Min Cut
+#### Optimization Algorithms
 
-- ``MaxFlowAlgorithm``
-  - ``DinicAlgorithm``
-  - ``EdmondsKarpAlgorithm``
-  - ``FordFulkersonAlgorithm``
+**Minimum Spanning Tree**
+- ``MinimumSpanningTreeAlgorithm`` - Protocol for MST algorithms
+- ``KruskalAlgorithm`` - O(E log E), edge-based, best for sparse
+- ``PrimAlgorithm`` - O(E log V), vertex-based, best for dense
+- ``BoruvkaAlgorithm`` - O(E log V), parallel-friendly
 
-### Matching
+**Maximum Flow**
+- ``MaxFlowAlgorithm`` - Protocol for flow algorithms
+- ``FordFulkersonAlgorithm`` - O(E × f), basic augmenting paths
+- ``EdmondsKarpAlgorithm`` - O(VE²), shortest augmenting paths
+- ``DinicAlgorithm`` - O(V²E), blocking flows, best for dense
 
-- ``MaximumMatchingAlgorithm``
-  - ``HopcroftKarpAlgorithm``
+**Bipartite Matching**
+- ``MaximumMatchingAlgorithm`` - Protocol for matching algorithms
+- ``HopcroftKarpAlgorithm`` - O(E√V), optimal bipartite matching
 
-### Graph generation
+#### Graph Analysis
 
-- ``RandomGraphGeneration``
-  - ``ErdosRenyiRandomGraphGenerator``
-  - ``BarabasiAlbertRandomGraphGenerator``
-  - ``WattsStrogatzRandomGraphGenerator``
+**Connectivity**
+- ``StronglyConnectedComponentsAlgorithm`` - Protocol for SCC algorithms
+- ``TarjanSCCAlgorithm`` - O(V+E), single DFS
+- ``KosarajuSCCAlgorithm`` - O(V+E), two DFS passes
 
-### Strongly connected components
+**Graph Coloring**
+- ``GraphColoringAlgorithm`` - Protocol for coloring algorithms
+- ``GreedyColoringAlgorithm`` - O(V+E), fast approximation
+- ``DSaturAlgorithm`` - O(V²), better quality
+- ``WelshPowellAlgorithm`` - O(V log V + E), degree-ordered
 
-- ``StronglyConnectedComponentsAlgorithm``
-  - ``KosarajuSCCAlgorithm``
-  - ``TarjanSCCAlgorithm``
+**Special Paths**
+- ``EulerianPathAlgorithm`` - Protocol for Eulerian paths
+- ``HierholzerEulerianPathAlgorithm`` - O(E), optimal for Eulerian cycles
+- ``HamiltonianPathAlgorithm`` - Protocol for Hamiltonian paths (NP-complete)
+- ``BacktrackingHamiltonianPathAlgorithm`` - Exhaustive search
+- ``HeuristicHamiltonianPathAlgorithm`` - Fast approximation
 
-### Hamiltonian paths and cycles
+**Graph Isomorphism**
+- ``GraphIsomorphismAlgorithm`` - Protocol for isomorphism testing
+- ``VF2Algorithm`` - Efficient subgraph isomorphism
+- ``WeisfeilerLehmanAlgorithm`` - Hash-based isomorphism test
 
-- ``HamiltonianPathAlgorithm``
-  - ``HeuristicHamiltonianPathAlgorithm``
-  - ``BacktrackingHamiltonianPathAlgorithm``
+#### Random Graph Generation
 
-### Eulerian paths and cycles
-
-- ``EulerianPathAlgorithm``
-  - ``HierholzerEulerianPathAlgorithm``
-  - ``BacktrackingEulerianPathAlgorithm``
+- ``RandomGraphGeneration`` - Protocol for random graphs
+- ``ErdosRenyiRandomGraphGenerator`` - G(n,p) random graphs
+- ``BarabasiAlbertRandomGraphGenerator`` - Scale-free networks
+- ``WattsStrogatzRandomGraphGenerator`` - Small-world networks
