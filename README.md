@@ -74,6 +74,82 @@ Swift Graphs is built around a powerful plugin architecture where **storage back
 - **Platform Independence** - Runs seamlessly across all Swift-supported platforms
 - **Swift Integration** - Leverages Swift's type system and modern language features
 
+## 🧬 Core Philosophy: Protocol-Oriented Graph Programming
+
+Swift Graphs is built on the proven design principles of the [Boost Graph Library (BGL)](https://www.boost.org/doc/libs/1_89_0/libs/graph/doc/table_of_contents.html), translated into Swift's protocol-oriented paradigm. This approach provides unmatched flexibility, type safety, and performance.
+
+### **Graph Concepts as Protocols**
+
+Following BGL's concept-based design, Swift Graphs models graph capabilities as protocols:
+
+- **Each protocol represents a specific capability** - `IncidenceGraph` for neighbor access, `BidirectionalGraph` for reverse traversal
+- **Graphs implement only what they support** - Not all graphs need all features
+- **Algorithms are generic over protocol requirements** - Write once, work with any compatible graph
+- **Compile-time safety** - Type system ensures correctness before runtime
+
+### **Protocol Hierarchy**
+
+```
+Graph (base: VertexDescriptor, EdgeDescriptor)
+├── IncidenceGraph (outgoing edges access)
+│   └── BidirectionalGraph (+ incoming edges access)
+├── VertexListGraph (iterate all vertices)
+├── EdgeListGraph (iterate all edges)
+├── AdjacencyGraph (direct vertex adjacency)
+├── MutableGraph (add/remove vertices/edges)
+│   ├── VertexMutableGraph (add/remove vertices)
+│   └── EdgeMutableGraph (add/remove edges)
+└── PropertyGraph (vertex/edge properties)
+    ├── VertexPropertyGraph (vertex data)
+    ├── EdgePropertyGraph (edge data)
+    └── MutablePropertyGraph (mutable properties)
+```
+
+### **The BGL Heritage**
+
+The Boost Graph Library pioneered generic graph programming in C++, introducing concepts like:
+
+- **Separation of graph structure from algorithms** - Algorithms work with any graph that meets requirements
+- **Minimal interface requirements** - Each algorithm specifies exactly what it needs
+- **Visitor pattern for instrumentation** - Observe and customize algorithm behavior
+- **Property maps for external data** - Separate topology from attributes
+
+Swift Graphs brings these proven patterns to Swift, enhanced with:
+
+- **Protocol-oriented design** - Swift's protocols provide cleaner syntax than C++ concepts
+- **Type safety** - Protocol constraints catch errors at compile time
+- **Value semantics** - Safer concurrent access and easier reasoning
+- **Modern language features** - Generics, associated types, and protocol extensions
+
+### **Design Pattern: Small Core, Rich Extensions**
+
+```swift
+// Core protocols are minimal
+protocol Graph {
+    associatedtype VertexDescriptor
+    associatedtype EdgeDescriptor
+}
+
+// Capabilities added through refinement
+protocol IncidenceGraph: Graph {
+    func outgoingEdges(of: VertexDescriptor) -> some Sequence<EdgeDescriptor>
+    func destination(of: EdgeDescriptor) -> VertexDescriptor?
+}
+
+// Algorithms work with protocol requirements
+extension IncidenceGraph where VertexDescriptor: Hashable {
+    func traverse(from source: VertexDescriptor, using algorithm: some TraversalAlgorithm) {
+        // Works with ANY IncidenceGraph
+    }
+}
+```
+
+This design means:
+- **Flexibility** - Implement only what you need
+- **Reusability** - Algorithms work across graph types
+- **Extensibility** - Add new graphs or algorithms without modifying existing code
+- **Type Safety** - Compiler enforces correctness
+
 ## 🚀 Quick Start
 
 ### Installation
@@ -278,28 +354,83 @@ print("WS graph small world: \(wattsStrogatz.hasSmallWorldProperty)")
 
 ## 🏗️ Architecture
 
-Swift Graphs follows a modular architecture with clear separation of concerns:
+Swift Graphs follows a **modular architecture** with clear separation of concerns between definitions and implementations:
 
-- **Graph Definitions** - Core protocols and abstractions
-- **Graph Implementations** - Concrete graph data structures  
-- **Algorithm Definitions** - Algorithm interfaces and contracts
-- **Algorithm Implementations** - Specific algorithm implementations
-- **Utilities** - Helper types and common functionality
+### **Graph Definitions** (Protocols)
 
-### Protocol-Based Design
+Core protocols defining graph capabilities:
+- `Graph` - Base protocol with vertex and edge descriptors
+- `IncidenceGraph` - Access to outgoing edges
+- `BidirectionalGraph` - Access to incoming edges
+- `VertexListGraph` / `EdgeListGraph` - Enumeration capabilities
+- `PropertyGraph` - Vertex and edge properties
+- `MutableGraph` - Dynamic modification
 
-The library uses Swift's protocol system to provide compile-time safety and enable the pluggable architecture:
+### **Graph Implementations** (Concrete Types)
+
+Concrete data structures implementing protocols:
+- `AdjacencyList` - Sparse graphs (most common)
+- `AdjacencyMatrix` - Dense graphs, O(1) edge lookup
+- `BipartiteAdjacencyList` - Two-colored graphs
+- `GridGraph` - 2D spatial graphs
+- `LazyGraph` - Computed on-demand
+
+### **Algorithm Definitions** (Algorithm Protocols)
+
+Algorithm families as protocols:
+- `ShortestPathAlgorithm` - Pathfinding strategies
+- `TraversalAlgorithm` - Graph exploration
+- `ColoringAlgorithm` - Vertex coloring
+- `ConnectedComponentsAlgorithm` - Component detection
+- `MinimumSpanningTreeAlgorithm` - MST strategies
+
+### **Algorithm Implementations** (Concrete Algorithms)
+
+Specific algorithm implementations:
+- Dijkstra, A*, Bellman-Ford (shortest paths)
+- DFS, BFS (traversal)
+- Greedy, DSatur (coloring)
+- Kruskal, Prim (MST)
+
+### **Cross-Cutting Concerns**
+
+**Storage Backends** (Pluggable):
+- `VertexStorage` - How vertices are stored
+- `EdgeStorage` - How edges are stored
+- Swap implementations without changing algorithms
+
+**Property Systems** (Pluggable):
+- `PropertyMap` - Associates data with vertices/edges
+- `DictionaryPropertyMap` - Hash-based storage
+- `ComputedPropertyGraph` - On-demand computation
+
+### **Protocol-Based Design Example**
+
+The library uses Swift's protocol system to provide compile-time safety:
 
 ```swift
-// Only works with weighted graphs
-extension Graph where Self: EdgePropertyGraph {
-    func shortestPath<Weight: AdditiveArithmetic & Comparable>(
+// Algorithm requires specific graph capabilities
+extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+    func shortestPath<Weight: Numeric & Comparable>(
         from source: VertexDescriptor,
         to destination: VertexDescriptor,
         using algorithm: some ShortestPathAlgorithm<Self, Weight>
     ) -> Path<VertexDescriptor, EdgeDescriptor>?
 }
+
+// Usage - type system ensures correctness
+let path = graph.shortestPath(
+    from: start,
+    to: goal,
+    using: .dijkstra(weight: .property(\.weight))  // Choose algorithm at call site
+)
 ```
+
+This architecture enables:
+- **Separation of concerns** - Structure, data, and algorithms are independent
+- **Pluggability** - Swap components without breaking code
+- **Type safety** - Compiler catches incompatibilities
+- **Extensibility** - Add new components without modifying existing ones
 
 ## 📊 Performance
 
