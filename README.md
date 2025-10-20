@@ -1,164 +1,476 @@
-# Graph Library for Swift
+# Swift Graphs
 
-[![Supported Swift versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Ftevelee%2Fswift-graphs%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/tevelee/swift-graphs)
-[![Supported Swift platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Ftevelee%2Fswift-graphs%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/tevelee/swift-graphs)
+[![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org)
+[![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20macOS%20%7C%20watchOS%20%7C%20tvOS%20%7C%20visionOS-lightgrey.svg)](https://swift.org)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.txt)
 
-Swift Graphs library provides a composable and extensible foundation for working with graphs. 
-Whether you're constructing binary trees, performing complex graph traversals, or optimizing pathfinding algorithms on weighted graphs, this library offers the dynamic flexibility needed for a wide range of graph-related use cases. 
+A comprehensive, high-performance graph algorithms library for Swift, inspired by the Boost Graph Library. Swift Graphs provides flexible graph representations with a small core API and extensive algorithm coverage, designed for maximum performance and type safety. The library is platform-independent and runs on all Swift-supported platforms including iOS, macOS, watchOS, tvOS, and visionOS.
 
-While some features are still in early development stages, the project is actively evolving, and contributions are highly encouraged.
+## 🔌 **Pluggable Architecture**
 
-[Documentation »](https://swiftpackageindex.com/tevelee/swift-graphs/documentation/graphs)
+Swift Graphs is built around a powerful plugin architecture where **storage backends**, **property systems**, and **algorithms** are completely pluggable and interchangeable. This design allows you to:
 
-## Key Features
+- **Mix and match storage strategies** - Use adjacency lists for sparse graphs, matrices for dense graphs, or custom storage backends
+- **Extend property systems** - Add custom vertex/edge properties or use computed properties
+- **Swap algorithms** - Choose the best algorithm for your specific use case or implement custom ones
+- **Compose graph types** - Combine different capabilities to create specialized graph implementations
 
-- **Multiple Graph Types**: Supports general graphs, binary graphs, grid graphs, and lazy graphs (on-demand edge computation).
-- **Weighted Graphs**: Handles graphs with weighted edges, enabling specialized algorithms like shortest pathfinding.
-- **Traversals**: Breadth-First Search (BFS), Depth-First Search (DFS), with support for preorder, inorder, and postorder traversals.
-- **Traversal Strategies**: Includes unique node visiting, and depth, path, and cost tracking during traversals.
-- **Shortest Path Algorithms**: Dijkstra, Bellman-Ford, and A* algorithms for finding efficient routes.
-- **Eulerian and Hamiltonian Paths/Cycles**: Support for backtracking, heuristic-based, and Hierholzer's algorithm for Eulerian paths.
-- **Max Flow/Min Cut Algorithms**: Ford-Fulkerson, Edmonds-Karp, and Dinic's algorithms for network flow analysis.
-- **Minimum Spanning Tree Algorithms**: Kruskal's, Prim's, and Borůvka's algorithms for constructing minimum spanning trees.
-- **Strongly Connected Components**: Kosaraju’s and Tarjan’s algorithms for identifying strongly connected components.
-- **Graph Coloring**: Greedy algorithm for efficient node coloring.
-- **Isomorphism**: Determine if two graphs are isomorphic using VF2 or Weisfeiler-Lehman algorithm
-- **Maximum Bipartite Matching**: Hopcroft-Karp algorithm for bipartite matching.
+## ✨ Features
 
-### Example Usage
+### 🏗️ **Flexible Graph Representations**
+- **Adjacency List** - Optimized for sparse graphs with efficient neighbor access
+- **Adjacency Matrix** - Perfect for dense graphs with O(1) edge lookups
+- **Grid Graph** - Specialized for 2D pathfinding and spatial algorithms
+- **Lazy Graph** - Compute edges on-demand for memory-efficient large graphs
+- **Binary Graph** - Specialized for tree structures with left/right child navigation
 
-```swift
-let graph = ConnectedGraph(edges: [
-    "Root": ["A", "B", "C"],
-    "B": ["X", "Y", "Z"]
-])
+### 🚀 **Comprehensive Algorithm Suite**
 
-graph.traverse(from: "Root", strategy: .bfs())
-graph.traverse(from: "Root", strategy: .dfs())
+#### **Pathfinding & Shortest Paths**
+- **Dijkstra's Algorithm** - Single-source shortest paths with non-negative weights
+- **A\* Search** - Heuristic-based pathfinding with customizable distance functions
+- **Bellman-Ford** - Handles negative edge weights and detects negative cycles
+- **Floyd-Warshall** - All-pairs shortest paths
+- **Johnson's Algorithm** - All-pairs shortest paths with negative weights
+- **Yen's Algorithm** - K shortest paths between two vertices
 
-graph.traverse(from: "Root", strategy: .bfs(.trackPath()))
-graph.traverse(from: "Root", strategy: .dfs(order: .postorder()))
-graph.traverse(from: "Root", strategy: .dfs().visitEachNodeOnce())
+#### **Graph Traversal**
+- **Depth-First Search (DFS)** - With preorder, postorder, and inorder variants
+- **Breadth-First Search (BFS)** - Level-by-level exploration
+- **Best-First Search** - Heuristic-guided traversal
+- **Iterative Deepening DFS** - Memory-efficient depth-limited search
+- **Uniform Cost Search** - Weighted graph traversal
 
-graph.shortestPath(from: "Root", to: "Z", using: .dijkstra()) // or .aStar() or .bellmanFord()
-graph.shortestPaths(from: "Root", using: .dijkstra()) // or .bellmanFord()
-graph.shortestPathsForAllPairs(using: .floydWarshall()) // or .johnson()
-graph.minimumSpanningTree(using: .kruskal()) // or .prim() or .boruvka()
-graph.maximumFlow(using: .fordFulkerson()) // or .edmondsKarp() or .dinic()
-graph.stronglyConnectedComponents(using: .kosaraju()) // or .tarjan()
-graph.colorNodes(using: .greedy()) // or .dsatur() or .welshPowell()
-graph.isIsomorphoc(to: graph2, using: .vf2()) // or .weisfeilerLehman()
-ConnectedGraph.random(using: .erdosRenyi()) // or .barabasiAlbert() or .wattsStrogatz() 
+#### **Graph Properties & Analysis**
+- **Connectivity** - Connected components, strongly connected components
+- **Cycle Detection** - Detect cycles and determine if graph is acyclic
+- **Tree Properties** - Check if graph is a tree, forest, or has specific tree properties
+- **Planarity** - Boyer-Myrvold planarity testing
+- **Bipartiteness** - Detect and analyze bipartite graphs
+- **Eulerian Paths** - Find Eulerian cycles and paths
+- **Hamiltonian Paths** - Find Hamiltonian cycles and paths
 
-graph.isCyclic()
-graph.isTree()
-graph.isConnected()
-graph.isPlanar()
-graph.isBipartite()
-graph.topologicalSort()
+#### **Optimization Algorithms**
+- **Minimum Spanning Tree** - Kruskal's, Prim's, and Borůvka's algorithms
+- **Maximum Flow** - Ford-Fulkerson, Edmonds-Karp, and Dinic's algorithms
+- **Graph Coloring** - Greedy, DSatur, and Welsh-Powell algorithms
+- **Topological Sort** - Kahn's algorithm for DAG ordering
 
-let lazyGraph = LazyGraph { node in
-    dynamicNeighbors(of: node)
-}
+#### **Advanced Algorithms**
+- **Graph Isomorphism** - VF2 and Weisfeiler-Lehman algorithms
+- **Random Graph Generation** - Erdős-Rényi, Barabási-Albert, Watts-Strogatz models
+- **Vertex Ordering** - Various ordering strategies for graph algorithms
 
-let gridGraph = GridGraph(grid: [
-    ["A", "B", "C", "D", "E"],
-    ["F", "G", "H", "I", "J"],
-    ["K", "L", "M", "N", "O"],
-    ["P", "Q", "R", "S", "T"],
-    ["U", "V", "W", "X", "Y"]
-], availableDirections: .orthogonal).weightedByDistance()
+#### **Clique & Community Detection**
+- **Clique Detection** - Bron-Kerbosch algorithm for finding maximal cliques
+- **Community Detection** - Louvain algorithm for modularity optimization
 
-gridGraph.shortestPath(from: GridPosition(x: 0, y: 0), to: GridPosition(x: 4, y: 4), using: .aStar(heuristic: .euclideanDistance(of: \.coordinates)))
-gridGraph.shortestPaths(from: GridPosition(x: 0, y: 0))
-gridGraph.shortestPathsForAllPairs()
+### 🎯 **Key Design Principles**
 
-gridGraph.eulerianCycle()
-gridGraph.eulerianPath()
+- **Type Safety** - Compile-time constraints ensure algorithms only work with compatible graphs
+- **Performance** - Optimized implementations with minimal overhead
+- **Extensibility** - Plugin architecture for custom algorithms and graph types
+- **Memory Efficiency** - Lazy evaluation and efficient storage backends
+- **Platform Independence** - Runs seamlessly across all Swift-supported platforms
+- **Swift Integration** - Leverages Swift's type system and modern language features
 
-gridGraph.hamiltonianCycle()
-gridGraph.hamiltonianPath()
-gridGraph.hamiltonianPath(from: GridPosition(x: 0, y: 0))
-gridGraph.hamiltonianPath(from: GridPosition(x: 0, y: 0), to: GridPosition(x: 4, y: 4))
+## 🧬 Core Philosophy: Protocol-Oriented Graph Programming
 
-let binaryGraph = ConnectedBinaryGraph(edges: [
-    "Root": (lhs: "A", rhs: "B"),
-    "A": (lhs: "X", rhs: "Y"),
-    "Y": (lhs: nil, rhs: "Z")
-])
-binaryGraph.traverse(from: "Root", strategy: .dfs(order: .inorder()))
+Swift Graphs is built on the proven design principles of the [Boost Graph Library (BGL)](https://www.boost.org/doc/libs/1_89_0/libs/graph/doc/table_of_contents.html), translated into Swift's protocol-oriented paradigm. This approach provides unmatched flexibility, type safety, and performance.
 
-let bipartite = ConnectedGraph(edges: [
-    GraphEdge(source: "u1", destination: "v1"),
-    GraphEdge(source: "u1", destination: "v2"),
-    GraphEdge(source: "u2", destination: "v1"),
-    GraphEdge(source: "u3", destination: "v2"),
-    GraphEdge(source: "u3", destination: "v3"),
-]).bipartite(leftPartition: ["u1", "u2", "u3"], rightPartition: ["v1", "v2", "v3"])
+### **Graph Concepts as Protocols**
 
-bipartite.maximumMatching(using: .hopcroftKarp())
+Following BGL's concept-based design, Swift Graphs models graph capabilities as protocols:
+
+- **Each protocol represents a specific capability** - `IncidenceGraph` for neighbor access, `BidirectionalGraph` for reverse traversal
+- **Graphs implement only what they support** - Not all graphs need all features
+- **Algorithms are generic over protocol requirements** - Write once, work with any compatible graph
+- **Compile-time safety** - Type system ensures correctness before runtime
+
+### **Protocol Hierarchy**
+
+```
+Graph (base: VertexDescriptor, EdgeDescriptor)
+├── IncidenceGraph (outgoing edges access)
+│   └── BidirectionalGraph (+ incoming edges access)
+├── VertexListGraph (iterate all vertices)
+├── EdgeListGraph (iterate all edges)
+├── AdjacencyGraph (direct vertex adjacency)
+├── MutableGraph (add/remove vertices/edges)
+│   ├── VertexMutableGraph (add/remove vertices)
+│   └── EdgeMutableGraph (add/remove edges)
+└── PropertyGraph (vertex/edge properties)
+    ├── VertexPropertyGraph (vertex data)
+    ├── EdgePropertyGraph (edge data)
+    └── MutablePropertyGraph (mutable properties)
 ```
 
-## Installation
+### **The BGL Heritage**
 
-Add `swift-graphs` as a package dependency in your project's `Package.swift`:
+The Boost Graph Library pioneered generic graph programming in C++, introducing concepts like:
+
+- **Separation of graph structure from algorithms** - Algorithms work with any graph that meets requirements
+- **Minimal interface requirements** - Each algorithm specifies exactly what it needs
+- **Visitor pattern for instrumentation** - Observe and customize algorithm behavior
+- **Property maps for external data** - Separate topology from attributes
+
+Swift Graphs brings these proven patterns to Swift, enhanced with:
+
+- **Protocol-oriented design** - Swift's protocols provide cleaner syntax than C++ concepts
+- **Type safety** - Protocol constraints catch errors at compile time
+- **Value semantics** - Safer concurrent access and easier reasoning
+- **Modern language features** - Generics, associated types, and protocol extensions
+
+### **Design Pattern: Small Core, Rich Extensions**
 
 ```swift
-// swift-tools-version:6.0
-import PackageDescription
+// Core protocols are minimal
+protocol Graph {
+    associatedtype VertexDescriptor
+    associatedtype EdgeDescriptor
+}
 
-let package = Package(
-    name: "MyPackage",
-    dependencies: [
-        .package(url: "https://github.com/tevelee/swift-graphs.git", from: "0.2.0")
-    ],
-    targets: [
-        .target(name: "MyTarget", dependencies: [
-            .product(name: "Graphs", package: "swift-graphs")
-        ])
-    ]
+// Capabilities added through refinement
+protocol IncidenceGraph: Graph {
+    func outgoingEdges(of: VertexDescriptor) -> some Sequence<EdgeDescriptor>
+    func destination(of: EdgeDescriptor) -> VertexDescriptor?
+}
+
+// Algorithms work with protocol requirements
+extension IncidenceGraph where VertexDescriptor: Hashable {
+    func traverse(from source: VertexDescriptor, using algorithm: some TraversalAlgorithm) {
+        // Works with ANY IncidenceGraph
+    }
+}
+```
+
+This design means:
+- **Flexibility** - Implement only what you need
+- **Reusability** - Algorithms work across graph types
+- **Extensibility** - Add new graphs or algorithms without modifying existing code
+- **Type Safety** - Compiler enforces correctness
+
+## 🚀 Quick Start
+
+### Installation
+
+Add Swift Graphs to your `Package.swift`:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/tevelee/swift-graphs.git", from: "1.0.0")
+]
+```
+
+### Basic Usage
+
+```swift
+import Graphs
+
+// Create a simple graph
+var graph = AdjacencyList()
+graph.add(edges: [
+    ("s", "a"),
+    ("s", "b"),
+    ("a", "c"),
+    ("b", "d"),
+])
+
+// Find shortest path
+let path = graph.shortestPath(from: "s", to: "c", using: .dijkstra())
+print("Shortest path: \(path?.vertices)")
+// Output: Shortest path: ["s", "a", "c"]
+```
+
+### Graph Traversal
+
+```swift
+// Depth-first search
+let dfsResult = graph.traverse(from: "s", using: .dfs())
+print("DFS vertices: \(dfsResult.vertices)")
+
+// Breadth-first search
+let bfsResult = graph.traverse(from: "s", using: .bfs())
+print("BFS vertices: \(bfsResult.vertices)")
+```
+
+### Grid Graph Pathfinding
+
+```swift
+// Create a 10x10 grid
+let grid = GridGraph(width: 10, height: 10)
+
+// Find path using A* with Manhattan distance
+let start = GridGraph.Vertex(x: 0, y: 0)
+let goal = GridGraph.Vertex(x: 9, y: 9)
+
+let path = grid.shortestPath(
+    from: start, 
+    to: goal, 
+    using: .aStar(heuristic: .manhattanDistance)
 )
 ```
 
-## Design Considerations
+## 📚 Advanced Examples
 
-### Generic Structure
+### Custom Graph Properties
 
-The library is built on a fully generic structure, allowing all nodes and edges to be defined as generic types without constraints. 
-This flexibility enables seamless integration of various algorithms on specialized graphs, such as weighted graphs. 
-By using generics, the library ensures that algorithms remain broadly applicable while optimized for specific graph types.
+One of the most powerful features is the ability to add custom properties to graphs. Here's how I can extend graphs with domain-specific properties:
 
-For example, binary graphs can leverage specialized inorder depth-first search, while layered traversal strategies—such as unique node visits or path tracking—can be easily added to any algorithm. 
-Generic constraints help formalize requirements, ensuring algorithms like Dijkstra's avoid negative weights for optimal performance.
+```swift
+// Define a custom property for social network analysis
+struct SocialMetrics: GraphProperty {
+    var influenceScore: Double
+    var communityId: Int
+    var isInfluencer: Bool { influenceScore > 0.8 }
+}
 
-### Composable Components and Algorithms
+// Create a graph with custom properties
+var socialGraph = AdjacencyList()
 
-This library is designed with composability in mind. 
-Similar to how Swift’s standard library transforms collections (e.g., `ReversedCollection`), this library provides efficient graph transformations such as `TransposedGraph` or `UndirectedGraph`. 
-Algorithms can be layered and extended dynamically.
+// Add vertices with social metrics
+let alice = socialGraph.addVertex { $0.influenceScore = 0.9; $0.communityId = 1 }
+let bob = socialGraph.addVertex { $0.influenceScore = 0.3; $0.communityId = 1 }
+let charlie = socialGraph.addVertex { $0.influenceScore = 0.7; $0.communityId = 2 }
 
-### Strong Defaults with Flexibility
+// Add weighted connections
+socialGraph.addEdge(from: alice, to: bob) { $0.weight = 0.8 }
+socialGraph.addEdge(from: alice, to: charlie) { $0.weight = 0.6 }
 
-Graphs in this library are directed by default, allowing for undirected (bidirectional) edges to be layered as transformations. 
-Sensible algorithm defaults are provided, so users can easily get started without needing to specify algorithms manually. 
-However, users retain the flexibility to override defaults with specific solutions when required.
+// Query using custom properties
+let influencers = socialGraph.vertices.filter { socialGraph[$0].isInfluencer }
+print("Influencers: \(influencers.map { socialGraph[$0].influenceScore })")
+```
 
-### Extensible Algorithms
+### Pluggable Storage Backends
 
-Algorithms in the library are built as abstract definitions with several built-in defaults. 
-However, the architecture allows users to plug in their own algorithms if needed. 
-For example, while Kruskal's and Prim's algorithms are provided for finding minimum spanning trees, users could implement their own reverse-delete algorithm, maintaining compatibility with the same API.
+I can easily swap storage backends based on graph characteristics:
 
-### Flexible Graph Declarations
+```swift
+// For sparse graphs - use adjacency list
+var sparseGraph = AdjacencyList()
+sparseGraph.add(edges: [("a", "b"), ("b", "c")])
 
-The foundation of the library is the `Graph` protocol, which requires only one method: defining the outgoing edges from a node. 
-This minimalist design enables a wide range of algorithms – such as traversals, shortest paths, and minimum spanning trees – without requiring a complex interface.
+// For dense graphs - use adjacency matrix
+var denseGraph = AdjacencyMatrix()
+denseGraph.add(edges: [
+    ("a", "b", 5), ("a", "c", 3), ("a", "d", 8),
+    ("b", "c", 2), ("b", "d", 4), ("c", "d", 1)
+])
 
-Multiple concrete graph types conform to this protocol, including eager representations (`ConnectedGraph`, `DisjointGraph`, `ConnectedBinaryGraph`, etc.) and optimized lazy evaluations (`LazyGraph`, `LazyBinaryGraph`). 
-Specialized types like `WeightedGraph` manage weighted edges, while `GridGraph` provides a convenient structure for 2D grid-based graphs.
+// For memory-constrained scenarios - use lazy evaluation
+let lazyGraph = LazyGraph { vertex in
+    // Compute neighbors on-demand
+    return computeNeighbors(for: vertex)
+}
+```
 
-## Contributions
+### Custom Algorithm Implementation
 
-While the core library provides a solid foundation, certain areas are still under development and not fully production-tested. 
-Contributions, suggestions, and feedback are highly encouraged. 
-Feel free to submit issues, start discussions for feature requests, and contribute code via pull requests.
+I can implement custom algorithms that leverage the pluggable architecture:
+
+```swift
+// Custom algorithm for finding influential nodes
+struct InfluenceRanking<Node, Edge>: GraphAlgorithm {
+    func findInfluencers(in graph: some GraphComponent<Node, Edge>) -> [Node] {
+        // Custom implementation using graph properties
+        return graph.vertices
+            .sorted { 
+                graph[$0].influenceScore > graph[$1].influenceScore 
+            }
+    }
+}
+
+// Use the custom algorithm
+let ranking = InfluenceRanking()
+let topInfluencers = ranking.findInfluencers(in: socialGraph)
+```
+
+### Graph Coloring with Different Strategies
+
+```swift
+// Create a complex graph
+var graph = AdjacencyList()
+graph.add(edges: [
+    ("a", "b"), ("a", "c"), ("b", "d"), ("c", "d"), 
+    ("d", "e"), ("e", "f"), ("f", "a")
+])
+
+// Try different coloring algorithms
+let greedyColoring = graph.colorGraph(using: .greedy())
+let dsaturColoring = graph.colorGraph(using: .dsatur())
+let welshPowellColoring = graph.colorGraph(using: .welshPowell())
+
+print("Greedy colors needed: \(greedyColoring.chromaticNumber)")
+print("DSatur colors needed: \(dsaturColoring.chromaticNumber)")
+print("Welsh-Powell colors needed: \(welshPowellColoring.chromaticNumber)")
+```
+
+### Minimum Spanning Tree with Different Algorithms
+
+```swift
+// Create a weighted graph
+var weightedGraph = AdjacencyList()
+weightedGraph.add(edges: [
+    ("a", "b", 4.0), ("a", "c", 2.0), ("b", "c", 1.0),
+    ("b", "d", 5.0), ("c", "d", 8.0), ("c", "e", 10.0),
+    ("d", "e", 2.0), ("d", "f", 6.0), ("e", "f", 3.0)
+])
+
+// Compare different MST algorithms
+let kruskalMST = weightedGraph.minimumSpanningTree(using: .kruskal())
+let primMST = weightedGraph.minimumSpanningTree(using: .prim())
+let boruvkaMST = weightedGraph.minimumSpanningTree(using: .boruvka())
+
+print("Kruskal MST weight: \(kruskalMST.totalWeight)")
+print("Prim MST weight: \(primMST.totalWeight)")
+print("Borůvka MST weight: \(boruvkaMST.totalWeight)")
+```
+
+### Random Graph Generation
+
+```swift
+// Generate different types of random graphs
+let erdosRenyi = ConnectedGraph.random(
+    vertices: 100, 
+    using: .erdosRenyi(edgeProbability: 0.1)
+)
+
+let barabasiAlbert = ConnectedGraph.random(
+    vertices: 100,
+    using: .barabasiAlbert(edgesPerVertex: 3)
+)
+
+let wattsStrogatz = ConnectedGraph.random(
+    vertices: 100,
+    using: .wattsStrogatz(neighbors: 4, rewiringProbability: 0.1)
+)
+
+// Analyze properties of generated graphs
+print("ER graph is connected: \(erdosRenyi.isConnected)")
+print("BA graph clustering: \(barabasiAlbert.clusteringCoefficient)")
+print("WS graph small world: \(wattsStrogatz.hasSmallWorldProperty)")
+```
+
+## 🏗️ Architecture
+
+Swift Graphs follows a **modular architecture** with clear separation of concerns between definitions and implementations:
+
+### **Graph Definitions** (Protocols)
+
+Core protocols defining graph capabilities:
+- `Graph` - Base protocol with vertex and edge descriptors
+- `IncidenceGraph` - Access to outgoing edges
+- `BidirectionalGraph` - Access to incoming edges
+- `VertexListGraph` / `EdgeListGraph` - Enumeration capabilities
+- `PropertyGraph` - Vertex and edge properties
+- `MutableGraph` - Dynamic modification
+
+### **Graph Implementations** (Concrete Types)
+
+Concrete data structures implementing protocols:
+- `AdjacencyList` - Sparse graphs (most common)
+- `AdjacencyMatrix` - Dense graphs, O(1) edge lookup
+- `BipartiteAdjacencyList` - Two-colored graphs
+- `GridGraph` - 2D spatial graphs
+- `LazyGraph` - Computed on-demand
+
+### **Algorithm Definitions** (Algorithm Protocols)
+
+Algorithm families as protocols:
+- `ShortestPathAlgorithm` - Pathfinding strategies
+- `TraversalAlgorithm` - Graph exploration
+- `ColoringAlgorithm` - Vertex coloring
+- `ConnectedComponentsAlgorithm` - Component detection
+- `MinimumSpanningTreeAlgorithm` - MST strategies
+
+### **Algorithm Implementations** (Concrete Algorithms)
+
+Specific algorithm implementations:
+- Dijkstra, A*, Bellman-Ford (shortest paths)
+- DFS, BFS (traversal)
+- Greedy, DSatur (coloring)
+- Kruskal, Prim (MST)
+
+### **Cross-Cutting Concerns**
+
+**Storage Backends** (Pluggable):
+- `VertexStorage` - How vertices are stored
+- `EdgeStorage` - How edges are stored
+- Swap implementations without changing algorithms
+
+**Property Systems** (Pluggable):
+- `PropertyMap` - Associates data with vertices/edges
+- `DictionaryPropertyMap` - Hash-based storage
+- `ComputedPropertyGraph` - On-demand computation
+
+### **Protocol-Based Design Example**
+
+The library uses Swift's protocol system to provide compile-time safety:
+
+```swift
+// Algorithm requires specific graph capabilities
+extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+    func shortestPath<Weight: Numeric & Comparable>(
+        from source: VertexDescriptor,
+        to destination: VertexDescriptor,
+        using algorithm: some ShortestPathAlgorithm<Self, Weight>
+    ) -> Path<VertexDescriptor, EdgeDescriptor>?
+}
+
+// Usage - type system ensures correctness
+let path = graph.shortestPath(
+    from: start,
+    to: goal,
+    using: .dijkstra(weight: .property(\.weight))  // Choose algorithm at call site
+)
+```
+
+This architecture enables:
+- **Separation of concerns** - Structure, data, and algorithms are independent
+- **Pluggability** - Swap components without breaking code
+- **Type safety** - Compiler catches incompatibilities
+- **Extensibility** - Add new components without modifying existing ones
+
+## 📊 Performance
+
+Swift Graphs is designed for high performance:
+
+- **Zero-cost abstractions** where possible
+- **Efficient memory usage** with specialized storage backends
+- **Optimized algorithms** with careful attention to complexity
+- **Lazy evaluation** for memory-efficient large graph processing
+
+## 🤝 Contributing
+
+I welcome contributions! Please see my [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+### Development Setup
+
+1. Clone the repository
+2. Open in Xcode or use Swift Package Manager
+3. Run tests: `swift test`
+4. Format code: `swift format`
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
+
+## 🙏 Acknowledgments
+
+- Inspired by the [Boost Graph Library](https://www.boost.org/doc/libs/1_82_0/libs/graph/doc/)
+- Built with [Swift Collections](https://github.com/apple/swift-collections) and [Swift Algorithms](https://github.com/apple/swift-algorithms)
+- Community feedback and contributions
+
+<!-- ## 📖 Documentation
+
+- [API Reference](https://tevelee.github.io/swift-graphs/)
+- [Algorithm Guide](docs/algorithms.md)
+- [Performance Guide](docs/performance.md)
+- [Examples](Examples/)
+-->
+
+---
+
+**Made with ❤️ for the Swift community**
+

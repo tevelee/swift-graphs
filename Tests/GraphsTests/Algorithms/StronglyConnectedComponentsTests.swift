@@ -1,0 +1,169 @@
+@testable import Graphs
+import Testing
+
+struct StronglyConnectedComponentsTests {
+    
+    @Test func testTarjanBasic() {
+        var graph = AdjacencyList()
+        
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        
+        // Create a cycle: A -> B -> C -> A
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: c)
+        graph.addEdge(from: c, to: a)
+        
+        let tarjan = Tarjan(on: graph)
+        let result = tarjan.stronglyConnectedComponents(visitor: nil)
+        
+        // Should have one SCC containing all three vertices
+        #expect(result.componentCount == 1)
+        #expect(result.components[0].count == 3)
+    }
+    
+    @Test func testKosarajuBasic() {
+        var graph = AdjacencyList()
+        
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        
+        // Create a cycle: A -> B -> C -> A
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: c)
+        graph.addEdge(from: c, to: a)
+        
+        let kosaraju = Kosaraju(on: graph)
+        let result = kosaraju.stronglyConnectedComponents(visitor: nil)
+        
+        // Should have one SCC containing all three vertices
+        #expect(result.componentCount == 1)
+        #expect(result.components[0].count == 3)
+    }
+    
+    @Test func testTarjanDisconnected() {
+        var graph = AdjacencyList()
+        
+        graph.addVertex { $0.label = "A" }
+        graph.addVertex { $0.label = "B" }
+        graph.addVertex { $0.label = "C" }
+        
+        // No edges - each vertex is its own SCC
+        let tarjan = Tarjan(on: graph)
+        let result = tarjan.stronglyConnectedComponents(visitor: nil)
+        
+        // Each vertex should be its own SCC
+        #expect(result.componentCount == 3)
+        
+        for component in result.components {
+            #expect(component.count == 1)
+        }
+    }
+    
+    @Test func testKosarajuDisconnected() {
+        var graph = AdjacencyList()
+        
+        graph.addVertex { $0.label = "A" }
+        graph.addVertex { $0.label = "B" }
+        graph.addVertex { $0.label = "C" }
+        
+        // No edges - each vertex is its own SCC
+        let kosaraju = Kosaraju(on: graph)
+        let result = kosaraju.stronglyConnectedComponents(visitor: nil)
+        
+        // Each vertex should be its own SCC
+        #expect(result.componentCount == 3)
+        
+        for component in result.components {
+            #expect(component.count == 1)
+        }
+    }
+    
+    @Test func testTarjanMultipleSCCs() {
+        var graph = AdjacencyList()
+        
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        let e = graph.addVertex { $0.label = "E" }
+        let f = graph.addVertex { $0.label = "F" }
+        
+        // First SCC: A -> B -> A
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: a)
+        
+        // Second SCC: C -> D -> E -> C
+        graph.addEdge(from: c, to: d)
+        graph.addEdge(from: d, to: e)
+        graph.addEdge(from: e, to: c)
+        
+        // Third SCC: F (single vertex)
+        // No edges for F
+        
+        // Connect SCCs
+        graph.addEdge(from: a, to: c)
+        graph.addEdge(from: c, to: f)
+        
+        let tarjan = Tarjan(on: graph)
+        let result = tarjan.stronglyConnectedComponents(visitor: nil)
+        
+        // Should have three SCCs
+        #expect(result.componentCount == 3)
+        
+        // Find components by size
+        let singleVertexComponent = result.components.first { $0.count == 1 }!
+        let twoVertexComponent = result.components.first { $0.count == 2 }!
+        let threeVertexComponent = result.components.first { $0.count == 3 }!
+        
+        // Verify component sizes
+        #expect(singleVertexComponent.count == 1)
+        #expect(twoVertexComponent.count == 2)
+        #expect(threeVertexComponent.count == 3)
+    }
+    
+    @Test func testKosarajuMultipleSCCs() {
+        var graph = AdjacencyList()
+        
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        let e = graph.addVertex { $0.label = "E" }
+        let f = graph.addVertex { $0.label = "F" }
+        
+        // First SCC: A -> B -> A
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: a)
+        
+        // Second SCC: C -> D -> E -> C
+        graph.addEdge(from: c, to: d)
+        graph.addEdge(from: d, to: e)
+        graph.addEdge(from: e, to: c)
+        
+        // Third SCC: F (single vertex)
+        // No edges for F
+        
+        // Connect SCCs
+        graph.addEdge(from: a, to: c)
+        graph.addEdge(from: c, to: f)
+        
+        let kosaraju = Kosaraju(on: graph)
+        let result = kosaraju.stronglyConnectedComponents(visitor: nil)
+        
+        // Should have three SCCs
+        #expect(result.componentCount == 3)
+        
+        // Find components by size
+        let singleVertexComponent = result.components.first { $0.count == 1 }!
+        let twoVertexComponent = result.components.first { $0.count == 2 }!
+        let threeVertexComponent = result.components.first { $0.count == 3 }!
+        
+        // Verify component sizes
+        #expect(singleVertexComponent.count == 1)
+        #expect(twoVertexComponent.count == 2)
+        #expect(threeVertexComponent.count == 3)
+    }
+}

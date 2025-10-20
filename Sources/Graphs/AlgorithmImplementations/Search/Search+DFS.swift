@@ -1,0 +1,42 @@
+extension SearchAlgorithm {
+    /// Creates a depth-first search algorithm.
+    ///
+    /// - Returns: A DFS search algorithm instance.
+    @inlinable
+    public static func dfs<Graph>() -> Self where Self == DFSSearch<Graph> {
+        .init()
+    }
+}
+
+/// A depth-first search algorithm implementation for the SearchAlgorithm protocol.
+///
+/// This struct wraps the core DFS algorithm to provide a SearchAlgorithm interface,
+/// making it easy to use DFS as a general search algorithm.
+///
+/// - Complexity: O(V + E) where V is the number of vertices and E is the number of edges
+public struct DFSSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
+    /// The visitor type for observing search progress.
+    public typealias Visitor = DepthFirstSearch<Graph>.Visitor
+    
+    /// Creates a new DFS search algorithm.
+    @inlinable
+    public init() {}
+    
+    /// Performs a depth-first search from the source vertex.
+    ///
+    /// - Parameters:
+    ///   - source: The vertex to start search from.
+    ///   - graph: The graph to search in.
+    ///   - visitor: An optional visitor to observe the search progress.
+    /// - Returns: A DFS algorithm instance.
+    @inlinable
+    public func search(
+        from source: Graph.VertexDescriptor,
+        in graph: Graph,
+        visitor: Visitor?
+    ) -> DepthFirstSearch<Graph> {
+        DepthFirstSearch(on: graph, from: source)
+    }
+}
+
+extension DFSSearch: VisitorSupporting {}
