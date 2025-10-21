@@ -23,8 +23,13 @@ extension MutableGraph where Self: VertexStorageBackedGraph & EdgeStorageBackedG
     @inlinable
     public mutating func addVertex() -> VertexDescriptor { vertexStore.addVertex() }
 
+    #if swift(>=6.2)
     @inlinable
     public mutating func remove(edge: consuming EdgeDescriptor) { edgeStore.remove(edge: edge) }
+    #else
+    @inlinable
+    public mutating func remove(edge: EdgeDescriptor) { edgeStore.remove(edge: edge) }
+    #endif
 }
 
 extension MutableGraph where Self: VertexStorageBackedGraph & EdgeStorageBackedGraph & IncidenceGraph {
@@ -35,20 +40,37 @@ extension MutableGraph where Self: VertexStorageBackedGraph & EdgeStorageBackedG
         return edgeStore.addEdge(from: source, to: destination)
     }
 
+    #if swift(>=6.2)
     @inlinable
     public mutating func remove(vertex: consuming VertexDescriptor) {
         for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
         vertexStore.remove(vertex: vertex)
     }
+    #else
+    @inlinable
+    public mutating func remove(vertex: VertexDescriptor) {
+        for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
+        vertexStore.remove(vertex: vertex)
+    }
+    #endif
 }
 
 extension MutableGraph where Self: VertexStorageBackedGraph & EdgeStorageBackedGraph & BidirectionalGraph {
+    #if swift(>=6.2)
     @inlinable
     public mutating func remove(vertex: consuming VertexDescriptor) {
         for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
         for edge in incomingEdges(of: vertex) { remove(edge: edge) }
         vertexStore.remove(vertex: vertex)
     }
+    #else
+    @inlinable
+    public mutating func remove(vertex: VertexDescriptor) {
+        for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
+        for edge in incomingEdges(of: vertex) { remove(edge: edge) }
+        vertexStore.remove(vertex: vertex)
+    }
+    #endif
 }
 
 

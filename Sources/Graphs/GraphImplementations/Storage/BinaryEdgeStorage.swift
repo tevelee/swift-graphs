@@ -93,6 +93,7 @@ extension BinaryEdgeStore: EdgeStorage {
         }
     }
     
+    #if swift(>=6.2)
     @inlinable
     public mutating func remove(edge: consuming Edge) {
         guard let endpoints = edgesStore.removeValue(forKey: edge) else { return }
@@ -104,6 +105,19 @@ extension BinaryEdgeStore: EdgeStorage {
             rightEdgeMap.removeValue(forKey: parent)
         }
     }
+    #else
+    @inlinable
+    public mutating func remove(edge: Edge) {
+        guard let endpoints = edgesStore.removeValue(forKey: edge) else { return }
+        let parent = endpoints.source
+        if leftEdgeMap[parent] == edge {
+            leftEdgeMap.removeValue(forKey: parent)
+        }
+        if rightEdgeMap[parent] == edge {
+            rightEdgeMap.removeValue(forKey: parent)
+        }
+    }
+    #endif
 }
 
 extension BinaryEdgeStore: BinaryEdgeStorage {

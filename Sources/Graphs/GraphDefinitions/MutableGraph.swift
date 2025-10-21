@@ -11,7 +11,11 @@ public protocol VertexMutableGraph: Graph {
     /// Removes a vertex from the graph.
     ///
     /// - Parameter vertex: The vertex to remove
+    #if swift(>=6.2)
     mutating func remove(vertex: consuming VertexDescriptor)
+    #else
+    mutating func remove(vertex: VertexDescriptor)
+    #endif
 }
 
 /// A protocol for graphs that support adding and removing edges.
@@ -31,7 +35,11 @@ public protocol EdgeMutableGraph: Graph {
     /// Removes an edge from the graph.
     ///
     /// - Parameter edge: The edge to remove
+    #if swift(>=6.2)
     mutating func remove(edge: consuming EdgeDescriptor)
+    #else
+    mutating func remove(edge: EdgeDescriptor)
+    #endif
 }
 
 /// A protocol for graphs that support both vertex and edge modification.

@@ -137,6 +137,7 @@ extension AdjacencyMatrix: MutableGraph {
         return e
     }
 
+    #if swift(>=6.2)
     @inlinable
     public mutating func remove(edge: consuming Edge) {
         guard let ep = edgesStore.removeValue(forKey: edge) else { return }
@@ -147,6 +148,18 @@ extension AdjacencyMatrix: MutableGraph {
             edgeLookup[ep.source] = nil
         }
     }
+    #else
+    @inlinable
+    public mutating func remove(edge: Edge) {
+        guard let ep = edgesStore.removeValue(forKey: edge) else { return }
+        if let i = index(of: ep.source), let j = index(of: ep.destination) { matrix[i][j] = false }
+        // Update the O(1) lookup table
+        edgeLookup[ep.source]?[ep.destination] = nil
+        if edgeLookup[ep.source]?.isEmpty == true {
+            edgeLookup[ep.source] = nil
+        }
+    }
+    #endif
 
     @inlinable
     public mutating func addVertex() -> Vertex {
@@ -160,6 +173,7 @@ extension AdjacencyMatrix: MutableGraph {
         return v
     }
 
+    #if swift(>=6.2)
     @inlinable
     public mutating func remove(vertex: consuming Vertex) {
         guard let idx = index(of: vertex) else { return }
@@ -181,6 +195,29 @@ extension AdjacencyMatrix: MutableGraph {
         for i in 0 ..< matrix.count { matrix[i].remove(at: idx) }
         verticesStore.remove(vertex)
     }
+    #else
+    @inlinable
+    public mutating func remove(vertex: Vertex) {
+        guard let idx = index(of: vertex) else { return }
+        // Remove incident edges
+        for e in outgoingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
+        for e in incomingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
+        // Clean up the O(1) lookup table
+        edgeLookup[vertex] = nil
+        for (source, var destinations) in edgeLookup {
+            destinations[vertex] = nil
+            if destinations.isEmpty {
+                edgeLookup[source] = nil
+            } else {
+                edgeLookup[source] = destinations
+            }
+        }
+        // Remove row and column
+        matrix.remove(at: idx)
+        for i in 0 ..< matrix.count { matrix[i].remove(at: idx) }
+        verticesStore.remove(vertex)
+    }
+    #endif
 }
 
 extension AdjacencyMatrix: AdjacencyGraph {

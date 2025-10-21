@@ -150,6 +150,7 @@ extension BipartiteAdjacencyList: MutableBipartiteGraph {
         addVertex(to: .left)
     }
     
+    #if swift(>=6.2)
     @inlinable
     public mutating func remove(vertex: consuming VertexDescriptor) {
         // Remove all edges connected to this vertex
@@ -163,6 +164,21 @@ extension BipartiteAdjacencyList: MutableBipartiteGraph {
         vertexPartitions.removeValue(forKey: vertex)
         vertexStore.remove(vertex: vertex)
     }
+    #else
+    @inlinable
+    public mutating func remove(vertex: VertexDescriptor) {
+        // Remove all edges connected to this vertex
+        for edge in outgoingEdges(of: vertex) {
+            remove(edge: edge)
+        }
+        for edge in incomingEdges(of: vertex) {
+            remove(edge: edge)
+        }
+        
+        vertexPartitions.removeValue(forKey: vertex)
+        vertexStore.remove(vertex: vertex)
+    }
+    #endif
     
     @discardableResult
     @inlinable

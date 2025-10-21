@@ -88,10 +88,17 @@ extension ComputedVertexPropertyGraph: EdgeMutableGraph where Base: EdgeMutableG
         base.addEdge(from: source, to: destination)
     }
     
+    #if swift(>=6.2)
     @inlinable
     public mutating func remove(edge: consuming EdgeDescriptor) {
         base.remove(edge: edge)
     }
+    #else
+    @inlinable
+    public mutating func remove(edge: EdgeDescriptor) {
+        base.remove(edge: edge)
+    }
+    #endif
 }
 
 extension ComputedVertexPropertyGraph: VertexMutableGraph where Base: VertexMutableGraph {
@@ -100,10 +107,17 @@ extension ComputedVertexPropertyGraph: VertexMutableGraph where Base: VertexMuta
         base.addVertex()
     }
     
+    #if swift(>=6.2)
     @inlinable
     public mutating func remove(vertex: consuming VertexDescriptor) {
         base.remove(vertex: vertex)
     }
+    #else
+    @inlinable
+    public mutating func remove(vertex: VertexDescriptor) {
+        base.remove(vertex: vertex)
+    }
+    #endif
 }
 
 extension ComputedVertexPropertyGraph: EdgePropertyGraph where Base: EdgePropertyGraph {
