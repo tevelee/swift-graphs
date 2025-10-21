@@ -1,5 +1,3 @@
-import Foundation
-
 /// A protocol for graph isomorphism algorithms
 public protocol IsomorphismAlgorithm<Graph> {
     /// The graph type that this algorithm operates on.

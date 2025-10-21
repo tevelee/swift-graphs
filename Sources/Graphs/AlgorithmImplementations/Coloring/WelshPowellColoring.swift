@@ -1,5 +1,3 @@
-import Foundation
-
 /// A Welsh-Powell graph coloring algorithm.
 ///
 /// This algorithm sorts vertices by degree in descending order and then colors them,

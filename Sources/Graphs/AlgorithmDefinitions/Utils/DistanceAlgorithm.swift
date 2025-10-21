@@ -1,6 +1,3 @@
-import Foundation
-import simd
-
 /// A distance calculation algorithm for geometric coordinates.
 ///
 /// DistanceAlgorithm provides various distance calculation methods for coordinates,
@@ -13,6 +10,9 @@ public struct DistanceAlgorithm<Coordinate, Distance> {
         self.calculateDistance = calculateDistance
     }
 }
+
+#if canImport(simd)
+import simd
 
 extension DistanceAlgorithm {
     /// Creates a Euclidean distance calculator for SIMD vectors.
@@ -69,3 +69,4 @@ extension SIMD where Scalar: FloatingPoint {
         self * self
     }
 }
+#endif

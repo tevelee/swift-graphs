@@ -1,5 +1,3 @@
-import Foundation
-
 /// A protocol for algorithms that perform graph coloring.
 public protocol ColoringAlgorithm<Graph, Color> {
     /// The graph type that this algorithm operates on.

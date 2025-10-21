@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for sequential vertex coloring algorithm visitors.
 extension SequentialVertexColoringAlgorithm.Visitor: Composable {
     /// Combines this visitor with another visitor.

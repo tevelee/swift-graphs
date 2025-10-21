@@ -19,20 +19,20 @@ Swift Graphs provides flexible graph representations with a small core API and e
 
 New to Swift Graphs? Start here:
 
-- <doc:GettingStarted> - Installation and your first graph
-- <doc:Concepts/GraphConcepts> - Understanding graphs, vertices, and edges
-- <doc:Concepts/ChoosingGraphType> - Selecting the right graph implementation
+- <doc:GettingStarted>
+- <doc:Concepts/GraphConcepts>
+- <doc:Concepts/ChoosingGraphType>
 
 ## Core Concepts
 
 Learn the foundational ideas behind Swift Graphs:
 
-- <doc:Concepts/ProtocolOrientedDesign> - Graph concepts as protocols
-- <doc:Concepts/Architecture> - Four-layer architecture overview
-- <doc:Concepts/PluggableArchitecture> - Swappable components and extensibility
-- <doc:Concepts/PropertiesAndPropertyMaps> - Associating data with graphs
-- <doc:Concepts/AlgorithmInterfaces> - Algorithm protocols and strategy pattern
-- <doc:Concepts/VisitorPattern> - Observing and customizing algorithms
+- <doc:Concepts/ProtocolOrientedDesign>
+- <doc:Concepts/Architecture>
+- <doc:Concepts/PluggableArchitecture>
+- <doc:Concepts/PropertiesAndPropertyMaps>
+- <doc:Concepts/AlgorithmInterfaces>
+- <doc:Concepts/VisitorPattern>
 
 ## Graph Types
 
@@ -44,11 +44,11 @@ Swift Graphs provides multiple graph implementations optimized for different use
 - ``AdjacencyMatrix`` - Dense graphs with O(1) edge lookup
 - ``BipartiteAdjacencyList`` - Two-colored graphs for matching problems
 - ``GridGraph`` - 2D spatial graphs for pathfinding
-- ``LazyGraph`` - On-demand computation for large graphs
+- ``LazyIncidenceGraph`` - On-demand computation for large graphs
 
 ### Choosing a Graph Type
 
-See <doc:Concepts/ChoosingGraphType> for detailed guidance on selecting the right implementation for your use case.
+See <doc:Concepts/ChoosingGraphType> for detailed guidance.
 
 ## Algorithms
 
@@ -71,7 +71,7 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 
 ### Graph Analysis
 
-- <doc:Algorithms/ConnectedComponents> - Find connected subgraphs
+- **Connected Components** - Find connected subgraphs
 - **Strongly Connected Components** - Directed graph components
 - **Cycle Detection** - Identify cycles in graphs
 - **Planarity Testing** - Boyer-Myrvold algorithm
@@ -87,7 +87,7 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 
 ### Special Paths
 
-- <doc:Algorithms/EulerianPaths> - Visit every edge exactly once
+- **Eulerian Paths** - Visit every edge exactly once
 - **Hamiltonian Paths** - Visit every vertex exactly once
 - **K-Shortest Paths** - Find multiple paths
 
@@ -120,7 +120,7 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 - ``AdjacencyMatrix``
 - ``BipartiteAdjacencyList``
 - ``GridGraph``
-- ``LazyGraph``
+- ``LazyIncidenceGraph``
 
 ### Graph Protocols
 
@@ -136,8 +136,6 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 ### Algorithms
 
 - <doc:AlgorithmsCatalog>
-- <doc:Algorithms/ConnectedComponents>
-- <doc:Algorithms/EulerianPaths>
 
 ### Supporting Types
 

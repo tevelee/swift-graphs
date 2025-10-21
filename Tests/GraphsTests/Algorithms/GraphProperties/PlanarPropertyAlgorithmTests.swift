@@ -1,5 +1,4 @@
 import Testing
-import Foundation
 @testable import Graphs
 
 struct PlanarPropertyAlgorithmTests {
@@ -251,33 +250,5 @@ struct PlanarPropertyAlgorithmTests {
         #expect(k33Euler == k33LeftRight)
         #expect(k33LeftRight == k33Hopcroft)
         #expect(k33Hopcroft == k33Boyer)
-    }
-    
-    // MARK: - Performance Tests
-    
-    @Test func testPerformanceComparison() {
-        let graph = createPlanarGraph()
-        
-        // This is a basic performance test - in practice, you'd want more sophisticated benchmarking
-        let startTime = Date()
-        
-        for _ in 0..<100 {
-            _ = graph.isPlanar(using: .eulerFormula())
-        }
-        
-        let eulerTime = Date().timeIntervalSince(startTime)
-        
-        // The other algorithms should be reasonably fast too
-        let startTime2 = Date()
-        
-        for _ in 0..<100 {
-            _ = graph.isPlanar(using: .leftRight())
-        }
-        
-        let leftRightTime = Date().timeIntervalSince(startTime2)
-        
-        // Basic assertion that both complete in reasonable time
-        #expect(eulerTime < 1.0) // Should complete in less than 1 second
-        #expect(leftRightTime < 1.0) // Should complete in less than 1 second
     }
 }

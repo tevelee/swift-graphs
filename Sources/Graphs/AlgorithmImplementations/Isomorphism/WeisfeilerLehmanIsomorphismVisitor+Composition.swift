@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Weisfeiler-Lehman isomorphism algorithm visitors.
 extension WeisfeilerLehmanIsomorphism.Visitor: Composable {
     /// Combines this visitor with another visitor.

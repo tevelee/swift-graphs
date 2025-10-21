@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for backtracking Hamiltonian path algorithm visitors.
 extension BacktrackingHamiltonian.Visitor: Composable {
     /// Combines this visitor with another visitor.

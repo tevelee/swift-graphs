@@ -1,7 +1,3 @@
-import Foundation
-
-// MARK: - Eulerian Path and Cycle Extensions
-
 extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, VertexDescriptor: Hashable {
     /// Checks if the graph has an Eulerian path using connectivity + degree conditions.
     /// A graph has an Eulerian path if and only if:

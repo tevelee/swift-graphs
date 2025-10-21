@@ -1,5 +1,3 @@
-import Foundation
-
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Detects communities using the specified algorithm.
     ///

@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Kosaraju's algorithm visitors.
 extension Kosaraju.Visitor: Composable {
     /// Combines this visitor with another visitor.

@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Tarjan's algorithm visitors.
 extension Tarjan.Visitor: Composable {
     /// Combines this visitor with another visitor.

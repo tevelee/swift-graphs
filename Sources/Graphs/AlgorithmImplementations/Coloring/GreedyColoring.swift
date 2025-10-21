@@ -1,5 +1,3 @@
-import Foundation
-
 /// A greedy graph coloring algorithm.
 ///
 /// This algorithm colors vertices one by one, assigning each vertex the smallest

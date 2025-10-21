@@ -1,5 +1,3 @@
-import Foundation
-
 extension ShortestPathsForAllPairsAlgorithm {
     /// Creates a Johnson algorithm for computing all-pairs shortest paths.
     ///

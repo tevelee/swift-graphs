@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for DFS connected components algorithm visitors.
 extension DFSConnectedComponents.Visitor: Composable {
     /// Combines this visitor with another visitor.

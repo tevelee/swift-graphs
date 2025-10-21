@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Kahn's algorithm visitors.
 extension Kahn.Visitor: Composable {
     /// Combines this visitor with another visitor.

@@ -1,5 +1,3 @@
-import Foundation
-
 extension MaxFlowAlgorithm {
     /// Creates a Ford-Fulkerson maximum flow algorithm.
     ///

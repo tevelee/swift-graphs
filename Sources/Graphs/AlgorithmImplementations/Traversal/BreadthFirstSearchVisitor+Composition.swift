@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for breadth-first search visitors.
 extension BreadthFirstSearch.Visitor: Composable {
     /// Combines this visitor with another visitor.

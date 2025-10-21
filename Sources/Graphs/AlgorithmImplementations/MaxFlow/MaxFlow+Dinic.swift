@@ -1,5 +1,3 @@
-import Foundation
-
 extension MaxFlowAlgorithm {
     /// Creates a Dinic's maximum flow algorithm.
     ///

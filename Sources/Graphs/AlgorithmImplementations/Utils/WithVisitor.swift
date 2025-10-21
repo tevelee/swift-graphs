@@ -1,5 +1,3 @@
-import Foundation
-
 /// A protocol for types that support visitors.
 public protocol VisitorSupporting {
     associatedtype Visitor: Composable where Visitor.Other == Visitor

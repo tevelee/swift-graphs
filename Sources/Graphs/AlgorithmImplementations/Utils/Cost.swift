@@ -1,5 +1,3 @@
-import Foundation
-
 /// Represents a cost that can be either finite or infinite.
 public enum Cost<Weight> {
     case infinite

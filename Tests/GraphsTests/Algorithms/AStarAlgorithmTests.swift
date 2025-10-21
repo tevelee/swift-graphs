@@ -1,6 +1,7 @@
 @testable import Graphs
 import Testing
 
+#if canImport(simd)
 struct AStarTests {
     @Test func findsShortestPathWithHeuristic() {
         var graph = AdjacencyList()
@@ -34,5 +35,4 @@ struct AStarTests {
         #expect(res?.vertices(to: d, in: graph) == [a, c, d])
     }
 }
-
-
+#endif

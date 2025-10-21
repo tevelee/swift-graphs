@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for A* algorithm visitors.
 extension AStar.Visitor: Composable {
     /// Combines this visitor with another visitor.

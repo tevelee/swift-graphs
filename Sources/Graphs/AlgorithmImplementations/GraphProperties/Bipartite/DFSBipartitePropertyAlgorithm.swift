@@ -1,5 +1,3 @@
-import Foundation
-
 /// DFS-based algorithm for checking if a graph is bipartite.
 public struct DFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = DFSBipartiteProperty<Graph>.Visitor

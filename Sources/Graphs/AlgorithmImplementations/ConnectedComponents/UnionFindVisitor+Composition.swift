@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Union-Find connected components algorithm visitors.
 extension UnionFindConnectedComponents.Visitor: Composable {
     /// Combines this visitor with another visitor.

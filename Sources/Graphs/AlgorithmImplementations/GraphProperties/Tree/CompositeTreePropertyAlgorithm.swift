@@ -1,5 +1,3 @@
-import Foundation
-
 /// Composite algorithm for checking if a graph is a tree using separate connected and cyclic algorithms.
 public struct CompositeTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = CompositeTreeProperty<Graph>.Visitor

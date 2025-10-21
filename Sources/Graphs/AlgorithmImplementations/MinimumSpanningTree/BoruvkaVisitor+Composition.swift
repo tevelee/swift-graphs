@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Boruvka's algorithm visitors.
 extension Boruvka.Visitor: Composable {
     /// Combines this visitor with another visitor.

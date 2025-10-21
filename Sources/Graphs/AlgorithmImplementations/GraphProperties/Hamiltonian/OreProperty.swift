@@ -1,5 +1,3 @@
-import Foundation
-
 /// Ore property visitor for Hamiltonian cycle algorithms.
 public struct OreProperty<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph> where Graph.VertexDescriptor: Hashable {
     /// A visitor that can be used to observe Ore property algorithm progress.

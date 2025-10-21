@@ -1,5 +1,3 @@
-import Foundation
-
 extension PlanarPropertyAlgorithm {
     /// Creates a Hopcroft-Tarjan planar property algorithm.
     ///

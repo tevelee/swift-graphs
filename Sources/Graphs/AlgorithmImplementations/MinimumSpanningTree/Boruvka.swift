@@ -1,5 +1,3 @@
-import Foundation
-
 /// Borůvka's algorithm for finding minimum spanning trees.
 ///
 /// This algorithm finds the MST by repeatedly finding the minimum weight edge

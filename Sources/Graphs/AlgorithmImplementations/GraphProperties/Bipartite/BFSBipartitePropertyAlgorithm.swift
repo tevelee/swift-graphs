@@ -1,5 +1,3 @@
-import Foundation
-
 /// BFS-based algorithm for checking if a graph is bipartite.
 public struct BFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = BFSBipartiteProperty<Graph>.Visitor

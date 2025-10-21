@@ -1,5 +1,3 @@
-import Foundation
-
 /// Prim's algorithm for finding minimum spanning trees.
 ///
 /// This algorithm finds the MST by starting from a vertex and greedily adding

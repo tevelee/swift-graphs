@@ -230,26 +230,23 @@ Now that you've created your first graph, explore these topics:
 
 ### Learn Core Concepts
 
-- <doc:Concepts/GraphConcepts> - Deep dive into graph theory
-- <doc:Concepts/ProtocolOrientedDesign> - Understand the design philosophy
-- <doc:Concepts/PropertiesAndPropertyMaps> - Custom properties and data
+- <doc:Concepts/GraphConcepts>
+- <doc:Concepts/ProtocolOrientedDesign>
+- <doc:Concepts/PropertiesAndPropertyMaps>
 
 ### Choose the Right Graph Type
 
-- <doc:Concepts/ChoosingGraphType> - Decision guide for graph implementations
-- Different graph types optimize for different use cases
+- <doc:Concepts/ChoosingGraphType>
 
 ### Explore Algorithms
 
-- <doc:AlgorithmsCatalog> - Complete guide to all algorithms
-- <doc:Algorithms/ConnectedComponents> - Find connected subgraphs
-- <doc:Algorithms/EulerianPaths> - Visit every edge once
+- <doc:AlgorithmsCatalog>
 
 ### Advanced Topics
 
-- <doc:Concepts/AlgorithmInterfaces> - Create custom algorithms
-- <doc:Concepts/VisitorPattern> - Observe algorithm execution
-- <doc:Concepts/PluggableArchitecture> - Extend the library
+- <doc:Concepts/AlgorithmInterfaces>
+- <doc:Concepts/VisitorPattern>
+- <doc:Concepts/PluggableArchitecture>
 
 ## Common Patterns
 

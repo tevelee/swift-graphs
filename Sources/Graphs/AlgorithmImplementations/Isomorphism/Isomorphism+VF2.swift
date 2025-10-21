@@ -1,5 +1,3 @@
-import Foundation
-
 extension IsomorphismAlgorithm where Graph: IncidenceGraph & VertexListGraph & EdgeListGraph {
     /// Creates a VF2 isomorphism algorithm.
     ///

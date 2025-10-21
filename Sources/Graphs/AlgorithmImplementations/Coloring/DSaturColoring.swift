@@ -1,5 +1,3 @@
-import Foundation
-
 /// A DSatur (Degree of Saturation) graph coloring algorithm.
 ///
 /// This algorithm colors vertices based on their saturation degree (number of different colors

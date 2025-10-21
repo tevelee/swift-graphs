@@ -1,5 +1,3 @@
-import Foundation
-
 /// Weisfeiler-Lehman algorithm for graph isomorphism.
 /// This algorithm uses iterative vertex labeling based on neighborhood structure
 /// to determine if two graphs are isomorphic. It's a fast heuristic that works

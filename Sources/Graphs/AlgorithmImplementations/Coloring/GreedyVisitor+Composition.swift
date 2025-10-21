@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for greedy coloring algorithm visitors.
 extension GreedyColoringAlgorithm.Visitor: Composable {
     /// Combines this visitor with another visitor.

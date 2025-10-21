@@ -1,5 +1,3 @@
-import Foundation
-
 /// A protocol for maximum flow algorithms.
 public protocol MaxFlowAlgorithm<Graph, Flow> {
     /// The graph type that this algorithm operates on.

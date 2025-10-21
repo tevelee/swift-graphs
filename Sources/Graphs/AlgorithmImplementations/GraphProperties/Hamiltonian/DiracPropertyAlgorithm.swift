@@ -1,5 +1,3 @@
-import Foundation
-
 /// Standard implementation of Dirac's theorem for Hamiltonian cycles.
 public struct StandardDiracPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = DiracProperty<Graph>.Visitor

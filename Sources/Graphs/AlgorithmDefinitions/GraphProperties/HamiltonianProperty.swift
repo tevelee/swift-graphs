@@ -1,5 +1,3 @@
-import Foundation
-
 extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, VertexDescriptor: Hashable {
     /// Checks if the graph has a Hamiltonian cycle using a hybrid approach:
     /// 1. First tries quick theorem checks (Dirac/Ore)

@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Kruskal's algorithm visitors.
 extension Kruskal.Visitor: Composable {
     /// Combines this visitor with another visitor.

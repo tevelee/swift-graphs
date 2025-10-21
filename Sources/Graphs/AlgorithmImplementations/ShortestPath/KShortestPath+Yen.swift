@@ -1,5 +1,3 @@
-import Foundation
-
 extension KShortestPathsAlgorithm where Weight: AdditiveArithmetic {
     /// Creates a Yen k-shortest paths algorithm.
     ///

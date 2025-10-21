@@ -1,5 +1,3 @@
-import Foundation
-
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Finds maximal cliques using the specified algorithm.
     ///

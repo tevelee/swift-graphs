@@ -1,5 +1,3 @@
-import Foundation
-
 /// Sequential Vertex Coloring algorithm that uses vertex ordering.
 /// 
 /// This algorithm assigns colors to vertices in a specific order, ensuring that no two

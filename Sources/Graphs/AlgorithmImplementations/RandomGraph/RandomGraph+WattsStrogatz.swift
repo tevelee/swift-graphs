@@ -1,5 +1,3 @@
-import Foundation
-
 extension WattsStrogatz: RandomGraphAlgorithm {}
 
 extension RandomGraphAlgorithm {

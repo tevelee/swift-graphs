@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Edmonds-Karp algorithm visitors.
 extension EdmondsKarp.Visitor: Composable {
     /// Combines this visitor with another visitor.

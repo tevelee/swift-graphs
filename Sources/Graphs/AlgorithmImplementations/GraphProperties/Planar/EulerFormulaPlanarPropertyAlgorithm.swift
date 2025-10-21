@@ -1,5 +1,3 @@
-import Foundation
-
 /// Euler formula-based algorithm for planar graph detection.
 /// This algorithm uses Euler's formula and Kuratowski's theorem for planarity testing.
 public struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {

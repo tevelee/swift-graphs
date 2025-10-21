@@ -1,5 +1,3 @@
-import Foundation
-
 /// Smallest Last Vertex Ordering algorithm.
 /// 
 /// This algorithm orders vertices by repeatedly removing the vertex with the smallest degree

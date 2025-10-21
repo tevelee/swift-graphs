@@ -1,5 +1,3 @@
-import Foundation
-
 extension BipartitePropertyAlgorithm {
     /// Creates a BFS-based bipartite property algorithm.
     ///

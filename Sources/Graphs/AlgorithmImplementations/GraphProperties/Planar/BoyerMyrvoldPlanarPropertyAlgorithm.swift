@@ -1,5 +1,3 @@
-import Foundation
-
 /// Boyer-Myrvold algorithm for planar graph detection.
 /// This is the most efficient O(V) algorithm for planarity testing.
 public struct BoyerMyrvoldPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {

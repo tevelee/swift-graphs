@@ -1,5 +1,3 @@
-import Foundation
-
 /// Barabasi-Albert random graph generation algorithm.
 ///
 /// This algorithm generates scale-free networks using preferential attachment.

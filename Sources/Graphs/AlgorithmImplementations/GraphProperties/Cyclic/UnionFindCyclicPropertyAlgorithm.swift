@@ -1,5 +1,3 @@
-import Foundation
-
 /// Union-Find-based algorithm for checking if a graph is cyclic.
 public struct UnionFindCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = UnionFindCyclicProperty<Graph>.Visitor

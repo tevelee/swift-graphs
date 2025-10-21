@@ -1,5 +1,3 @@
-import Foundation
-
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Checks if the graph is connected using the specified algorithm.
     ///

@@ -1,5 +1,3 @@
-import Foundation
-
 /// A protocol for algorithms that find k shortest paths.
 public protocol KShortestPathsAlgorithm<Graph, Weight> {
     /// The graph type that this algorithm operates on.

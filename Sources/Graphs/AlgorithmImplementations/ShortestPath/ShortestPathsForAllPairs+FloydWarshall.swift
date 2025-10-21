@@ -1,5 +1,3 @@
-import Foundation
-
 extension ShortestPathsForAllPairsAlgorithm where Weight: AdditiveArithmetic {
     /// Creates a Floyd-Warshall algorithm for computing all-pairs shortest paths.
     ///

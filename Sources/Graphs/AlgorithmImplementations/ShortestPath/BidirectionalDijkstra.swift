@@ -1,5 +1,3 @@
-import Foundation
-
 /// Bidirectional Dijkstra's algorithm for finding shortest paths between two vertices.
 ///
 /// Bidirectional Dijkstra's algorithm searches from both the source and destination

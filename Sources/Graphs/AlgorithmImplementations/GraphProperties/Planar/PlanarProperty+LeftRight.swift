@@ -1,5 +1,3 @@
-import Foundation
-
 extension PlanarPropertyAlgorithm {
     /// Creates a Left-Right planar property algorithm.
     ///

@@ -1,5 +1,3 @@
-import Foundation
-
 /// Left-Right Planarity Test algorithm for planar graph detection.
 /// This is a simpler O(V²) algorithm that uses DFS to attempt a planar embedding.
 public struct LeftRightPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {

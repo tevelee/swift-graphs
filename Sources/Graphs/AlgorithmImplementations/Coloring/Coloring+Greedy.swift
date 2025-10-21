@@ -1,5 +1,3 @@
-import Foundation
-
 extension ColoringAlgorithm where Color == Int {
     /// Creates a greedy coloring algorithm.
     ///

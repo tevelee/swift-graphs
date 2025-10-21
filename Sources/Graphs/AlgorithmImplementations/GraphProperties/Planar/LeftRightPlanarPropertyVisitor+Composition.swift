@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Left-Right planar property algorithm visitors.
 extension LeftRightPlanarPropertyAlgorithm.Visitor: Composable {
     /// Combines this visitor with another visitor.

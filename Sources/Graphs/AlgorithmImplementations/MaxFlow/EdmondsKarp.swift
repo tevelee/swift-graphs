@@ -1,5 +1,3 @@
-import Foundation
-
 /// Edmonds-Karp algorithm for computing maximum flow.
 ///
 /// This algorithm finds the maximum flow in a flow network by using BFS to find

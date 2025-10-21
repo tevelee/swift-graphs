@@ -1,6 +1,7 @@
-import Foundation
-import simd
 @testable import Graphs
+
+#if canImport(simd)
+import simd
 
 enum Coordinates2D: VertexProperty {
     static let defaultValue = SIMD2<Double>(0, 0)
@@ -12,5 +13,4 @@ extension VertexProperties {
         set { self[Coordinates2D.self] = newValue }
     }
 }
-
-
+#endif

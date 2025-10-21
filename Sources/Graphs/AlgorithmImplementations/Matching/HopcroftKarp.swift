@@ -1,4 +1,3 @@
-import Foundation
 import Collections
 
 /// Hopcroft-Karp algorithm for finding maximum matching in bipartite graphs.

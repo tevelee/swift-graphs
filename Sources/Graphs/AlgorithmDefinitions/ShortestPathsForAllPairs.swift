@@ -1,5 +1,3 @@
-import Foundation
-
 /// A protocol for algorithms that compute shortest paths between all pairs of vertices.
 public protocol ShortestPathsForAllPairsAlgorithm<Graph, Weight> {
     /// The graph type that this algorithm operates on.

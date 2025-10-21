@@ -1,5 +1,3 @@
-import Foundation
-
 /// Standard implementation of Ore's theorem for Hamiltonian cycles.
 public struct StandardOrePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = OreProperty<Graph>.Visitor

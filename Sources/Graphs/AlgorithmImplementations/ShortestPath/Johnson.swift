@@ -1,5 +1,3 @@
-import Foundation
-
 /// Johnson's algorithm for computing shortest paths between all pairs of vertices.
 ///
 /// Johnson's algorithm is a method for finding shortest paths between all pairs of vertices

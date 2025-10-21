@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Welsh-Powell coloring algorithm visitors.
 extension WelshPowellColoringAlgorithm.Visitor: Composable {
     /// Combines this visitor with another visitor.

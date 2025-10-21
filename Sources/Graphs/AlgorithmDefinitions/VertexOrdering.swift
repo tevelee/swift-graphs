@@ -1,5 +1,3 @@
-import Foundation
-
 /// A protocol for vertex ordering algorithms.
 public protocol VertexOrderingAlgorithm<Graph> {
     /// The graph type that this algorithm operates on.

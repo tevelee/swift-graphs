@@ -1,5 +1,3 @@
-import Foundation
-
 extension PlanarPropertyAlgorithm {
     /// Creates an Euler formula-based planar property algorithm.
     ///

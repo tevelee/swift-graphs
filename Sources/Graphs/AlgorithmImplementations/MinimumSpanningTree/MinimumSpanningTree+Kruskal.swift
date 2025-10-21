@@ -1,5 +1,3 @@
-import Foundation
-
 extension MinimumSpanningTreeAlgorithm where Weight: AdditiveArithmetic {
     /// Creates a Kruskal MST algorithm.
     ///

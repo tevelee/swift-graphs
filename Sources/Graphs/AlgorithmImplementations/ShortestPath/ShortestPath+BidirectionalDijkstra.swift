@@ -1,5 +1,3 @@
-import Foundation
-
 extension ShortestPathAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
     /// Creates a bidirectional Dijkstra shortest path algorithm.
     ///

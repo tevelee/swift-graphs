@@ -1,5 +1,3 @@
-import Foundation
-
 /// A protocol for random graph generation algorithms.
 public protocol RandomGraphAlgorithm<Graph> {
     /// The graph type that this algorithm operates on.

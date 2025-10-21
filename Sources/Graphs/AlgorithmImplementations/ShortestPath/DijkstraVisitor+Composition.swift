@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Dijkstra algorithm visitors.
 extension Dijkstra.Visitor: Composable {
     /// Combines this visitor with another visitor.

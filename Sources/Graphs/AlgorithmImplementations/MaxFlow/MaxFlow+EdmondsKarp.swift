@@ -1,5 +1,3 @@
-import Foundation
-
 extension MaxFlowAlgorithm {
     /// Creates an Edmonds-Karp maximum flow algorithm.
     ///

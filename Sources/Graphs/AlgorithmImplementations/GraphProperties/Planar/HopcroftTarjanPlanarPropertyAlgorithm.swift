@@ -1,5 +1,3 @@
-import Foundation
-
 /// Hopcroft-Tarjan algorithm for planar graph detection.
 /// This is a classic O(V) algorithm that uses DFS and lowpoint calculations.
 public struct HopcroftTarjanPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {

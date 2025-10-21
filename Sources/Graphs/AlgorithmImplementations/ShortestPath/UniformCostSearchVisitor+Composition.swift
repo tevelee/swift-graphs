@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for uniform cost search visitors.
 extension UniformCostSearch.Visitor: Composable {
     /// Combines this visitor with another visitor.

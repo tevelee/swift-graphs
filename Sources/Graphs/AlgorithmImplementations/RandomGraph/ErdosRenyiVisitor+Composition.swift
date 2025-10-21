@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Erdos-Renyi random graph algorithm visitors.
 extension ErdosRenyi.Visitor: Composable {
     /// Combines this visitor with another visitor.

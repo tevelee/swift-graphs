@@ -1,5 +1,3 @@
-import Foundation
-
 /// Ford-Fulkerson algorithm for computing maximum flow.
 ///
 /// This algorithm finds the maximum flow in a flow network by repeatedly finding

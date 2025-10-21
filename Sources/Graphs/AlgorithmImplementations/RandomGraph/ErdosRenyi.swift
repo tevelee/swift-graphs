@@ -1,5 +1,3 @@
-import Foundation
-
 /// Erdos-Renyi random graph generation algorithm.
 ///
 /// This algorithm generates random graphs where each possible edge is included

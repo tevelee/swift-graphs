@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Bron-Kerbosch clique detection algorithm visitors.
 extension BronKerboschCliqueDetection.Visitor: Composable {
     /// Combines this visitor with another visitor.

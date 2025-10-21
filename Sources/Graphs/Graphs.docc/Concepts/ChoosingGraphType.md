@@ -207,12 +207,12 @@ let image = GridGraph(width: 640, height: 480)
 // Process neighboring pixels
 ```
 
-### `LazyGraph` - Computed On-Demand
+### `LazyIncidenceGraph` - Computed On-Demand
 
 **Best for:** Large/infinite graphs, expensive edge computation
 
 ```swift
-let lazyGraph = LazyGraph { vertex in
+let lazyGraph = LazyIncidenceGraph { vertex in
     // Compute neighbors on-demand
     return computeNeighbors(for: vertex)
 }
@@ -243,13 +243,13 @@ let lazyGraph = LazyGraph { vertex in
 **Example use cases:**
 ```swift
 // State space search
-let chessPositions = LazyGraph { position in
+let chessPositions = LazyIncidenceGraph { position in
     // Generate legal moves
     return legalMoves(from: position)
 }
 
 // Large generated graph
-let fractal = LazyGraph { point in
+let fractal = LazyIncidenceGraph { point in
     // Compute fractal neighbors
     return fractalNeighbors(point)
 }
@@ -265,7 +265,7 @@ let fractal = LazyGraph { point in
 | AdjacencyMatrix | O(V²) | Dense graphs (E ≈ V²) |
 | BipartiteAdjacencyList | O(V + E) | Bipartite graphs |
 | GridGraph | O(1) | Regular 2D grids |
-| LazyGraph | O(1) | Computed graphs |
+| LazyIncidenceGraph | O(1) | Computed graphs |
 
 ### Operation Complexity
 
@@ -384,10 +384,10 @@ func convert(from list: AdjacencyList) -> AdjacencyMatrix {
 4. **Is it a special structure?**
    - 2D grid: `GridGraph`
    - Bipartite: `BipartiteAdjacencyList`
-   - Computed: `LazyGraph`
+   - Computed: `LazyIncidenceGraph`
 
 5. **Memory constraints?**
-   - Limited memory: `AdjacencyList` or `LazyGraph`
+   - Limited memory: `AdjacencyList` or `LazyIncidenceGraph`
    - Plentiful memory: `AdjacencyMatrix` for simplicity
 
 ### Common Scenarios
@@ -398,10 +398,10 @@ func convert(from list: AdjacencyList) -> AdjacencyMatrix {
 | Complete graph | `AdjacencyMatrix` |
 | Game map | `GridGraph` |
 | Job matching | `BipartiteAdjacencyList` |
-| Web crawler | `LazyGraph` |
+| Web crawler | `LazyIncidenceGraph` |
 | Road network | `AdjacencyList` |
 | Small state machine | `AdjacencyMatrix` |
-| Search space | `LazyGraph` |
+| Search space | `LazyIncidenceGraph` |
 
 ### Default Recommendation
 
@@ -434,11 +434,11 @@ let graph = AdjacencyList(
 var graph = AdjacencyMatrix(reservingCapacity: 1000)
 ```
 
-### For `LazyGraph`
+### For `LazyIncidenceGraph`
 
 ```swift
 // Cache computed edges if they're expensive
-class CachedLazyGraph {
+class CachedLazyIncidenceGraph {
     var cache: [Vertex: [Vertex]] = [:]
     
     func neighbors(of v: Vertex) -> [Vertex] {
@@ -456,9 +456,8 @@ class CachedLazyGraph {
 
 Now that you've chosen a graph type:
 
-- Learn about <doc:GraphConcepts> - Understanding graph terminology
-- Explore <doc:PropertiesAndPropertyMaps> - Adding data to graphs
-- Study algorithm documentation - Running algorithms on your graph
+- <doc:GraphConcepts>
+- <doc:PropertiesAndPropertyMaps>
 
 ## See Also
 

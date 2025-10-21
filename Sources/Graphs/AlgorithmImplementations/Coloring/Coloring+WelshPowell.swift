@@ -1,5 +1,3 @@
-import Foundation
-
 extension ColoringAlgorithm where Color == Int {
     /// Creates a Welsh-Powell coloring algorithm.
     ///

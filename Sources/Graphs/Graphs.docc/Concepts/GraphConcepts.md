@@ -398,7 +398,7 @@ Swift Graphs provides multiple implementations:
 
 - **`GridGraph`** - 2D spatial grids
 - **`BipartiteAdjacencyList`** - Two-colored graphs
-- **`LazyGraph`** - Computed on-demand
+- **`LazyIncidenceGraph`** - Computed on-demand
 
 See <doc:ChoosingGraphType> for detailed comparison.
 
@@ -497,9 +497,9 @@ dependencies.addEdge(from: taskA, to: taskB)  // B depends on A
 
 Now that you understand graph concepts:
 
-- Learn about <doc:ProtocolOrientedDesign> - How protocols enable flexibility
-- Explore <doc:ChoosingGraphType> - Select the right implementation
-- Study <doc:AlgorithmInterfaces> - Using and creating algorithms
+- <doc:ProtocolOrientedDesign>
+- <doc:ChoosingGraphType>
+- <doc:AlgorithmInterfaces>
 
 ## See Also
 

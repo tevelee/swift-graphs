@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Hopcroft-Tarjan planar property algorithm visitors.
 extension HopcroftTarjanPlanarPropertyAlgorithm.Visitor: Composable {
     /// Combines this visitor with another visitor.

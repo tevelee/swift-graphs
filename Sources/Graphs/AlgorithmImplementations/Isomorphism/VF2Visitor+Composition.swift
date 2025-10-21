@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for VF2 isomorphism algorithm visitors.
 extension VF2Isomorphism.Visitor: Composable {
     /// Combines this visitor with another visitor.

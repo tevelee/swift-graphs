@@ -1,5 +1,3 @@
-import Foundation
-
 /// Dirac property visitor for Hamiltonian cycle algorithms.
 public struct DiracProperty<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph> where Graph.VertexDescriptor: Hashable {
     /// A visitor that can be used to observe Dirac property algorithm progress.

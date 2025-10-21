@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Barabasi-Albert random graph algorithm visitors.
 extension BarabasiAlbert.Visitor: Composable {
     /// Combines this visitor with another visitor.

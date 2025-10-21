@@ -1,5 +1,3 @@
-import Foundation
-
 extension TreePropertyAlgorithm {
     /// Creates a composite tree property algorithm using separate connected and cyclic algorithms.
     ///

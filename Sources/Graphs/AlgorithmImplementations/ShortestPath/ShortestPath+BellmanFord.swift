@@ -1,5 +1,3 @@
-import Foundation
-
 extension ShortestPathAlgorithm where Weight: AdditiveArithmetic {
     /// Creates a Bellman-Ford shortest path algorithm.
     ///

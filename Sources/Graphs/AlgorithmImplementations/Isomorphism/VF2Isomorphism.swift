@@ -1,5 +1,3 @@
-import Foundation
-
 /// VF2 (Vento-Foggia) algorithm for graph isomorphism.
 /// This is a state-space search algorithm that explores possible vertex mappings
 /// between two graphs in a systematic way.

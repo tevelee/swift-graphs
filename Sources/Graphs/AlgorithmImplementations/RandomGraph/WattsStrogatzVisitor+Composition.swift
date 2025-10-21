@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Watts-Strogatz random graph algorithm visitors.
 extension WattsStrogatz.Visitor: Composable {
     public typealias Other = WattsStrogatz.Visitor

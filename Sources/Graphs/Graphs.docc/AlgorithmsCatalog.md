@@ -755,8 +755,6 @@ if let path = graph.eulerianPath(using: .hierholzer()) {
 - DNA sequencing
 - Network traversal
 
-See <doc:EulerianPaths> for detailed guide.
-
 ## Hamiltonian Paths and Cycles
 
 Visit every vertex exactly once.
@@ -1018,8 +1016,7 @@ let isPlanar = graph.isPlanar(using: .boyerMyrvold())
 
 ## See Also
 
-- <doc:ConnectedComponents> - Detailed connected components guide
-- <doc:EulerianPaths> - Detailed Eulerian paths guide
-- <doc:AlgorithmInterfaces> - Creating custom algorithms
-- <doc:VisitorPattern> - Observing algorithm execution
+- <doc:Concepts/AlgorithmInterfaces> - Creating custom algorithms
+- <doc:Concepts/VisitorPattern> - Observing algorithm execution
+- <doc:Concepts/Architecture> - Library architecture overview
 

@@ -195,7 +195,7 @@ struct BipartiteAdjacencyList: BipartiteGraph { ... }
 struct GridGraph: Graph, IncidenceGraph { ... }
 
 /// Computed on-demand
-struct LazyGraph: Graph, IncidenceGraph { ... }
+struct LazyIncidenceGraph: Graph, IncidenceGraph { ... }
 
 /// Computed properties
 struct ComputedVertexPropertyGraph: PropertyGraph { ... }

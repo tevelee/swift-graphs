@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Floyd-Warshall algorithm visitors.
 extension FloydWarshall.Visitor: Composable {
     /// Combines this visitor with another visitor.

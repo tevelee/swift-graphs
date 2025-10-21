@@ -1,5 +1,3 @@
-import Foundation
-
 /// Reverse Cuthill-McKee Ordering algorithm.
 /// 
 /// This algorithm reorders the vertices of a graph to reduce the bandwidth of its adjacency matrix.

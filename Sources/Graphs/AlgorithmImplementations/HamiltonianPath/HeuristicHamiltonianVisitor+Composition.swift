@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for heuristic Hamiltonian path algorithm visitors.
 extension HeuristicHamiltonian.Visitor: Composable {
     /// Combines this visitor with another visitor.

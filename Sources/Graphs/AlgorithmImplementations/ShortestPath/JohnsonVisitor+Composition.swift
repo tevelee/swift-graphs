@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Johnson algorithm visitors.
 extension Johnson.Visitor: Composable {
     /// Combines this visitor with another visitor.

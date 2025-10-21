@@ -1,5 +1,3 @@
-import Foundation
-
 /// Watts-Strogatz random graph generation algorithm.
 ///
 /// This algorithm generates small-world networks by starting with a regular

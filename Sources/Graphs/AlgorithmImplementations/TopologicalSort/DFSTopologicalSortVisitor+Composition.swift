@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for DFS topological sort visitors.
 extension DFSTopologicalSort.Visitor: Composable {
     /// Combines this visitor with another visitor.

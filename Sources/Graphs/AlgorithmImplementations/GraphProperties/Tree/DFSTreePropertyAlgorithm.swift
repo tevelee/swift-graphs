@@ -1,5 +1,3 @@
-import Foundation
-
 /// Single-pass DFS-based algorithm for checking if a graph is a tree.
 public struct DFSTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = DFSTreeProperty<Graph>.Visitor

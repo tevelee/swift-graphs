@@ -1,5 +1,3 @@
-import Foundation
-
 /// DFS-based algorithm for checking if a graph is cyclic.
 public struct DFSCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = DepthFirstSearch<Graph>.Visitor

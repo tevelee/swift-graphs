@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Boyer-Myrvold planar property algorithm visitors.
 extension BoyerMyrvoldPlanarPropertyAlgorithm.Visitor: Composable {
     /// Combines this visitor with another visitor.

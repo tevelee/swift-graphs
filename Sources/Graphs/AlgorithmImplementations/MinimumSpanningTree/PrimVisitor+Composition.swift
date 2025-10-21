@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for Prim's algorithm visitors.
 extension Prim.Visitor: Composable {
     /// Combines this visitor with another visitor.

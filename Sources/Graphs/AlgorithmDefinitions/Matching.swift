@@ -1,5 +1,3 @@
-import Foundation
-
 /// A protocol for maximum matching algorithms on bipartite graphs.
 public protocol MatchingAlgorithm<Graph> {
     /// The graph type that this algorithm operates on.

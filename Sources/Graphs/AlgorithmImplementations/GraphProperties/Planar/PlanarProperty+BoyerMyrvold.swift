@@ -1,5 +1,3 @@
-import Foundation
-
 extension PlanarPropertyAlgorithm {
     /// Creates a Boyer-Myrvold planar property algorithm.
     ///

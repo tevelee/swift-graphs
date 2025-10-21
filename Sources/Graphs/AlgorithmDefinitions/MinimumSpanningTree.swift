@@ -1,5 +1,3 @@
-import Foundation
-
 /// A protocol for minimum spanning tree algorithms.
 public protocol MinimumSpanningTreeAlgorithm<Graph, Weight> {
     /// The graph type that this algorithm operates on.

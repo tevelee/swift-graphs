@@ -1,5 +1,3 @@
-import Foundation
-
 extension ConnectedPropertyAlgorithm {
     /// Creates a traversal-based connected property algorithm.
     ///

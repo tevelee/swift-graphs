@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for depth-first search visitors.
 extension DepthFirstSearch.Visitor: Composable {
     /// Combines this visitor with another visitor.

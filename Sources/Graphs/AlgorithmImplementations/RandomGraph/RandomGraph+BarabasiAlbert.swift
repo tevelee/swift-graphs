@@ -1,5 +1,3 @@
-import Foundation
-
 extension BarabasiAlbert: RandomGraphAlgorithm {}
 
 extension RandomGraphAlgorithm {

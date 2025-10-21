@@ -1,5 +1,3 @@
-import Foundation
-
 /// A protocol for types that can be combined with other types.
 public protocol Composable {
     associatedtype Other

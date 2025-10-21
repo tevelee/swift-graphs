@@ -1,5 +1,3 @@
-import Foundation
-
 /// Extension providing composition support for bidirectional Dijkstra algorithm visitors.
 extension BidirectionalDijkstra.Visitor: Composable {
     /// Combines this visitor with another visitor.
