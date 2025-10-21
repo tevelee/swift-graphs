@@ -165,6 +165,9 @@ struct HeuristicToDestination<Graph: Graphs.Graph, EstimatedCost> {
     let estimatedCost: (Graph.VertexDescriptor) -> Heuristic<Graph, EstimatedCost>
 }
 
+#if canImport(simd)
+import simd
+
 extension HeuristicToDestination where Graph: PropertyGraph {
     static func euclideanDistance<Coordinate: SIMD>(
         of coordinates: @escaping (VertexProperties) -> Coordinate
@@ -182,5 +185,6 @@ extension HeuristicToDestination where Graph: PropertyGraph {
         }
     }
 }
+#endif
 
 extension AStarShortestPathToDestination: VisitorSupporting {}

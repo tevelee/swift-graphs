@@ -411,6 +411,9 @@ extension Heuristic {
     }
 }
 
+#if canImport(simd)
+import simd
+
 extension Heuristic where Graph: PropertyGraph {
     /// Creates a Euclidean distance heuristic for vertices with coordinate properties.
     ///
@@ -444,5 +447,6 @@ extension Heuristic where Graph: PropertyGraph {
         }
     }
 }
+#endif
 
 extension AStar: VisitorSupportingSequence {}

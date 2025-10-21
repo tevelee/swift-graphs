@@ -2,6 +2,8 @@
 import Testing
 
 #if canImport(simd)
+import simd
+
 struct AStarTests {
     @Test func findsShortestPathWithHeuristic() {
         var graph = AdjacencyList()
