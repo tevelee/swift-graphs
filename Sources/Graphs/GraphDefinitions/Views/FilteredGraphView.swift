@@ -142,7 +142,7 @@ extension FilteredGraphView: IncidenceGraph {
     }
     @inlinable
     public func outDegree(of vertex: VertexDescriptor) -> Int {
-        outgoingEdges(of: vertex).count { _ in true }
+        outgoingEdges(of: vertex).count
     }
 }
 
@@ -204,3 +204,13 @@ extension FilteredGraphView {
     }
 }
 
+extension Sequence {
+    @usableFromInline
+    var count: Int {
+        var result = 0
+        for _ in self {
+            result += 1
+        }
+        return result
+    }
+}

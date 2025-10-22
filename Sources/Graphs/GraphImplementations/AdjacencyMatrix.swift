@@ -238,6 +238,8 @@ extension AdjacencyMatrix: AdjacencyGraph {
 }
 
 extension AdjacencyMatrix: PropertyGraph {
+    public typealias VertexProperties = VertexPropertyValues
+    public typealias EdgeProperties = EdgePropertyValues
     public typealias VertexPropertyMap = DictionaryPropertyMap<Vertex, VertexPropertyValues>
     public typealias EdgePropertyMap = DictionaryPropertyMap<Edge, EdgePropertyValues>
 }

@@ -95,7 +95,10 @@ extension AdjacencyList: VertexListGraph {}
 extension AdjacencyList: EdgeListGraph {}
 extension AdjacencyList: AdjacencyGraph {}
 extension AdjacencyList: MutableGraph {}
-extension AdjacencyList: PropertyGraph {}
+extension AdjacencyList: PropertyGraph {
+    public typealias VertexProperties = VertexPropertyMap.Value
+    public typealias EdgeProperties = EdgePropertyMap.Value
+}
 extension AdjacencyList: MutablePropertyGraph {}
 extension AdjacencyList: BinaryIncidenceGraph where EdgeStore: BinaryEdgeStorage {}
 extension AdjacencyList: MutableBinaryIncidenceGraph where EdgeStore: BinaryEdgeStorage {}

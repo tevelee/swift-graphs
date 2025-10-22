@@ -121,6 +121,8 @@ extension ComputedEdgePropertyGraph: VertexMutableGraph where Base: VertexMutabl
 }
 
 extension ComputedEdgePropertyGraph: VertexPropertyGraph where Base: VertexPropertyGraph {
+    public typealias VertexProperties = Base.VertexProperties
+    public typealias VertexPropertyMap = Base.VertexPropertyMap
     @inlinable
     public var vertexPropertyMap: Base.VertexPropertyMap { base.vertexPropertyMap }
 }
@@ -134,6 +136,8 @@ extension ComputedEdgePropertyGraph: VertexMutablePropertyGraph where Base: Vert
 }
 
 extension ComputedEdgePropertyGraph: EdgePropertyGraph where Base: EdgePropertyGraph {
+    public typealias EdgeProperties = ComputedEdgeProperties<Base.EdgeProperties, Property>
+    public typealias EdgePropertyMap = ComputedEdgePropertyMap<Base.EdgePropertyMap, Property>
     @inlinable
     public var edgePropertyMap: ComputedEdgePropertyMap<Base.EdgePropertyMap, Property> {
         .init(base: base.edgePropertyMap) { edge in
