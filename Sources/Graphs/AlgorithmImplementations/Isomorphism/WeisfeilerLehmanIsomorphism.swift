@@ -106,7 +106,7 @@ public struct WeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & VertexListGrap
                 neighborLabels.sort()
                 
                 // Create a string signature
-                let signature = "\(currentLabel):\(neighborLabels.map(String.init).joined(separator: ","))"
+                let signature = "\(currentLabel):\(neighborLabels.map { "\($0)" }.joined(separator: ","))"
                 
                 // Assign a new label based on the signature
                 if let existingLabel = labelMap[signature] {
@@ -251,7 +251,7 @@ public struct EnhancedWeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & Vertex
                     guard let neighbor = graph.destination(of: edge) else { continue }
                     let neighborLabel = labels[neighbor]!
                     // Use edge descriptor as string representation for edge labels
-                    let edgeInfo = String(describing: edge)
+                    let edgeInfo = "\(edge)"
                     neighborInfo.append((neighborLabel, edgeInfo))
                 }
                 

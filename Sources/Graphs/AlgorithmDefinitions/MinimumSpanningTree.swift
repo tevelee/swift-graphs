@@ -47,15 +47,6 @@ public struct MinimumSpanningTree<Vertex: Hashable, Edge, Weight: AdditiveArithm
         vertices.contains(vertex)
     }
     
-    /// Checks if the MST contains a specific edge.
-    ///
-    /// - Parameter edge: The edge to check
-    /// - Returns: True if the edge is in the MST
-    @inlinable
-    public func contains(edge: Edge) -> Bool {
-        edges.contains { $0 as? AnyHashable == edge as? AnyHashable }
-    }
-    
     /// The number of edges in the MST.
     @inlinable
     public var edgeCount: Int {
@@ -89,6 +80,19 @@ extension IncidenceGraph where Self: EdgePropertyGraph {
         using algorithm: some MinimumSpanningTreeAlgorithm<Self, Weight>
     ) -> MinimumSpanningTree<VertexDescriptor, EdgeDescriptor, Weight> {
         algorithm.minimumSpanningTree(in: self, visitor: nil)
+    }
+}
+
+// MARK: - Conditional Edge Comparison
+
+extension MinimumSpanningTree where Edge: Equatable {
+    /// Checks if the MST contains a specific edge.
+    ///
+    /// - Parameter edge: The edge to check
+    /// - Returns: True if the edge is in the MST
+    @inlinable
+    public func contains(edge: Edge) -> Bool {
+        edges.contains(edge)
     }
 }
 
