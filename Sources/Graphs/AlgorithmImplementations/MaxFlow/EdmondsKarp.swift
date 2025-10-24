@@ -5,7 +5,7 @@
 ///
 /// - Complexity: O(V * E^2) where V is the number of vertices and E is the number of edges
 public struct EdmondsKarp<
-    Graph: IncidenceGraph & EdgePropertyGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
+    Graph: IncidenceGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
     Flow: AdditiveArithmetic & Comparable & Numeric & FloatingPoint
 > where
     Graph.VertexDescriptor: Hashable,

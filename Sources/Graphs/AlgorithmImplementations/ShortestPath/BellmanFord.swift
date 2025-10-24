@@ -3,7 +3,7 @@
 /// Bellman-Ford can handle graphs with negative edge weights and detects negative cycles.
 /// It has a time complexity of O(VE) where V is the number of vertices and E is the number of edges.
 public struct BellmanFord<
-    Graph: IncidenceGraph & EdgeListGraph & EdgePropertyGraph & VertexListGraph,
+    Graph: IncidenceGraph & EdgeListGraph & VertexListGraph,
     Weight: AdditiveArithmetic & Comparable
 > where
     Graph.VertexDescriptor: Hashable

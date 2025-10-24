@@ -5,7 +5,7 @@
 ///
 /// - Complexity: O(V^2 * E) where V is the number of vertices and E is the number of edges
 public struct Dinic<
-    Graph: IncidenceGraph & EdgePropertyGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
+    Graph: IncidenceGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
     Flow: AdditiveArithmetic & Comparable & Numeric & FloatingPoint
 > where
     Graph.VertexDescriptor: Hashable,

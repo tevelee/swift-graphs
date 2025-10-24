@@ -19,7 +19,7 @@ extension TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
 ///
 /// - Complexity: O(b^d) where b is the branching factor and d is the depth
 public struct BestFirstTraversal<
-    Graph: IncidenceGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph,
     HScore: AdditiveArithmetic & Comparable
 >: TraversalAlgorithm where
     Graph.VertexDescriptor: Hashable

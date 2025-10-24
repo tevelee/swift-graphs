@@ -7,7 +7,7 @@ extension MaxFlowAlgorithm {
     public static func dinic<Graph, Flow>(
         capacityCost: CostDefinition<Graph, Flow>
     ) -> Dinic<Graph, Flow> where
-        Graph: IncidenceGraph & EdgePropertyGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
+        Graph: IncidenceGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
         Flow: AdditiveArithmetic & Comparable & Numeric & FloatingPoint,
         Graph.VertexDescriptor: Hashable,
         Graph.EdgeDescriptor: Hashable,

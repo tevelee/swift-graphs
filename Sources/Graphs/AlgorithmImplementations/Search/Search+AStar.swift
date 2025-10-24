@@ -35,7 +35,7 @@ extension SearchAlgorithm {
 /// This struct wraps the core A* algorithm to provide a SearchAlgorithm interface,
 /// making it easy to use A* as a general search algorithm.
 public struct AStarSearch<
-    Graph: IncidenceGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph,
     Weight: AdditiveArithmetic & Comparable,
     HScore: AdditiveArithmetic,
     FScore: Comparable

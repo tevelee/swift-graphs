@@ -37,7 +37,7 @@ extension ShortestPathUntilAlgorithm {
 ///
 /// - Complexity: O((V + E) log V) where V is the number of vertices and E is the number of edges
 public struct AStarShortestPathUntil<
-    Graph: IncidenceGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph,
     Weight: AdditiveArithmetic & Comparable,
     HScore: AdditiveArithmetic,
     FScore: Comparable

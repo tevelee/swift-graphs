@@ -18,7 +18,7 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
 
 // MARK: - Default Implementations
 
-extension IncidenceGraph where Self: EdgePropertyGraph, VertexDescriptor: Hashable {
+extension IncidenceGraph where VertexDescriptor: Hashable {
     /// Finds the shortest path between two vertices using Dijkstra's algorithm as the default.
     /// This is the most commonly used and efficient algorithm for non-negative edge weights.
     ///

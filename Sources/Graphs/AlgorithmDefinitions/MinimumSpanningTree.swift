@@ -1,7 +1,7 @@
 /// A protocol for minimum spanning tree algorithms.
 public protocol MinimumSpanningTreeAlgorithm<Graph, Weight> {
     /// The graph type that this algorithm operates on.
-    associatedtype Graph: IncidenceGraph & EdgePropertyGraph where Graph.VertexDescriptor: Hashable
+    associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
     /// The weight type for edge costs.
     associatedtype Weight: AdditiveArithmetic & Comparable
     /// The visitor type for observing algorithm progress.
@@ -70,7 +70,7 @@ extension VisitorWrapper: MinimumSpanningTreeAlgorithm where Base: MinimumSpanni
     }
 }
 
-extension IncidenceGraph where Self: EdgePropertyGraph {
+extension IncidenceGraph {
     /// Computes the minimum spanning tree using the specified algorithm.
     ///
     /// - Parameter algorithm: The MST algorithm to use
@@ -98,7 +98,7 @@ extension MinimumSpanningTree where Edge: Equatable {
 
 // MARK: - Default Implementations
 
-extension IncidenceGraph where Self: EdgePropertyGraph & EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable {
+extension IncidenceGraph where Self: EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable {
     /// Finds the minimum spanning tree using Kruskal's algorithm as the default.
     /// This is a well-known and efficient algorithm for finding MSTs.
     ///

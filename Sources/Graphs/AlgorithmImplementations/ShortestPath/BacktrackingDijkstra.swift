@@ -6,7 +6,7 @@
 /// - Complexity: O((V + E) log V) for the Dijkstra phase, plus O(P * L) for path enumeration
 ///   where P is the number of paths and L is the average path length.
 public struct BacktrackingDijkstra<
-    Graph: IncidenceGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph,
     Weight: Numeric & Comparable
 > where
     Graph.VertexDescriptor: Hashable,
@@ -94,6 +94,64 @@ public struct BacktrackingDijkstra<
         self.makePriorityQueue = makePriorityQueue
     }
     
+    /// Finds all shortest paths from source until a condition is met.
+    ///
+    /// - Parameters:
+    ///   - source: The starting vertex
+    ///   - condition: A closure that determines when to stop searching
+    ///   - visitor: Optional visitor for algorithm events
+    /// - Returns: A result containing all paths with the minimum cost
+    @inlinable
+    public func findAllShortestPaths(
+        from source: Vertex,
+        until condition: @escaping (Vertex) -> Bool,
+        visitor: Visitor? = nil
+    ) -> Result {
+        // First, run a standard Dijkstra to find if any vertex satisfying the condition exists and get optimal cost
+        let dijkstra = Dijkstra(
+            on: graph,
+            from: source,
+            edgeWeight: edgeWeight
+        )
+        
+        guard let dijkstraResult = dijkstra.first(where: { condition($0.currentVertex) }) else {
+            return Result(source: source, destination: source, paths: [], optimalCost: nil)
+        }
+        
+        let optimalCost = dijkstraResult.currentDistance()
+        let destination = dijkstraResult.currentVertex
+        
+        // Now run modified Dijkstra to collect all shortest predecessors
+        let (costs, predecessors) = computeAllShortestPredecessors(
+            from: source,
+            until: condition,
+            visitor: visitor
+        )
+        
+        // Verify we found at least one vertex satisfying the condition
+        guard let destinationCost = costs[destination], destinationCost == optimalCost else {
+            // Shouldn't happen, but handle gracefully
+            let path = Path<Vertex, Edge>(
+                source: source,
+                destination: destination,
+                vertices: dijkstraResult.vertices(to: destination, in: graph),
+                edges: dijkstraResult.edges(to: destination, in: graph)
+            )
+            return Result(source: source, destination: destination, paths: [path], optimalCost: optimalCost)
+        }
+        
+        // Backtrack to enumerate all paths
+        let paths = enumerateAllPaths(
+            from: source,
+            to: destination,
+            costs: costs,
+            predecessors: predecessors,
+            visitor: visitor
+        )
+        
+        return Result(source: source, destination: destination, paths: paths, optimalCost: optimalCost)
+    }
+    
     /// Finds all shortest paths from source to destination.
     ///
     /// - Parameters:
@@ -161,6 +219,75 @@ public struct BacktrackingDijkstra<
             self.vertex = vertex
             self.cost = cost
         }
+    }
+    
+    /// Runs modified Dijkstra to compute all shortest predecessors for each vertex until a condition is met.
+    @usableFromInline
+    func computeAllShortestPredecessors(
+        from source: Vertex,
+        until condition: @escaping (Vertex) -> Bool,
+        visitor: Visitor?
+    ) -> (costs: [Vertex: Weight], predecessors: [Vertex: [Edge]]) {
+        var queue = makePriorityQueue()
+        queue.enqueue(PriorityItem(vertex: source, cost: .finite(.zero)))
+        
+        var costs: [Vertex: Weight] = [source: .zero]
+        var predecessors: [Vertex: [Edge]] = [:]
+        var visited: Set<Vertex> = []
+        
+        while let currentItem = queue.dequeue() {
+            let currentVertex = currentItem.vertex
+            
+            // Skip if already visited
+            if visited.contains(currentVertex) {
+                continue
+            }
+            
+            visited.insert(currentVertex)
+            visitor?.examineVertex?(currentVertex)
+            
+            // Early termination if we've reached a vertex satisfying the condition
+            if condition(currentVertex) {
+                break
+            }
+            
+            guard let currentCost = costs[currentVertex] else { continue }
+            
+            // Explore neighbors
+            for edge in graph.outgoingEdges(of: currentVertex) {
+                guard let neighbor = graph.destination(of: edge) else { continue }
+                
+                visitor?.examineEdge?(edge)
+                
+                let edgeCost = edgeWeight.costToExplore(edge, graph)
+                let newCost = currentCost + edgeCost
+                
+                if let existingCost = costs[neighbor] {
+                    if newCost < existingCost {
+                        // Found a strictly better path - replace predecessors
+                        costs[neighbor] = newCost
+                        predecessors[neighbor] = [edge]
+                        queue.enqueue(PriorityItem(vertex: neighbor, cost: .finite(newCost)))
+                        visitor?.edgeOnShortestPath?(edge)
+                    } else if newCost == existingCost {
+                        // Found another equally optimal path - add to predecessors
+                        predecessors[neighbor, default: []].append(edge)
+                        visitor?.edgeOnShortestPath?(edge)
+                    }
+                    // If newCost > existingCost, ignore (not on a shortest path)
+                } else {
+                    // First time reaching this vertex
+                    costs[neighbor] = newCost
+                    predecessors[neighbor] = [edge]
+                    queue.enqueue(PriorityItem(vertex: neighbor, cost: .finite(newCost)))
+                    visitor?.edgeOnShortestPath?(edge)
+                }
+            }
+            
+            visitor?.finishVertex?(currentVertex)
+        }
+        
+        return (costs, predecessors)
     }
     
     /// Runs modified Dijkstra to compute all shortest predecessors for each vertex.

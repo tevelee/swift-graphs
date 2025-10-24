@@ -18,7 +18,7 @@ extension SearchAlgorithm {
 ///
 /// - Complexity: O((V + E) log V) where V is the number of vertices and E is the number of edges
 public struct UniformCostSearchAlgorithm<
-    Graph: IncidenceGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph,
     Weight: Numeric & Comparable
 >: SearchAlgorithm where
     Graph.VertexDescriptor: Hashable,

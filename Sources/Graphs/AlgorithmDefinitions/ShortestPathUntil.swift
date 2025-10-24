@@ -18,7 +18,7 @@ extension IncidenceGraph {
 
 // MARK: - Default Implementations
 
-extension IncidenceGraph where Self: EdgePropertyGraph, VertexDescriptor: Hashable {
+extension IncidenceGraph where VertexDescriptor: Hashable {
     /// Finds the shortest path from source until a condition is met using Dijkstra's algorithm as the default.
     /// This is useful for finding paths to the first vertex that satisfies a condition.
     ///

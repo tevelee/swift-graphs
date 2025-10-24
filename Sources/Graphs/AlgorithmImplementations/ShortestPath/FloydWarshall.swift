@@ -6,7 +6,7 @@
 ///
 /// - Complexity: O(V³) where V is the number of vertices
 public struct FloydWarshall<
-    Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph & VertexListGraph,
     Weight: AdditiveArithmetic & Comparable
 > where
     Graph.VertexDescriptor: Hashable
@@ -144,7 +144,7 @@ extension FloydWarshall {
     ///   - edgeWeight: The cost definition for edge weights.
     /// - Returns: A new Floyd-Warshall algorithm instance.
     @inlinable
-    public static func create<G: IncidenceGraph & VertexListGraph & EdgePropertyGraph, W: AdditiveArithmetic & Comparable>(
+    public static func create<G: IncidenceGraph & VertexListGraph, W: AdditiveArithmetic & Comparable>(
         on graph: G,
         edgeWeight: CostDefinition<G, W>
     ) -> FloydWarshall<G, W> where G.VertexDescriptor: Hashable {

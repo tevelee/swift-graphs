@@ -5,7 +5,7 @@
 ///
 /// - Complexity: O(E log V) where E is the number of edges and V is the number of vertices
 public struct Prim<
-    Graph: IncidenceGraph & EdgePropertyGraph & VertexListGraph,
+    Graph: IncidenceGraph & VertexListGraph,
     Weight: AdditiveArithmetic & Comparable
 > where
     Graph.VertexDescriptor: Hashable,

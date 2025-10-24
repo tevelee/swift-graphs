@@ -1,7 +1,7 @@
 /// A protocol for maximum flow algorithms.
 public protocol MaxFlowAlgorithm<Graph, Flow> {
     /// The graph type that this algorithm operates on.
-    associatedtype Graph: IncidenceGraph & EdgePropertyGraph & EdgeListGraph & VertexListGraph where Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable
+    associatedtype Graph: IncidenceGraph & EdgeListGraph & VertexListGraph where Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable
     /// The flow type for edge capacities and flows.
     associatedtype Flow: AdditiveArithmetic & Comparable & FloatingPoint
     /// The visitor type for observing algorithm progress.
@@ -112,7 +112,7 @@ extension VisitorWrapper: MaxFlowAlgorithm where Base: MaxFlowAlgorithm, Base.Vi
     }
 }
 
-extension IncidenceGraph where Self: EdgePropertyGraph {
+extension IncidenceGraph {
     /// Computes the maximum flow using the specified algorithm.
     ///
     /// - Parameters:
@@ -132,7 +132,7 @@ extension IncidenceGraph where Self: EdgePropertyGraph {
 
 // MARK: - Default Implementations
 
-extension BidirectionalGraph where Self: EdgePropertyGraph & EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
+extension BidirectionalGraph where Self: EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
     /// Finds the maximum flow using Edmonds-Karp algorithm as the default.
     /// This is a well-known and efficient algorithm for maximum flow problems.
     ///

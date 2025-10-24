@@ -38,7 +38,7 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
 
 // MARK: - Default Implementations
 
-extension IncidenceGraph where Self: EdgePropertyGraph, VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
+extension IncidenceGraph where VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
     /// Finds the k shortest paths using Yen's algorithm as the default.
     /// This is the most commonly used algorithm for finding k shortest paths.
     func kShortestPaths<Weight: Numeric & Comparable>(

@@ -4,7 +4,7 @@ extension KShortestPathsAlgorithm where Weight: AdditiveArithmetic {
     /// - Parameter weight: The cost definition for edge weights.
     /// - Returns: A Yen k-shortest paths algorithm instance.
     @inlinable
-    public static func yen<Graph: IncidenceGraph & EdgePropertyGraph, Weight>(
+    public static func yen<Graph: IncidenceGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == YenKShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable {
         .init(weight: weight)
@@ -18,7 +18,7 @@ extension KShortestPathsAlgorithm where Weight: AdditiveArithmetic {
 ///
 /// - Complexity: O(k * V * (E + V log V)) where k is the number of paths, V is vertices, E is edges
 public struct YenKShortestPath<
-    Graph: IncidenceGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph,
     Weight: Numeric & Comparable
 >: KShortestPathsAlgorithm where
     Graph.VertexDescriptor: Hashable,

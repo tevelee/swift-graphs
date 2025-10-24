@@ -4,7 +4,7 @@
 /// the cost from the current vertex to the goal, making it more efficient than
 /// Dijkstra's algorithm for finding shortest paths in many cases.
 public struct AStar<
-    Graph: IncidenceGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph,
     Weight: AdditiveArithmetic & Comparable,
     HScore: AdditiveArithmetic,
     FScore: Comparable

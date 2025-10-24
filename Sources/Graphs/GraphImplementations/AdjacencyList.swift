@@ -103,7 +103,37 @@ extension AdjacencyList: MutablePropertyGraph {}
 extension AdjacencyList: BinaryIncidenceGraph where EdgeStore: BinaryEdgeStorage {}
 extension AdjacencyList: MutableBinaryIncidenceGraph where EdgeStore: BinaryEdgeStorage {}
 
-protocol AdjacencyListProtocol:
+/// A protocol that represents the full set of capabilities provided by an `AdjacencyList` graph.
+///
+/// `AdjacencyListProtocol` aggregates all graph protocols that `AdjacencyList` implements,
+/// providing a convenient type-erased interface for algorithms that require comprehensive
+/// graph operations. This includes support for:
+///
+/// - **Enumeration**: List all vertices or edges
+/// - **Structure Access**: Get outgoing/incoming edges, adjacent vertices
+/// - **Mutation**: Add and remove vertices and edges
+/// - **Properties**: Attach data to vertices and edges
+///
+/// Use this protocol when you need to work with `AdjacencyList` instances without being
+/// tied to specific storage backends or property map implementations.
+///
+/// ## Protocol Requirements
+///
+/// This protocol inherits from:
+///
+/// - `Graph`: Basic graph type with vertex and edge descriptors
+/// - `VertexStorageBackedGraph`: Access to the underlying vertex storage
+/// - `EdgeStorageBackedGraph`: Access to the underlying edge storage
+/// - `IncidenceGraph`: Get outgoing edges from a vertex
+/// - `BidirectionalGraph`: Get incoming edges from a vertex
+/// - `VertexListGraph`: Enumerate all vertices in the graph
+/// - `EdgeListGraph`: Enumerate all edges in the graph
+/// - `AdjacencyGraph`: Get adjacent vertices directly (without edges)
+/// - `MutableGraph`: Add and remove vertices and edges
+/// - `PropertyGraph`: Read vertex and edge properties
+/// - `MutablePropertyGraph`: Modify vertex and edge properties
+/// ```
+public protocol AdjacencyListProtocol<VertexDescriptor, EdgeDescriptor>:
     Graph,
     VertexStorageBackedGraph,
     EdgeStorageBackedGraph,

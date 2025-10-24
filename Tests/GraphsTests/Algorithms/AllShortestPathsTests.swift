@@ -276,5 +276,158 @@ struct AllShortestPathsTests {
             #expect(cost == 3.0)
         }
     }
+    
+    // MARK: - Until-based API Tests
+    
+    @Test func testUntilConditionWithMultipleEqualPaths() {
+        let graph = createMultipleEqualPathsGraph()
+        
+        let a = graph.findVertex(labeled: "A")!
+        
+        // Find all shortest paths until we reach vertex D
+        let paths = graph.allShortestPaths(from: a, until: { vertex in
+            graph[vertex].label == "D"
+        }, weight: .property(\.weight))
+        
+        #expect(paths.count == 2)
+        
+        // Both paths should have cost 3
+        for path in paths {
+            let cost = path.edges.reduce(0.0) { sum, edge in
+                sum + graph[edge].weight
+            }
+            #expect(cost == 3.0)
+            #expect(graph[path.destination].label == "D")
+        }
+        
+        // Verify the paths are the expected ones
+        let pathVertexSets = Set(paths.map { Set($0.vertices.map { graph[$0].label }) })
+        let expectedPath1 = Set(["A", "B", "D"])
+        let expectedPath2 = Set(["A", "C", "D"])
+        
+        #expect(pathVertexSets.contains(expectedPath1))
+        #expect(pathVertexSets.contains(expectedPath2))
+    }
+    
+    @Test func testUntilConditionWithSinglePath() {
+        let graph = createLinearGraph()
+        
+        let a = graph.findVertex(labeled: "A")!
+        
+        // Find shortest path until we reach vertex C
+        let paths = graph.allShortestPaths(from: a, until: { vertex in
+            graph[vertex].label == "C"
+        }, weight: .property(\.weight))
+        
+        #expect(paths.count == 1)
+        
+        let path = paths[0]
+        #expect(path.vertices.count == 3)
+        #expect(path.edges.count == 2)
+        #expect(graph[path.destination].label == "C")
+        
+        let cost = path.edges.reduce(0.0) { sum, edge in
+            sum + graph[edge].weight
+        }
+        #expect(cost == 5.0)
+    }
+    
+    @Test func testUntilConditionWithNoMatchingVertex() {
+        let graph = createLinearGraph()
+        
+        let a = graph.findVertex(labeled: "A")!
+        
+        // Find shortest path until we reach a vertex that doesn't exist
+        let paths = graph.allShortestPaths(from: a, until: { vertex in
+            graph[vertex].label == "Z"
+        }, weight: .property(\.weight))
+        
+        #expect(paths.isEmpty)
+    }
+    
+    @Test func testUntilConditionWithSelf() {
+        let graph = createLinearGraph()
+        
+        let a = graph.findVertex(labeled: "A")!
+        
+        // Find shortest path until we reach the source vertex itself
+        let paths = graph.allShortestPaths(from: a, until: { vertex in
+            vertex == a
+        }, weight: .property(\.weight))
+        
+        #expect(paths.count == 1)
+        #expect(paths[0].vertices.count == 1)
+        #expect(paths[0].edges.isEmpty)
+        #expect(paths[0].destination == a)
+    }
+    
+    @Test func testUntilConditionWithComplexGraph() {
+        // Create a graph where we want to find paths until we reach any vertex with label "D" or "E"
+        var graph = AdjacencyList()
+        
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        let e = graph.addVertex { $0.label = "E" }
+        
+        graph.addEdge(from: a, to: b) { $0.weight = 1 }
+        graph.addEdge(from: a, to: c) { $0.weight = 2 }
+        graph.addEdge(from: b, to: d) { $0.weight = 1 }
+        graph.addEdge(from: c, to: e) { $0.weight = 1 }
+        
+        let paths = graph.allShortestPaths(from: a, until: { vertex in
+            let label = graph[vertex].label
+            return label == "D" || label == "E"
+        }, weight: .property(\.weight))
+        
+        // Should find paths to both D and E, but only the shortest ones
+        #expect(paths.count >= 1)
+        
+        for path in paths {
+            let cost = path.edges.reduce(0.0) { sum, edge in
+                sum + graph[edge].weight
+            }
+            let destinationLabel = graph[path.destination].label
+            #expect(destinationLabel == "D" || destinationLabel == "E")
+            
+            // All paths should have the same minimum cost
+            if destinationLabel == "D" {
+                #expect(cost == 2.0) // A -> B -> D
+            } else if destinationLabel == "E" {
+                #expect(cost == 3.0) // A -> C -> E
+            }
+        }
+    }
+    
+    @Test func testBacktrackingDijkstraUntilDirectly() {
+        let graph = createMultipleEqualPathsGraph()
+        
+        let a = graph.findVertex(labeled: "A")!
+        
+        let algorithm = BacktrackingDijkstra(on: graph, edgeWeight: .property(\.weight))
+        let result = algorithm.findAllShortestPaths(from: a, until: { vertex in
+            graph[vertex].label == "D"
+        }, visitor: nil)
+        
+        #expect(result.paths.count == 2)
+        #expect(result.optimalCost == 3.0)
+        #expect(result.source == a)
+        #expect(graph[result.destination].label == "D")
+    }
+    
+    @Test func testUntilWithAlgorithmParameter() {
+        let graph = createMultipleEqualPathsGraph()
+        
+        let a = graph.findVertex(labeled: "A")!
+        
+        let paths = graph.allShortestPaths(
+            from: a,
+            until: { vertex in graph[vertex].label == "D" },
+            using: .backtrackingDijkstra(weight: .property(\.weight))
+        )
+        
+        #expect(paths.count == 2)
+    }
 }
 

@@ -4,7 +4,7 @@ extension ShortestPathAlgorithm where Weight: AdditiveArithmetic {
     /// - Parameter weight: The cost definition for edge weights.
     /// - Returns: A Johnson shortest path algorithm instance.
     @inlinable
-    public static func johnson<Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph, Weight>(
+    public static func johnson<Graph: IncidenceGraph & VertexListGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == JohnsonShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable, Weight: Numeric, Weight.Magnitude == Weight {
         .init(weight: weight)
@@ -18,7 +18,7 @@ extension ShortestPathAlgorithm where Weight: AdditiveArithmetic {
 ///
 /// - Complexity: O(V^2 log V + VE) where V is the number of vertices and E is the number of edges
 public struct JohnsonShortestPath<
-    Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph & VertexListGraph,
     Weight: AdditiveArithmetic & Comparable
 >: ShortestPathAlgorithm where
     Graph.VertexDescriptor: Hashable,

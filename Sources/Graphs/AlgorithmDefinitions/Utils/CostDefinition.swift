@@ -27,7 +27,7 @@ extension CostDefinition {
     }
 }
 
-extension CostDefinition where Cost == Int {
+extension CostDefinition where Cost == UInt {
     /// A cost definition that returns a unit cost (1) for all edges.
     @inlinable
     public static var unit: Self {

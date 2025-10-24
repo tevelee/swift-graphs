@@ -6,7 +6,7 @@
 ///
 /// - Complexity: O(V² log V + VE) where V is the number of vertices and E is the number of edges
 public struct Johnson<
-    Graph: IncidenceGraph & VertexListGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph & VertexListGraph,
     Weight: AdditiveArithmetic & Comparable
 > where
     Graph.VertexDescriptor: Hashable,

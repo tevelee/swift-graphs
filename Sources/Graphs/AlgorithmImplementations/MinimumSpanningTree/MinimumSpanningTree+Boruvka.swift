@@ -4,7 +4,7 @@ extension MinimumSpanningTreeAlgorithm where Weight: AdditiveArithmetic {
     /// - Parameter weight: The cost definition for edge weights
     /// - Returns: A new Borůvka MST algorithm
     @inlinable
-    public static func boruvka<Graph: EdgeListGraph & IncidenceGraph & EdgePropertyGraph & VertexListGraph, Weight>(
+    public static func boruvka<Graph: EdgeListGraph & IncidenceGraph  & VertexListGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == Boruvka<Graph, Weight>, Graph.VertexDescriptor: Hashable {
         .init(edgeWeight: weight)

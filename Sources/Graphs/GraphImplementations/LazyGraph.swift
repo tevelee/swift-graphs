@@ -1,3 +1,5 @@
+import Collections
+
 /// A protocol for lazy edge representations.
 ///
 /// LazyEdge defines the interface for edges that are computed on demand,
@@ -24,6 +26,9 @@ public struct SimpleEdge<Vertex>: LazyEdge {
         self.destination = destination
     }
 }
+
+extension SimpleEdge: Equatable where Vertex: Equatable {}
+extension SimpleEdge: Hashable where Vertex: Hashable {}
 
 /// A lazy incidence graph that computes edges on demand.
 ///
@@ -74,5 +79,55 @@ extension LazyIncidenceGraph {
                 SimpleEdge(source: source, destination: $0)
             }
         }
+    }
+    
+    /// Materializes the lazy graph into a concrete AdjacencyList.
+    ///
+    /// This function traverses the lazy graph starting from the given source vertex
+    /// to discover all reachable vertices and edges, then creates a concrete
+    /// AdjacencyList that implements VertexListGraph for use with algorithms
+    /// like Floyd-Warshall that require vertex enumeration.
+    ///
+    /// - Parameters:
+    ///   - source: The starting vertex for traversal to discover the graph structure
+    ///   - traversalAlgorithm: The traversal algorithm to use
+    /// - Returns: An AdjacencyList containing all discovered vertices and edges
+    @inlinable
+    public func materialize(
+        from source: Vertex,
+        using traversalAlgorithm: some TraversalAlgorithm<Self>
+    ) -> some AdjacencyListProtocol where Vertex: Hashable, Edge: LazyEdge<Vertex> {
+        let result = traverse(from: source, using: traversalAlgorithm)
+        
+        var graph = AdjacencyList()
+        
+        let uniqueVertices = OrderedSet(result.vertices)
+        
+        var vertexMapping: [Vertex: OrderedVertexStorage.Vertex] = [:]
+        for vertex in uniqueVertices {
+            vertexMapping[vertex] = graph.addVertex()
+        }
+        
+        for edge in result.edges {
+            guard let sourceVertex = self.source(of: edge),
+                  let destinationVertex = self.destination(of: edge),
+                  let mappedSource = vertexMapping[sourceVertex],
+                  let mappedDestination = vertexMapping[destinationVertex] else { continue }
+            
+            graph.addEdge(from: mappedSource, to: mappedDestination)
+        }
+        
+        return graph
+    }
+    
+    /// Materializes the lazy graph into a concrete AdjacencyList using DFS traversal.
+    ///
+    /// This is a convenience method that uses DFS traversal by default.
+    ///
+    /// - Parameter source: The starting vertex for traversal to discover the graph structure
+    /// - Returns: An AdjacencyList containing all discovered vertices and edges
+    @inlinable
+    public func materialize(from source: Vertex) -> some AdjacencyListProtocol where Vertex: Hashable, Edge: LazyEdge<Vertex> {
+        return materialize(from: source, using: .bfs())
     }
 }

@@ -6,7 +6,7 @@
 ///
 /// - Complexity: O(E * max_flow) where E is the number of edges
 public struct FordFulkerson<
-    Graph: IncidenceGraph & EdgePropertyGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
+    Graph: IncidenceGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
     Flow: AdditiveArithmetic & Comparable & Numeric & FloatingPoint
 > where
     Graph.VertexDescriptor: Hashable,

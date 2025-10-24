@@ -1,3 +1,23 @@
+extension AllShortestPathsUntilAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
+    /// Creates a backtracking Dijkstra algorithm for finding all shortest paths until a condition is met.
+    ///
+    /// This algorithm finds all paths from source to vertices that satisfy a condition and share the optimal (minimum) cost.
+    /// It first runs Dijkstra to find the optimal cost, then tracks all predecessors that maintain
+    /// that optimal cost, and finally backtracks to enumerate all such paths.
+    ///
+    /// - Parameter weight: The cost definition for edge weights
+    /// - Returns: A backtracking Dijkstra algorithm instance
+    @inlinable
+    public static func backtrackingDijkstra<Graph: IncidenceGraph, Weight>(
+        weight: CostDefinition<Graph, Weight>
+    ) -> Self where 
+        Self == BacktrackingDijkstraAllShortestPathsAlgorithm<Graph, Weight>,
+        Graph.VertexDescriptor: Hashable
+    {
+        .init(weight: weight)
+    }
+}
+
 extension AllShortestPathsAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
     /// Creates a backtracking Dijkstra algorithm for finding all shortest paths.
     ///
@@ -8,7 +28,7 @@ extension AllShortestPathsAlgorithm where Weight: Numeric, Weight.Magnitude == W
     /// - Parameter weight: The cost definition for edge weights
     /// - Returns: A backtracking Dijkstra algorithm instance
     @inlinable
-    public static func backtrackingDijkstra<Graph: IncidenceGraph & EdgePropertyGraph, Weight>(
+    public static func backtrackingDijkstra<Graph: IncidenceGraph, Weight>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where 
         Self == BacktrackingDijkstraAllShortestPathsAlgorithm<Graph, Weight>,
@@ -20,9 +40,9 @@ extension AllShortestPathsAlgorithm where Weight: Numeric, Weight.Magnitude == W
 
 /// An all shortest paths algorithm based on backtracking Dijkstra.
 public struct BacktrackingDijkstraAllShortestPathsAlgorithm<
-    Graph: IncidenceGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph,
     Weight: Numeric & Comparable
->: AllShortestPathsAlgorithm where
+>: AllShortestPathsUntilAlgorithm, AllShortestPathsAlgorithm where
     Graph.VertexDescriptor: Hashable,
     Weight.Magnitude == Weight
 {
@@ -36,6 +56,18 @@ public struct BacktrackingDijkstraAllShortestPathsAlgorithm<
     @inlinable
     public init(weight: CostDefinition<Graph, Weight>) {
         self.weight = weight
+    }
+    
+    @inlinable
+    public func allShortestPaths(
+        from source: Graph.VertexDescriptor,
+        until condition: @escaping (Graph.VertexDescriptor) -> Bool,
+        in graph: Graph,
+        visitor: Visitor?
+    ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>] {
+        let algorithm = BacktrackingDijkstra(on: graph, edgeWeight: weight)
+        let result = algorithm.findAllShortestPaths(from: source, until: condition, visitor: visitor)
+        return result.paths
     }
     
     @inlinable

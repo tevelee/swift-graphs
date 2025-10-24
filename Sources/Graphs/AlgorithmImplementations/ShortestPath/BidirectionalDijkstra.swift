@@ -6,7 +6,7 @@
 ///
 /// - Complexity: O(E log V) where E is the number of edges and V is the number of vertices
 public struct BidirectionalDijkstra<
-    Graph: IncidenceGraph & BidirectionalGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph & BidirectionalGraph,
     Weight: Numeric & Comparable
 > where
     Graph.VertexDescriptor: Hashable,

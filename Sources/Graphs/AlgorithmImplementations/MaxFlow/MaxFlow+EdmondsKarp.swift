@@ -7,7 +7,7 @@ extension MaxFlowAlgorithm {
     public static func edmondsKarp<Graph, Flow>(
         capacityCost: CostDefinition<Graph, Flow>
     ) -> EdmondsKarp<Graph, Flow> where
-        Graph: IncidenceGraph & EdgePropertyGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
+        Graph: IncidenceGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
         Flow: AdditiveArithmetic & Comparable & Numeric & FloatingPoint,
         Graph.VertexDescriptor: Hashable,
         Graph.EdgeDescriptor: Hashable,

@@ -5,7 +5,7 @@
 ///
 /// - Complexity: O(E log E) where E is the number of edges
 public struct Kruskal<
-    Graph: EdgeListGraph & IncidenceGraph & EdgePropertyGraph & VertexListGraph,
+    Graph: EdgeListGraph & IncidenceGraph  & VertexListGraph,
     Weight: AdditiveArithmetic & Comparable
 > where
     Graph.VertexDescriptor: Hashable

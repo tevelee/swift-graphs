@@ -114,7 +114,7 @@ extension IncidenceGraph where Self: VertexListGraph {
 
 // MARK: - Default Implementations
 
-extension IncidenceGraph where Self: VertexListGraph & EdgePropertyGraph, VertexDescriptor: Hashable {
+extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Finds shortest paths between all pairs of vertices using Floyd-Warshall algorithm as the default.
     /// This is efficient for dense graphs and when you need all-pairs shortest paths.
     ///

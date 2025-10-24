@@ -37,7 +37,7 @@ extension ShortestPathAlgorithm {
 ///
 /// - Complexity: O((V + E) log V) where V is the number of vertices and E is the number of edges
 public struct AStarShortestPathAlgorithm<
-    Graph: IncidenceGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph,
     Weight: AdditiveArithmetic & Comparable,
     HScore: AdditiveArithmetic,
     FScore: Comparable
@@ -124,7 +124,7 @@ extension ShortestPathAlgorithm {
 }
 
 struct AStarShortestPathToDestination<
-    Graph: IncidenceGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph,
     Weight: AdditiveArithmetic & Comparable,
     HScore: AdditiveArithmetic,
     FScore: Comparable

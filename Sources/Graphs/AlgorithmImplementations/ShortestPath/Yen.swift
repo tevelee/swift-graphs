@@ -6,7 +6,7 @@
 ///
 /// - Complexity: O(K * V * (E + V log V)) where K is the number of paths, V is the number of vertices, and E is the number of edges
 public struct Yen<
-    Graph: IncidenceGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph,
     Weight: Numeric & Comparable
 > where
     Graph.VertexDescriptor: Hashable,
@@ -447,27 +447,18 @@ extension Yen.PriorityItem: Comparable {
 
 /// A temporary graph that allows edge removal for Yen's algorithm.
 @usableFromInline
-struct TemporaryGraph<BaseGraph: IncidenceGraph & EdgePropertyGraph>: IncidenceGraph & EdgePropertyGraph where BaseGraph.EdgeDescriptor: Hashable {
+struct TemporaryGraph<BaseGraph: IncidenceGraph>: IncidenceGraph where BaseGraph.EdgeDescriptor: Hashable {
     @usableFromInline
     typealias VertexDescriptor = BaseGraph.VertexDescriptor
     @usableFromInline
     typealias EdgeDescriptor = BaseGraph.EdgeDescriptor
     @usableFromInline
     typealias OutgoingEdges = FilteredEdges<BaseGraph.OutgoingEdges>
-    @usableFromInline
-    typealias EdgeProperties = BaseGraph.EdgeProperties
-    @usableFromInline
-    typealias EdgePropertyMap = BaseGraph.EdgePropertyMap
     
     @usableFromInline
     let originalGraph: BaseGraph
     @usableFromInline
     var removedEdges: Set<EdgeDescriptor> = []
-    
-    @usableFromInline
-    var edgePropertyMap: EdgePropertyMap {
-        originalGraph.edgePropertyMap
-    }
     
     @inlinable
     init(originalGraph: BaseGraph) {
@@ -501,9 +492,6 @@ struct TemporaryGraph<BaseGraph: IncidenceGraph & EdgePropertyGraph>: IncidenceG
     func outDegree(of vertex: VertexDescriptor) -> Int {
         originalGraph.outgoingEdges(of: vertex).filter { !removedEdges.contains($0) }.count
     }
-    
-    // MARK: - EdgePropertyGraph conformance
-    // The protocol only requires edgePropertyMap, which is already provided
 }
 
 @usableFromInline

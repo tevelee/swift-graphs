@@ -5,7 +5,7 @@
 ///
 /// - Complexity: O(E + V log V) where E is the number of edges and V is the number of vertices
 public struct UniformCostSearch<
-    Graph: IncidenceGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph,
     Weight: Numeric & Comparable
 > where
     Graph.VertexDescriptor: Hashable,

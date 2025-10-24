@@ -8,7 +8,7 @@ extension ShortestPathUntilAlgorithm {
 }
 
 public struct DijkstraShortestPath<
-    Graph: IncidenceGraph & EdgePropertyGraph,
+    Graph: IncidenceGraph,
     Weight: Numeric
 >: ShortestPathUntilAlgorithm where
     Weight.Magnitude == Weight,
