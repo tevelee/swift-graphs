@@ -80,10 +80,10 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 ### Optimization Problems
 
 - **Minimum Spanning Tree** - Kruskal, Prim, Borůvka algorithms
-- **Maximum Flow** - Ford-Fulkerson, Edmonds-Karp, Dinic's algorithms
+- **Maximum Flow** - Ford-Fulkerson, Edmonds-Karp, Dinic algorithms
 - **Graph Coloring** - Greedy, DSatur, Welsh-Powell algorithms
 - **Topological Sort** - DAG ordering
-- **Matching** - Maximum cardinality and weighted matching
+- **Matching** - Maximum cardinality matching (Hopcroft-Karp)
 
 ### Special Paths
 

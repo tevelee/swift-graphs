@@ -1,6 +1,9 @@
 import Collections
 
 extension EdgeStorage where Edges == OrderedSet<Edge> {
+    /// Creates a caching wrapper that provides O(1) access to incoming and outgoing edges.
+    ///
+    /// - Returns: A cached edge storage wrapper around this storage
     @inlinable
     public func cacheInOutEdges() -> CacheInOutEdges<Self> {
         CacheInOutEdges(base: self)

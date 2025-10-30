@@ -93,7 +93,7 @@ cityNetwork.kShortestPaths(from: sanFrancisco, to: denver, k: 3, using: .yen(wei
 
 // All-Pairs Shortest Paths - distances between all city pairs
 cityNetwork.shortestPathsForAllPairs(using: .floydWarshall(weight: .property(\.weight)))
-cityNetwork.shortestPathsForAllPairs(using: .johnson(weight: .property(\.weight)))
+cityNetwork.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)))
 
 // Minimum Spanning Tree - minimum cost to connect all cities
 cityNetwork.minimumSpanningTree(using: .kruskal(weight: .property(\.weight)))

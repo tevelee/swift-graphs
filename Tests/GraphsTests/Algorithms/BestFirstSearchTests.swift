@@ -4,12 +4,12 @@ import Testing
 struct BestFirstTests {
     @Test func greedyBestFirst_OrdersByHeuristic() {
         var graph = AdjacencyList()
-        graph.add(edges: [
-            ("s", "a"),
-            ("s", "b"),
-            ("a", "c"),
-            ("b", "d"),
-        ])
+        graph.addEdges(providing: \.label) {
+            ("s", "a")
+            ("s", "b")
+            ("a", "c")
+            ("b", "d")
+        }
 
         // Heuristic that favors 'b' branch first
         let order: [String: UInt] = ["s": 0, "b": 1, "d": 2, "a": 3, "c": 4]

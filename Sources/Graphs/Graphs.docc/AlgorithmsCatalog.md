@@ -97,7 +97,7 @@ let path = graph.shortestPath(
 **Best for:** All-pairs shortest paths, dense graphs
 
 ```swift
-let allPaths = graph.allPairsShortestPaths(
+let allPaths = graph.shortestPathsForAllPairs(
     using: .floydWarshall(weight: .property(\.weight))
 )
 ```
@@ -120,8 +120,8 @@ let allPaths = graph.allPairsShortestPaths(
 **Best for:** All-pairs shortest paths in sparse graphs
 
 ```swift
-let allPaths = graph.allPairsShortestPaths(
-    using: .johnson(weight: .property(\.weight))
+let allPaths = graph.shortestPathsForAllPairs(
+    using: .johnson(edgeWeight: .property(\.weight))
 )
 ```
 
@@ -453,7 +453,7 @@ Compute maximum flow in flow networks.
 let maxFlow = graph.maximumFlow(
     from: source,
     to: sink,
-    using: .fordFulkerson(capacity: .property(\.capacity))
+    using: .fordFulkerson(capacityCost: .property(\.capacity))
 )
 ```
 
@@ -476,7 +476,7 @@ let maxFlow = graph.maximumFlow(
 let maxFlow = graph.maximumFlow(
     from: source,
     to: sink,
-    using: .edmondsKarp(capacity: .property(\.capacity))
+    using: .edmondsKarp(capacityCost: .property(\.capacity))
 )
 ```
 
@@ -501,7 +501,7 @@ let maxFlow = graph.maximumFlow(
 let maxFlow = graph.maximumFlow(
     from: source,
     to: sink,
-    using: .dinic(capacity: .property(\.capacity))
+    using: .dinic(capacityCost: .property(\.capacity))
 )
 ```
 
@@ -516,28 +516,6 @@ let maxFlow = graph.maximumFlow(
 - Need better performance
 - Bipartite matching
 
-### Push-Relabel Algorithm
-
-**Best for:** Maximum performance
-
-```swift
-let maxFlow = graph.maximumFlow(
-    from: source,
-    to: sink,
-    using: .pushRelabel(capacity: .property(\.capacity))
-)
-```
-
-**Characteristics:**
-- **Time Complexity:** O(V²E) - O(V³) with heuristics
-- **Space Complexity:** O(V + E)
-- **Strategy:** Preflow-push
-- **Fastest:** In practice for many graphs
-
-**Use when:**
-- Performance critical
-- Very large networks
-- Willing to trade complexity for speed
 
 ## Graph Coloring
 
@@ -627,26 +605,6 @@ let matching = bipartiteGraph.maximumMatching(using: .hopcroftKarp())
 - Resource allocation
 - Fastest bipartite matching
 
-### Hungarian Algorithm
-
-**Best for:** Weighted bipartite matching
-
-```swift
-let matching = bipartiteGraph.maximumWeightedMatching(
-    using: .hungarian(weight: .property(\.weight))
-)
-```
-
-**Characteristics:**
-- **Time Complexity:** O(V³)
-- **Space Complexity:** O(V²)
-- **Finds:** Maximum weight matching
-- **Optimal:** Yes
-
-**Use when:**
-- Weighted assignment problems
-- Cost optimization
-- Task scheduling with costs
 
 ## Topological Sort
 

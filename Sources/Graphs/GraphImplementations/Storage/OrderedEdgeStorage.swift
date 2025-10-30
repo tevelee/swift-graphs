@@ -1,6 +1,7 @@
 import Collections
 
 extension EdgeStorage {
+    /// Creates an ordered edge storage instance.
     @inlinable
     public static func ordered<Vertex>() -> OrderedEdgeStorage<Vertex> where Self == OrderedEdgeStorage<Vertex> {
         OrderedEdgeStorage()

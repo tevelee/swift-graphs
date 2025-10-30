@@ -1,6 +1,7 @@
 import Collections
 
 extension VertexStorage {
+    /// Creates an ordered vertex storage instance.
     @inlinable
     public static func ordered() -> OrderedVertexStorage where Self == OrderedVertexStorage {
         OrderedVertexStorage()

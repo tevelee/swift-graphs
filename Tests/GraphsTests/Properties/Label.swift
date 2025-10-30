@@ -25,7 +25,7 @@ extension AdjacencyList {
     ) -> VertexDescriptor {
         addVertex { $0.label = "\(file):\(line)" }
     }
-    
+
     @discardableResult
     mutating func addEdge(
         from source: VertexDescriptor,
@@ -34,46 +34,6 @@ extension AdjacencyList {
         line: Int = #line
     ) -> EdgeDescriptor? {
         addEdge(from: source, to: destination) { $0.label = "\(file):\(line)" }
-    }
-}
-
-extension MutablePropertyGraph {
-    mutating func add(edges: [(String, String)]) {
-        let labelToVertex: [String: VertexDescriptor] = Dictionary(
-            grouping: edges.flatMap { [$0, $1] },
-            by: \.self
-        )
-        .compactMapValues(\.first)
-        .mapValues { label in
-            self.addVertex { $0.label = label }
-        }
-
-        for (sourceLabel, destinationLabel) in edges {
-            let source = labelToVertex[sourceLabel]!
-            let destination = labelToVertex[destinationLabel]!
-            addEdge(from: source, to: destination)
-        }
-    }
-    
-    mutating func add(edges: [(String, String, weight: Double)]) {
-        let labelToVertex: [String: VertexDescriptor] = Dictionary(
-            grouping: edges.flatMap { source, destination, _ in
-                [source, destination]
-            },
-            by: \.self
-        )
-        .compactMapValues(\.first)
-        .mapValues { label in
-            self.addVertex { $0.label = label }
-        }
-
-        for (sourceLabel, destinationLabel, weight) in edges {
-            let source = labelToVertex[sourceLabel]!
-            let destination = labelToVertex[destinationLabel]!
-            addEdge(from: source, to: destination) {
-                $0.weight = weight
-            }
-        }
     }
 }
 

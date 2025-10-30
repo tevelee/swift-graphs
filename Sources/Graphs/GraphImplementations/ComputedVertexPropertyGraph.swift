@@ -19,9 +19,13 @@ extension Graph {
 /// ComputedVertexPropertyGraph wraps a base graph and provides computed vertex properties
 /// that are calculated dynamically when accessed. This is useful for properties that
 /// are expensive to store but can be computed efficiently on demand.
-public struct ComputedVertexPropertyGraph<Base: Graph, Property: VertexProperty> {
+public struct ComputedVertexPropertyGraph<Base: Graph, Property: VertexProperty> where Base.VertexDescriptor: Hashable {
     public var base: Base
     public let compute: (Base.VertexDescriptor, Base) -> Property.Value
+    
+    public typealias UnderlyingPropertyMap = DictionaryPropertyMap<Base.VertexDescriptor, VertexPropertyValues>
+    @usableFromInline
+    var _vertexPropertyMap = UnderlyingPropertyMap(defaultValue: VertexPropertyValues())
     
     @inlinable
     public init(base: Base, compute: @escaping (Base.VertexDescriptor, Base) -> Property.Value) {
@@ -135,13 +139,13 @@ extension ComputedVertexPropertyGraph: EdgeMutablePropertyGraph where Base: Edge
     }
 }
 
-extension ComputedVertexPropertyGraph: VertexPropertyGraph where Base: VertexPropertyGraph {
-    public typealias VertexProperties = ComputedVertexProperties<Base.VertexProperties, Property>
-    public typealias VertexPropertyMap = ComputedVertexPropertyMap<Base.VertexPropertyMap, Property>
+extension ComputedVertexPropertyGraph: VertexPropertyGraph {
+    public typealias VertexProperties = ComputedVertexProperties<VertexPropertyValues, Property>
+    public typealias VertexPropertyMap = ComputedVertexPropertyMap<UnderlyingPropertyMap, Property>
     @inlinable
-    public var vertexPropertyMap: ComputedVertexPropertyMap<Base.VertexPropertyMap, Property> {
-        .init(base: base.vertexPropertyMap) { edge in
-            compute(edge, base)
+    public var vertexPropertyMap: ComputedVertexPropertyMap<UnderlyingPropertyMap, Property> {
+        .init(base: _vertexPropertyMap) { vertex in
+            compute(vertex, base)
         }
     }
 }
