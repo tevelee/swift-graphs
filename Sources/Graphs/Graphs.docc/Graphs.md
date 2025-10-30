@@ -91,6 +91,14 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 - **Hamiltonian Paths** - Visit every vertex exactly once
 - **K-Shortest Paths** - Find multiple paths
 
+### Centrality Measures
+
+- **Degree Centrality** - Simple importance based on connections
+- **PageRank** - Link-based importance for web graphs
+- **Betweenness Centrality** - Bottleneck and bridge identification
+- **Closeness Centrality** - Average distance to all vertices
+- **Eigenvector Centrality** - Recursive importance measure
+
 ### Random Graphs
 
 - **Erdős-Rényi** - Random edge probability

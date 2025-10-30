@@ -156,6 +156,14 @@ cityNetwork.findCliques(using: .bronKerbosch())
 cityNetwork.detectCommunities()
 cityNetwork.detectCommunities(using: .louvain())
 
+// Centrality Measures - measure vertex importance and influence
+cityNetwork.centrality()
+cityNetwork.centrality(using: .degree())
+cityNetwork.centrality(using: .pageRank(dampingFactor: 0.85))
+cityNetwork.centrality(using: .betweenness())
+cityNetwork.centrality(using: .closeness())
+cityNetwork.centrality(using: .eigenvector())
+
 // Graph Isomorphism - check if two graphs have the same structure
 var anotherNetwork = AdjacencyList()
 // ... build another network
@@ -201,7 +209,7 @@ dependencies: [
 
 **Optimization** - Minimum Spanning Tree (Kruskal, Prim, Borůvka), Maximum Flow (Ford-Fulkerson, Edmonds-Karp, Dinic), Graph Coloring (Greedy, DSatur, Welsh-Powell, Sequential), Matching (Hopcroft-Karp), Topological Sort (DFS, Kahn)
 
-**Advanced** - Graph Isomorphism (VF2, Weisfeiler-Lehman), Clique Detection (Bron-Kerbosch), Community Detection (Louvain), Random Graphs (Erdős-Rényi, Barabási-Albert, Watts-Strogatz)
+**Advanced** - Graph Isomorphism (VF2, Weisfeiler-Lehman), Clique Detection (Bron-Kerbosch), Community Detection (Louvain), Centrality Measures (PageRank, Betweenness, Closeness, Eigenvector, Degree), Random Graphs (Erdős-Rényi, Barabási-Albert, Watts-Strogatz)
 
 ## Design Philosophy
 

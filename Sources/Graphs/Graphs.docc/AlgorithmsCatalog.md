@@ -938,6 +938,110 @@ let isPlanar = graph.isPlanar(using: .boyerMyrvold())
 - Geographic networks
 - Graph drawing
 
+## Centrality Measures
+
+Measure the importance or influence of vertices in a graph.
+
+### Degree Centrality
+
+**Best for:** Simple importance measure based on connections
+
+```swift
+let centrality = graph.centrality(using: .degree())
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V + E)
+- **Space Complexity:** O(V)
+- **Measures:** Number of outgoing edges
+- **Simple:** Fastest centrality measure
+
+**Use when:**
+- Need quick importance ranking
+- Local influence matters
+- Social network analysis
+- Default centrality measure
+
+### PageRank
+
+**Best for:** Web graphs and link-based importance
+
+```swift
+let centrality = graph.centrality(using: .pageRank(dampingFactor: 0.85))
+```
+
+**Characteristics:**
+- **Time Complexity:** O(k × (V + E)) where k is iterations until convergence
+- **Space Complexity:** O(V)
+- **Measures:** Importance based on incoming links
+- **Handles:** Dangling nodes (vertices with no outgoing edges)
+
+**Use when:**
+- Web graph analysis
+- Citation networks
+- Influence propagation
+- Link-based ranking
+
+### Betweenness Centrality
+
+**Best for:** Identifying bottlenecks and bridge vertices
+
+```swift
+let centrality = graph.centrality(using: .betweenness())
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V × E) for unweighted graphs
+- **Space Complexity:** O(V)
+- **Measures:** How often vertex appears on shortest paths
+- **Algorithm:** Brandes' algorithm
+
+**Use when:**
+- Network resilience analysis
+- Finding critical nodes
+- Transportation networks
+- Communication bottlenecks
+
+### Closeness Centrality
+
+**Best for:** Identifying vertices close to all others
+
+```swift
+let centrality = graph.centrality(using: .closeness())
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V × (V + E))
+- **Space Complexity:** O(V)
+- **Measures:** Average distance to all other vertices
+- **Handles:** Disconnected components (returns 0 for unreachable vertices)
+
+**Use when:**
+- Information spreading
+- Epidemic modeling
+- Finding central hubs
+- Average reachability analysis
+
+### Eigenvector Centrality
+
+**Best for:** Importance based on neighbors' importance
+
+```swift
+let centrality = graph.centrality(using: .eigenvector())
+```
+
+**Characteristics:**
+- **Time Complexity:** O(k × (V + E)) where k is iterations until convergence
+- **Space Complexity:** O(V)
+- **Measures:** Recursive importance (important if connected to important vertices)
+- **Requires:** BidirectionalGraph (needs incoming edges)
+
+**Use when:**
+- Social influence analysis
+- Power structures
+- Collaborative networks
+- Recursive importance needed
+
 ## Algorithm Selection Guide
 
 ### By Problem Type
@@ -954,6 +1058,7 @@ let isPlanar = graph.isPlanar(using: .boyerMyrvold())
 | Bipartite matching | Hopcroft-Karp |
 | Topological sort | Kahn or DFS |
 | Connected components | DFS (standard), Union-Find (incremental) |
+| Vertex importance | Degree (fast), PageRank (link-based), Betweenness (bottlenecks) |
 
 ### By Graph Size
 
