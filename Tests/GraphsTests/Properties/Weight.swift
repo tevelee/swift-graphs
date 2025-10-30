@@ -1,6 +1,6 @@
 @testable import Graphs
 
-enum Weight: VertexProperty, EdgeProperty {
+enum Weight: VertexProperty, EdgeProperty, SerializableProperty {
     static let defaultValue = 1.0
 }
 extension VertexProperties {

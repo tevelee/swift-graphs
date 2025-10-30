@@ -1,6 +1,6 @@
 @testable import Graphs
 
-enum Label: VertexProperty, EdgeProperty {
+enum Label: VertexProperty, EdgeProperty, SerializableProperty {
     static let defaultValue = ""
 }
 
@@ -18,24 +18,6 @@ extension EdgeProperties {
     }
 }
 
-extension AdjacencyList {
-    mutating func addVertex(
-        file: String = #file,
-        line: Int = #line
-    ) -> VertexDescriptor {
-        addVertex { $0.label = "\(file):\(line)" }
-    }
-
-    @discardableResult
-    mutating func addEdge(
-        from source: VertexDescriptor,
-        to destination: VertexDescriptor,
-        file: String = #file,
-        line: Int = #line
-    ) -> EdgeDescriptor? {
-        addEdge(from: source, to: destination) { $0.label = "\(file):\(line)" }
-    }
-}
 
 extension AdjacencyList {
     func traverse(
