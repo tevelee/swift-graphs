@@ -102,6 +102,47 @@ cityMap.addEdge(from: sanFrancisco, to: losAngeles) {
 print(cityMap[sanFrancisco].label)  // "San Francisco"
 ```
 
+### Alternative: InlineGraph
+
+For graphs where vertices and edges ARE your data types (not just IDs with separate properties), use `InlineGraph`:
+
+```swift
+// Define your types
+struct City: Hashable {
+    let name: String
+    let population: Int
+}
+
+struct Road: EdgeProtocol {
+    let source: City
+    let destination: City
+    let distance: Double
+}
+
+// Create graph - vertices and edges are the actual data
+var map: InlineGraph<City, Road> = InlineGraph()
+
+let sf = City(name: "San Francisco", population: 815201)
+let la = City(name: "Los Angeles", population: 3820914)
+
+map.addEdge(Road(source: sf, destination: la, distance: 383.0))
+
+// Direct access to your types (no property maps needed)
+for vertex in map.vertices() {
+    print("\(vertex.name): \(vertex.population) people")
+}
+```
+
+**When to use `InlineGraph`:**
+- Your vertices/edges are domain objects, not just identifiers
+- You want strong typing without property map indirection
+- Data is inseparable from graph structure
+
+**When to use `AdjacencyList`:**
+- You need flexible, dynamic properties
+- Vertices are just identifiers with attached data
+- You want to add/remove properties at runtime
+
 ### Default Properties
 
 Swift Graphs provides common properties out of the box:

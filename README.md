@@ -182,7 +182,8 @@ dependencies: [
 ## Features
 
 ### 🏗️ Flexible Graph Types
-- **AdjacencyList** - Sparse graphs (most common)
+- **AdjacencyList** - Sparse graphs with property maps (most common)
+- **InlineGraph** - Vertices and edges directly contain their data
 - **AdjacencyMatrix** - Dense graphs, O(1) edge lookup
 - **GridGraph** - 2D pathfinding and spatial algorithms
 - **LazyIncidenceGraph** - Computed on-demand for large graphs

@@ -58,6 +58,99 @@ var roadNetwork = AdjacencyList()  // City connected to ~5 cities
 var buildSystem = AdjacencyList()  // File depends on ~10 files
 ```
 
+### `InlineGraph` - Data in Types
+
+**Best for:** Graphs where vertices/edges ARE the data
+
+```swift
+// Simple graph with default edges
+let graph: InlineGraph<String, SimpleEdge<String>> = InlineGraph()
+graph.addEdge(from: "A", to: "B")
+
+// Custom edge types with embedded data
+struct WeightedEdge: EdgeProtocol {
+    let source: City
+    let destination: City
+    let distance: Double
+    let mode: TransportMode
+}
+
+var routes: InlineGraph<City, WeightedEdge> = InlineGraph()
+routes.addEdge(WeightedEdge(
+    source: sanFrancisco,
+    destination: losAngeles,
+    distance: 380,
+    mode: .highway
+))
+```
+
+**Characteristics:**
+- **Space complexity:** O(V + E)
+- Vertices and edges are the actual data types
+- No separate storage descriptors or property maps
+- Properties embedded directly in vertex/edge types
+
+**Advantages:**
+- ✅ Type-safe: vertices and edges are your domain types
+- ✅ No indirection through property maps
+- ✅ Cleaner code when data is inseparable from graph elements
+- ✅ Deterministic ordering (uses `OrderedDictionary`)
+- ✅ Works seamlessly with all graph algorithms
+
+**Disadvantages:**
+- ❌ Vertex/edge types must be `Hashable`
+- ❌ Less flexible than property maps for dynamic data
+- ❌ Edge type must conform to `EdgeProtocol`
+
+**Use when:**
+- Your vertices/edges ARE domain objects (not just identifiers)
+- You want strong typing without property map indirection
+- Data is inseparable from graph structure
+- You prefer value semantics
+
+**Example use cases:**
+```swift
+// State machines where states are the data
+enum GameState: Hashable {
+    case menu, playing, paused, gameOver
+}
+struct Transition: EdgeProtocol {
+    let source: GameState
+    let destination: GameState
+    let trigger: String
+}
+let stateMachine: InlineGraph<GameState, Transition> = InlineGraph()
+
+// Knowledge graphs where entities are vertices
+struct Entity: Hashable {
+    let name: String
+    let type: EntityType
+}
+struct Relationship: EdgeProtocol {
+    let source: Entity
+    let destination: Entity
+    let relationshipType: String
+}
+let knowledge: InlineGraph<Entity, Relationship> = InlineGraph()
+
+// Workflow graphs
+struct Task: Hashable {
+    let id: String
+    let name: String
+}
+let workflow: InlineGraph<Task, SimpleEdge<Task>> = InlineGraph()
+```
+
+**Comparison with `AdjacencyList`:**
+
+| Aspect | InlineGraph | AdjacencyList |
+|--------|-------------|---------------|
+| Vertex identity | The type itself | Integer descriptor |
+| Properties | Embedded in type | Separate property map |
+| Type safety | Stronger | Need subscripts |
+| Flexibility | Less (fixed at type level) | More (add properties anytime) |
+| Code clarity | Direct access | Via property maps |
+
 ### `AdjacencyMatrix` - Dense Graphs
 
 **Best for:** Dense graphs, need O(1) edge lookup
@@ -262,6 +355,7 @@ let fractal = LazyIncidenceGraph { point in
 | Implementation | Space | Best For |
 |----------------|-------|----------|
 | AdjacencyList | O(V + E) | Sparse graphs (E << V²) |
+| InlineGraph | O(V + E) | Vertices/edges are domain types |
 | AdjacencyMatrix | O(V²) | Dense graphs (E ≈ V²) |
 | BipartiteAdjacencyList | O(V + E) | Bipartite graphs |
 | GridGraph | O(1) | Regular 2D grids |
@@ -395,6 +489,8 @@ func convert(from list: AdjacencyList) -> AdjacencyMatrix {
 | Scenario | Recommended |
 |----------|-------------|
 | Social network | `AdjacencyList` |
+| State machine | `InlineGraph` |
+| Knowledge graph | `InlineGraph` |
 | Complete graph | `AdjacencyMatrix` |
 | Game map | `GridGraph` |
 | Job matching | `BipartiteAdjacencyList` |
@@ -465,6 +561,7 @@ Now that you've chosen a graph type:
 - <doc:Architecture>
 - <doc:PropertiesAndPropertyMaps>
 - ``AdjacencyList``
+- ``InlineGraph``
 - ``AdjacencyMatrix``
 - ``GridGraph``
 
