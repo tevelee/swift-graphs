@@ -81,7 +81,7 @@ public struct LouvainCommunityDetection<Graph: IncidenceGraph & VertexListGraph 
             
             // First phase: local optimization
             for vertex in graph.vertices() {
-                let currentCommunity = communities[vertex]!
+                guard let currentCommunity = communities[vertex] else { continue }
                 let neighbors = graph.successors(of: vertex)
                 
                 // Find best community to move to
@@ -118,7 +118,7 @@ public struct LouvainCommunityDetection<Graph: IncidenceGraph & VertexListGraph 
         }
         
         // Group vertices by community
-        let communityGroups = Dictionary(grouping: communities.keys) { communities[$0]! }
+        let communityGroups = Dictionary(grouping: communities.keys) { communities[$0] ?? -1 }
         let finalCommunities = communityGroups.values.map { Array($0) }
         
         return CommunityDetectionResult(

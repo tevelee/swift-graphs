@@ -98,6 +98,8 @@ public struct CliqueDetectionResult<Vertex: Hashable> {
     }
 }
 
+extension CliqueDetectionResult: Sendable where Vertex: Sendable {}
+
 extension CliqueDetectionResult: Equatable where Vertex: Equatable {
     public static func == (lhs: CliqueDetectionResult<Vertex>, rhs: CliqueDetectionResult<Vertex>) -> Bool {
         lhs.cliques.count == rhs.cliques.count && 

@@ -63,10 +63,12 @@ public struct UnionFindConnectedComponents<Graph: IncidenceGraph & VertexListGra
         
         // Find function with path compression
         func find(_ vertex: Vertex) -> Vertex {
-            if parent[vertex] != vertex {
-                parent[vertex] = find(parent[vertex]!)
+            guard var currentParent = parent[vertex] else { return vertex }
+            if currentParent != vertex {
+                currentParent = find(currentParent)
+                parent[vertex] = currentParent
             }
-            return parent[vertex]!
+            return currentParent
         }
         
         // Union function with union by rank
@@ -76,13 +78,15 @@ public struct UnionFindConnectedComponents<Graph: IncidenceGraph & VertexListGra
             
             if rootX == rootY { return }
             
-            if rank[rootX]! < rank[rootY]! {
+            guard let rankX = rank[rootX], let rankY = rank[rootY] else { return }
+            
+            if rankX < rankY {
                 parent[rootX] = rootY
-            } else if rank[rootX]! > rank[rootY]! {
+            } else if rankX > rankY {
                 parent[rootY] = rootX
             } else {
                 parent[rootY] = rootX
-                rank[rootX]! += 1
+                rank[rootX] = rankX + 1
             }
         }
         
@@ -102,10 +106,7 @@ public struct UnionFindConnectedComponents<Graph: IncidenceGraph & VertexListGra
         var components: [Vertex: [Vertex]] = [:]
         for vertex in graph.vertices() {
             let root = find(vertex)
-            if components[root] == nil {
-                components[root] = []
-            }
-            components[root]!.append(vertex)
+            components[root, default: []].append(vertex)
         }
         
         // Convert to array of arrays and notify visitor

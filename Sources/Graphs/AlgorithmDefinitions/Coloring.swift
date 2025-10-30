@@ -71,6 +71,8 @@ public struct GraphColoring<Vertex: Hashable, Color: Hashable & Equatable> {
     }
 }
 
+extension GraphColoring: Sendable where Vertex: Sendable, Color: Sendable {}
+
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Colors the graph using the specified algorithm.
     ///

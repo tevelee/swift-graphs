@@ -37,10 +37,12 @@ public struct UnionFindCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexLis
         
         // Find root with path compression
         func findRoot(_ vertex: Graph.VertexDescriptor) -> Graph.VertexDescriptor {
-            if parent[vertex] != vertex {
-                parent[vertex] = findRoot(parent[vertex]!)
+            guard var currentParent = parent[vertex] else { return vertex }
+            if currentParent != vertex {
+                currentParent = findRoot(currentParent)
+                parent[vertex] = currentParent
             }
-            return parent[vertex]!
+            return currentParent
         }
         
         // Union two sets by rank
@@ -53,13 +55,15 @@ public struct UnionFindCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexLis
             }
             
             // Union by rank
-            if rank[rootX]! < rank[rootY]! {
+            guard let rankX = rank[rootX], let rankY = rank[rootY] else { return }
+            
+            if rankX < rankY {
                 parent[rootX] = rootY
-            } else if rank[rootX]! > rank[rootY]! {
+            } else if rankX > rankY {
                 parent[rootY] = rootX
             } else {
                 parent[rootY] = rootX
-                rank[rootX]! += 1
+                rank[rootX] = rankX + 1
             }
         }
         
@@ -155,11 +159,13 @@ public struct UnionFindCyclicProperty<Graph: IncidenceGraph & VertexListGraph & 
     }
     
     private mutating func findRoot(_ vertex: Vertex) -> Vertex {
-        if parent[vertex] != vertex {
+        guard var currentParent = parent[vertex] else { return vertex }
+        if currentParent != vertex {
             // Path compression: make parent point directly to root
-            parent[vertex] = findRoot(parent[vertex]!)
+            currentParent = findRoot(currentParent)
+            parent[vertex] = currentParent
         }
-        return parent[vertex]!
+        return currentParent
     }
     
     private mutating func union(_ x: Vertex, _ y: Vertex) {
@@ -167,14 +173,16 @@ public struct UnionFindCyclicProperty<Graph: IncidenceGraph & VertexListGraph & 
         let rootY = findRoot(y)
         
         // Union by rank: attach smaller tree under root of larger tree
-        if rank[rootX]! < rank[rootY]! {
+        guard let rankX = rank[rootX], let rankY = rank[rootY] else { return }
+        
+        if rankX < rankY {
             parent[rootX] = rootY
-        } else if rank[rootX]! > rank[rootY]! {
+        } else if rankX > rankY {
             parent[rootY] = rootX
         } else {
             // If ranks are same, make one root and increment its rank
             parent[rootY] = rootX
-            rank[rootX] = rank[rootX]! + 1
+            rank[rootX] = rankX + 1
         }
     }
 }

@@ -40,7 +40,7 @@ public struct BFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGr
                 
                 while !queue.isEmpty && isBipartite {
                     let currentVertex = queue.removeFirst()
-                    let currentColor = color[currentVertex]!
+                    guard let currentColor = color[currentVertex] else { continue }
                     let nextColor = currentColor == 1 ? 2 : 1
                     
                     visitor?.examineVertex?(currentVertex)

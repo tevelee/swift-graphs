@@ -93,13 +93,14 @@ public struct WeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & VertexListGrap
                 visitor?.examineVertex?(vertex)
                 
                 // Create a signature based on current label and neighbor labels
-                let currentLabel = labels[vertex]!
+                guard let currentLabel = labels[vertex] else { continue }
                 var neighborLabels: [Int] = []
                 
                 for edge in graph.outgoingEdges(of: vertex) {
                     visitor?.examineEdge?(edge)
-                    guard let neighbor = graph.destination(of: edge) else { continue }
-                    neighborLabels.append(labels[neighbor]!)
+                    guard let neighbor = graph.destination(of: edge),
+                          let neighborLabel = labels[neighbor] else { continue }
+                    neighborLabels.append(neighborLabel)
                 }
                 
                 // Sort neighbor labels for consistency
@@ -118,7 +119,9 @@ public struct WeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & VertexListGrap
                     nextNewLabel += 1
                 }
                 
-                visitor?.labelVertex?(vertex, newLabels[vertex]!)
+                if let newLabel = newLabels[vertex] {
+                    visitor?.labelVertex?(vertex, newLabel)
+                }
             }
             
             visitor?.iterationComplete?(iteration + 1, newLabels)
@@ -243,13 +246,13 @@ public struct EnhancedWeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & Vertex
                 visitor?.examineVertex?(vertex)
                 
                 // Create a signature based on current label and neighbor labels with edge information
-                let currentLabel = labels[vertex]!
+                guard let currentLabel = labels[vertex] else { continue }
                 var neighborInfo: [(Int, String)] = []
                 
                 for edge in graph.outgoingEdges(of: vertex) {
                     visitor?.examineEdge?(edge)
-                    guard let neighbor = graph.destination(of: edge) else { continue }
-                    let neighborLabel = labels[neighbor]!
+                    guard let neighbor = graph.destination(of: edge),
+                          let neighborLabel = labels[neighbor] else { continue }
                     // Use edge descriptor as string representation for edge labels
                     let edgeInfo = "\(edge)"
                     neighborInfo.append((neighborLabel, edgeInfo))
@@ -272,7 +275,9 @@ public struct EnhancedWeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & Vertex
                     nextNewLabel += 1
                 }
                 
-                visitor?.labelVertex?(vertex, newLabels[vertex]!)
+                if let newLabel = newLabels[vertex] {
+                    visitor?.labelVertex?(vertex, newLabel)
+                }
             }
             
             visitor?.iterationComplete?(iteration + 1, newLabels)

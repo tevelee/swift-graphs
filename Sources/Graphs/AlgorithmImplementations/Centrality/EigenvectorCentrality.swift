@@ -131,7 +131,9 @@ public struct EigenvectorCentrality<Graph: IncidenceGraph & VertexListGraph & Bi
             // Check for convergence
             var maxDiff = 0.0
             for vertex in vertices {
-                let diff = abs(newCentrality[vertex]! - centrality[vertex]!)
+                let newValue = newCentrality[vertex] ?? 0.0
+                let oldValue = centrality[vertex] ?? 0.0
+                let diff = abs(newValue - oldValue)
                 maxDiff = max(maxDiff, diff)
             }
             

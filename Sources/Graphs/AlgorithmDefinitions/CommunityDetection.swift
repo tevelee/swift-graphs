@@ -110,6 +110,8 @@ public struct CommunityDetectionResult<Vertex: Hashable> {
     }
 }
 
+extension CommunityDetectionResult: Sendable where Vertex: Sendable {}
+
 extension CommunityDetectionResult: Equatable where Vertex: Equatable {
     public static func == (lhs: CommunityDetectionResult<Vertex>, rhs: CommunityDetectionResult<Vertex>) -> Bool {
         lhs.vertexToCommunity == rhs.vertexToCommunity && 

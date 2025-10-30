@@ -76,6 +76,8 @@ public struct TraversalResult<Vertex, Edge> {
     }
 }
 
+extension TraversalResult: Sendable where Vertex: Sendable, Edge: Sendable {}
+
 extension VisitorWrapper: TraversalAlgorithm where Base: TraversalAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
     

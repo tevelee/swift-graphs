@@ -134,6 +134,13 @@ struct MatchingAlgorithmTests {
         #expect(result.isMatched(left2))
         #expect(result.isMatched(right2))
         
+        // Test partner lookup
+        #expect(result.partner(of: left1) == right1)
+        #expect(result.partner(of: right1) == left1)
+        #expect(result.partner(of: left2) == right2)
+        #expect(result.partner(of: right2) == left2)
+        #expect(result.partner(of: left1) != left2) // left1's partner should be right1, not left2
+        
         // Test partition-specific queries
         #expect(result.matchedLeftVertices.count == 2)
         #expect(result.matchedRightVertices.count == 2)

@@ -329,9 +329,12 @@ where Graph.VertexDescriptor: Hashable {
             }
         }
         
+        guard let first = path.first, let last = path.last else {
+            return nil
+        }
         return Path(
-            source: path.first!,
-            destination: path.last!,
+            source: first,
+            destination: last,
             vertices: path,
             edges: edges
         )

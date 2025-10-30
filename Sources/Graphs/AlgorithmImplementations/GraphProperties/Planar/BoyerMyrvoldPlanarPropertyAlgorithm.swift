@@ -167,10 +167,13 @@ public struct BoyerMyrvoldPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
                 if !visited.contains(neighbor) {
                     parent[neighbor] = vertex
                     dfs(neighbor)
-                    lowpoint[vertex] = min(lowpoint[vertex]!, lowpoint[neighbor]!)
+                    if let vertexLowpoint = lowpoint[vertex], let neighborLowpoint = lowpoint[neighbor] {
+                        lowpoint[vertex] = min(vertexLowpoint, neighborLowpoint)
+                    }
                     
                     // Check for biconnected component
-                    if lowpoint[neighbor]! >= discoveryTime[vertex]! {
+                    if let neighborLowpoint = lowpoint[neighbor], let vertexDiscoveryTime = discoveryTime[vertex],
+                       neighborLowpoint >= vertexDiscoveryTime {
                         var component = Set<Vertex>()
                         var w: Vertex
                         repeat {
@@ -181,7 +184,9 @@ public struct BoyerMyrvoldPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
                         components.append(component)
                     }
                 } else if parent[vertex] != neighbor {
-                    lowpoint[vertex] = min(lowpoint[vertex]!, discoveryTime[neighbor]!)
+                    if let vertexLowpoint = lowpoint[vertex], let neighborDiscoveryTime = discoveryTime[neighbor] {
+                        lowpoint[vertex] = min(vertexLowpoint, neighborDiscoveryTime)
+                    }
                 }
             }
         }
@@ -249,11 +254,12 @@ public struct BoyerMyrvoldPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
         
         func dfs(_ vertex: Vertex) -> Bool {
             visited.insert(vertex)
-            discoveryTime[vertex] = time
-            lowpoint[vertex] = time
+            let currentTime = time
+            discoveryTime[vertex] = currentTime
+            lowpoint[vertex] = currentTime
             time += 1
             
-            visitor?.examineVertex?(vertex, discoveryTime[vertex]!)
+            visitor?.examineVertex?(vertex, currentTime)
             
             let neighbors = (adjacency[vertex] ?? []).filter { component.contains($0) }
             
@@ -261,28 +267,39 @@ public struct BoyerMyrvoldPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
                 if !visited.contains(neighbor) {
                     // Tree edge
                     parent[neighbor] = vertex
-                    visitor?.examineEdge?(findEdge(from: vertex, to: neighbor, in: graph)!, .tree)
+                    if let edge = findEdge(from: vertex, to: neighbor, in: graph) {
+                        visitor?.examineEdge?(edge, .tree)
+                    }
                     
                     // Add to embedding
                     embedding[vertex]?.append(neighbor)
-                    visitor?.addToEmbedding?(vertex, embedding[vertex]!)
+                    if let vertexEmbedding = embedding[vertex] {
+                        visitor?.addToEmbedding?(vertex, vertexEmbedding)
+                    }
                     
                     if !dfs(neighbor) {
                         return false
                     }
                     
                     // Update lowpoint
-                    lowpoint[vertex] = min(lowpoint[vertex]!, lowpoint[neighbor]!)
+                    if let vertexLowpoint = lowpoint[vertex], let neighborLowpoint = lowpoint[neighbor] {
+                        lowpoint[vertex] = min(vertexLowpoint, neighborLowpoint)
+                    }
                 } else if parent[vertex] != neighbor {
                     // Back edge
-                    visitor?.examineEdge?(findEdge(from: vertex, to: neighbor, in: graph)!, .back)
-                    lowpoint[vertex] = min(lowpoint[vertex]!, discoveryTime[neighbor]!)
+                    if let edge = findEdge(from: vertex, to: neighbor, in: graph) {
+                        visitor?.examineEdge?(edge, .back)
+                    }
+                    if let vertexLowpoint = lowpoint[vertex], let neighborDiscoveryTime = discoveryTime[neighbor] {
+                        lowpoint[vertex] = min(vertexLowpoint, neighborDiscoveryTime)
+                    }
                     
                     // Check if back edge creates a conflict
-                    if !canAddBackEdge(from: vertex, to: neighbor, in: embedding) {
+                    if !canAddBackEdge(from: vertex, to: neighbor, in: embedding),
+                       let conflictEdge = findEdge(from: vertex, to: neighbor, in: graph) {
                         visitor?.embeddingConflict?(
-                            findEdge(from: vertex, to: neighbor, in: graph)!,
-                            findEdge(from: vertex, to: neighbor, in: graph)!
+                            conflictEdge,
+                            conflictEdge
                         )
                         return false
                     }

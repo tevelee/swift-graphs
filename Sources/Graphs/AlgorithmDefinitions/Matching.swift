@@ -40,6 +40,11 @@ public struct MatchingResult<Vertex: Hashable, Edge> {
     /// The right partition vertices that are unmatched.
     public let unmatchedRightVertices: Set<Vertex>
     
+    /// Internal mapping from vertex to its matching partner.
+    /// This is used to efficiently look up partners without needing graph access.
+    @usableFromInline
+    let partnerMap: [Vertex: Vertex]
+    
     /// Creates a new matching result.
     ///
     /// - Parameters:
@@ -51,6 +56,7 @@ public struct MatchingResult<Vertex: Hashable, Edge> {
     ///   - matchedRightVertices: The right partition vertices that are matched
     ///   - unmatchedLeftVertices: The left partition vertices that are unmatched
     ///   - unmatchedRightVertices: The right partition vertices that are unmatched
+    ///   - partnerMap: Optional mapping from vertex to its matching partner. If nil, will be computed from matchingEdges when possible.
     @inlinable
     public init(
         matchingSize: Int,
@@ -60,7 +66,8 @@ public struct MatchingResult<Vertex: Hashable, Edge> {
         matchedLeftVertices: Set<Vertex>,
         matchedRightVertices: Set<Vertex>,
         unmatchedLeftVertices: Set<Vertex>,
-        unmatchedRightVertices: Set<Vertex>
+        unmatchedRightVertices: Set<Vertex>,
+        partnerMap: [Vertex: Vertex]? = nil
     ) {
         self.matchingSize = matchingSize
         self.matchingEdges = matchingEdges
@@ -70,6 +77,10 @@ public struct MatchingResult<Vertex: Hashable, Edge> {
         self.matchedRightVertices = matchedRightVertices
         self.unmatchedLeftVertices = unmatchedLeftVertices
         self.unmatchedRightVertices = unmatchedRightVertices
+        
+        // Use provided partner map, or build empty map if not provided
+        // Algorithms should provide the partner map for efficient lookup
+        self.partnerMap = partnerMap ?? [:]
     }
     
     /// Check if a vertex is matched.
@@ -97,16 +108,11 @@ public struct MatchingResult<Vertex: Hashable, Edge> {
     @inlinable
     public func partner(of vertex: Vertex) -> Vertex? {
         guard isMatched(vertex) else { return nil }
-        
-        // Find the edge that contains this vertex
-        for _ in matchingEdges {
-            // This would need to be implemented based on how edges are structured
-            // For now, we'll return nil as this requires access to the graph structure
-            return nil
-        }
-        return nil
+        return partnerMap[vertex]
     }
 }
+
+extension MatchingResult: Sendable where Vertex: Sendable, Edge: Sendable {}
 
 extension VisitorWrapper: MatchingAlgorithm where Base: MatchingAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph

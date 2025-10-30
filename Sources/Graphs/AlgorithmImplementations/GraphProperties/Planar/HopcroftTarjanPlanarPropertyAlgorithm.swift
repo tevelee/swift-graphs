@@ -132,11 +132,12 @@ public struct HopcroftTarjanPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vert
         
         func dfs(_ vertex: Vertex) -> Bool {
             visited.insert(vertex)
-            discoveryTime[vertex] = time
-            lowpoint[vertex] = time
+            let currentTime = time
+            discoveryTime[vertex] = currentTime
+            lowpoint[vertex] = currentTime
             time += 1
             
-            visitor?.discoverVertex?(vertex, discoveryTime[vertex]!)
+            visitor?.discoverVertex?(vertex, currentTime)
             
             let neighbors = adjacency[vertex] ?? []
             
@@ -144,22 +145,32 @@ public struct HopcroftTarjanPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vert
                 if !visited.contains(neighbor) {
                     // Tree edge
                     parent[neighbor] = vertex
-                    visitor?.examineEdge?(findEdge(from: vertex, to: neighbor, in: graph)!, .tree)
+                    if let edge = findEdge(from: vertex, to: neighbor, in: graph) {
+                        visitor?.examineEdge?(edge, .tree)
+                    }
                     
                     if !dfs(neighbor) {
                         return false
                     }
                     
                     // Update lowpoint
-                    lowpoint[vertex] = min(lowpoint[vertex]!, lowpoint[neighbor]!)
+                    if let vertexLowpoint = lowpoint[vertex], let neighborLowpoint = lowpoint[neighbor] {
+                        lowpoint[vertex] = min(vertexLowpoint, neighborLowpoint)
+                    }
                 } else if parent[vertex] != neighbor {
                     // Back edge
-                    visitor?.examineEdge?(findEdge(from: vertex, to: neighbor, in: graph)!, .back)
-                    lowpoint[vertex] = min(lowpoint[vertex]!, discoveryTime[neighbor]!)
+                    if let edge = findEdge(from: vertex, to: neighbor, in: graph) {
+                        visitor?.examineEdge?(edge, .back)
+                    }
+                    if let vertexLowpoint = lowpoint[vertex], let neighborDiscoveryTime = discoveryTime[neighbor] {
+                        lowpoint[vertex] = min(vertexLowpoint, neighborDiscoveryTime)
+                    }
                 }
             }
             
-            visitor?.calculateLowpoint?(vertex, lowpoint[vertex]!)
+            if let finalLowpoint = lowpoint[vertex] {
+                visitor?.calculateLowpoint?(vertex, finalLowpoint)
+            }
             return true
         }
         

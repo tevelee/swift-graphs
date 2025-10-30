@@ -106,6 +106,8 @@ public struct CentralityResult<Vertex: Hashable> {
     }
 }
 
+extension CentralityResult: Sendable where Vertex: Sendable {}
+
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Computes centrality using the specified algorithm.
     ///

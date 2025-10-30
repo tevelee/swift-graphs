@@ -47,6 +47,11 @@ public struct MinimumSpanningTree<Vertex: Hashable, Edge, Weight: AdditiveArithm
         vertices.contains(vertex)
     }
     
+}
+
+extension MinimumSpanningTree: Sendable where Vertex: Sendable, Edge: Sendable, Weight: Sendable {}
+
+extension MinimumSpanningTree {
     /// The number of edges in the MST.
     @inlinable
     public var edgeCount: Int {

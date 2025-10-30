@@ -96,6 +96,11 @@ public struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: AdditiveArit
             edges: edges
         )
     }
+}
+
+extension AllPairsShortestPaths: Sendable where Vertex: Sendable, Edge: Sendable, Weight: Sendable {}
+
+extension AllPairsShortestPaths {
     
 }
 

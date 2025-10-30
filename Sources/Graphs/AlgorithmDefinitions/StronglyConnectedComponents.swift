@@ -105,7 +105,11 @@ public struct StronglyConnectedComponentsResult<Vertex: Hashable> {
         guard let index = componentIndex(for: vertex) else { return nil }
         return components[index]
     }
-    
+}
+
+extension StronglyConnectedComponentsResult: Sendable where Vertex: Sendable {}
+
+extension StronglyConnectedComponentsResult {
     /// Returns whether two vertices are in the same strongly connected component.
     public func areInSameComponent(_ vertex1: Vertex, _ vertex2: Vertex) -> Bool {
         guard let index1 = componentIndex(for: vertex1),

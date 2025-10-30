@@ -118,7 +118,8 @@ public struct HopcroftKarp<Graph: BipartiteGraph & IncidenceGraph & VertexListGr
             matchedLeftVertices: matchedLeftVertices,
             matchedRightVertices: matchedRightVertices,
             unmatchedLeftVertices: unmatchedLeftVertices,
-            unmatchedRightVertices: unmatchedRightVertices
+            unmatchedRightVertices: unmatchedRightVertices,
+            partnerMap: matching
         )
     }
     

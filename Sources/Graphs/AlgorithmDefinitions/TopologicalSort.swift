@@ -81,6 +81,8 @@ public struct TopologicalSortResult<Vertex: Hashable> {
     }
 }
 
+extension TopologicalSortResult: Sendable where Vertex: Sendable {}
+
 extension TopologicalSortResult: Equatable where Vertex: Equatable {
     public static func == (lhs: TopologicalSortResult<Vertex>, rhs: TopologicalSortResult<Vertex>) -> Bool {
         lhs.sortedVertices == rhs.sortedVertices && lhs.hasCycle == rhs.hasCycle && lhs.cycleVertices == rhs.cycleVertices

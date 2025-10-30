@@ -136,7 +136,8 @@ public struct PageRankCentrality<Graph: IncidenceGraph & VertexListGraph & Bidir
                 let outDegree = outDegrees[vertex] ?? 0
                 guard outDegree > 0 else { continue }
                 
-                let contribution = dampingFactor * rank[vertex]! / Double(outDegree)
+                guard let vertexRank = rank[vertex] else { continue }
+                let contribution = dampingFactor * vertexRank / Double(outDegree)
                 
                 for edge in graph.outgoingEdges(of: vertex) {
                     if let neighbor = graph.destination(of: edge) {
@@ -147,7 +148,7 @@ public struct PageRankCentrality<Graph: IncidenceGraph & VertexListGraph & Bidir
             
             // Handle dangling nodes: redistribute their rank uniformly
             if !danglingNodes.isEmpty {
-                let danglingRank = danglingNodes.reduce(0.0) { $0 + rank[$1]! }
+                let danglingRank = danglingNodes.reduce(0.0) { $0 + (rank[$1] ?? 0.0) }
                 let danglingContribution = dampingFactor * danglingRank / n
                 for vertex in vertices {
                     newRank[vertex, default: 0.0] += danglingContribution
@@ -159,7 +160,9 @@ public struct PageRankCentrality<Graph: IncidenceGraph & VertexListGraph & Bidir
             // Check for convergence
             var maxDiff = 0.0
             for vertex in vertices {
-                let diff = abs(newRank[vertex]! - rank[vertex]!)
+                let newValue = newRank[vertex] ?? 0.0
+                let oldValue = rank[vertex] ?? 0.0
+                let diff = abs(newValue - oldValue)
                 maxDiff = max(maxDiff, diff)
             }
             

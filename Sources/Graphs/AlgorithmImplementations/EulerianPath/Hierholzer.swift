@@ -170,8 +170,8 @@ where Graph.VertexDescriptor: Hashable {
                 visitor?.addToPath?(vertexToAdd)
                 visitor?.backtrack?(vertexToAdd)
                 
-                if !stack.isEmpty {
-                    current = stack.last!
+                if let last = stack.last {
+                    current = last
                 }
             }
         }
@@ -193,11 +193,11 @@ where Graph.VertexDescriptor: Hashable {
             }
         }
         
-        guard path.count > 0 else { return nil }
+        guard path.count > 0, let pathFirst = path.first, let pathLast = path.last else { return nil }
         
         let result = Path(
-            source: path.first!,
-            destination: path.last!,
+            source: pathFirst,
+            destination: pathLast,
             vertices: path,
             edges: edges
         )

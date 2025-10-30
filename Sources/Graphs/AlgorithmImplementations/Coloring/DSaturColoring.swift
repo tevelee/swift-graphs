@@ -66,8 +66,9 @@ public struct DSaturColoringAlgorithm<
         
         // Find vertex with maximum degree to start (break ties by vertex index for determinism)
         let startVertex = vertices.enumerated().max { 
-            if degrees[$0.element]! != degrees[$1.element]! {
-                return degrees[$0.element]! < degrees[$1.element]!
+            guard let deg0 = degrees[$0.element], let deg1 = degrees[$1.element] else { return false }
+            if deg0 != deg1 {
+                return deg0 < deg1
             }
             // Break ties by vertex index for determinism
             return $0.offset > $1.offset
@@ -147,7 +148,9 @@ public struct DSaturColoringAlgorithm<
     ) -> Graph.VertexDescriptor {
         var maxSaturation = -1
         var maxDegree = -1
-        var selectedVertex = uncoloredVertices.first!
+        guard var selectedVertex = uncoloredVertices.first else {
+            preconditionFailure("findMaxSaturationVertex called with empty uncoloredVertices set - this should never happen as the function is only called when !uncoloredVertices.isEmpty")
+        }
         
         for vertex in uncoloredVertices {
             let neighbors = Set(graph.successors(of: vertex))
@@ -165,8 +168,11 @@ public struct DSaturColoringAlgorithm<
                 shouldSelect = true
             } else if saturationDegree == maxSaturation && degree == maxDegree {
                 // Both saturation and degree are equal, use vertex index for determinism
-                let currentIndex = vertices.firstIndex(of: vertex)!
-                let selectedIndex = vertices.firstIndex(of: selectedVertex)!
+                guard let currentIndex = vertices.firstIndex(of: vertex),
+                      let selectedIndex = vertices.firstIndex(of: selectedVertex) else {
+                    shouldSelect = false
+                    break
+                }
                 shouldSelect = currentIndex < selectedIndex
             } else {
                 shouldSelect = false

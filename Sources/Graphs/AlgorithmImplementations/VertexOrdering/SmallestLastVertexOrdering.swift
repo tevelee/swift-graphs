@@ -60,7 +60,9 @@ public struct SmallestLastVertexOrderingAlgorithm<
             let minDegreeVertices = vertexList.filter { remainingVertices.contains($0) && degrees[$0] == minDegree }
 
             // If there are ties, choose the first one in vertex list order (deterministic)
-            let vertexToRemove = minDegreeVertices.first!
+            guard let vertexToRemove = minDegreeVertices.first else {
+                preconditionFailure("minDegreeVertices should not be empty - there should always be vertices with minimum degree")
+            }
 
             visitor?.examineVertex?(vertexToRemove)
             visitor?.removeVertex?(vertexToRemove, minDegree)

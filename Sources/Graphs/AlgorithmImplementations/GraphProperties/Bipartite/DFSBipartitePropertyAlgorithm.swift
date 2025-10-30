@@ -56,7 +56,7 @@ public struct DFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGr
         color: inout [Graph.VertexDescriptor: Int],
         visitor: Visitor?
     ) -> Bool {
-        let currentColor = color[vertex]!
+        guard let currentColor = color[vertex] else { return false }
         let nextColor = currentColor == 1 ? 2 : 1
         
         visitor?.examineVertex?(vertex)

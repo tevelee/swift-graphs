@@ -30,3 +30,5 @@ public struct Path<Vertex, Edge> {
         self.edges = edges
     }
 }
+
+extension Path: Sendable where Vertex: Sendable, Edge: Sendable {}

@@ -111,14 +111,16 @@ public struct BetweennessCentrality<Graph: IncidenceGraph & VertexListGraph> whe
                     
                     // Discover w for the first time
                     if distances[w] == nil {
-                        distances[w] = distances[v]! + 1
+                        guard let vDistance = distances[v] else { continue }
+                        let wDistance = vDistance + 1
+                        distances[w] = wDistance
                         queue.append(w)
-                        visitor?.foundShortestPath?(source, w, distances[w]!)
+                        visitor?.foundShortestPath?(source, w, wDistance)
                     }
                     
                     // Count shortest paths to w through v
-                    if distances[w] == distances[v]! + 1 {
-                        pathCounts[w, default: 0] += pathCounts[v]!
+                    if let wDistance = distances[w], let vDistance = distances[v], wDistance == vDistance + 1 {
+                        pathCounts[w, default: 0] += pathCounts[v, default: 0]
                         predecessors[w, default: []].append(v)
                     }
                 }

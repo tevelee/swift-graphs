@@ -85,9 +85,11 @@ public struct ClosenessCentrality<Graph: IncidenceGraph & VertexListGraph> where
                     guard let w = graph.destination(of: edge) else { continue }
                     
                     if distances[w] == nil {
-                        distances[w] = distances[v]! + 1
+                        guard let vDistance = distances[v] else { continue }
+                        let wDistance = vDistance + 1
+                        distances[w] = wDistance
                         queue.append(w)
-                        visitor?.computeDistance?(vertex, w, distances[w]!)
+                        visitor?.computeDistance?(vertex, w, wDistance)
                     }
                 }
             }

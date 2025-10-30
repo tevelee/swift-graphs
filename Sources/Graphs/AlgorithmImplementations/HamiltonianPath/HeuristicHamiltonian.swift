@@ -150,7 +150,8 @@ where Graph.VertexDescriptor: Hashable {
             in: graph,
             visitor: visitor
         ) {
-            return buildPath(from: path, in: graph)
+            let dest = path.last ?? source
+            return buildPath(from: path, source: source, destination: dest, in: graph)
         }
         
         return nil
@@ -175,7 +176,7 @@ where Graph.VertexDescriptor: Hashable {
             in: graph,
             visitor: visitor
         ) {
-            return buildPath(from: path, in: graph)
+            return buildPath(from: path, source: source, destination: destination, in: graph)
         }
         
         return nil
@@ -202,7 +203,7 @@ where Graph.VertexDescriptor: Hashable {
             // Add the starting vertex at the end to complete the cycle
             path.append(source)
             visitor?.addToPath?(source)
-            return buildPath(from: path, in: graph)
+            return buildPath(from: path, source: source, destination: source, in: graph)
         }
         
         return nil
@@ -348,15 +349,17 @@ where Graph.VertexDescriptor: Hashable {
     
     private func buildPath(
         from path: [Graph.VertexDescriptor],
+        source: Graph.VertexDescriptor,
+        destination: Graph.VertexDescriptor,
         in graph: Graph
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-        guard path.count > 0 else { return nil }
+        guard path.count > 0, let pathFirst = path.first, let pathLast = path.last else { return nil }
         
         // Handle single vertex case
         if path.count == 1 {
             return Path(
-                source: path[0],
-                destination: path[0],
+                source: pathFirst,
+                destination: pathFirst,
                 vertices: path,
                 edges: []
             )
@@ -379,8 +382,8 @@ where Graph.VertexDescriptor: Hashable {
         }
         
         return Path(
-            source: path.first!,
-            destination: path.last!,
+            source: pathFirst,
+            destination: pathLast,
             vertices: path,
             edges: edges
         )

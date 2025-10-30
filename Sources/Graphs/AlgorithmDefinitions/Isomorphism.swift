@@ -59,6 +59,8 @@ public struct IsomorphismResult<Vertex: Hashable> {
     }
 }
 
+extension IsomorphismResult: Sendable where Vertex: Sendable {}
+
 /// Extension to add isomorphism checking to graphs
 extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDescriptor: Hashable {
     /// Checks if this graph is isomorphic to another graph.

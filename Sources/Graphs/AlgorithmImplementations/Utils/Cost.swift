@@ -59,3 +59,5 @@ extension Cost: ExpressibleByNilLiteral {
         self = .infinite
     }
 }
+
+extension Cost: Sendable where Weight: Sendable {}

@@ -136,11 +136,18 @@ public struct BronKerboschCliqueDetection<Graph: IncidenceGraph & VertexListGrap
         neighbors: [Vertex: Set<Vertex>]
     ) -> Vertex {
         // Choose vertex with maximum degree in P
-        candidates.max { v1, v2 in
+        if let maxVertex = candidates.max(by: { v1, v2 in
             let count1 = (neighbors[v1] ?? []).intersection(p).count
             let count2 = (neighbors[v2] ?? []).intersection(p).count
             return count1 < count2
-        } ?? candidates.first!
+        }) {
+            return maxVertex
+        }
+        // Fallback: if candidates is empty, return first vertex from P
+        guard let fallback = p.first else {
+            preconditionFailure("choosePivot called with empty candidates and empty P - this should not happen")
+        }
+        return fallback
     }
 }
 

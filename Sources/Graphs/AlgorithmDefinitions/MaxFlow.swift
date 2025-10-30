@@ -97,6 +97,8 @@ public struct MaxFlowResult<Vertex: Hashable, Edge: Hashable, Flow: AdditiveArit
     }
 }
 
+extension MaxFlowResult: Sendable where Vertex: Sendable, Edge: Sendable, Flow: Sendable {}
+
 extension VisitorWrapper: MaxFlowAlgorithm where Base: MaxFlowAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
     public typealias Flow = Base.Flow
