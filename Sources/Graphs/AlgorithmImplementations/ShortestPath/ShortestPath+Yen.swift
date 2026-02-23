@@ -1,12 +1,12 @@
-extension ShortestPathAlgorithm where Weight: AdditiveArithmetic {
+extension ShortestPathAlgorithm {
     /// Creates a Yen shortest path algorithm.
     ///
     /// - Parameter weight: The cost definition for edge weights.
     /// - Returns: A Yen shortest path algorithm instance.
     @inlinable
-    public static func yen<Graph: IncidenceGraph, Weight>(
+    public static func yen<Graph: IncidenceGraph, Weight: Numeric>(
         weight: CostDefinition<Graph, Weight>
-    ) -> Self where Self == YenShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable {
+    ) -> Self where Self == YenShortestPath<Graph, Weight>, Weight.Magnitude == Weight, Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable {
         .init(weight: weight)
     }
 }

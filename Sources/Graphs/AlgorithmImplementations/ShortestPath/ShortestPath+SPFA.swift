@@ -1,10 +1,10 @@
-extension SingleSourceShortestPathAlgorithm where Weight: AdditiveArithmetic {
+extension SingleSourceShortestPathAlgorithm {
     /// Creates an SPFA single-source shortest path algorithm.
     ///
     /// - Parameter weight: The cost definition for edge weights.
     /// - Returns: An SPFA shortest path algorithm instance.
     @inlinable
-    public static func spfa<Graph: IncidenceGraph & VertexListGraph, Weight>(
+    public static func spfa<Graph: IncidenceGraph & VertexListGraph, Weight: AdditiveArithmetic>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == SPFAShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable {
         .init(weight: weight)

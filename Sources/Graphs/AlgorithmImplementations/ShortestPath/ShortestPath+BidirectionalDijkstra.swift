@@ -1,12 +1,12 @@
-extension ShortestPathAlgorithm where Weight: Numeric, Weight.Magnitude == Weight {
+extension ShortestPathAlgorithm {
     /// Creates a bidirectional Dijkstra shortest path algorithm.
     ///
     /// - Parameter weight: The cost definition for edge weights.
     /// - Returns: A bidirectional Dijkstra shortest path algorithm instance.
     @inlinable
-    public static func bidirectionalDijkstra<Graph: IncidenceGraph & BidirectionalGraph, Weight>(
+    public static func bidirectionalDijkstra<Graph: IncidenceGraph & BidirectionalGraph, Weight: Numeric>(
         weight: CostDefinition<Graph, Weight>
-    ) -> Self where Self == BidirectionalDijkstraShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable {
+    ) -> Self where Self == BidirectionalDijkstraShortestPath<Graph, Weight>, Weight.Magnitude == Weight, Graph.VertexDescriptor: Hashable {
         .init(weight: weight)
     }
 }

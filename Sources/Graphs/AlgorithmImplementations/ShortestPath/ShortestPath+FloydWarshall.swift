@@ -1,10 +1,10 @@
-extension ShortestPathAlgorithm where Weight: AdditiveArithmetic {
+extension ShortestPathAlgorithm {
     /// Creates a Floyd-Warshall shortest path algorithm.
     ///
     /// - Parameter weight: The cost definition for edge weights.
     /// - Returns: A Floyd-Warshall shortest path algorithm instance.
     @inlinable
-    public static func floydWarshall<Graph: IncidenceGraph & VertexListGraph, Weight>(
+    public static func floydWarshall<Graph: IncidenceGraph & VertexListGraph, Weight: AdditiveArithmetic>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == FloydWarshallShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable {
         .init(weight: weight)
