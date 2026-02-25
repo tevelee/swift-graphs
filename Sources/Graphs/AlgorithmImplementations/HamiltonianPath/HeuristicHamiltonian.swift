@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 /// Heuristic algorithm for finding Hamiltonian paths and cycles.
 ///
 /// This algorithm uses various heuristics to guide the search for Hamiltonian
@@ -391,4 +392,4 @@ where Graph.VertexDescriptor: Hashable {
 }
 
 extension HeuristicHamiltonian: VisitorSupporting {}
-
+#endif

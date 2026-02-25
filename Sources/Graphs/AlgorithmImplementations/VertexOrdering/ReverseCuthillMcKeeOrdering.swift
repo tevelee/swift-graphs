@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 /// Reverse Cuthill-McKee Ordering algorithm.
 /// 
 /// This algorithm reorders the vertices of a graph to reduce the bandwidth of its adjacency matrix.
@@ -113,3 +114,4 @@ public struct ReverseCuthillMcKeeOrderingAlgorithm<
 }
 
 extension ReverseCuthillMcKeeOrderingAlgorithm: VisitorSupporting {}
+#endif

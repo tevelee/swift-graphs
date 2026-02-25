@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 @testable import Graphs
 import Testing
 
@@ -195,3 +196,4 @@ struct HamiltonianPathTests {
         #expect(cycle == nil)
     }
 }
+#endif

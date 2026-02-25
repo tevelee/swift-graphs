@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 extension HamiltonianPathAlgorithm {
     /// Creates a backtracking Hamiltonian path algorithm.
     ///
@@ -24,3 +25,4 @@ extension BacktrackingHamiltonian: HamiltonianPathAlgorithm {
         hamiltonianPath(from: source, to: destination, in: graph, visitor: nil)
     }
 }
+#endif

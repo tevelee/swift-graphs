@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 /// Extension providing composition support for Louvain community detection algorithm visitors.
 extension LouvainCommunityDetection.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -26,3 +27,4 @@ extension LouvainCommunityDetection.Visitor: Composable {
         )
     }
 }
+#endif

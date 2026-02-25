@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 extension ColoringAlgorithm where Color == Int {
     /// Creates a greedy coloring algorithm.
     ///
@@ -14,3 +15,4 @@ extension GreedyColoringAlgorithm: ColoringAlgorithm {
         color(graph: graph, visitor: nil)
     }
 }
+#endif

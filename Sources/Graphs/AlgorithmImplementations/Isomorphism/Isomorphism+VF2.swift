@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 extension IsomorphismAlgorithm where Graph: IncidenceGraph & VertexListGraph & EdgeListGraph {
     /// Creates a VF2 isomorphism algorithm.
     ///
@@ -19,3 +20,4 @@ extension VF2Isomorphism: IsomorphismAlgorithm {
         findIsomorphism(graph1, graph2, visitor: nil)
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 @testable import Graphs
 import Testing
 
@@ -16,5 +17,4 @@ struct DijkstraTests {
         #expect(graph[e].weight == 2)
     }
 }
-
-
+#endif

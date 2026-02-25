@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 /// Extension providing composition support for Floyd-Warshall algorithm visitors.
 extension FloydWarshall.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -26,3 +27,4 @@ extension FloydWarshall.Visitor: Composable {
         )
     }
 }
+#endif

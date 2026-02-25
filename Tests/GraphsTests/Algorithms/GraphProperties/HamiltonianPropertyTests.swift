@@ -172,7 +172,8 @@ struct HamiltonianPropertyTests {
     }
     
     // MARK: - Hybrid Approach Tests
-    
+
+    #if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
     @Test func testHybridHamiltonianCycle() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
@@ -250,8 +251,10 @@ struct HamiltonianPropertyTests {
         #expect(!graph.hasHamiltonianCycle())
     }
     
+    #endif
+
     // MARK: - Visitor Pattern Tests
-    
+
     @Test func testDiracVisitor() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 /// Louvain community detection algorithm implementation.
 public struct LouvainCommunityDetectionAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph>: CommunityDetectionAlgorithm where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = LouvainCommunityDetection<Graph>.Visitor
@@ -33,3 +34,4 @@ extension CommunityDetectionAlgorithm {
         .init(resolution: resolution)
     }
 }
+#endif

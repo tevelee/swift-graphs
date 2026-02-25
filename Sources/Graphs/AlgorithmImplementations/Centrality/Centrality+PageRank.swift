@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 extension CentralityAlgorithm {
     /// Creates a PageRank centrality algorithm.
     ///
@@ -18,4 +19,4 @@ extension CentralityAlgorithm {
         .init(dampingFactor: dampingFactor, maxIterations: maxIterations, tolerance: tolerance)
     }
 }
-
+#endif

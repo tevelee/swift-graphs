@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 /// Tarjan's algorithm for finding articulation points and bridges.
 ///
 /// Uses a single depth-first search tracking discovery times and low-link values
@@ -204,3 +205,4 @@ public struct TarjanArticulationPoints<Graph: IncidenceGraph & VertexListGraph> 
         return ArticulationPointsResult(cutVertices: cutVertices, bridges: bridges)
     }
 }
+#endif

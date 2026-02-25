@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
 import Collections
 
 /// A storage implementation for binary tree edge structures.
@@ -131,5 +132,4 @@ extension BinaryEdgeStore: BinaryEdgeStorage {
         rightEdgeMap[v]
     }
 }
-
-
+#endif

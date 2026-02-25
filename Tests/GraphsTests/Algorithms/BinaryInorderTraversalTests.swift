@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
 import Testing
 @testable import Graphs
 
@@ -25,5 +26,4 @@ struct BinaryInorderDFSTests {
         #expect(result.vertices == [d, b, e, a, c])
     }
 }
-
-
+#endif

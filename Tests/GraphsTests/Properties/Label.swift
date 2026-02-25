@@ -1,8 +1,14 @@
 @testable import Graphs
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 enum Label: VertexProperty, EdgeProperty, SerializableProperty {
     static let defaultValue = ""
 }
+#else
+enum Label: VertexProperty, EdgeProperty {
+    static let defaultValue = ""
+}
+#endif
 
 extension VertexProperties {
     var label: String {

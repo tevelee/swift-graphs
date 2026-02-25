@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 import Foundation
 
 /// A utility for serializing graphs into various formats.
@@ -105,3 +106,4 @@ public struct GraphFormatter {
         return string
     }
 }
+#endif

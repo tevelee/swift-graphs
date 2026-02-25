@@ -18,6 +18,7 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension IncidenceGraph where VertexDescriptor: Hashable {
     /// Finds the shortest path between two vertices using Dijkstra's algorithm as the default.
     /// This is the most commonly used and efficient algorithm for non-negative edge weights.
@@ -36,6 +37,7 @@ extension IncidenceGraph where VertexDescriptor: Hashable {
         shortestPath(from: source, to: destination, using: .dijkstra(weight: weight))
     }
 }
+#endif
 
 /// A protocol for shortest path algorithms.
 ///

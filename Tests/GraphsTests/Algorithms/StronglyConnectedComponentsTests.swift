@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 @testable import Graphs
 import Testing
 
@@ -167,3 +168,4 @@ struct StronglyConnectedComponentsTests {
         #expect(threeVertexComponent.count == 3)
     }
 }
+#endif

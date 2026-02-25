@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 /// Extension providing composition support for DFS connected components algorithm visitors.
 extension DFSConnectedComponents.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -22,3 +23,4 @@ extension DFSConnectedComponents.Visitor: Composable {
         )
     }
 }
+#endif

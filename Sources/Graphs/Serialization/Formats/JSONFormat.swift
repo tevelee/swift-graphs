@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 import Foundation
 
 extension SerializationFormat {
@@ -215,3 +216,4 @@ extension JSONFormat: PropertySerializationFormat where G: PropertyGraph, G: Inc
         return result
     }
 }
+#endif

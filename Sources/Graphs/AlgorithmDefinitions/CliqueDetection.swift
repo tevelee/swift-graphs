@@ -13,6 +13,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Finds maximal cliques using Bron-Kerbosch algorithm as the default.
     /// This is the most commonly used algorithm for clique detection.
@@ -23,6 +24,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         findCliques(using: .bronKerbosch())
     }
 }
+#endif
 
 /// A protocol for clique detection algorithms.
 public protocol CliqueDetectionAlgorithm<Graph> {

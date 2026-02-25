@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 /// Extension providing composition support for Boruvka's algorithm visitors.
 extension Boruvka.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -30,3 +31,4 @@ extension Boruvka.Visitor: Composable {
         )
     }
 }
+#endif

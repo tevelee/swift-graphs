@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 import Collections
 
 extension AllPathsAlgorithm {
@@ -141,3 +142,4 @@ public struct DFSAllPaths<Graph: IncidenceGraph>: Sequence where Graph.VertexDes
         }
     }
 }
+#endif

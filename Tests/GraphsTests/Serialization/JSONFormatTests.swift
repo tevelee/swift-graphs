@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 @testable import Graphs
 import Testing
 import Foundation
@@ -356,3 +357,4 @@ struct JSONFormatTests {
         #expect(edges.count == 1)
     }
 }
+#endif

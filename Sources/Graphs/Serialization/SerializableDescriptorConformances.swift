@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 import Collections
 
 // MARK: - OrderedVertexStorage.Vertex
@@ -59,4 +60,4 @@ extension Int: SerializableDescriptor {
         "\(self)"
     }
 }
-
+#endif

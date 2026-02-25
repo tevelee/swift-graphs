@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || (GRAPHS_OPTIMIZATION && GRAPHS_BIPARTITE_GRAPH)
 import Testing
 @testable import Graphs
 
@@ -167,3 +168,4 @@ struct MatchingAlgorithmTests {
         #expect(result.matchingEdges.count == 2)
     }
 }
+#endif

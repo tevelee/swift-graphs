@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 /// DFS-based connected components algorithm implementation.
 public struct DFSConnectedComponentsAlgorithm<Graph: IncidenceGraph & VertexListGraph>: ConnectedComponentsAlgorithm where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = DFSConnectedComponents<Graph>.Visitor
@@ -25,3 +26,4 @@ extension ConnectedComponentsAlgorithm {
         .init()
     }
 }
+#endif

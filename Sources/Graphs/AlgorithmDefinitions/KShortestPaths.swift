@@ -38,6 +38,7 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension IncidenceGraph where VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
     /// Finds the k shortest paths using Yen's algorithm as the default.
     /// This is the most commonly used algorithm for finding k shortest paths.
@@ -50,6 +51,7 @@ extension IncidenceGraph where VertexDescriptor: Hashable, EdgeDescriptor: Hasha
         kShortestPaths(from: source, to: destination, k: k, using: .yen(weight: weight))
     }
 }
+#endif
 
 extension VisitorWrapper: KShortestPathsAlgorithm where Base: KShortestPathsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph

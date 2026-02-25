@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 import Collections
 
 /// Kahn's algorithm for topological sorting.
@@ -123,3 +124,4 @@ public struct Kahn<Graph: IncidenceGraph & VertexListGraph>: TopologicalSortAlgo
 }
 
 extension Kahn: VisitorSupporting {}
+#endif

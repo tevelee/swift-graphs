@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_GENERATION
 /// Barabasi-Albert random graph generation algorithm.
 ///
 /// This algorithm generates scale-free networks using preferential attachment.
@@ -132,3 +133,4 @@ public struct BarabasiAlbert<
 }
 
 extension BarabasiAlbert: VisitorSupporting {}
+#endif

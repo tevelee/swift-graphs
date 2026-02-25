@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 @testable import Graphs
 import Testing
 
@@ -849,4 +850,4 @@ struct CentralityAlgorithmTests {
         #expect(abs(closenessA - closenessB) < 0.001)
     }
 }
-
+#endif

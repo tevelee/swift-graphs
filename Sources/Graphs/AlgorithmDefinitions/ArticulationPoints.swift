@@ -10,6 +10,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         algorithm.articulationPoints(in: self, visitor: nil)
     }
 
+    #if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
     /// Finds articulation points (cut vertices) and bridges (cut edges) using Tarjan's algorithm as the default.
     ///
     /// - Returns: The articulation points result containing cut vertices and bridges
@@ -17,6 +18,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     public func articulationPoints() -> ArticulationPointsResult<VertexDescriptor, EdgeDescriptor> {
         articulationPoints(using: .tarjan())
     }
+    #endif
 }
 
 /// A protocol for articulation points algorithms.

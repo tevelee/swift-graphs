@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 /// Backtracking algorithm for finding Hamiltonian paths and cycles.
 ///
 /// This algorithm uses backtracking to systematically explore all possible
@@ -342,4 +343,4 @@ where Graph.VertexDescriptor: Hashable {
 }
 
 extension BacktrackingHamiltonian: VisitorSupporting {}
-
+#endif

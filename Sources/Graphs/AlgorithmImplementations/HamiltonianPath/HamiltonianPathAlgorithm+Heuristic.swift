@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 extension HamiltonianPathAlgorithm {
     /// Creates a heuristic Hamiltonian path algorithm.
     ///
@@ -25,3 +26,4 @@ extension HeuristicHamiltonian: HamiltonianPathAlgorithm {
         hamiltonianPath(from: source, to: destination, in: graph, visitor: nil)
     }
 }
+#endif

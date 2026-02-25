@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 extension CentralityAlgorithm {
     /// Creates a closeness centrality algorithm.
     ///
@@ -10,4 +11,4 @@ extension CentralityAlgorithm {
         .init()
     }
 }
-
+#endif

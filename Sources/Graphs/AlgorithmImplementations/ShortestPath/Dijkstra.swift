@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 /// Dijkstra's algorithm for finding shortest paths from a source vertex.
 ///
 /// Dijkstra's algorithm is a greedy algorithm that finds the shortest paths from a source
@@ -319,3 +320,4 @@ extension Dijkstra.Result {
 }
 
 extension Dijkstra: VisitorSupportingSequence {}
+#endif

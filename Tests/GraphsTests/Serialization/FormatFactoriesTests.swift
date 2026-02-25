@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 @testable import Graphs
 import Testing
 
@@ -162,3 +163,4 @@ struct FormatFactoriesTests {
         #expect(graphMLResult == graphMLExpected)
     }
 }
+#endif

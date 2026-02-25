@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 /// Extension providing composition support for Welsh-Powell coloring algorithm visitors.
 extension WelshPowellColoringAlgorithm.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -26,3 +27,4 @@ extension WelshPowellColoringAlgorithm.Visitor: Composable {
         )
     }
 }
+#endif

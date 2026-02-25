@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_GRID_GRAPH
 import Collections
 
 /// A grid graph implementation where vertices are arranged in a rectangular grid.
@@ -440,4 +441,4 @@ extension OrderedSet<GridDirection> {
         lhs.subtracting(rhs)
     }
 }
-
+#endif

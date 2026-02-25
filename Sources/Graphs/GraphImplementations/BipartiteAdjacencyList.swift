@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_BIPARTITE_GRAPH
 import Collections
 
 /// An adjacency list implementation of a bipartite graph.
@@ -195,3 +196,4 @@ extension BipartiteAdjacencyList: MutableBipartiteGraph {
         return edgeStore.addEdge(from: source, to: destination)
     }
 }
+#endif

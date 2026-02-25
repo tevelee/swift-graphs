@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 @testable import Graphs
 import Testing
 
@@ -266,3 +267,4 @@ struct MaxFlowAlgorithmTests {
         return graph
     }
 }
+#endif

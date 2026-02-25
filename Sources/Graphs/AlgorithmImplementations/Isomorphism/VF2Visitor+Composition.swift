@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 /// Extension providing composition support for VF2 isomorphism algorithm visitors.
 extension VF2Isomorphism.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -30,3 +31,4 @@ extension VF2Isomorphism.Visitor: Composable {
         )
     }
 }
+#endif

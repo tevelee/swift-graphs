@@ -119,6 +119,7 @@ extension IncidenceGraph where Self: VertexListGraph {
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Finds shortest paths between all pairs of vertices using Floyd-Warshall algorithm as the default.
     /// This is efficient for dense graphs and when you need all-pairs shortest paths.
@@ -132,6 +133,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         shortestPathsForAllPairs(using: .floydWarshall(weight: weight))
     }
 }
+#endif
 
 extension VisitorWrapper: ShortestPathsForAllPairsAlgorithm where Base: ShortestPathsForAllPairsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph

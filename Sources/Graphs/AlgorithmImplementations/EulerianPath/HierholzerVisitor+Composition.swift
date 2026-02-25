@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 /// Extension providing composition support for Hierholzer's algorithm visitors.
 extension Hierholzer.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -30,3 +31,4 @@ extension Hierholzer.Visitor: Composable {
         )
     }
 }
+#endif

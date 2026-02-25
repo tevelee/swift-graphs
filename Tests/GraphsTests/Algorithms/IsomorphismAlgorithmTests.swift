@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 import Testing
 @testable import Graphs
 
@@ -473,3 +474,4 @@ struct IsomorphismAlgorithmTests {
         #expect(stabilized != nil)
     }
 }
+#endif

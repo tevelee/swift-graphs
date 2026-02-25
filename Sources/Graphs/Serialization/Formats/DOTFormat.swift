@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 import Foundation
 
 extension SerializationFormat {
@@ -308,3 +309,4 @@ extension DOTFormat: PropertySerializationFormat where G: PropertyGraph, G: Inci
         return result
     }
 }
+#endif

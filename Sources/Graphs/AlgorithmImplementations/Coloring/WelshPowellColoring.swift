@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 /// A Welsh-Powell graph coloring algorithm.
 ///
 /// This algorithm sorts vertices by degree in descending order and then colors them,
@@ -142,4 +143,4 @@ public struct WelshPowellColoringAlgorithm<
 }
 
 extension WelshPowellColoringAlgorithm: VisitorSupporting {}
-
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
     /// Creates a best-first traversal algorithm.
     ///
@@ -81,3 +82,4 @@ public struct BestFirstTraversal<
 }
 
 extension BestFirstTraversal: VisitorSupporting {}
+#endif

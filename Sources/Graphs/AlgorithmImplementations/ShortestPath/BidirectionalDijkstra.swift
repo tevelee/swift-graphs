@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 /// Bidirectional Dijkstra's algorithm for finding shortest paths between two vertices.
 ///
 /// Bidirectional Dijkstra's algorithm searches from both the source and destination
@@ -395,3 +396,4 @@ extension BidirectionalDijkstra.PriorityItem: Comparable {
 }
 
 extension BidirectionalDijkstra: VisitorSupporting {}
+#endif

@@ -130,7 +130,8 @@ final class VisitorPatternTests {
     }
     
     // MARK: - Shortest Path Tests
-    
+
+    #if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
     @Test func dijkstra() {
         // Create a weighted graph
         var graph = AdjacencyList()
@@ -198,8 +199,11 @@ final class VisitorPatternTests {
         #expect(visitedEdges.count >= 2)
     }
     
+    #endif
+
     // MARK: - Minimum Spanning Tree Tests
-    
+
+    #if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
     @Test func kruskal() {
         // Create a weighted graph
         var graph = AdjacencyList()
@@ -248,8 +252,11 @@ final class VisitorPatternTests {
         #expect(visitedEdges.count >= 2)
     }
     
+    #endif
+
     // MARK: - Graph Coloring Tests
-    
+
+    #if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
     @Test func greedyColoring() {
         // Create a simple graph
         var graph = AdjacencyList()
@@ -300,8 +307,11 @@ final class VisitorPatternTests {
         #expect(visitedVertices.contains("C"))
     }
     
+    #endif
+
     // MARK: - Hamiltonian Path Tests
-    
+
+    #if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
     @Test func backtrackingHamiltonian() {
         // Create a simple graph
         var graph = AdjacencyList()
@@ -375,8 +385,11 @@ final class VisitorPatternTests {
         #expect(visitedVertices.count >= 1)
     }
     
+    #endif
+
     // MARK: - Random Graph Tests
-    
+
+    #if !GRAPHS_USES_TRAITS || GRAPHS_GENERATION
     @Test func erdosRenyi() {
         // Create a random graph
         var visitedVertices: [String] = []
@@ -394,8 +407,11 @@ final class VisitorPatternTests {
         #expect(visitedVertices.count >= 3)
     }
     
+    #endif
+
     // MARK: - Additional Shortest Path Tests
-    
+
+    #if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
     @Test func floydWarshall() {
         // Create a weighted graph
         var graph = AdjacencyList()
@@ -463,5 +479,5 @@ final class VisitorPatternTests {
         #expect(result != nil)
         #expect(visitedPaths.count >= 1)
     }
-    
+    #endif
 }

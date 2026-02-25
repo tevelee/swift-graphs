@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_GENERATION
 /// Extension providing composition support for Erdos-Renyi random graph algorithm visitors.
 extension ErdosRenyi.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -26,3 +27,4 @@ extension ErdosRenyi.Visitor: Composable {
         )
     }
 }
+#endif

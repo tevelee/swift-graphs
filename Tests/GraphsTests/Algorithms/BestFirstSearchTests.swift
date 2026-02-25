@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 @testable import Graphs
 import Testing
 
@@ -21,5 +22,4 @@ struct BestFirstTests {
         #expect(labels == ["s", "b", "d", "a", "c"])
     }
 }
-
-
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension ShortestPathAlgorithm {
     /// Creates a Floyd-Warshall shortest path algorithm.
     ///
@@ -105,3 +106,4 @@ public struct FloydWarshallShortestPath<
 }
 
 extension FloydWarshallShortestPath: VisitorSupporting {}
+#endif

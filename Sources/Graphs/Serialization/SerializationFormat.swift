@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 import Foundation
 
 /// A protocol for graph serialization formats.
@@ -32,4 +33,4 @@ public enum SerializationError: Error, CustomStringConvertible {
         }
     }
 }
-
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 /// A greedy graph coloring algorithm.
 ///
 /// This algorithm colors vertices one by one, assigning each vertex the smallest
@@ -130,4 +131,4 @@ public struct GreedyColoringAlgorithm<
 }
 
 extension GreedyColoringAlgorithm: VisitorSupporting {}
-
+#endif

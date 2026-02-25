@@ -18,6 +18,7 @@ extension IncidenceGraph {
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension IncidenceGraph where VertexDescriptor: Hashable {
     /// Finds the shortest path from source until a condition is met using Dijkstra's algorithm as the default.
     /// This is useful for finding paths to the first vertex that satisfies a condition.
@@ -36,6 +37,7 @@ extension IncidenceGraph where VertexDescriptor: Hashable {
         shortestPath(from: source, until: condition, using: .dijkstra(weight: weight))
     }
 }
+#endif
 
 /// A protocol for shortest path algorithms that search until a condition is met.
 ///

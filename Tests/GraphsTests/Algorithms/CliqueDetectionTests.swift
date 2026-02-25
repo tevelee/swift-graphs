@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 import Testing
 @testable import Graphs
 
@@ -281,3 +282,4 @@ struct CliqueDetectionTests {
         #expect(result1.maximalCliqueSize == result2.maximalCliqueSize)
     }
 }
+#endif

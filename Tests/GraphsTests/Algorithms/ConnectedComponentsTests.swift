@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 @testable import Graphs
 import Testing
 
@@ -269,3 +270,4 @@ struct ConnectedComponentsTests {
         #expect(sizes1 == sizes2)
     }
 }
+#endif

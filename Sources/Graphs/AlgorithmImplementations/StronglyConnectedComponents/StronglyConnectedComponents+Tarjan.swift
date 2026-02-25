@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Finds strongly connected components using Tarjan's algorithm.
     ///
@@ -10,3 +11,4 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         algorithm.stronglyConnectedComponents(in: self, visitor: nil as Tarjan<Self>.Visitor?)
     }
 }
+#endif

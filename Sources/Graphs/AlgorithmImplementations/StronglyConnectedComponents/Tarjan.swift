@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 import Collections
 
 /// Tarjan's algorithm for finding strongly connected components.
@@ -189,4 +190,4 @@ public struct Tarjan<Graph: IncidenceGraph & VertexListGraph> where Graph.Vertex
         return StronglyConnectedComponentsResult(components: components)
     }
 }
-
+#endif

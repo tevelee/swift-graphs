@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 import Collections
 
 /// Closeness centrality algorithm implementation.
@@ -116,4 +117,4 @@ public struct ClosenessCentrality<Graph: IncidenceGraph & VertexListGraph> where
 }
 
 extension ClosenessCentralityAlgorithm: VisitorSupporting {}
-
+#endif

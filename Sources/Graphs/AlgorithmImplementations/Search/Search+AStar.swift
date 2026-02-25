@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension SearchAlgorithm {
     /// Creates an A* search algorithm with custom cost calculation.
     ///
@@ -74,3 +75,4 @@ public struct AStarSearch<
 }
 
 extension AStarSearch: VisitorSupporting {}
+#endif

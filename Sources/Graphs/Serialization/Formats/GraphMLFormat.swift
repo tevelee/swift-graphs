@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 import Foundation
 
 extension SerializationFormat {
@@ -237,3 +238,4 @@ extension GraphMLFormat: PropertySerializationFormat where G: PropertyGraph, G: 
         return result
     }
 }
+#endif

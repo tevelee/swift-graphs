@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension ShortestPathAlgorithm {
     /// Creates a Bellman-Ford shortest path algorithm.
     ///
@@ -93,3 +94,4 @@ public struct BellmanFordShortestPath<
 }
 
 extension BellmanFordShortestPath: VisitorSupporting {}
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 /// Ford-Fulkerson algorithm for computing maximum flow.
 ///
 /// This algorithm finds the maximum flow in a flow network by repeatedly finding
@@ -260,3 +261,4 @@ public struct FordFulkerson<
 }
 
 extension FordFulkerson: VisitorSupporting {}
+#endif

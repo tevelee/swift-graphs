@@ -137,6 +137,7 @@ extension BipartiteGraph where Self: IncidenceGraph & VertexListGraph {
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 extension BipartiteGraph where Self: IncidenceGraph & VertexListGraph {
     /// Finds the maximum matching using Hopcroft-Karp algorithm as the default.
     /// This is the most efficient algorithm for maximum matching in bipartite graphs.
@@ -147,3 +148,4 @@ extension BipartiteGraph where Self: IncidenceGraph & VertexListGraph {
         maximumMatching(using: .hopcroftKarp())
     }
 }
+#endif

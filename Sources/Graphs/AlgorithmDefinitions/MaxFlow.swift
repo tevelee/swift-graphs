@@ -134,6 +134,7 @@ extension IncidenceGraph {
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 extension BidirectionalGraph where Self: EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
     /// Finds the maximum flow using Edmonds-Karp algorithm as the default.
     /// This is a well-known and efficient algorithm for maximum flow problems.
@@ -152,3 +153,4 @@ extension BidirectionalGraph where Self: EdgeListGraph & VertexListGraph, Vertex
         maximumFlow(from: source, to: sink, using: .edmondsKarp(capacityCost: capacity))
     }
 }
+#endif

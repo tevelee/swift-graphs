@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 /// Extension providing composition support for Prim's algorithm visitors.
 extension Prim.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -26,3 +27,4 @@ extension Prim.Visitor: Composable {
         )
     }
 }
+#endif

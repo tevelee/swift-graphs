@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension ShortestPathAlgorithm {
     /// Creates a Yen shortest path algorithm.
     ///
@@ -61,3 +62,4 @@ public struct YenShortestPath<
 }
 
 extension YenShortestPath: VisitorSupporting {}
+#endif

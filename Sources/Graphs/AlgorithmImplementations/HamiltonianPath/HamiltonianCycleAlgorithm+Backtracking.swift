@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 extension HamiltonianCycleAlgorithm {
     /// Creates a backtracking Hamiltonian cycle algorithm.
     ///
@@ -9,3 +10,4 @@ extension HamiltonianCycleAlgorithm {
 }
 
 extension BacktrackingHamiltonian: HamiltonianCycleAlgorithm {}
+#endif

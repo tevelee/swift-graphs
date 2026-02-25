@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 /// Backtracking Dijkstra's algorithm for finding all shortest paths with the same minimum cost.
 ///
 /// This algorithm extends Dijkstra's algorithm to track all predecessors that lead to the
@@ -429,4 +430,4 @@ extension BacktrackingDijkstra.PriorityItem: Comparable {
         lhs.cost < rhs.cost
     }
 }
-
+#endif

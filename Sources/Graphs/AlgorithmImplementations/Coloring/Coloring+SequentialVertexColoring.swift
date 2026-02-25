@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 extension ColoringAlgorithm where Color == Int {
     /// Creates a Sequential Vertex Coloring algorithm.
     ///
@@ -17,3 +18,4 @@ extension SequentialVertexColoringAlgorithm: ColoringAlgorithm {
         color(graph: graph, visitor: nil)
     }
 }
+#endif

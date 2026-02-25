@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 import Collections
 
 /// Betweenness centrality algorithm implementation.
@@ -166,4 +167,4 @@ public struct BetweennessCentrality<Graph: IncidenceGraph & VertexListGraph> whe
 }
 
 extension BetweennessCentralityAlgorithm: VisitorSupporting {}
-
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 /// Extension providing composition support for Union-Find connected components algorithm visitors.
 extension UnionFindConnectedComponents.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -22,3 +23,4 @@ extension UnionFindConnectedComponents.Visitor: Composable {
         )
     }
 }
+#endif

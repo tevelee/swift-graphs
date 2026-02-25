@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 import Collections
 
 /// PageRank centrality algorithm implementation.
@@ -180,4 +181,4 @@ public struct PageRankCentrality<Graph: IncidenceGraph & VertexListGraph & Bidir
 }
 
 extension PageRankCentralityAlgorithm: VisitorSupporting {}
-
+#endif

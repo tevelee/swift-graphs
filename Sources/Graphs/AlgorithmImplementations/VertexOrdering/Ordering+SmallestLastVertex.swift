@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 extension VertexOrderingAlgorithm {
     /// Creates a Smallest Last Vertex Ordering algorithm.
     ///
@@ -9,3 +10,4 @@ extension VertexOrderingAlgorithm {
 }
 
 extension SmallestLastVertexOrderingAlgorithm: VertexOrderingAlgorithm {}
+#endif

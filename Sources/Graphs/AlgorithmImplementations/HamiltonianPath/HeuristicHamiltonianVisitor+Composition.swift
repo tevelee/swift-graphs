@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 /// Extension providing composition support for heuristic Hamiltonian path algorithm visitors.
 extension HeuristicHamiltonian.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -30,3 +31,4 @@ extension HeuristicHamiltonian.Visitor: Composable {
         )
     }
 }
+#endif

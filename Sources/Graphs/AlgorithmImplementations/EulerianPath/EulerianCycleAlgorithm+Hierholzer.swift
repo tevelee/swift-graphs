@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 extension EulerianCycleAlgorithm {
     /// Creates a Hierholzer algorithm for finding Eulerian cycles.
     ///
@@ -14,3 +15,4 @@ extension Hierholzer: EulerianCycleAlgorithm {
         eulerianCycle(in: graph, visitor: nil)
     }
 }
+#endif

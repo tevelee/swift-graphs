@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 /// Extension providing composition support for Tarjan articulation points visitors.
 extension TarjanArticulationPoints.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -38,3 +39,4 @@ extension TarjanArticulationPoints.Visitor: Composable {
         )
     }
 }
+#endif

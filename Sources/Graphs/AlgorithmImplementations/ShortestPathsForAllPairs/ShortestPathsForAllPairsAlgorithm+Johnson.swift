@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension ShortestPathsForAllPairsAlgorithm {
     /// Creates a Johnson algorithm for computing all-pairs shortest paths.
     ///
@@ -10,3 +11,4 @@ extension ShortestPathsForAllPairsAlgorithm {
         Johnson(edgeWeight: edgeWeight)
     }
 }
+#endif

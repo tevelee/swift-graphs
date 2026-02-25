@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 /// Extension providing composition support for Kruskal's algorithm visitors.
 extension Kruskal.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -26,3 +27,4 @@ extension Kruskal.Visitor: Composable {
         )
     }
 }
+#endif

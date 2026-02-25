@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 @testable import Graphs
 import Testing
 
@@ -430,4 +431,4 @@ struct AllShortestPathsTests {
         #expect(paths.count == 2)
     }
 }
-
+#endif

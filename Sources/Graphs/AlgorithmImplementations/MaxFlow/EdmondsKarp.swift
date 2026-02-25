@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 /// Edmonds-Karp algorithm for computing maximum flow.
 ///
 /// This algorithm finds the maximum flow in a flow network by using BFS to find
@@ -268,3 +269,4 @@ public struct EdmondsKarp<
 }
 
 extension EdmondsKarp: VisitorSupporting {}
+#endif

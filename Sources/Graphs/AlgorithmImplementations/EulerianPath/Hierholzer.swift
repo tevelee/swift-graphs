@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 /// Hierholzer's algorithm for finding Eulerian paths and cycles.
 ///
 /// Hierholzer's algorithm finds an Eulerian path or cycle in a graph by building
@@ -206,4 +207,4 @@ where Graph.VertexDescriptor: Hashable {
 }
 
 extension Hierholzer: VisitorSupporting {}
-
+#endif

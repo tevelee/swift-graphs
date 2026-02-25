@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension KShortestPathsAlgorithm where Weight: AdditiveArithmetic {
     /// Creates a Yen k-shortest paths algorithm.
     ///
@@ -62,3 +63,4 @@ public struct YenKShortestPath<
 }
 
 extension YenKShortestPath: VisitorSupporting {}
+#endif

@@ -23,6 +23,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
         return cycleAlgorithm.hamiltonianCycle(in: self, visitor: nil) != nil
     }
     
+    #if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
     /// Convenience method using standard algorithms.
     ///
     /// - Returns: `true` if the graph has a Hamiltonian cycle, `false` otherwise
@@ -34,6 +35,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
             cycleAlgorithm: .backtracking()
         )
     }
+    #endif
 }
 
 extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, VertexDescriptor: Hashable {
@@ -61,6 +63,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
         return pathAlgorithm.hamiltonianPath(in: self, visitor: nil) != nil
     }
     
+    #if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
     /// Convenience method using standard algorithms.
     ///
     /// - Returns: `true` if the graph has a Hamiltonian path, `false` otherwise
@@ -72,6 +75,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
             pathAlgorithm: .backtracking()
         )
     }
+    #endif
 }
 
 extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, VertexDescriptor: Hashable {

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 /// VF2 (Vento-Foggia) algorithm for graph isomorphism.
 /// This is a state-space search algorithm that explores possible vertex mappings
 /// between two graphs in a systematic way.
@@ -236,3 +237,4 @@ public struct VF2Isomorphism<Graph: IncidenceGraph & VertexListGraph & EdgeListG
 }
 
 extension VF2Isomorphism: VisitorSupporting {}
+#endif

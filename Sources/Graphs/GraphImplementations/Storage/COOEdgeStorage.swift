@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
 import Collections
 
 /// A coordinate (COO) format edge storage implementation.
@@ -101,5 +102,4 @@ public struct COOEdgeStorage<Vertex: Hashable>: EdgeStorage {
         tombstones.insert(edge.id)
     }
 }
-
-
+#endif

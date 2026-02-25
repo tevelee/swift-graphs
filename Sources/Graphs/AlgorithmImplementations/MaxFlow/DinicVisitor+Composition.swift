@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 /// Extension providing composition support for Dinic's algorithm visitors.
 extension Dinic.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -38,3 +39,4 @@ extension Dinic.Visitor: Composable {
         )
     }
 }
+#endif

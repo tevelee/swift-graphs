@@ -13,6 +13,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDescriptor: Hashable {
     /// Detects communities using Louvain algorithm as the default.
     /// This is a fast and widely-used algorithm for community detection.
@@ -23,6 +24,7 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
         detectCommunities(using: .louvain())
     }
 }
+#endif
 
 /// A protocol for community detection algorithms.
 public protocol CommunityDetectionAlgorithm<Graph> {
