@@ -265,6 +265,7 @@ protocol SearchAlgorithm<Graph> {
 - `ConnectedComponentsAlgorithm` - Component detection
 - `MinimumSpanningTreeAlgorithm` - MST strategies
 - `MaxFlowAlgorithm` - Flow computation
+- `MinimumCutAlgorithm` - Global minimum cut
 - `ArticulationPointsAlgorithm` - Cut vertices and bridge edges
 - `HamiltonianPathAlgorithm` - Hamiltonian paths/cycles
 - `EulerianPathAlgorithm` - Eulerian paths/cycles
@@ -561,7 +562,7 @@ Starting with Swift 6.2, Swift Graphs supports **SPM traits** for modular compil
 |-------|----------|---------|
 | **Pathfinding** | Dijkstra, A\*, Bellman-Ford, SPFA, Floyd-Warshall, Johnson, Yen | Yes |
 | **Connectivity** | Connected Components, SCCs, Articulation Points, Topological Sort | Yes |
-| **Optimization** | Max Flow, MST, Matching | No |
+| **Optimization** | Max Flow, Min Cut, MST, Matching | No |
 | **Analysis** | Coloring, Centrality, Community Detection | No |
 | **Advanced** | Isomorphism, Cliques, Eulerian/Hamiltonian | No |
 | **Generation** | Random graph generators | No |

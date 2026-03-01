@@ -587,6 +587,48 @@ let maxFlow = graph.maximumFlow(
 - Need better performance
 - Bipartite matching
 
+## Minimum Cut
+
+Find the minimum total edge weight whose removal disconnects the graph, without specifying source or sink vertices.
+
+### Stoer-Wagner Algorithm
+
+**Best for:** Global minimum cut on undirected weighted graphs
+
+```swift
+let result = graph.minimumCut(using: .stoerWagner(weight: .property(\.weight)))
+
+// Or use the convenience method (defaults to Stoer-Wagner)
+let result = graph.minimumCut(weight: .property(\.weight))
+
+// Access results
+if let cut = result {
+    print("Cut weight: \(cut.cutWeight)")
+    print("Partition A: \(cut.partitionA)")
+    print("Partition B: \(cut.partitionB)")
+    print("Cut edges: \(cut.cutEdges)")
+
+    // O(1) edge check
+    if cut.isCutEdge(someEdge) {
+        print("This edge crosses the partition")
+    }
+}
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V³)
+- **Space Complexity:** O(V²)
+- **Strategy:** Maximum adjacency ordering with vertex contraction
+- **Supports:** Any `Numeric & Comparable` weight (integers and floating-point)
+- **Optimal:** Yes (exact solution)
+
+**Use when:**
+- Finding the weakest link that disconnects a network
+- Network reliability analysis (complement to articulation points)
+- Partitioning graphs into balanced communities
+- VLSI circuit design and image segmentation
+
+> Note: Stoer-Wagner operates on undirected graphs. For directed graphs, apply the `.undirected()` view first. The library represents undirected edges as bidirectional directed edges — Stoer-Wagner handles this naturally.
 
 ## Graph Coloring
 
@@ -1125,6 +1167,7 @@ let centrality = graph.centrality(using: .eigenvector())
 | All pairs | Johnson (sparse), Floyd-Warshall (dense) |
 | Minimum spanning tree | Kruskal (sparse), Prim (dense) |
 | Maximum flow | Edmonds-Karp (general), Dinic (large) |
+| Global minimum cut | Stoer-Wagner |
 | Graph coloring | Greedy (fast), DSatur (quality) |
 | Bipartite matching | Hopcroft-Karp |
 | Topological sort | Kahn or DFS |

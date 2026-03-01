@@ -106,6 +106,10 @@ cityNetwork.maximumFlow(from: sanFrancisco, to: denver, using: .fordFulkerson(ca
 cityNetwork.maximumFlow(from: sanFrancisco, to: denver, using: .edmondsKarp(capacityCost: .property(\.weight)))
 cityNetwork.maximumFlow(from: sanFrancisco, to: denver, using: .dinic(capacityCost: .property(\.weight)))
 
+// Minimum Cut - find the cheapest way to disconnect a graph
+cityNetwork.minimumCut(weight: .property(\.weight))
+cityNetwork.minimumCut(using: .stoerWagner(weight: .property(\.weight)))
+
 // Connectivity & Components - analyze network structure
 cityNetwork.connectedComponents()
 cityNetwork.connectedComponents(using: .dfs())
@@ -212,7 +216,7 @@ dependencies: [
 
 **Graph Properties** - Tree Detection, Cycle Detection, Bipartiteness, Connectivity, Eulerian Paths/Cycles, Hamiltonian Paths/Cycles (Backtracking, Heuristic)
 
-**Optimization** - Minimum Spanning Tree (Kruskal, Prim, Borůvka), Maximum Flow (Ford-Fulkerson, Edmonds-Karp, Dinic), Graph Coloring (Greedy, DSatur, Welsh-Powell, Sequential), Matching (Hopcroft-Karp), Topological Sort (DFS, Kahn)
+**Optimization** - Minimum Spanning Tree (Kruskal, Prim, Borůvka), Maximum Flow (Ford-Fulkerson, Edmonds-Karp, Dinic), Minimum Cut (Stoer-Wagner), Graph Coloring (Greedy, DSatur, Welsh-Powell, Sequential), Matching (Hopcroft-Karp), Topological Sort (DFS, Kahn)
 
 **Advanced** - Graph Isomorphism (VF2, Weisfeiler-Lehman), Clique Detection (Bron-Kerbosch), Community Detection (Louvain), Centrality Measures (PageRank, Betweenness, Closeness, Eigenvector, Degree), Random Graphs (Erdős-Rényi, Barabási-Albert, Watts-Strogatz)
 

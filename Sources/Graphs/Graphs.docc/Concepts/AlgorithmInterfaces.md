@@ -238,6 +238,33 @@ protocol MinimumSpanningTreeAlgorithm<Graph, Weight> {
 - `PrimMST` - Vertex-based, good for dense graphs
 - `BoruvkaMST` - Parallel-friendly
 
+### Minimum Cut Algorithms
+
+```swift
+protocol MinimumCutAlgorithm<Graph, Weight> {
+    associatedtype Graph: IncidenceGraph & VertexListGraph
+    associatedtype Weight: Numeric & Comparable
+    associatedtype Visitor
+
+    func minimumCut(
+        in graph: Graph,
+        visitor: Visitor?
+    ) -> MinimumCutResult<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>?
+}
+```
+
+**Implementations:**
+- `StoerWagner` - Maximum adjacency ordering, O(V³)
+
+**Usage:**
+
+```swift
+let result = graph.minimumCut(using: .stoerWagner(weight: .property(\.weight)))
+print("Cut weight: \(result?.cutWeight)")
+print("Partition A: \(result?.partitionA)")
+print("Partition B: \(result?.partitionB)")
+```
+
 ## Creating Custom Algorithms
 
 ### Step 1: Define Algorithm Type
