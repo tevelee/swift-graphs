@@ -7,10 +7,10 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
     ///   - algorithm: The shortest path algorithm to use
     /// - Returns: The shortest path, or `nil` if no path exists
     @inlinable
-    public func shortestPath<Weight: AdditiveArithmetic & Comparable>(
+    public func shortestPath(
         from source: VertexDescriptor,
         to destination: VertexDescriptor,
-        using algorithm: some ShortestPathAlgorithm<Self, Weight>
+        using algorithm: some ShortestPathAlgorithm<Self>
     ) -> Path<VertexDescriptor, EdgeDescriptor>? {
         algorithm.shortestPath(from: source, to: destination, in: self, visitor: nil)
     }
@@ -41,13 +41,10 @@ extension IncidenceGraph where VertexDescriptor: Hashable {
 ///
 /// Shortest path algorithms find the path with minimum total weight between two vertices
 /// in a weighted graph. Different algorithms have different characteristics and requirements.
-public protocol ShortestPathAlgorithm<Graph, Weight> {
+public protocol ShortestPathAlgorithm<Graph> {
     /// The type of graph this algorithm operates on.
     associatedtype Graph: IncidenceGraph
-    
-    /// The type used for edge weights.
-    associatedtype Weight: AdditiveArithmetic & Comparable
-    
+
     /// The type of visitor used for algorithm events.
     associatedtype Visitor
 
@@ -67,29 +64,8 @@ public protocol ShortestPathAlgorithm<Graph, Weight> {
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 }
 
-extension ShortestPathAlgorithm where Self: ShortestPathUntilAlgorithm, Graph.VertexDescriptor: Equatable {
-    /// Default implementation using the until-based algorithm.
-    ///
-    /// - Parameters:
-    ///   - source: The starting vertex
-    ///   - destination: The target vertex
-    ///   - graph: The graph to search
-    ///   - visitor: Optional visitor for algorithm events
-    /// - Returns: The shortest path, or `nil` if no path exists
-    @inlinable
-    public func shortestPath(
-        from source: Graph.VertexDescriptor,
-        to destination: Graph.VertexDescriptor,
-        in graph: Graph,
-        visitor: Visitor?
-    ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-        shortestPath(from: source, until: { $0 == destination }, in: graph, visitor: visitor)
-    }
-}
-
 extension VisitorWrapper: ShortestPathAlgorithm where Base: ShortestPathAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
-    public typealias Weight = Base.Weight
 
     @inlinable
     public func shortestPath(

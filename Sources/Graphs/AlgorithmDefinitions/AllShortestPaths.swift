@@ -1,38 +1,3 @@
-/// A protocol for algorithms that find all shortest paths until a condition is met.
-///
-/// Unlike k-shortest paths algorithms that return paths with potentially different costs,
-/// all-shortest-paths algorithms return only paths that share the optimal (minimum) cost.
-/// This is useful when there are multiple equally-optimal paths in a graph.
-public protocol AllShortestPathsUntilAlgorithm<Graph, Weight> {
-    /// The type of graph this algorithm operates on.
-    associatedtype Graph: IncidenceGraph
-    
-    /// The type used for edge weights.
-    associatedtype Weight: AdditiveArithmetic & Comparable
-    
-    /// The type of visitor used for algorithm events.
-    associatedtype Visitor
-    
-    /// Finds all shortest paths from source until a condition is met.
-    ///
-    /// Returns all paths from source to vertices that satisfy the condition and have the minimum total cost.
-    /// If multiple paths exist with the same optimal cost, all are returned.
-    /// If no path exists, returns an empty array.
-    ///
-    /// - Parameters:
-    ///   - source: The starting vertex
-    ///   - condition: A closure that determines when to stop searching
-    ///   - graph: The graph to search
-    ///   - visitor: Optional visitor for algorithm events
-    /// - Returns: An array of all shortest paths (may be empty if no path exists)
-    func allShortestPaths(
-        from source: Graph.VertexDescriptor,
-        until condition: @escaping (Graph.VertexDescriptor) -> Bool,
-        in graph: Graph,
-        visitor: Visitor?
-    ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>]
-}
-
 /// A protocol for algorithms that find all shortest paths with the same minimum cost.
 ///
 /// Unlike k-shortest paths algorithms that return paths with potentially different costs,
@@ -41,13 +6,13 @@ public protocol AllShortestPathsUntilAlgorithm<Graph, Weight> {
 public protocol AllShortestPathsAlgorithm<Graph, Weight> {
     /// The type of graph this algorithm operates on.
     associatedtype Graph: IncidenceGraph
-    
+
     /// The type used for edge weights.
     associatedtype Weight: AdditiveArithmetic & Comparable
-    
+
     /// The type of visitor used for algorithm events.
     associatedtype Visitor
-    
+
     /// Finds all shortest paths between two vertices.
     ///
     /// Returns all paths from source to destination that have the minimum total cost.
@@ -68,6 +33,55 @@ public protocol AllShortestPathsAlgorithm<Graph, Weight> {
     ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>]
 }
 
+/// A protocol for algorithms that find all shortest paths until a condition is met.
+///
+/// Unlike k-shortest paths algorithms that return paths with potentially different costs,
+/// all-shortest-paths algorithms return only paths that share the optimal (minimum) cost.
+/// Since condition-based search is strictly more general than point-to-point search,
+/// this protocol inherits from ``AllShortestPathsAlgorithm`` and provides a default
+/// `from:to:` implementation that delegates to `from:until:`.
+public protocol AllShortestPathsUntilAlgorithm<Graph, Weight>: AllShortestPathsAlgorithm {
+    /// Finds all shortest paths from source until a condition is met.
+    ///
+    /// Returns all paths from source to vertices that satisfy the condition and have the minimum total cost.
+    /// If multiple paths exist with the same optimal cost, all are returned.
+    /// If no path exists, returns an empty array.
+    ///
+    /// - Parameters:
+    ///   - source: The starting vertex
+    ///   - condition: A closure that determines when to stop searching
+    ///   - graph: The graph to search
+    ///   - visitor: Optional visitor for algorithm events
+    /// - Returns: An array of all shortest paths (may be empty if no path exists)
+    func allShortestPaths(
+        from source: Graph.VertexDescriptor,
+        until condition: @escaping (Graph.VertexDescriptor) -> Bool,
+        in graph: Graph,
+        visitor: Visitor?
+    ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>]
+}
+
+// Default implementation: from:to: delegates to until:
+extension AllShortestPathsUntilAlgorithm where Graph.VertexDescriptor: Equatable {
+    /// Default implementation that delegates to the condition-based search.
+    ///
+    /// - Parameters:
+    ///   - source: The starting vertex
+    ///   - destination: The target vertex
+    ///   - graph: The graph to search
+    ///   - visitor: Optional visitor for algorithm events
+    /// - Returns: An array of all shortest paths (may be empty if no path exists)
+    @inlinable
+    public func allShortestPaths(
+        from source: Graph.VertexDescriptor,
+        to destination: Graph.VertexDescriptor,
+        in graph: Graph,
+        visitor: Visitor?
+    ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>] {
+        allShortestPaths(from: source, until: { $0 == destination }, in: graph, visitor: visitor)
+    }
+}
+
 extension IncidenceGraph where VertexDescriptor: Equatable {
     /// Finds all shortest paths from source until a condition is met using the specified algorithm.
     ///
@@ -84,7 +98,7 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
     ) -> [Path<VertexDescriptor, EdgeDescriptor>] {
         algorithm.allShortestPaths(from: source, until: condition, in: self, visitor: nil)
     }
-    
+
     /// Finds all shortest paths between two vertices using the specified algorithm.
     ///
     /// - Parameters:
@@ -121,7 +135,7 @@ extension IncidenceGraph where VertexDescriptor: Hashable {
     ) -> [Path<VertexDescriptor, EdgeDescriptor>] where Weight.Magnitude == Weight {
         allShortestPaths(from: source, until: condition, using: .backtrackingDijkstra(weight: weight))
     }
-    
+
     /// Finds all shortest paths between two vertices using backtracking Dijkstra's algorithm as the default.
     /// This algorithm finds all paths that have the same minimum cost.
     ///
@@ -140,30 +154,7 @@ extension IncidenceGraph where VertexDescriptor: Hashable {
     }
 }
 
-extension AllShortestPathsAlgorithm where Self: AllShortestPathsUntilAlgorithm, Graph.VertexDescriptor: Equatable {
-    /// Default implementation using the until-based algorithm.
-    ///
-    /// - Parameters:
-    ///   - source: The starting vertex
-    ///   - destination: The target vertex
-    ///   - graph: The graph to search
-    ///   - visitor: Optional visitor for algorithm events
-    /// - Returns: An array of all shortest paths (may be empty if no path exists)
-    @inlinable
-    public func allShortestPaths(
-        from source: Graph.VertexDescriptor,
-        to destination: Graph.VertexDescriptor,
-        in graph: Graph,
-        visitor: Visitor?
-    ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>] {
-        allShortestPaths(from: source, until: { $0 == destination }, in: graph, visitor: visitor)
-    }
-}
-
 extension VisitorWrapper: AllShortestPathsUntilAlgorithm where Base: AllShortestPathsUntilAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
-    public typealias Graph = Base.Graph
-    public typealias Weight = Base.Weight
-    
     @inlinable
     public func allShortestPaths(
         from source: Base.Graph.VertexDescriptor,
@@ -176,9 +167,8 @@ extension VisitorWrapper: AllShortestPathsUntilAlgorithm where Base: AllShortest
 }
 
 extension VisitorWrapper: AllShortestPathsAlgorithm where Base: AllShortestPathsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
-    public typealias Graph = Base.Graph
     public typealias Weight = Base.Weight
-    
+
     @inlinable
     public func allShortestPaths(
         from source: Base.Graph.VertexDescriptor,
@@ -189,4 +179,3 @@ extension VisitorWrapper: AllShortestPathsAlgorithm where Base: AllShortestPaths
         base.allShortestPaths(from: source, to: destination, in: graph, visitor: self.visitor.combined(with: visitor))
     }
 }
-

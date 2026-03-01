@@ -1,23 +1,23 @@
-extension ShortestPathAlgorithm where Weight: AdditiveArithmetic {
+extension ShortestPathAlgorithm {
     /// Creates a Bellman-Ford shortest path algorithm.
     ///
     /// - Parameter weight: The cost definition for edge weights.
     /// - Returns: A Bellman-Ford shortest path algorithm instance.
     @inlinable
-    public static func bellmanFord<Graph: IncidenceGraph & EdgeListGraph & VertexListGraph, Weight>(
+    public static func bellmanFord<Graph: IncidenceGraph & EdgeListGraph & VertexListGraph, Weight: AdditiveArithmetic>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == BellmanFordShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable {
         .init(weight: weight)
     }
 }
 
-extension SingleSourceShortestPathAlgorithm where Weight: AdditiveArithmetic {
+extension SingleSourceShortestPathAlgorithm {
     /// Creates a Bellman-Ford single-source shortest path algorithm.
     ///
     /// - Parameter weight: The cost definition for edge weights.
     /// - Returns: A Bellman-Ford shortest path algorithm instance.
     @inlinable
-    public static func bellmanFord<Graph: IncidenceGraph & EdgeListGraph & VertexListGraph, Weight>(
+    public static func bellmanFord<Graph: IncidenceGraph & EdgeListGraph & VertexListGraph, Weight: AdditiveArithmetic>(
         weight: CostDefinition<Graph, Weight>
     ) -> Self where Self == BellmanFordShortestPath<Graph, Weight>, Graph.VertexDescriptor: Hashable {
         .init(weight: weight)

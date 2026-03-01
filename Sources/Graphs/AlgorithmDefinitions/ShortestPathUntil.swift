@@ -41,13 +41,10 @@ extension IncidenceGraph where VertexDescriptor: Hashable {
 ///
 /// These algorithms find the shortest path from a source vertex to the first vertex
 /// that satisfies a given condition, rather than searching to a specific destination.
-public protocol ShortestPathUntilAlgorithm<Graph> {
-    /// The type of graph this algorithm operates on.
-    associatedtype Graph: IncidenceGraph
-    
-    /// The type of visitor used for algorithm events.
-    associatedtype Visitor
-
+/// Since condition-based search is strictly more general than point-to-point search,
+/// this protocol inherits from ``ShortestPathAlgorithm`` and provides a default
+/// `from:to:` implementation that delegates to `from:until:`.
+public protocol ShortestPathUntilAlgorithm<Graph>: ShortestPathAlgorithm {
     /// Finds the shortest path from source until a condition is met.
     ///
     /// - Parameters:
@@ -64,9 +61,28 @@ public protocol ShortestPathUntilAlgorithm<Graph> {
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 }
 
+// Default implementation: from:to: delegates to until:
+extension ShortestPathUntilAlgorithm where Graph.VertexDescriptor: Equatable {
+    /// Default implementation that delegates to the condition-based search.
+    ///
+    /// - Parameters:
+    ///   - source: The starting vertex
+    ///   - destination: The target vertex
+    ///   - graph: The graph to search
+    ///   - visitor: Optional visitor for algorithm events
+    /// - Returns: The shortest path, or `nil` if no path exists
+    @inlinable
+    public func shortestPath(
+        from source: Graph.VertexDescriptor,
+        to destination: Graph.VertexDescriptor,
+        in graph: Graph,
+        visitor: Visitor?
+    ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        shortestPath(from: source, until: { $0 == destination }, in: graph, visitor: visitor)
+    }
+}
+
 extension VisitorWrapper: ShortestPathUntilAlgorithm where Base: ShortestPathUntilAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
-    public typealias Graph = Base.Graph
-    
     @inlinable
     public func shortestPath(
         from source: Base.Graph.VertexDescriptor,
