@@ -87,6 +87,7 @@ cityNetwork.shortestPath(from: sanFrancisco, to: denver, using: .dijkstra(weight
 cityNetwork.shortestPath(from: sanFrancisco, to: denver, using: .aStar(weight: .property(\.weight), heuristic: { _, _ in 0 }))
 cityNetwork.shortestPath(from: sanFrancisco, to: denver, using: .bellmanFord(weight: .property(\.weight)))
 cityNetwork.shortestPath(from: sanFrancisco, to: denver, using: .bidirectionalDijkstra(weight: .property(\.weight)))
+cityNetwork.shortestPaths(from: sanFrancisco, using: .spfa(weight: .property(\.weight)))
 
 // K Shortest Paths - find multiple alternative routes
 cityNetwork.kShortestPaths(from: sanFrancisco, to: denver, k: 3, using: .yen(weight: .property(\.weight)))
@@ -199,7 +200,7 @@ dependencies: [
 
 ### 🚀 Comprehensive Algorithms
 
-**Shortest Paths** - Dijkstra, Bidirectional Dijkstra, A*, Bellman-Ford, Floyd-Warshall, Johnson, Yen (K-shortest)
+**Shortest Paths** - Dijkstra, Bidirectional Dijkstra, A*, Bellman-Ford, SPFA, Floyd-Warshall, Johnson, Yen (K-shortest)
 
 **Traversal & Search** - DFS (preorder/postorder), BFS, Best-First, Depth-Limited DFS, Iterative Deepening DFS
 

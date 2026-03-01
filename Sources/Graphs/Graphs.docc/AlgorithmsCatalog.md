@@ -92,6 +92,40 @@ let path = graph.shortestPath(
 - Graph is not too large
 - Only algorithm that handles negative weights
 
+### SPFA (Shortest Path Faster Algorithm)
+
+**Best for:** Graphs with negative edge weights, faster than Bellman-Ford on average
+
+```swift
+let result = graph.shortestPaths(
+    from: source,
+    using: .spfa(weight: .property(\.weight))
+)
+
+// Access results
+if let path = result.path(from: source, to: destination, in: graph) {
+    print(path.vertices)
+}
+
+// Check for negative cycles
+if result.hasNegativeCycle {
+    print("Negative cycle detected!")
+}
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V × E) worst case, O(E) average case
+- **Space Complexity:** O(V)
+- **Requirements:** None (handles negative weights)
+- **Detects:** Negative cycles
+- **Optimal:** Yes
+
+**Use when:**
+- Graph has negative edge weights
+- Want faster average performance than Bellman-Ford
+- Need single-source shortest paths to all vertices
+- Need negative cycle detection
+
 ### Floyd-Warshall Algorithm
 
 **Best for:** All-pairs shortest paths, dense graphs
@@ -1050,7 +1084,7 @@ let centrality = graph.centrality(using: .eigenvector())
 |---------|----------------------|
 | Unweighted shortest path | BFS |
 | Weighted shortest path | Dijkstra or A* |
-| Negative weights | Bellman-Ford |
+| Negative weights | Bellman-Ford or SPFA |
 | All pairs | Johnson (sparse), Floyd-Warshall (dense) |
 | Minimum spanning tree | Kruskal (sparse), Prim (dense) |
 | Maximum flow | Edmonds-Karp (general), Dinic (large) |

@@ -59,6 +59,7 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 - **Dijkstra's Algorithm** - Single-source shortest paths (non-negative weights)
 - **A\* Search** - Heuristic-guided pathfinding
 - **Bellman-Ford** - Handles negative weights, detects negative cycles
+- **SPFA** - Faster alternative to Bellman-Ford for negative weights
 - **Floyd-Warshall** - All-pairs shortest paths
 - **Johnson's Algorithm** - All-pairs with sparse graphs
 

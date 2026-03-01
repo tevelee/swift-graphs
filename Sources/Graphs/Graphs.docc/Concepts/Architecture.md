@@ -282,6 +282,7 @@ Specific algorithm implementations:
 struct Dijkstra<Graph, Weight>: ShortestPathAlgorithm { ... }
 struct AStar<Graph, Weight>: ShortestPathAlgorithm { ... }
 struct BellmanFord<Graph, Weight>: ShortestPathAlgorithm { ... }
+struct SPFA<Graph, Weight>: SingleSourceShortestPathAlgorithm { ... }
 struct FloydWarshall<Graph, Weight>: ShortestPathAlgorithm { ... }
 ```
 
