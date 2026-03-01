@@ -193,6 +193,31 @@ protocol ConnectedComponentsAlgorithm<Graph> {
 let components = graph.connectedComponents(using: .unionFind())
 ```
 
+### Articulation Points Algorithms
+
+```swift
+protocol ArticulationPointsAlgorithm<Graph> {
+    associatedtype Graph: IncidenceGraph
+    associatedtype Visitor
+
+    func articulationPoints(
+        in graph: Graph,
+        visitor: Visitor?
+    ) -> ArticulationPointsResult<Graph.VertexDescriptor, Graph.EdgeDescriptor>
+}
+```
+
+**Implementations:**
+- `TarjanArticulationPointsAlgorithm` - Single DFS pass, O(V + E)
+
+**Usage:**
+
+```swift
+let result = graph.articulationPoints(using: .tarjan())
+print("Cut vertices: \(result.cutVertices)")
+print("Bridges: \(result.bridges)")
+```
+
 ### Minimum Spanning Tree Algorithms
 
 ```swift

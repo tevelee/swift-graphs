@@ -74,6 +74,7 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 
 - **Connected Components** - Find connected subgraphs
 - **Strongly Connected Components** - Directed graph components
+- **Articulation Points & Bridges** - Find critical vertices and edges
 - **Cycle Detection** - Identify cycles in graphs
 - **Planarity Testing** - Boyer-Myrvold algorithm
 - **Bipartiteness** - Two-coloring detection

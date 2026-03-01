@@ -114,6 +114,10 @@ cityNetwork.stronglyConnectedComponents()
 cityNetwork.stronglyConnectedComponents(using: .kosaraju())
 cityNetwork.stronglyConnectedComponents(using: .tarjan())
 
+// Articulation Points & Bridges - find critical vertices and edges
+cityNetwork.articulationPoints()
+cityNetwork.articulationPoints(using: .tarjan())
+
 // Graph Coloring - assign colors to vertices with no adjacent same colors
 cityNetwork.colorGraph()
 cityNetwork.colorGraph(using: .greedy())
@@ -204,7 +208,7 @@ dependencies: [
 
 **Traversal & Search** - DFS (preorder/postorder), BFS, Best-First, Depth-Limited DFS, Iterative Deepening DFS
 
-**Connectivity** - Connected Components (DFS, Union-Find), Strongly Connected Components (Tarjan, Kosaraju)
+**Connectivity** - Connected Components (DFS, Union-Find), Strongly Connected Components (Tarjan, Kosaraju), Articulation Points & Bridges (Tarjan)
 
 **Graph Properties** - Tree Detection, Cycle Detection, Bipartiteness, Connectivity, Eulerian Paths/Cycles, Hamiltonian Paths/Cycles (Backtracking, Heuristic)
 

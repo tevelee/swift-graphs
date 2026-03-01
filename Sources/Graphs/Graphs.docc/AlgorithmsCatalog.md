@@ -412,6 +412,43 @@ let sccs = graph.stronglyConnectedComponents(using: .kosaraju())
 - Prefer simple implementation
 - Performance difference negligible
 
+## Articulation Points & Bridges
+
+Find critical vertices (cut vertices) and edges (bridges) whose removal disconnects the graph.
+
+### Tarjan's Algorithm
+
+**Best for:** Finding all articulation points and bridges in a single pass
+
+```swift
+let result = graph.articulationPoints()
+
+// Check specific vertices and edges
+if result.isArticulationPoint(vertex) {
+    print("Removing this vertex disconnects the graph")
+}
+if result.isBridge(edge) {
+    print("Removing this edge disconnects the graph")
+}
+
+// Access all results
+print(result.cutVertices)  // Set of articulation points
+print(result.bridges)      // Array of bridge edges
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V + E)
+- **Space Complexity:** O(V)
+- **Strategy:** Single DFS pass with low-link values
+- **Finds:** Both cut vertices and bridge edges
+- **Optimal:** Linear time
+
+**Use when:**
+- Network reliability analysis (finding single points of failure)
+- Identifying critical infrastructure in transportation networks
+- Communication network vulnerability assessment
+- Graph decomposition into biconnected components
+
 ## Minimum Spanning Tree
 
 Find minimum-weight tree connecting all vertices.
@@ -1092,6 +1129,7 @@ let centrality = graph.centrality(using: .eigenvector())
 | Bipartite matching | Hopcroft-Karp |
 | Topological sort | Kahn or DFS |
 | Connected components | DFS (standard), Union-Find (incremental) |
+| Articulation points | Tarjan |
 | Vertex importance | Degree (fast), PageRank (link-based), Betweenness (bottlenecks) |
 
 ### By Graph Size

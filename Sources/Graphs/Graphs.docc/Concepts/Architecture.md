@@ -265,6 +265,7 @@ protocol SearchAlgorithm<Graph> {
 - `ConnectedComponentsAlgorithm` - Component detection
 - `MinimumSpanningTreeAlgorithm` - MST strategies
 - `MaxFlowAlgorithm` - Flow computation
+- `ArticulationPointsAlgorithm` - Cut vertices and bridge edges
 - `HamiltonianPathAlgorithm` - Hamiltonian paths/cycles
 - `EulerianPathAlgorithm` - Eulerian paths/cycles
 
