@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_GENERATION
 /// Watts-Strogatz random graph generation algorithm.
 ///
 /// This algorithm generates small-world networks by starting with a regular
@@ -129,3 +130,4 @@ public struct WattsStrogatz<
 }
 
 extension WattsStrogatz: VisitorSupporting {}
+#endif

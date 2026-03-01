@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 /// Sequential Vertex Coloring algorithm that uses vertex ordering.
 /// 
 /// This algorithm assigns colors to vertices in a specific order, ensuring that no two
@@ -144,3 +145,4 @@ public struct SequentialVertexColoringAlgorithm<
         return true
     }
 }
+#endif

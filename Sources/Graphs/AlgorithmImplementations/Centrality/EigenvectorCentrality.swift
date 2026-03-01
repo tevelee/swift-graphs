@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 import Collections
 
 /// Eigenvector centrality algorithm implementation.
@@ -151,4 +152,4 @@ public struct EigenvectorCentrality<Graph: IncidenceGraph & VertexListGraph & Bi
 }
 
 extension EigenvectorCentralityAlgorithm: VisitorSupporting {}
-
+#endif

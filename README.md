@@ -224,6 +224,7 @@ Swift Graphs follows a **protocol-oriented architecture** inspired by the Boost 
 - **Type Safety** - Compile-time constraints ensure correctness
 - **Performance** - Zero-cost abstractions and optimized implementations
 - **Extensibility** - Add custom graphs and algorithms without modifying existing code
+- **Modular Builds** - SPM traits (Swift 6.2+) let you include only the algorithm families you need
 
 ### Protocol Hierarchy
 

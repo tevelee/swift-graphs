@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension SingleSourceShortestPathAlgorithm {
     /// Creates an SPFA single-source shortest path algorithm.
     ///
@@ -62,3 +63,4 @@ public struct SPFAShortestPath<
 }
 
 extension SPFAShortestPath: VisitorSupporting {}
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
 import Collections
 
 /// A compressed sparse row (CSR) format edge storage implementation.
@@ -154,4 +155,4 @@ public struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
         freeList.append(edgeId)
     }
 }
-
+#endif

@@ -26,6 +26,7 @@ extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hash
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Finds strongly connected components using Kosaraju's algorithm as the default.
     /// This is a well-known and efficient algorithm for finding SCCs.
@@ -36,6 +37,7 @@ extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hash
         stronglyConnectedComponents(using: .kosaraju())
     }
 }
+#endif
 
 /// A protocol for strongly connected components algorithms.
 public protocol StronglyConnectedComponentsAlgorithm<Graph> {

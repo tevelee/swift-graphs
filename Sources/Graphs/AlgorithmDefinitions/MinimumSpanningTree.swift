@@ -103,6 +103,7 @@ extension MinimumSpanningTree where Edge: Equatable {
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 extension IncidenceGraph where Self: EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable {
     /// Finds the minimum spanning tree using Kruskal's algorithm as the default.
     /// This is a well-known and efficient algorithm for finding MSTs.
@@ -116,3 +117,4 @@ extension IncidenceGraph where Self: EdgeListGraph & VertexListGraph, VertexDesc
         minimumSpanningTree(using: .kruskal(weight: weight))
     }
 }
+#endif

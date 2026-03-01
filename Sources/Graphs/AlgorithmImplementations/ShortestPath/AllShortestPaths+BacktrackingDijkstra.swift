@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension AllShortestPathsUntilAlgorithm {
     /// Creates a backtracking Dijkstra algorithm for finding all shortest paths until a condition is met.
     ///
@@ -84,3 +85,4 @@ public struct BacktrackingDijkstraAllShortestPathsAlgorithm<
 }
 
 extension BacktrackingDijkstraAllShortestPathsAlgorithm: VisitorSupporting {}
+#endif

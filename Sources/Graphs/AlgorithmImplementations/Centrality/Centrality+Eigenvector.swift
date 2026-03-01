@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 extension CentralityAlgorithm {
     /// Creates an eigenvector centrality algorithm.
     ///
@@ -16,4 +17,4 @@ extension CentralityAlgorithm {
         .init(maxIterations: maxIterations, tolerance: tolerance)
     }
 }
-
+#endif

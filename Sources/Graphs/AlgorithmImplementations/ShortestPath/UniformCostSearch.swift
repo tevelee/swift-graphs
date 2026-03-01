@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 /// Uniform Cost Search algorithm for finding shortest paths from a source vertex.
 ///
 /// Uniform Cost Search is a search algorithm that explores vertices in order of their
@@ -426,3 +427,4 @@ extension UniformCostSearch.Result {
 }
 
 extension UniformCostSearch: VisitorSupportingSequence {}
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 /// Tarjan's algorithm implementation for strongly connected components.
 public struct TarjanStronglyConnectedComponentsAlgorithm<Graph: IncidenceGraph & VertexListGraph>: StronglyConnectedComponentsAlgorithm where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = Tarjan<Graph>.Visitor
@@ -25,3 +26,4 @@ extension StronglyConnectedComponentsAlgorithm {
         .init()
     }
 }
+#endif

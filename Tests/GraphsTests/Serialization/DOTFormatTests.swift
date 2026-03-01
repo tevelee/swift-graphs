@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 @testable import Graphs
 import Testing
 
@@ -359,3 +360,4 @@ struct DOTFormatTests {
         #expect(result == expected)
     }
 }
+#endif

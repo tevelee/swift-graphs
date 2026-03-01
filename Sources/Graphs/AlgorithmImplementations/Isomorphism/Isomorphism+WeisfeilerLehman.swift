@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 extension IsomorphismAlgorithm where Graph: IncidenceGraph & VertexListGraph & EdgeListGraph {
     /// Creates a Weisfeiler-Lehman isomorphism algorithm.
     ///
@@ -49,3 +50,4 @@ extension EnhancedWeisfeilerLehmanIsomorphism: IsomorphismAlgorithm {
         findIsomorphism(graph1, graph2, visitor: nil)
     }
 }
+#endif

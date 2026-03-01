@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
 @testable import Graphs
 import Testing
 
@@ -20,11 +21,11 @@ struct EdgeStorageBackendsTests {
 
     @Test func csrAdjacencyList_basic() {
         var g = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
-        
+
         let a = g.addVertex()
         let b = g.addVertex()
         let c = g.addVertex()
-        
+
         g.addEdge(from: a, to: b)
         g.addEdge(from: a, to: c)
         g.addEdge(from: c, to: b)
@@ -37,5 +38,4 @@ struct EdgeStorageBackendsTests {
         #expect(g.inDegree(of: b) == 2)
     }
 }
-
-
+#endif

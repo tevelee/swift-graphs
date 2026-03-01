@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 /// Extension providing composition support for DSatur coloring algorithm visitors.
 extension DSaturColoringAlgorithm.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -26,3 +27,4 @@ extension DSaturColoringAlgorithm.Visitor: Composable {
         )
     }
 }
+#endif

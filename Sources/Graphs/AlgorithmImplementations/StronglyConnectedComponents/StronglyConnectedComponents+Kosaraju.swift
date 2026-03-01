@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Finds strongly connected components using Kosaraju's algorithm.
     ///
@@ -10,3 +11,4 @@ extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hash
         algorithm.stronglyConnectedComponents(in: self, visitor: nil as Kosaraju<Self>.Visitor?)
     }
 }
+#endif

@@ -88,6 +88,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Colors the graph using the Greedy algorithm as the default.
     /// This is a simple and efficient algorithm that works well for most graphs.
@@ -98,6 +99,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         colorGraph(using: .greedy())
     }
 }
+#endif
 
 /// A protocol for color types that can be represented as integers.
 public protocol IntegerBasedColor: Hashable & Equatable {

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_GENERATION
 extension ErdosRenyi: RandomGraphAlgorithm {}
 
 extension RandomGraphAlgorithm {
@@ -12,3 +13,4 @@ extension RandomGraphAlgorithm {
         .init(edgeProbability: edgeProbability)
     }
 }
+#endif

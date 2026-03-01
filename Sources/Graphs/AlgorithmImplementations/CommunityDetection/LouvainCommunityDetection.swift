@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 import Collections
 
 /// Louvain algorithm for community detection.
@@ -154,3 +155,4 @@ extension LouvainCommunityDetection: CommunityDetectionAlgorithm {
 }
 
 extension LouvainCommunityDetection: VisitorSupporting {}
+#endif

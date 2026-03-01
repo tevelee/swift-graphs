@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 @testable import Graphs
 import Testing
 
@@ -239,3 +240,4 @@ struct ArticulationPointsTests {
         #expect(result.cutVertices == [b])
     }
 }
+#endif

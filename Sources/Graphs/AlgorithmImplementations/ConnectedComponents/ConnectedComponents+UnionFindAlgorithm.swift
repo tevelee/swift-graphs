@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 /// Union-Find based connected components algorithm implementation.
 public struct UnionFindConnectedComponentsAlgorithm<Graph: IncidenceGraph & VertexListGraph>: ConnectedComponentsAlgorithm where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = UnionFindConnectedComponents<Graph>.Visitor
@@ -25,3 +26,4 @@ extension ConnectedComponentsAlgorithm {
         .init()
     }
 }
+#endif

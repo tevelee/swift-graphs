@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 import Collections
 
 /// DFS-based connected components algorithm.
@@ -114,3 +115,4 @@ extension DFSConnectedComponents: ConnectedComponentsAlgorithm {
         connectedComponents(visitor: visitor)
     }
 }
+#endif

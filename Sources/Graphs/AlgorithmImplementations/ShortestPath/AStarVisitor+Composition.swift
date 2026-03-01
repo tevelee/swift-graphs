@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 /// Extension providing composition support for A* algorithm visitors.
 extension AStar.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -30,3 +31,4 @@ extension AStar.Visitor: Composable {
         )
     }
 }
+#endif

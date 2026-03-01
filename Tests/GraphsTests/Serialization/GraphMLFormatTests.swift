@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 @testable import Graphs
 import Testing
 import Foundation
@@ -348,3 +349,4 @@ struct GraphMLFormatTests {
         #expect(result == expected)
     }
 }
+#endif

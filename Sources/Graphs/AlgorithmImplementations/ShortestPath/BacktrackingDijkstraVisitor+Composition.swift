@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension BacktrackingDijkstra.Visitor: Composable {
     public typealias Other = Self
     
@@ -27,4 +28,4 @@ extension BacktrackingDijkstra.Visitor: Composable {
         )
     }
 }
-
+#endif

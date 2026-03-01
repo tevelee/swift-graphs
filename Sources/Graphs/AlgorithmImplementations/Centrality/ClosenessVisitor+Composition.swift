@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 extension ClosenessCentrality.Visitor: Composable {
     public typealias Other = Self
     
@@ -19,4 +20,4 @@ extension ClosenessCentrality.Visitor: Composable {
         )
     }
 }
-
+#endif

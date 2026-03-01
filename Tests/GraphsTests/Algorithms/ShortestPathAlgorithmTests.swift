@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 @testable import Graphs
 import Testing
 
@@ -148,3 +149,4 @@ struct ShortestPathAlgorithmsTests {
         #expect(distanceToA == .finite(0.0))
     }
 }
+#endif

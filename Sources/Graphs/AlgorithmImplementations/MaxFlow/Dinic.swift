@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 /// Dinic's algorithm for computing maximum flow.
 ///
 /// This algorithm finds the maximum flow in a flow network by building level graphs
@@ -330,3 +331,4 @@ public struct Dinic<
 }
 
 extension Dinic: VisitorSupporting {}
+#endif

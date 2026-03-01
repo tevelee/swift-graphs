@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_GRID_GRAPH
 import Testing
 @testable import Graphs
 
@@ -20,5 +21,4 @@ struct GridGraphTests {
         #expect(degree == 4)
     }
 }
-
-
+#endif

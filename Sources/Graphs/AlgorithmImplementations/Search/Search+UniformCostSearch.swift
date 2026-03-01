@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension SearchAlgorithm {
     /// Creates a uniform cost search algorithm.
     ///
@@ -56,3 +57,4 @@ public struct UniformCostSearchAlgorithm<
 }
 
 extension UniformCostSearchAlgorithm: VisitorSupporting {}
+#endif

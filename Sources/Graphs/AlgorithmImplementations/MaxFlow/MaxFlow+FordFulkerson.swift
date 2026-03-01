@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 extension MaxFlowAlgorithm {
     /// Creates a Ford-Fulkerson maximum flow algorithm.
     ///
@@ -18,3 +19,4 @@ extension MaxFlowAlgorithm {
 }
 
 extension FordFulkerson: MaxFlowAlgorithm {}
+#endif

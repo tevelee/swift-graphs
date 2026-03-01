@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 /// Weisfeiler-Lehman algorithm for graph isomorphism.
 /// This algorithm uses iterative vertex labeling based on neighborhood structure
 /// to determine if two graphs are isomorphic. It's a fast heuristic that works
@@ -315,3 +316,4 @@ public struct EnhancedWeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & Vertex
 
 extension WeisfeilerLehmanIsomorphism: VisitorSupporting {}
 extension EnhancedWeisfeilerLehmanIsomorphism: VisitorSupporting {}
+#endif

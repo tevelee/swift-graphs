@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension ShortestPathUntilAlgorithm {
     /// Creates an A* shortest path algorithm with custom cost calculation.
     ///
@@ -223,3 +224,4 @@ extension HeuristicToDestination where Graph: PropertyGraph {
 #endif
 
 extension AStarShortestPathToDestination: VisitorSupporting {}
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 extension EulerianPathAlgorithm {
     /// Creates a Hierholzer algorithm for finding Eulerian paths.
     ///
@@ -14,3 +15,4 @@ extension Hierholzer: EulerianPathAlgorithm {
         eulerianPath(in: graph, visitor: nil)
     }
 }
+#endif

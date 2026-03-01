@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 import Collections
 
 /// DFS-based algorithm for topological sorting.
@@ -195,3 +196,4 @@ public struct DFSTopologicalSort<Graph: IncidenceGraph & VertexListGraph>: Topol
 }
 
 extension DFSTopologicalSort: VisitorSupporting {}
+#endif

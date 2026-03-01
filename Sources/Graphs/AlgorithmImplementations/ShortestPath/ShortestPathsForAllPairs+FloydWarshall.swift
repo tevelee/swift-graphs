@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension ShortestPathsForAllPairsAlgorithm where Weight: AdditiveArithmetic {
     /// Creates a Floyd-Warshall algorithm for computing all-pairs shortest paths.
     ///
@@ -46,3 +47,4 @@ public struct FloydWarshallAllPairs<
 }
 
 extension FloydWarshallAllPairs: VisitorSupporting {}
+#endif

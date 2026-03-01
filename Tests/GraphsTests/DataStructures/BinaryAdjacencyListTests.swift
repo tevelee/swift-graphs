@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
 import Testing
 @testable import Graphs
 
@@ -44,5 +45,4 @@ struct BinaryAdjacencyListTests {
         #expect(g.outDegree(of: a) == 1)
     }
 }
-
-
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_GENERATION
 /// Erdos-Renyi random graph generation algorithm.
 ///
 /// This algorithm generates random graphs where each possible edge is included
@@ -101,3 +102,4 @@ public struct ErdosRenyi<
 }
 
 extension ErdosRenyi: VisitorSupporting {}
+#endif

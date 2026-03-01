@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 /// A protocol for graph properties that can be serialized.
 ///
 /// Conforming types must have a `Codable` value type, enabling them to be
@@ -16,3 +17,4 @@ extension SerializableProperty {
         "\(self)"
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 import Collections
 
 /// Hopcroft-Karp algorithm for finding maximum matching in bipartite graphs.
@@ -263,3 +264,4 @@ extension HopcroftKarp: VisitorSupporting {
         VisitorWrapper(base: self, visitor: visitor)
     }
 }
+#endif

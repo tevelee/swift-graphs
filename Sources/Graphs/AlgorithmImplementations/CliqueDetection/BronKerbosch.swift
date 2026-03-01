@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 import Collections
 
 /// Bron-Kerbosch algorithm for finding all maximal cliques.
@@ -162,3 +163,4 @@ extension BronKerboschCliqueDetection: CliqueDetectionAlgorithm {
 }
 
 extension BronKerboschCliqueDetection: VisitorSupporting {}
+#endif

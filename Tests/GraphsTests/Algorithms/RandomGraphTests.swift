@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_GENERATION
 import Testing
 @testable import Graphs
 
@@ -315,3 +316,4 @@ struct RandomGraphTests {
         #expect(graph.edgeCount >= 0)
     }
 }
+#endif

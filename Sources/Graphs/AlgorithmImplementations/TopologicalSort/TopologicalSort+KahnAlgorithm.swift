@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 extension TopologicalSortAlgorithm {
     /// Creates a Kahn topological sort algorithm.
     ///
@@ -7,3 +8,4 @@ extension TopologicalSortAlgorithm {
         .init()
     }
 }
+#endif

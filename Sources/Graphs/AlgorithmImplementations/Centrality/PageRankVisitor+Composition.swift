@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 extension PageRankCentrality.Visitor: Composable {
     public typealias Other = Self
     
@@ -23,4 +24,4 @@ extension PageRankCentrality.Visitor: Composable {
         )
     }
 }
-
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 /// Bron-Kerbosch clique detection algorithm implementation.
 public struct BronKerboschCliqueDetectionAlgorithm<Graph: IncidenceGraph & VertexListGraph>: CliqueDetectionAlgorithm where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = BronKerboschCliqueDetection<Graph>.Visitor
@@ -25,3 +26,4 @@ extension CliqueDetectionAlgorithm {
         .init()
     }
 }
+#endif

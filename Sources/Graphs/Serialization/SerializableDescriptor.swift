@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 /// A protocol for vertex or edge descriptors that can be serialized.
 ///
 /// Conforming types provide a string identifier that uniquely represents
@@ -9,4 +10,4 @@ public protocol SerializableDescriptor {
     /// the context of a graph and remain consistent across serializations.
     var serializedIdentifier: String { get }
 }
-
+#endif

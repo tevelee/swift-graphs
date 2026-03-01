@@ -118,6 +118,7 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension IncidenceGraph where VertexDescriptor: Hashable {
     /// Finds all shortest paths from source until a condition is met using backtracking Dijkstra's algorithm as the default.
     /// This algorithm finds all paths that have the same minimum cost.
@@ -153,6 +154,7 @@ extension IncidenceGraph where VertexDescriptor: Hashable {
         allShortestPaths(from: source, to: destination, using: .backtrackingDijkstra(weight: weight))
     }
 }
+#endif
 
 extension VisitorWrapper: AllShortestPathsUntilAlgorithm where Base: AllShortestPathsUntilAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     @inlinable

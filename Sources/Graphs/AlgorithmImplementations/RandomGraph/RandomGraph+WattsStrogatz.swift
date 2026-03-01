@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_GENERATION
 extension WattsStrogatz: RandomGraphAlgorithm {}
 
 extension RandomGraphAlgorithm {
@@ -15,3 +16,4 @@ extension RandomGraphAlgorithm {
         .init(averageDegree: averageDegree, rewiringProbability: rewiringProbability)
     }
 }
+#endif

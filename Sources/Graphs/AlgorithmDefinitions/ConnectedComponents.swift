@@ -13,6 +13,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Finds connected components using DFS-based algorithm as the default.
     /// This is the most commonly used and efficient algorithm for finding connected components.
@@ -23,6 +24,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         connectedComponents(using: .dfs())
     }
 }
+#endif
 
 /// A protocol for connected components algorithms.
 public protocol ConnectedComponentsAlgorithm<Graph> {

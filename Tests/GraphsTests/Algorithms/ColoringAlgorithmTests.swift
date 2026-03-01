@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 @testable import Graphs
 import Testing
 
@@ -505,3 +506,4 @@ struct ColoringAlgorithmTests {
         #expect(k4Coloring.chromaticNumber == 4) // Complete graph K4 needs exactly 4 colors
     }
 }
+#endif

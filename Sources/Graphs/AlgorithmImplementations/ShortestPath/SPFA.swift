@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 import Collections
 
 /// The Shortest Path Faster Algorithm (SPFA) for finding shortest paths in graphs with negative edge weights.
@@ -146,3 +147,4 @@ public struct SPFA<
 }
 
 extension SPFA: VisitorSupporting {}
+#endif

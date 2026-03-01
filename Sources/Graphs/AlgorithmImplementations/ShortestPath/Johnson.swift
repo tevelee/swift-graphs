@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 /// Johnson's algorithm for computing shortest paths between all pairs of vertices.
 ///
 /// Johnson's algorithm is a method for finding shortest paths between all pairs of vertices
@@ -233,4 +234,4 @@ extension Johnson: ShortestPathsForAllPairsAlgorithm {
 }
 
 extension Johnson: VisitorSupporting {}
-
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 /// Tarjan's algorithm implementation for articulation points and bridges.
 public struct TarjanArticulationPointsAlgorithm<Graph: IncidenceGraph & VertexListGraph>: ArticulationPointsAlgorithm where Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable {
     public typealias Visitor = TarjanArticulationPoints<Graph>.Visitor
@@ -25,3 +26,4 @@ extension ArticulationPointsAlgorithm {
         .init()
     }
 }
+#endif

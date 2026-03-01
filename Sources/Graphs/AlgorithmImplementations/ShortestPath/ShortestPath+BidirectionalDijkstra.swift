@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension ShortestPathAlgorithm {
     /// Creates a bidirectional Dijkstra shortest path algorithm.
     ///
@@ -57,3 +58,4 @@ public struct BidirectionalDijkstraShortestPath<
 }
 
 extension BidirectionalDijkstraShortestPath: VisitorSupporting {}
+#endif

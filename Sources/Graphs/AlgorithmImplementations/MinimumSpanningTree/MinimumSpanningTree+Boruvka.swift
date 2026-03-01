@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 extension MinimumSpanningTreeAlgorithm where Weight: AdditiveArithmetic {
     /// Creates a Borůvka MST algorithm.
     ///
@@ -22,3 +23,4 @@ extension Boruvka: MinimumSpanningTreeAlgorithm {
         )
     }
 }
+#endif

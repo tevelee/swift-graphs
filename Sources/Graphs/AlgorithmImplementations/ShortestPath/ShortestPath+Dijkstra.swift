@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension ShortestPathUntilAlgorithm {
     /// Creates a Dijkstra shortest path algorithm.
     ///
@@ -79,3 +80,4 @@ public struct DijkstraShortestPathAlgorithm<
 }
 
 extension DijkstraShortestPathAlgorithm: VisitorSupporting {}
+#endif

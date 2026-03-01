@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Finds connected components using Union-Find algorithm.
     ///
@@ -10,3 +11,4 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         algorithm.connectedComponents(in: self, visitor: nil)
     }
 }
+#endif

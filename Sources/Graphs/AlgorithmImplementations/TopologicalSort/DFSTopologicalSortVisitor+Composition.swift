@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 /// Extension providing composition support for DFS topological sort visitors.
 extension DFSTopologicalSort.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -42,3 +43,4 @@ extension DFSTopologicalSort.Visitor: Composable {
         )
     }
 }
+#endif

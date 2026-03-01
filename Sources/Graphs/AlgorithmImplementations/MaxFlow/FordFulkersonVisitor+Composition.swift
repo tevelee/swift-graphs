@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 /// Extension providing composition support for Ford-Fulkerson algorithm visitors.
 extension FordFulkerson.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -26,3 +27,4 @@ extension FordFulkerson.Visitor: Composable {
         )
     }
 }
+#endif

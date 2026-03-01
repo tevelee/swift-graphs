@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 /// An A* search algorithm implementation.
 ///
 /// A* is an informed search algorithm that uses a heuristic function to estimate
@@ -450,3 +451,4 @@ extension Heuristic where Graph: PropertyGraph {
 #endif
 
 extension AStar: VisitorSupportingSequence {}
+#endif

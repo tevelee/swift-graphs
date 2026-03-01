@@ -57,6 +57,7 @@ struct SearchDFSOrderTests {
         #expect(collected == [a, b])
     }
     
+    #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
     @Test func inorderVisitsLeftSubtreeThenRootThenRightSubtree() {
         var graph = AdjacencyList(edgeStore: BinaryEdgeStore())
         
@@ -80,4 +81,5 @@ struct SearchDFSOrderTests {
         let result = Array(graph.search(from: a, using: .dfs(order: .inorder)))
         #expect(result == [d, b, e, a, c])
     }
+    #endif
 }

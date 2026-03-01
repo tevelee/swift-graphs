@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 /// Extension providing composition support for SPFA algorithm visitors.
 extension SPFA.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -30,3 +31,4 @@ extension SPFA.Visitor: Composable {
         )
     }
 }
+#endif

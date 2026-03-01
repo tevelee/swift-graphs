@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 import Testing
 @testable import Graphs
 
@@ -302,3 +303,4 @@ struct CommunityDetectionTests {
         #expect(result2.modularity >= 0.0)
     }
 }
+#endif

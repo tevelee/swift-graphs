@@ -551,6 +551,42 @@ let properties = DictionaryPropertyMap<Int, Properties>()
     .withComputed(\.customMetric) { /* compute */ }
 ```
 
+## Modular Builds with SPM Traits
+
+Starting with Swift 6.2, Swift Graphs supports **SPM traits** for modular compilation. Traits let you include only the algorithm families and graph types your project needs, reducing compile time and binary size.
+
+### Available Traits
+
+| Trait | Contents | Default |
+|-------|----------|---------|
+| **Pathfinding** | Dijkstra, A\*, Bellman-Ford, SPFA, Floyd-Warshall, Johnson, Yen | Yes |
+| **Connectivity** | Connected Components, SCCs, Articulation Points, Topological Sort | Yes |
+| **Optimization** | Max Flow, MST, Matching | No |
+| **Analysis** | Coloring, Centrality, Community Detection | No |
+| **Advanced** | Isomorphism, Cliques, Eulerian/Hamiltonian | No |
+| **Generation** | Random graph generators | No |
+| **Serialization** | DOT, GraphML, JSON | No |
+| **GridGraph** | 2D grid-based graphs | No |
+| **BipartiteGraph** | Two-partitioned graphs | No |
+| **SpecializedStorage** | CSR, COO, Binary storage backends | No |
+| **Full** | All of the above | No |
+
+### Usage
+
+```swift
+// In your Package.swift — select only what you need
+.target(
+    name: "MyApp",
+    dependencies: [
+        .product(name: "Graphs", package: "swift-graphs", traits: ["Pathfinding", "GridGraph"])
+    ]
+)
+```
+
+### Backward Compatibility
+
+Traits are **fully backward compatible**. On Swift versions before 6.2, all features are always available. The trait system uses conditional compilation (`#if`) guards, so core protocols and types remain accessible regardless of trait selection.
+
 ## Directory Structure
 
 ```

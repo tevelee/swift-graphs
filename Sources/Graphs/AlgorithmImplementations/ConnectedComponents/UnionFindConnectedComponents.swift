@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 import Collections
 
 /// Union-Find based connected components algorithm.
@@ -128,3 +129,4 @@ extension UnionFindConnectedComponents: ConnectedComponentsAlgorithm {
         connectedComponents(visitor: visitor)
     }
 }
+#endif

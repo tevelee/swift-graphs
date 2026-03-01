@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 /// Extension providing composition support for smallest last vertex ordering algorithm visitors.
 extension SmallestLastVertexOrderingAlgorithm.Visitor: Composable {
     public typealias Other = Self
@@ -15,3 +16,4 @@ extension SmallestLastVertexOrderingAlgorithm.Visitor: Composable {
         )
     }
 }
+#endif

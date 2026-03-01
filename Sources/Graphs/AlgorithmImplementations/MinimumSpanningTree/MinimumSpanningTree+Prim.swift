@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 extension MinimumSpanningTreeAlgorithm where Weight: AdditiveArithmetic {
     /// Creates a Prim MST algorithm.
     ///
@@ -25,3 +26,4 @@ extension Prim: MinimumSpanningTreeAlgorithm {
         )
     }
 }
+#endif

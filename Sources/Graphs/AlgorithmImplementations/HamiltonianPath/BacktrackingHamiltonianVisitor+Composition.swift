@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 /// Extension providing composition support for backtracking Hamiltonian path algorithm visitors.
 extension BacktrackingHamiltonian.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -30,3 +31,4 @@ extension BacktrackingHamiltonian.Visitor: Composable {
         )
     }
 }
+#endif

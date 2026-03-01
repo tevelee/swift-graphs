@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 import Collections
 
 /// Kosaraju's algorithm for finding strongly connected components.
@@ -172,4 +173,4 @@ public struct Kosaraju<Graph: BidirectionalGraph & VertexListGraph> where Graph.
         return StronglyConnectedComponentsResult(components: components)
     }
 }
-
+#endif

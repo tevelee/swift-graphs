@@ -123,6 +123,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
     /// Computes degree centrality as the default.
     ///
@@ -136,4 +137,5 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         centrality(using: .degree())
     }
 }
+#endif
 

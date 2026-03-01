@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 /// Extension providing composition support for reverse Cuthill-McKee ordering algorithm visitors.
 extension ReverseCuthillMcKeeOrderingAlgorithm.Visitor: Composable {
     public typealias Other = Self
@@ -16,3 +17,4 @@ extension ReverseCuthillMcKeeOrderingAlgorithm.Visitor: Composable {
         )
     }
 }
+#endif

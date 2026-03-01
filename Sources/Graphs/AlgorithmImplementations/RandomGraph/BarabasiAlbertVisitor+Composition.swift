@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_GENERATION
 /// Extension providing composition support for Barabasi-Albert random graph algorithm visitors.
 extension BarabasiAlbert.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -26,3 +27,4 @@ extension BarabasiAlbert.Visitor: Composable {
         )
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 /// Extension providing composition support for Hopcroft-Karp algorithm visitors.
 extension HopcroftKarp.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -34,3 +35,4 @@ extension HopcroftKarp.Visitor: Composable {
         )
     }
 }
+#endif

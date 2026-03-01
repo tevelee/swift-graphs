@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 /// Extension providing composition support for Yen's algorithm visitors.
 extension Yen.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -22,3 +23,4 @@ extension Yen.Visitor: Composable {
         )
     }
 }
+#endif

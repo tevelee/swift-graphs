@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension ShortestPathAlgorithm {
     /// Creates a Johnson shortest path algorithm.
     ///
@@ -107,3 +108,4 @@ public struct JohnsonShortestPath<
 }
 
 extension JohnsonShortestPath: VisitorSupporting {}
+#endif

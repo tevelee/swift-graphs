@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_BIPARTITE_GRAPH
 import Testing
 @testable import Graphs
 
@@ -183,3 +184,4 @@ struct BipartiteCheckableTests {
         #expect(graph.bipartition() == nil)
     }
 }
+#endif

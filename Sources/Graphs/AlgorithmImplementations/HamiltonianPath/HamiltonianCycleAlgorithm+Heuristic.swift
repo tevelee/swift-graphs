@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 extension HamiltonianCycleAlgorithm {
     /// Creates a heuristic Hamiltonian cycle algorithm.
     ///
@@ -15,3 +16,4 @@ extension HeuristicHamiltonian: HamiltonianCycleAlgorithm {
         hamiltonianCycle(in: graph, visitor: nil)
     }
 }
+#endif

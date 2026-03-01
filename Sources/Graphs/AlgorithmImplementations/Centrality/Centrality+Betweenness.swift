@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 extension CentralityAlgorithm {
     /// Creates a betweenness centrality algorithm.
     ///
@@ -13,4 +14,4 @@ extension CentralityAlgorithm {
         .init(normalized: normalized)
     }
 }
-
+#endif

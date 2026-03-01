@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 /// Extension providing composition support for Bellman-Ford algorithm visitors.
 extension BellmanFord.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -34,3 +35,4 @@ extension BellmanFord.Visitor: Composable {
         )
     }
 }
+#endif

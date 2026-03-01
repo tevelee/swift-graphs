@@ -13,6 +13,7 @@ Swift Graphs provides flexible graph representations with a small core API and e
 - **Compile-Time Safety** - Type system ensures algorithm compatibility
 - **Comprehensive Algorithms** - Shortest paths, traversals, coloring, MST, flow, and more
 - **BGL Heritage** - Decades of proven graph library design
+- **Modular Builds** - SPM traits (Swift 6.2+) for including only the features you need
 - **Platform Independent** - iOS, macOS, watchOS, tvOS, and visionOS
 
 ## Getting Started

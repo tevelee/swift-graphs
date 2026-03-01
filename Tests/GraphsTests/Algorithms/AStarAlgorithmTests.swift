@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 @testable import Graphs
 import Testing
 
@@ -37,4 +38,5 @@ struct AStarTests {
         #expect(res?.vertices(to: d, in: graph) == [a, c, d])
     }
 }
+#endif
 #endif

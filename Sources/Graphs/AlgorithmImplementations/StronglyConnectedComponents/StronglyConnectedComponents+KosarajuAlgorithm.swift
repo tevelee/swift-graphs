@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 /// Kosaraju's algorithm implementation for strongly connected components.
 public struct KosarajuStronglyConnectedComponentsAlgorithm<Graph: BidirectionalGraph & VertexListGraph>: StronglyConnectedComponentsAlgorithm where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = Kosaraju<Graph>.Visitor
@@ -25,3 +26,4 @@ extension StronglyConnectedComponentsAlgorithm {
         .init()
     }
 }
+#endif

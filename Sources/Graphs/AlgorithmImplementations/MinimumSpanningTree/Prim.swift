@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 /// Prim's algorithm for finding minimum spanning trees.
 ///
 /// This algorithm finds the MST by starting from a vertex and greedily adding
@@ -196,4 +197,4 @@ extension Prim.PriorityItem: Comparable {
         lhs.weight == rhs.weight && lhs.edge == rhs.edge
     }
 }
-
+#endif

@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_GENERATION
 /// Extension providing composition support for Watts-Strogatz random graph algorithm visitors.
 extension WattsStrogatz.Visitor: Composable {
     public typealias Other = WattsStrogatz.Visitor
@@ -32,3 +33,4 @@ extension WattsStrogatz.Visitor: Composable {
         )
     }
 }
+#endif

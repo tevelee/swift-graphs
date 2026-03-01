@@ -38,6 +38,7 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
     }
 }
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 extension IncidenceGraph where VertexDescriptor: Hashable {
     /// Finds all paths between two vertices using Depth-First Search as the default.
     ///
@@ -53,3 +54,4 @@ extension IncidenceGraph where VertexDescriptor: Hashable {
         allPaths(from: source, to: destination, using: .dfs())
     }
 }
+#endif

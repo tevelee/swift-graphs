@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 @testable import Graphs
 import Testing
 
@@ -442,3 +443,4 @@ struct TopologicalSortTests {
         #expect(finishedVertices1 == finishedVertices2)
     }
 }
+#endif

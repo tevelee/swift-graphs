@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
 /// Extension providing composition support for Weisfeiler-Lehman isomorphism algorithm visitors.
 extension WeisfeilerLehmanIsomorphism.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -63,3 +64,4 @@ extension EnhancedWeisfeilerLehmanIsomorphism.Visitor: Composable {
         )
     }
 }
+#endif

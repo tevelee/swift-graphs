@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 @testable import Graphs
 import Testing
 
@@ -199,3 +200,4 @@ struct MinimumSpanningTreeTests {
         #expect(mst.totalWeight == 0.0)
     }
 }
+#endif

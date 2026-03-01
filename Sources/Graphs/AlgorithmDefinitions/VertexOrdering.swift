@@ -77,6 +77,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
 
 // MARK: - Default Implementations
 
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, VertexDescriptor: Hashable {
     /// Orders vertices using Smallest Last Vertex Ordering as the default.
     /// This is particularly effective for graph coloring algorithms.
@@ -86,7 +87,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
     public func orderVertices() -> VertexOrdering<VertexDescriptor> {
         orderVertices(using: .smallestLastVertex())
     }
-    
+
     /// Orders vertices using Reverse Cuthill-McKee algorithm for bandwidth reduction.
     /// This is particularly effective for reducing matrix bandwidth.
     ///
@@ -96,3 +97,4 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
         orderVertices(using: .reverseCuthillMcKee())
     }
 }
+#endif

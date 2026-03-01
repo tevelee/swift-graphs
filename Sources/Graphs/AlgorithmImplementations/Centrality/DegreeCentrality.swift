@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 /// Degree centrality algorithm implementation.
 ///
 /// Degree centrality measures the number of connections a vertex has.
@@ -96,4 +97,4 @@ public struct DegreeCentrality<Graph: IncidenceGraph & VertexListGraph> where Gr
 }
 
 extension DegreeCentralityAlgorithm: VisitorSupporting {}
-
+#endif

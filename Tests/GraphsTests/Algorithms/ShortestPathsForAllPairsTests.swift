@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 @testable import Graphs
 import Testing
 
@@ -215,3 +216,4 @@ struct ShortestPathsForAllPairsTests {
         #expect(result.distances.isEmpty)
     }
 }
+#endif

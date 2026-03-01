@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
 /// Borůvka's algorithm for finding minimum spanning trees.
 ///
 /// This algorithm finds the MST by repeatedly finding the minimum weight edge
@@ -228,3 +229,4 @@ public struct Boruvka<
 }
 
 extension Boruvka: VisitorSupporting {}
+#endif

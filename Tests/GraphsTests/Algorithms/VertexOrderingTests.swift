@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 @testable import Graphs
 import Testing
 
@@ -482,3 +483,4 @@ struct VertexOrderingTests {
         #expect(smallestLastOrdering.orderedVertices != rcmOrdering.orderedVertices)
     }
 }
+#endif

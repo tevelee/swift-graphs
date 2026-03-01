@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
 /// Yen's algorithm for finding K shortest paths between two vertices.
 ///
 /// Yen's algorithm finds the K shortest paths between a source and destination vertex
@@ -539,4 +540,4 @@ struct FilteredIterator<BaseIterator: IteratorProtocol>: IteratorProtocol where 
         return nil
     }
 }
-
+#endif

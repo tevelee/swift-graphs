@@ -1,3 +1,4 @@
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
 /// Extension providing composition support for sequential vertex coloring algorithm visitors.
 extension SequentialVertexColoringAlgorithm.Visitor: Composable {
     /// Combines this visitor with another visitor.
@@ -30,3 +31,4 @@ extension SequentialVertexColoringAlgorithm.Visitor: Composable {
         )
     }
 }
+#endif
