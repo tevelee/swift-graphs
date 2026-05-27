@@ -116,8 +116,6 @@ public struct UniformCostSearch<
     let source: Vertex
     @usableFromInline
     let edgeWeight: CostDefinition<Graph, Weight>
-    @usableFromInline
-    let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
 
     /// Creates a new uniform cost search algorithm instance.
     ///
@@ -125,20 +123,15 @@ public struct UniformCostSearch<
     ///   - graph: The graph to search in.
     ///   - source: The source vertex.
     ///   - edgeWeight: The cost definition for edge weights.
-    ///   - makePriorityQueue: A factory for creating priority queues.
     @inlinable
     public init(
         on graph: Graph,
         from source: Vertex,
-        edgeWeight: CostDefinition<Graph, Weight>,
-        makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
-            PriorityQueue()
-        }
+        edgeWeight: CostDefinition<Graph, Weight>
     ) {
         self.graph = graph
         self.source = source
         self.edgeWeight = edgeWeight
-        self.makePriorityQueue = makePriorityQueue
     }
 
     /// Creates an iterator for the uniform cost search.
@@ -151,8 +144,7 @@ public struct UniformCostSearch<
             graph: graph,
             source: source,
             edgeWeight: edgeWeight,
-            visitor: visitor,
-            queue: makePriorityQueue()
+            visitor: visitor
         )
     }
 
@@ -167,7 +159,7 @@ public struct UniformCostSearch<
         @usableFromInline
         let visitor: Visitor?
         @usableFromInline
-        var queue: any QueueProtocol<PriorityItem>
+        var queue = PriorityQueue<PriorityItem>()
         @usableFromInline
         var visited: Set<Vertex> = []
 
@@ -185,20 +177,17 @@ public struct UniformCostSearch<
         ///   - source: The source vertex.
         ///   - edgeWeight: The cost definition for edge weights.
         ///   - visitor: An optional visitor.
-        ///   - queue: The priority queue to use.
         @inlinable
         public init(
             graph: Graph,
             source: Vertex,
             edgeWeight: CostDefinition<Graph, Weight>,
-            visitor: Visitor?,
-            queue: any QueueProtocol<PriorityItem>
+            visitor: Visitor?
         ) {
             self.graph = graph
             self.source = source
             self.edgeWeight = edgeWeight
             self.visitor = visitor
-            self.queue = queue
             self.propertyMap = graph.makeVertexPropertyMap()
 
             // UCS only initializes the source node, not all nodes

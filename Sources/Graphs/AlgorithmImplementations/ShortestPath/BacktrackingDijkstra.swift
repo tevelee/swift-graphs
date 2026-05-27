@@ -73,26 +73,19 @@ public struct BacktrackingDijkstra<
     let graph: Graph
     @usableFromInline
     let edgeWeight: CostDefinition<Graph, Weight>
-    @usableFromInline
-    let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
     
     /// Creates a backtracking Dijkstra algorithm instance.
     ///
     /// - Parameters:
     ///   - graph: The graph to search
     ///   - edgeWeight: The cost definition for edge weights
-    ///   - makePriorityQueue: A closure that creates a priority queue (defaults to min-heap)
     @inlinable
     public init(
         on graph: Graph,
-        edgeWeight: CostDefinition<Graph, Weight>,
-        makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
-            PriorityQueue()
-        }
+        edgeWeight: CostDefinition<Graph, Weight>
     ) {
         self.graph = graph
         self.edgeWeight = edgeWeight
-        self.makePriorityQueue = makePriorityQueue
     }
     
     /// Finds all shortest paths from source until a condition is met.
@@ -229,7 +222,7 @@ public struct BacktrackingDijkstra<
         until condition: @escaping (Vertex) -> Bool,
         visitor: Visitor?
     ) -> (costs: [Vertex: Weight], predecessors: [Vertex: [Edge]]) {
-        var queue = makePriorityQueue()
+        var queue = PriorityQueue<PriorityItem>()
         queue.enqueue(PriorityItem(vertex: source, cost: .finite(.zero)))
         
         var costs: [Vertex: Weight] = [source: .zero]
@@ -298,7 +291,7 @@ public struct BacktrackingDijkstra<
         destination: Vertex,
         visitor: Visitor?
     ) -> (costs: [Vertex: Weight], predecessors: [Vertex: [Edge]]) {
-        var queue = makePriorityQueue()
+        var queue = PriorityQueue<PriorityItem>()
         queue.enqueue(PriorityItem(vertex: source, cost: .finite(.zero)))
         
         var costs: [Vertex: Weight] = [source: .zero]

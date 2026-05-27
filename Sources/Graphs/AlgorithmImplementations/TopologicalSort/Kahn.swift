@@ -41,17 +41,9 @@ public struct Kahn<Graph: IncidenceGraph & VertexListGraph>: TopologicalSortAlgo
         }
     }
 
-    /// The queue factory for Kahn's algorithm.
-    @usableFromInline
-    let makeQueue: () -> any QueueProtocol<Vertex>
-
     /// Creates a new Kahn's algorithm instance.
-    ///
-    /// - Parameter makeQueue: A factory for creating the queue used in the algorithm.
     @inlinable
-    public init(makeQueue: @escaping () -> any QueueProtocol<Vertex> = { Deque() }) {
-        self.makeQueue = makeQueue
-    }
+    public init() {}
 
     /// Performs topological sort using Kahn's algorithm.
     ///
@@ -66,7 +58,7 @@ public struct Kahn<Graph: IncidenceGraph & VertexListGraph>: TopologicalSortAlgo
     ) -> TopologicalSortResult<Graph.VertexDescriptor> {
         var inDegree: OrderedDictionary<Vertex, Int> = [:]
         var sortedVertices: [Vertex] = []
-        var queue = makeQueue()
+        var queue = Deque<Vertex>()
         
         // Calculate in-degrees for all vertices
         for vertex in graph.vertices() {

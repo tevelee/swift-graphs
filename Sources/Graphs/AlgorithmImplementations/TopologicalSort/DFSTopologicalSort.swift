@@ -72,17 +72,9 @@ public struct DFSTopologicalSort<Graph: IncidenceGraph & VertexListGraph>: Topol
         static var defaultValue: Color { .white }
     }
     
-    /// The stack factory for DFS traversal.
-    @usableFromInline
-    let makeStack: () -> any StackProtocol<Vertex>
-    
     /// Creates a new DFS topological sort algorithm.
-    ///
-    /// - Parameter makeStack: A factory for creating the stack used in DFS traversal.
     @inlinable
-    public init(makeStack: @escaping () -> any StackProtocol<Vertex> = { Array() }) {
-        self.makeStack = makeStack
-    }
+    public init() {}
     
     /// Performs topological sort using DFS.
     ///
@@ -142,7 +134,7 @@ public struct DFSTopologicalSort<Graph: IncidenceGraph & VertexListGraph>: Topol
     ) -> (hasCycle: Bool, cycleVertices: [Vertex]) {
         var hasCycle = false
         var cycleVertices: [Vertex] = []
-        var stack = makeStack()
+        var stack: [Vertex] = []
         
         stack.push(vertex)
         

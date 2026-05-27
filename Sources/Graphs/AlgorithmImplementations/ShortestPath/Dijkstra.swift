@@ -102,22 +102,16 @@ public struct Dijkstra<
     let source: Vertex
     @usableFromInline
     let edgeWeight: CostDefinition<Graph, Weight>
-    @usableFromInline
-    let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
 
     @inlinable
     public init(
         on graph: Graph,
         from source: Vertex,
-        edgeWeight: CostDefinition<Graph, Weight>,
-        makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
-            PriorityQueue()
-        }
+        edgeWeight: CostDefinition<Graph, Weight>
     ) {
         self.graph = graph
         self.source = source
         self.edgeWeight = edgeWeight
-        self.makePriorityQueue = makePriorityQueue
     }
 
     @inlinable
@@ -126,8 +120,7 @@ public struct Dijkstra<
             graph: graph,
             source: source,
             edgeWeight: edgeWeight,
-            visitor: visitor,
-            queue: makePriorityQueue()
+            visitor: visitor
         )
     }
 
@@ -141,7 +134,7 @@ public struct Dijkstra<
         @usableFromInline
         let visitor: Visitor?
         @usableFromInline
-        var queue: any QueueProtocol<PriorityItem>
+        var queue = PriorityQueue<PriorityItem>()
         @usableFromInline
         var visited: Set<Vertex> = []
 
@@ -157,14 +150,12 @@ public struct Dijkstra<
             graph: Graph,
             source: Vertex,
             edgeWeight: CostDefinition<Graph, Weight>,
-            visitor: Visitor?,
-            queue: any QueueProtocol<PriorityItem>
+            visitor: Visitor?
         ) {
             self.graph = graph
             self.source = source
             self.edgeWeight = edgeWeight
             self.visitor = visitor
-            self.queue = queue
             self.propertyMap = graph.makeVertexPropertyMap()
 
             propertyMap[source][distanceProperty] = .finite(.zero)

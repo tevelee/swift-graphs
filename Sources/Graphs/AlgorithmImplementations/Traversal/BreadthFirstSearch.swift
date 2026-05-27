@@ -129,26 +129,19 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
     let graph: Graph
     @usableFromInline
     let source: Vertex
-    @usableFromInline
-    let makeQueue: () -> any QueueProtocol<Vertex>
     
     /// Creates a new breadth-first search algorithm instance.
     ///
     /// - Parameters:
     ///   - graph: The graph to search in.
     ///   - source: The source vertex.
-    ///   - makeQueue: A factory for creating queues.
     @inlinable
     public init(
         on graph: Graph,
-        from source: Vertex, // TODO: multi source with a set/sequence of vertices
-        makeQueue: @escaping () -> any QueueProtocol<Vertex> = {
-            Deque()
-        }
+        from source: Vertex // TODO: multi source with a set/sequence of vertices
     ) {
         self.graph = graph
         self.source = source
-        self.makeQueue = makeQueue
     }
     
     /// Creates an iterator for the breadth-first search.
@@ -157,7 +150,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
     /// - Returns: An iterator for the search.
     @inlinable
     public func makeIterator(visitor: Visitor?) -> Iterator {
-        Iterator(graph: graph, source: source, visitor: visitor, queue: makeQueue())
+        Iterator(graph: graph, source: source, visitor: visitor)
     }
     
     /// An iterator for breadth-first search.
@@ -169,7 +162,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
         @usableFromInline
         let visitor: Visitor?
         @usableFromInline
-        var queue: any QueueProtocol<Vertex>
+        var queue: Deque<Vertex> = []
 
         @usableFromInline
         var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
@@ -186,19 +179,16 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
         ///   - graph: The graph to search in.
         ///   - source: The source vertex.
         ///   - visitor: An optional visitor.
-        ///   - queue: The queue to use.
         @inlinable
         public init(
             graph: Graph,
             source: Vertex,
-            visitor: Visitor?,
-            queue: any QueueProtocol<Vertex>
+            visitor: Visitor?
         ) {
             self.graph = graph
             self.source = source
             self.visitor = visitor
             self.propertyMap = graph.makeVertexPropertyMap()
-            self.queue = queue
             
             propertyMap[source][colorProperty] = .gray
             propertyMap[source][distanceProperty] = .reachable(depth: 0)

@@ -109,8 +109,6 @@ public struct AStar<
     let heuristic: Heuristic<Graph, HScore>
     @usableFromInline
     let calculateTotalCost: (GScore, HScore) -> FScore
-    @usableFromInline
-    let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
 
     @inlinable
     public init(
@@ -118,10 +116,7 @@ public struct AStar<
         from source: Vertex,
         edgeWeight: CostDefinition<Graph, Weight>,
         heuristic: Heuristic<Graph, HScore>,
-        calculateTotalCost: @escaping (Weight, HScore) -> FScore,
-        makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
-            PriorityQueue()
-        }
+        calculateTotalCost: @escaping (Weight, HScore) -> FScore
     ) {
         self.graph = graph
         self.source = source
@@ -136,7 +131,6 @@ public struct AStar<
                     return calculateTotalCost(weight, hScore)
             }
         }
-        self.makePriorityQueue = makePriorityQueue
     }
 
     @inlinable
@@ -147,8 +141,7 @@ public struct AStar<
             edgeWeight: edgeWeight,
             heuristic: heuristic,
             calculateTotalCost: calculateTotalCost,
-            visitor: visitor,
-            queue: makePriorityQueue()
+            visitor: visitor
         )
     }
 
@@ -170,7 +163,7 @@ public struct AStar<
         @usableFromInline
         let visitor: Visitor?
         @usableFromInline
-        var queue: any QueueProtocol<PriorityItem>
+        var queue = PriorityQueue<PriorityItem>()
         @usableFromInline
         var visited: Set<Vertex> = []
 
@@ -188,8 +181,7 @@ public struct AStar<
             edgeWeight: CostDefinition<Graph, Weight>,
             heuristic: Heuristic<Graph, HScore>,
             calculateTotalCost: @escaping (GScore, HScore) -> FScore,
-            visitor: Visitor?,
-            queue: any QueueProtocol<PriorityItem>
+            visitor: Visitor?
         ) {
             self.graph = graph
             self.source = source
@@ -197,7 +189,6 @@ public struct AStar<
             self.heuristic = heuristic
             self.calculateTotalCost = calculateTotalCost
             self.visitor = visitor
-            self.queue = queue
             self.propertyMap = graph.makeVertexPropertyMap()
 
             let gScore: GScore = .finite(.zero)

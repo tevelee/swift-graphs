@@ -78,8 +78,6 @@ public struct BidirectionalDijkstra<
     let graph: Graph
     @usableFromInline
     let edgeWeight: CostDefinition<Graph, Weight>
-    @usableFromInline
-    let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
     
     /// A priority queue item for bidirectional Dijkstra.
     public struct PriorityItem {
@@ -104,18 +102,13 @@ public struct BidirectionalDijkstra<
     /// - Parameters:
     ///   - graph: The graph to search in.
     ///   - edgeWeight: The cost definition for edge weights.
-    ///   - makePriorityQueue: A factory for creating priority queues.
     @inlinable
     public init(
         on graph: Graph,
-        edgeWeight: CostDefinition<Graph, Weight>,
-        makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
-            PriorityQueue()
-        }
+        edgeWeight: CostDefinition<Graph, Weight>
     ) {
         self.graph = graph
         self.edgeWeight = edgeWeight
-        self.makePriorityQueue = makePriorityQueue
     }
     
     /// Finds the shortest path between two vertices.
@@ -134,7 +127,7 @@ public struct BidirectionalDijkstra<
         var forwardVisited: Set<Vertex> = []
         var backwardVisited: Set<Vertex> = []
         
-        var queue = makePriorityQueue()
+        var queue = PriorityQueue<PriorityItem>()
         
         // Initialize
         forwardDistances[source] = .finite(.zero)
@@ -254,7 +247,7 @@ public struct BidirectionalDijkstra<
         currentCost: Cost<Weight>,
         distances: inout [Vertex: Cost<Weight>],
         predecessors: inout [Vertex: Edge?],
-        queue: inout any QueueProtocol<PriorityItem>,
+        queue: inout PriorityQueue<PriorityItem>,
         visitor: Visitor?
     ) {
         for edge in graph.outgoingEdges(of: currentVertex) {
@@ -292,7 +285,7 @@ public struct BidirectionalDijkstra<
         currentCost: Cost<Weight>,
         distances: inout [Vertex: Cost<Weight>],
         predecessors: inout [Vertex: Edge?],
-        queue: inout any QueueProtocol<PriorityItem>,
+        queue: inout PriorityQueue<PriorityItem>,
         visitor: Visitor?
     ) {
         for edge in graph.incomingEdges(of: currentVertex) {

@@ -172,27 +172,19 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
     /// The source vertex.
     @usableFromInline
     let source: Vertex
-    /// A factory for creating stacks.
-    @usableFromInline
-    let makeStack: () -> any StackProtocol<DFSFrame>
 
     /// Creates a new depth-first search algorithm instance.
     ///
     /// - Parameters:
     ///   - graph: The graph to search in.
     ///   - source: The source vertex.
-    ///   - makeStack: A factory for creating stacks.
     @inlinable
     public init(
         on graph: Graph,
-        from source: Vertex,
-        makeStack: @escaping () -> any StackProtocol<DFSFrame> = {
-            Array()
-        }
+        from source: Vertex
     ) {
         self.graph = graph
         self.source = source
-        self.makeStack = makeStack
     }
 
     /// Creates an iterator for the depth-first search.
@@ -201,7 +193,7 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
     /// - Returns: An iterator for the search.
     @inlinable
     public func makeIterator(visitor: Visitor?) -> Iterator {
-        Iterator(graph: graph, source: source, visitor: visitor, stack: makeStack())
+        Iterator(graph: graph, source: source, visitor: visitor)
     }
 
     /// An iterator for depth-first search.
@@ -215,9 +207,9 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
         /// An optional visitor.
         @usableFromInline
         let visitor: Visitor?
-        /// The DFS stack.
+        // The DFS stack
         @usableFromInline
-        var stack: any StackProtocol<DFSFrame>
+        var stack: [DFSFrame] = []
         /// The current time counter.
         @usableFromInline
         var time: UInt = 0
@@ -241,18 +233,15 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
         ///   - graph: The graph to search in.
         ///   - source: The source vertex.
         ///   - visitor: An optional visitor.
-        ///   - stack: The stack to use.
         @inlinable
         public init(
             graph: Graph,
             source: Vertex,
-            visitor: Visitor?,
-            stack: any StackProtocol<DFSFrame>
+            visitor: Visitor?
         ) {
             self.graph = graph
             self.source = source
             self.visitor = visitor
-            self.stack = stack
             self.propertyMap = graph.makeVertexPropertyMap()
 
             self.stack.push(DFSFrame(vertex: source, isFirstVisit: true, depth: 0))

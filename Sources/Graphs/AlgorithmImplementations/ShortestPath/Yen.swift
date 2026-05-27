@@ -21,8 +21,6 @@ public struct Yen<
     
     @usableFromInline
     let edgeWeight: CostDefinition<Graph, Weight>
-    @usableFromInline
-    let makePriorityQueue: () -> any QueueProtocol<PriorityItem>
     
     /// A priority queue item for Yen's algorithm.
     public struct PriorityItem {
@@ -65,16 +63,11 @@ public struct Yen<
     ///
     /// - Parameters:
     ///   - edgeWeight: The cost definition for edge weights.
-    ///   - makePriorityQueue: A factory for creating priority queues.
     @inlinable
     public init(
-        edgeWeight: CostDefinition<Graph, Weight>,
-        makePriorityQueue: @escaping () -> any QueueProtocol<PriorityItem> = {
-            PriorityQueue()
-        }
+        edgeWeight: CostDefinition<Graph, Weight>
     ) {
         self.edgeWeight = edgeWeight
-        self.makePriorityQueue = makePriorityQueue
     }
     
     /// Finds the K shortest paths between two vertices.
