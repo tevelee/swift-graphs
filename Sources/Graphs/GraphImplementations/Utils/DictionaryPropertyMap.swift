@@ -34,14 +34,14 @@ extension DictionaryPropertyMap: MutablePropertyMap {
 
 extension Graph where VertexDescriptor: Hashable {
     @inlinable
-    public func makeVertexPropertyMap() -> some MutablePropertyMap<VertexDescriptor, VertexPropertyValues> {
-        .init(defaultValue: .init()) as DictionaryPropertyMap
+    public func makeVertexPropertyMap() -> DictionaryPropertyMap<VertexDescriptor, VertexPropertyValues> {
+        .init(defaultValue: .init())
     }
 }
 
 extension Graph where EdgeDescriptor: Hashable {
     @inlinable
-    public func makeEdgePropertyMap() -> some MutablePropertyMap<EdgeDescriptor, EdgePropertyValues> {
-        .init(defaultValue: .init()) as DictionaryPropertyMap
+    public func makeEdgePropertyMap() -> DictionaryPropertyMap<EdgeDescriptor, EdgePropertyValues> {
+        .init(defaultValue: .init())
     }
 }

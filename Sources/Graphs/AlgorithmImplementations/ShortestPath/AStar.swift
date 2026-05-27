@@ -168,7 +168,7 @@ public struct AStar<
         var visited: Set<Vertex> = []
 
         @usableFromInline
-        var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
+        var propertyMap: DictionaryPropertyMap<Vertex, VertexPropertyValues>
         @usableFromInline
         let gScoreProperty: any VertexProperty<GScore>.Type = GScoreProperty.self
         @usableFromInline

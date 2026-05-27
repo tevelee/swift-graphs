@@ -90,7 +90,7 @@ public struct DFSTopologicalSort<Graph: IncidenceGraph & VertexListGraph>: Topol
         var sortedVertices: [Vertex] = []
         var hasCycle = false
         var cycleVertices: [Vertex] = []
-        var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues> = graph.makeVertexPropertyMap()
+        var propertyMap: DictionaryPropertyMap<Vertex, VertexPropertyValues> = graph.makeVertexPropertyMap()
         let colorProperty: any VertexProperty<Color>.Type = ColorProperty.self
         
         // Process all vertices to handle disconnected components
@@ -127,7 +127,7 @@ public struct DFSTopologicalSort<Graph: IncidenceGraph & VertexListGraph>: Topol
     func dfsVisit(
         from vertex: Vertex,
         in graph: Graph,
-        propertyMap: inout any MutablePropertyMap<Vertex, VertexPropertyValues>,
+        propertyMap: inout DictionaryPropertyMap<Vertex, VertexPropertyValues>,
         colorProperty: any VertexProperty<Color>.Type,
         sortedVertices: inout [Vertex],
         visitor: Visitor?

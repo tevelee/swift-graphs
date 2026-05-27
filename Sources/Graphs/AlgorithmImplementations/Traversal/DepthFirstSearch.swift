@@ -215,7 +215,7 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
         var time: UInt = 0
 
         @usableFromInline
-        var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
+        var propertyMap: DictionaryPropertyMap<Vertex, VertexPropertyValues>
         @usableFromInline
         let colorProperty: any VertexProperty<Color>.Type = ColorProperty.self
         @usableFromInline

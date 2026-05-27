@@ -165,7 +165,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
         var queue: Deque<Vertex> = []
 
         @usableFromInline
-        var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
+        var propertyMap: DictionaryPropertyMap<Vertex, VertexPropertyValues>
         @usableFromInline
         let colorProperty: any VertexProperty<Color>.Type = ColorProperty.self
         @usableFromInline

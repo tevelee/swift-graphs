@@ -164,7 +164,7 @@ public struct UniformCostSearch<
         var visited: Set<Vertex> = []
 
         @usableFromInline
-        var propertyMap: any MutablePropertyMap<Vertex, VertexPropertyValues>
+        var propertyMap: DictionaryPropertyMap<Vertex, VertexPropertyValues>
         @usableFromInline
         let distanceProperty: any VertexProperty<Cost>.Type = DistanceProperty.self
         @usableFromInline
