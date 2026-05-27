@@ -1,4 +1,4 @@
-import Collections
+import OrderedCollections
 
 /// A view of a graph that filters vertices and edges based on predicates.
 ///

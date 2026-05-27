@@ -1,5 +1,5 @@
 #if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
-import Collections
+import OrderedCollections
 
 /// Kosaraju's algorithm for finding strongly connected components.
 ///

@@ -1,5 +1,5 @@
 #if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
-import Collections
+import OrderedCollections
 
 /// Hopcroft-Karp algorithm for finding maximum matching in bipartite graphs.
 ///

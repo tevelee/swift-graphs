@@ -1,5 +1,5 @@
 #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-import Collections
+import OrderedCollections
 
 /// A storage implementation for binary tree edge structures.
 ///

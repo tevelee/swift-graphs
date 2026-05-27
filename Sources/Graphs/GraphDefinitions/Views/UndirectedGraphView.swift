@@ -1,4 +1,4 @@
-import Collections
+import OrderedCollections
 
 /// A view of a bidirectional graph that treats it as undirected.
 ///

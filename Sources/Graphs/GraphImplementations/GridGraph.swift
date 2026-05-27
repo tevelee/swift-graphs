@@ -1,5 +1,5 @@
 #if !GRAPHS_USES_TRAITS || GRAPHS_GRID_GRAPH
-import Collections
+import OrderedCollections
 
 /// A grid graph implementation where vertices are arranged in a rectangular grid.
 ///

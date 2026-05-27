@@ -1,4 +1,4 @@
-import Collections
+import DequeModule
 
 /// A protocol for stack-like data structures.
 ///

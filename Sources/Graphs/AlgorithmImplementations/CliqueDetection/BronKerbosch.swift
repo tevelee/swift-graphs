@@ -1,5 +1,5 @@
 #if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
-import Collections
+import OrderedCollections
 
 /// Bron-Kerbosch algorithm for finding all maximal cliques.
 ///

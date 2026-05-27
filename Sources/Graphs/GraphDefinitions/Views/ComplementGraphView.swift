@@ -1,4 +1,4 @@
-import Collections
+import OrderedCollections
 
 /// A view of a graph that represents its complement.
 ///

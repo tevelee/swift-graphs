@@ -1,4 +1,4 @@
-import Collections
+import OrderedCollections
 
 /// A lazy incidence graph that computes edges on demand.
 ///

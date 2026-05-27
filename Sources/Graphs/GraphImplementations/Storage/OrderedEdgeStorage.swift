@@ -1,4 +1,4 @@
-import Collections
+import OrderedCollections
 
 extension EdgeStorage {
     /// Creates an ordered edge storage instance.

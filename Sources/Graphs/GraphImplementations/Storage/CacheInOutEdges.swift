@@ -1,4 +1,4 @@
-import Collections
+import OrderedCollections
 
 extension EdgeStorage where Edges == OrderedSet<Edge> {
     /// Creates a caching wrapper that provides O(1) access to incoming and outgoing edges.

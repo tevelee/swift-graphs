@@ -1,5 +1,5 @@
 #if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
-import Collections
+import OrderedCollections
 
 extension AllPathsAlgorithm {
     /// Returns a Depth-First Search (DFS) based all-paths algorithm.

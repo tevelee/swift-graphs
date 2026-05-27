@@ -1,5 +1,5 @@
 #if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
-import Collections
+import OrderedCollections
 
 // MARK: - OrderedVertexStorage.Vertex
 
@@ -9,9 +9,12 @@ extension OrderedVertexStorage.Vertex: SerializableDescriptor {
     }
 }
 
-// MARK: - OrderedEdgeStorage.Edge
+// MARK: - LinearOrderedEdgeStorage.Edge
+// (Reached through the OrderedEdgeStorage typealias, which is
+// CacheInOutEdges<LinearOrderedEdgeStorage<V>>; the Edge type is the underlying
+// LinearOrderedEdgeStorage.Edge.)
 
-extension OrderedEdgeStorage.Edge: SerializableDescriptor {
+extension LinearOrderedEdgeStorage.Edge: SerializableDescriptor {
     public var serializedIdentifier: String {
         "e\(id)"
     }

@@ -1,5 +1,5 @@
 #if !GRAPHS_USES_TRAITS || GRAPHS_BIPARTITE_GRAPH
-import Collections
+import OrderedCollections
 
 /// An adjacency list implementation of a bipartite graph.
 ///

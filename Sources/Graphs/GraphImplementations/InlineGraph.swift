@@ -1,4 +1,4 @@
-import Collections
+import OrderedCollections
 
 /// A graph where vertices and edges directly contain their data.
 ///

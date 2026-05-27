@@ -1,5 +1,6 @@
 #if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
-import Collections
+import OrderedCollections
+import DequeModule
 
 /// Kahn's algorithm for topological sorting.
 /// 

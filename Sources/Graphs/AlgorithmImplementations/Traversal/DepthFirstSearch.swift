@@ -1,4 +1,4 @@
-import Collections
+import OrderedCollections
 
 /// Depth-First Search algorithm for traversing graphs.
 ///

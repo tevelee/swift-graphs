@@ -1,5 +1,5 @@
 #if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
-import Collections
+import OrderedCollections
 
 /// PageRank centrality algorithm implementation.
 ///

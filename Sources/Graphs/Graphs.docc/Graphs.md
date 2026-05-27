@@ -35,6 +35,11 @@ Learn the foundational ideas behind Swift Graphs:
 - <doc:Concepts/AlgorithmInterfaces>
 - <doc:Concepts/VisitorPattern>
 
+## Guides
+
+- <doc:Concepts/AddingAnAlgorithm>
+- <doc:Concepts/ChoosingStorageBackend>
+
 ## Graph Types
 
 Swift Graphs provides multiple graph implementations optimized for different use cases:
@@ -125,6 +130,11 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 - <doc:Concepts/AlgorithmInterfaces>
 - <doc:Concepts/VisitorPattern>
 - <doc:Concepts/PropertiesAndPropertyMaps>
+
+### Guides
+
+- <doc:Concepts/AddingAnAlgorithm>
+- <doc:Concepts/ChoosingStorageBackend>
 
 ### Graph Implementations
 

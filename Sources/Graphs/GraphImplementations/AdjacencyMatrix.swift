@@ -1,4 +1,4 @@
-import Collections
+import OrderedCollections
 
 /// An adjacency matrix implementation of a graph.
 ///
