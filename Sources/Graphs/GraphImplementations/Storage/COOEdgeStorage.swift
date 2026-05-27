@@ -10,7 +10,7 @@ public struct COOEdgeStorage<Vertex: Hashable>: EdgeStorage {
     /// An edge descriptor for COO format edges.
     public struct Edge: Identifiable, Hashable {
         public let id: Int
-        
+
         @inlinable
         public init(id: Int) {
             self.id = id
@@ -24,6 +24,10 @@ public struct COOEdgeStorage<Vertex: Hashable>: EdgeStorage {
     // Use a Set for O(1) tombstone checks
     @usableFromInline
     var tombstones: Set<Int> = []
+
+    /// Creates a new empty COO edge storage.
+    @inlinable
+    public init() {}
 
     @inlinable
     public var edgeCount: Int {

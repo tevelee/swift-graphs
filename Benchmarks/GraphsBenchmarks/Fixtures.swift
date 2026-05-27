@@ -48,7 +48,7 @@ typealias BenchGraph = AdjacencyList<
     OrderedVertexStorage,
     CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
     DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
-    DictionaryPropertyMap<LinearOrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
+    DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
 >
 
 typealias BenchVertex = BenchGraph.VertexDescriptor

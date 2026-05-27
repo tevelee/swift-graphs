@@ -6,16 +6,16 @@ import Graphs
 
 typealias CSRGraph = AdjacencyList<
     OrderedVertexStorage,
-    CSREdgeStorage<OrderedVertexStorage.Vertex>,
+    CacheInOutEdges<CSREdgeStorage<OrderedVertexStorage.Vertex>>,
     DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
     DictionaryPropertyMap<CSREdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
 >
 
 typealias OrderedNoCacheGraph = AdjacencyList<
     OrderedVertexStorage,
-    LinearOrderedEdgeStorage<OrderedVertexStorage.Vertex>,
+    CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
     DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
-    DictionaryPropertyMap<LinearOrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
+    DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
 >
 
 private func makeCSRGraph(n: Int, avgDegree: Int, seed: UInt64 = 42) -> (CSRGraph, [CSRGraph.VertexDescriptor]) {
@@ -34,7 +34,7 @@ private func makeCSRGraph(n: Int, avgDegree: Int, seed: UInt64 = 42) -> (CSRGrap
 }
 
 private func makeOrderedNoCacheGraph(n: Int, avgDegree: Int, seed: UInt64 = 42) -> (OrderedNoCacheGraph, [OrderedNoCacheGraph.VertexDescriptor]) {
-    var graph = OrderedNoCacheGraph(edgeStore: LinearOrderedEdgeStorage())
+    var graph = OrderedNoCacheGraph(edgeStore: OrderedEdgeStorage().cacheInOutEdges())
     var rng = SplitMix64(seed: seed)
     let vertices = (0..<n).map { _ in graph.addVertex() }
     let edgeCount = (n * avgDegree) / 2

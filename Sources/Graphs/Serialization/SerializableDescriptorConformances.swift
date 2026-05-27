@@ -9,12 +9,9 @@ extension OrderedVertexStorage.Vertex: SerializableDescriptor {
     }
 }
 
-// MARK: - LinearOrderedEdgeStorage.Edge
-// (Reached through the OrderedEdgeStorage typealias, which is
-// CacheInOutEdges<LinearOrderedEdgeStorage<V>>; the Edge type is the underlying
-// LinearOrderedEdgeStorage.Edge.)
+// MARK: - OrderedEdgeStorage.Edge
 
-extension LinearOrderedEdgeStorage.Edge: SerializableDescriptor {
+extension OrderedEdgeStorage.Edge: SerializableDescriptor {
     public var serializedIdentifier: String {
         "e\(id)"
     }

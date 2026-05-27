@@ -1,7 +1,7 @@
 import Testing
 @testable import Graphs
 
-typealias TestGraph = AdjacencyList<OrderedVertexStorage, CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>, DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>, DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>>
+private typealias TestGraph = AdjacencyList<OrderedVertexStorage, CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>, DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>, DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>>
 
 struct HamiltonianPropertyTests {
     

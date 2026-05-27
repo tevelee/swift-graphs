@@ -10,12 +10,16 @@ public struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
     /// An edge descriptor for CSR format edges.
     public struct Edge: Identifiable, Hashable {
         public let id: Int
-        
+
         @inlinable
         public init(id: Int) {
             self.id = id
         }
     }
+
+    /// Creates a new empty CSR edge storage.
+    @inlinable
+    public init() {}
 
     @usableFromInline
     var vertexIndex: OrderedDictionary<Vertex, Int> = [:]
@@ -155,4 +159,5 @@ public struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
         freeList.append(edgeId)
     }
 }
+
 #endif

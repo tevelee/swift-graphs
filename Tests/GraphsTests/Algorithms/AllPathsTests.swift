@@ -68,8 +68,8 @@ struct AllPathsTests {
     
     func createNoPathGraph() -> some AdjacencyListProtocol {
         var graph = AdjacencyList()
-        let a = graph.addVertex { $0.label = "a" }
-        let b = graph.addVertex { $0.label = "b" }
+        _ = graph.addVertex { $0.label = "a" }
+        _ = graph.addVertex { $0.label = "b" }
         
         return graph
     }
