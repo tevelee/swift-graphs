@@ -3,7 +3,7 @@ import Testing
 
 struct GraphTransformationTests {
     
-    @Test func testReversedGraph() {
+    @Test func reversedGraphFlipsEdgeDirection() {
         var graph = DefaultAdjacencyList()
         
         let a = graph.addVertex()
@@ -28,7 +28,7 @@ struct GraphTransformationTests {
         #expect(aNeighbors.contains(c))
     }
     
-    @Test func testTransposeGraph() {
+    @Test func transposeGraphFlipsEdgeDirection() {
         var graph = DefaultAdjacencyList()
         
         let a = graph.addVertex()
@@ -51,25 +51,32 @@ struct GraphTransformationTests {
         #expect(bNeighbors.contains(a))
     }
     
-    @Test func testComplementGraph() {
-        // Note: Complement graph requires EdgeLookupGraph conformance and Hashable vertices
-        // For now, we'll test the basic functionality with a simple approach
-        var graph = DefaultAdjacencyList()
-        
+    @Test func complementGraphInvertsAdjacency() {
+        // ComplementGraphView requires EdgeLookupGraph — use AdjacencyMatrix
+        var graph = AdjacencyMatrix()
+
         let a = graph.addVertex()
         let b = graph.addVertex()
-        _ = graph.addVertex() // c - unused but needed for completeness
-        
-        // Add only one edge: a -> b
+        let c = graph.addVertex()
+
         graph.addEdge(from: a, to: b)
-        
-        // Test that we can create a complement view (this tests the method exists)
-        // The actual complement functionality would need proper type constraints
-        // which is complex to test in this context
-        #expect(true) // Placeholder test - complement functionality exists
+
+        // 3 vertices: 3×2 = 6 possible directed edges (no self-loops)
+        // Original has 1 edge, so complement has 5
+        let comp = graph.complement()
+        #expect(comp.edgeCount == 5)
+
+        // Complement must not contain the original edge A→B
+        #expect(comp.outDegree(of: a) == 1) // only A→C (not A→B and not A→A)
+        let aNeighbors = Array(comp.outgoingEdges(of: a).compactMap { comp.destination(of: $0) })
+        #expect(aNeighbors == [c])
+
+        // Complement must contain all other directed edges
+        #expect(comp.outDegree(of: b) == 2) // B→A and B→C
+        #expect(comp.outDegree(of: c) == 2) // C→A and C→B
     }
     
-    @Test func testFilteredGraph() {
+    @Test func filteredGraphExcludesMatchingVertices() {
         var graph = DefaultAdjacencyList()
         
         let a = graph.addVertex()
@@ -93,7 +100,7 @@ struct GraphTransformationTests {
         #expect(filtered.outDegree(of: c) == 0) // c -> d, but d is filtered out
     }
     
-    @Test func testUndirectedGraph() {
+    @Test func undirectedGraphMakesEdgesBidirectional() {
         var graph = DefaultAdjacencyList()
         
         let a = graph.addVertex()
@@ -121,7 +128,7 @@ struct GraphTransformationTests {
         #expect(bNeighbors.contains(c))
     }
     
-    @Test func testChainingTransformations() {
+    @Test func chainingTransformationsCompose() {
         var graph = DefaultAdjacencyList()
         
         let a = graph.addVertex()
@@ -140,13 +147,18 @@ struct GraphTransformationTests {
         #expect(backToOriginal.outDegree(of: b) == 1) // b -> c  
         #expect(backToOriginal.outDegree(of: c) == 0) // c has no outgoing edges
         
-        // Test chaining: complement -> complement should give original
-        // Note: Complement functionality requires complex type constraints
-        // For now, we'll test that the basic chaining works with reversed graphs
-        #expect(true) // Placeholder test - complement chaining exists
+        // complement().complement() on AdjacencyMatrix round-trips back to the original
+        var matrix = AdjacencyMatrix()
+        let ma = matrix.addVertex()
+        let mb = matrix.addVertex()
+        matrix.addEdge(from: ma, to: mb)
+        let doubleComplement = matrix.complement().complement()
+        #expect(doubleComplement.edgeCount == matrix.edgeCount)
+        #expect(doubleComplement.outDegree(of: ma) == matrix.outDegree(of: ma))
+        #expect(doubleComplement.outDegree(of: mb) == matrix.outDegree(of: mb))
     }
     
-    @Test func testConvenienceFilteringMethods() {
+    @Test func convenienceFilteringMethods() {
         var graph = DefaultAdjacencyList()
         
         let a = graph.addVertex()
@@ -167,7 +179,7 @@ struct GraphTransformationTests {
         #expect(filteredEdges.edgeCount == 3)
     }
     
-    @Test func testTransposeWithMatrix() {
+    @Test func transposeWorksWithAdjacencyMatrix() {
         var matrix = AdjacencyMatrix()
         
         let a = matrix.addVertex()

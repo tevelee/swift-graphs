@@ -2,7 +2,7 @@
 @testable import Graphs
 import Testing
 
-struct ShortestPathAlgorithmsTests {
+struct ShortestPathAlgorithmTests {
     
     func createLinearGraph() -> some AdjacencyListProtocol {
         var graph = AdjacencyList()
@@ -48,7 +48,9 @@ struct ShortestPathAlgorithmsTests {
         return graph
     }
     
-    @Test func testFloydWarshall() {
+    // MARK: - Core Behavior
+
+    @Test func floydWarshallFindsAllPairs() {
         let graph = createLinearGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -63,7 +65,7 @@ struct ShortestPathAlgorithmsTests {
         #expect(result.distance(from: a, to: a) == 0.0) // Self-loop
     }
     
-    @Test func testDijkstraAllPaths() {
+    @Test func dijkstraFindsAllPaths() {
         let graph = createLinearGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -83,7 +85,7 @@ struct ShortestPathAlgorithmsTests {
         #expect(distanceToA == .finite(0.0))
     }
     
-    @Test func testKShortestPaths() throws {
+    @Test func kShortestPaths() throws {
         let graph = createLinearGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -97,7 +99,7 @@ struct ShortestPathAlgorithmsTests {
         #expect(firstPath.vertices.count == 3)
     }
     
-    @Test func testBellmanFord() {
+    @Test func bellmanFordHandlesNegativeWeights() {
         let graph = createNegativeWeightGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -109,7 +111,7 @@ struct ShortestPathAlgorithmsTests {
         #expect(result.distances[c] == .finite(1.0)) // A -> B -> C (2 + (-1) = 1)
     }
     
-    @Test func testBidirectionalDijkstra() {
+    @Test func bidirectionalDijkstra() {
         let graph = createLinearGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -122,7 +124,9 @@ struct ShortestPathAlgorithmsTests {
         #expect(result.path?.vertices.count == 1)
     }
     
-    @Test func testNoPathExists() {
+    // MARK: - Edge Cases
+
+    @Test func noPathExists() {
         let graph = createDisconnectedGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -136,7 +140,7 @@ struct ShortestPathAlgorithmsTests {
         #expect(distanceToB == .infinite)
     }
     
-    @Test func testSingleVertex() {
+    @Test func singleVertex() {
         let graph = createSingleVertexGraph()
         
         let a = graph.findVertex(labeled: "A")!

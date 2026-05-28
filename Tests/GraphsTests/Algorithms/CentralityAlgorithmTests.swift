@@ -4,7 +4,7 @@ import Testing
 
 struct CentralityAlgorithmTests {
     
-    // MARK: - Test Data Helpers
+    // MARK: - Test Graphs
     
     func createEmptyGraph() -> some AdjacencyListProtocol {
         AdjacencyList()
@@ -70,22 +70,22 @@ struct CentralityAlgorithmTests {
         return graph
     }
     
-    // MARK: - Degree Centrality Tests
+    // MARK: - Core Behavior (Degree)
     
-    @Test func testDegreeCentralityEmptyGraph() {
+    @Test func degreeCentralityEmptyGraph() {
         let graph = createEmptyGraph()
         let result = graph.centrality(using: .degree())
         #expect(result.values.isEmpty)
     }
     
-    @Test func testDegreeCentralitySingleVertex() {
+    @Test func degreeCentralitySingleVertex() {
         let graph = createSingleVertexGraph()
         let result = graph.centrality(using: .degree())
         let vertex = Array(graph.vertices())[0]
         #expect(result.centrality(for: vertex) == 0.0)
     }
     
-    @Test func testDegreeCentralityStarGraph() {
+    @Test func degreeCentralityStarGraph() {
         var graph = AdjacencyList()
         let center = graph.addVertex()
         var leaves: [DefaultAdjacencyList.VertexDescriptor] = []
@@ -102,7 +102,7 @@ struct CentralityAlgorithmTests {
         #expect(result.mostCentralVertex() == center)
     }
     
-    @Test func testDegreeCentralityStarGraphExactValues() {
+    @Test func degreeCentralityStarGraphExactValues() {
         var graph = AdjacencyList()
         let center = graph.addVertex()
         var leaves: [DefaultAdjacencyList.VertexDescriptor] = []
@@ -128,7 +128,7 @@ struct CentralityAlgorithmTests {
         }
     }
     
-    @Test func testDegreeCentralityNormalized() {
+    @Test func degreeCentralityNormalized() {
         var graph = AdjacencyList()
         let center = graph.addVertex()
         for _ in 0..<5 {
@@ -145,7 +145,7 @@ struct CentralityAlgorithmTests {
         }
     }
     
-    @Test func testDegreeCentralityIsolatedVertex() {
+    @Test func degreeCentralityIsolatedVertex() {
         var graph = AdjacencyList()
         let connected = graph.addVertex()
         let isolated = graph.addVertex()
@@ -155,7 +155,7 @@ struct CentralityAlgorithmTests {
         #expect(result.centrality(for: isolated) == 0.0)
     }
     
-    @Test func testDegreeCentralityVisitor() {
+    @Test func degreeCentralityVisitor() {
         var examinedVertices: Set<DefaultAdjacencyList.VertexDescriptor> = []
         var computedDegrees: [DefaultAdjacencyList.VertexDescriptor: Int] = [:]
         
@@ -181,22 +181,22 @@ struct CentralityAlgorithmTests {
         #expect(computedDegrees.count == graph.vertexCount)
     }
     
-    // MARK: - PageRank Tests
+    // MARK: - Core Behavior (PageRank)
     
-    @Test func testPageRankEmptyGraph() {
+    @Test func pageRankEmptyGraph() {
         let graph = createEmptyGraph()
         let result = graph.centrality(using: .pageRank())
         #expect(result.values.isEmpty)
     }
     
-    @Test func testPageRankSingleVertex() {
+    @Test func pageRankSingleVertex() {
         let graph = createSingleVertexGraph()
         let result = graph.centrality(using: .pageRank())
         let vertex = Array(graph.vertices())[0]
         #expect(result.centrality(for: vertex) == 1.0)
     }
     
-    @Test func testPageRankCycleGraph() {
+    @Test func pageRankCycleGraph() {
         let graph = createCycleGraph()
         let result = graph.centrality(using: .pageRank())
         
@@ -208,7 +208,7 @@ struct CentralityAlgorithmTests {
         }
     }
     
-    @Test func testPageRankStarGraph() {
+    @Test func pageRankStarGraph() {
         var graph = AdjacencyList()
         let center = graph.addVertex()
         var leaves: [DefaultAdjacencyList.VertexDescriptor] = []
@@ -224,7 +224,7 @@ struct CentralityAlgorithmTests {
         #expect(result.centrality(for: center) > result.centrality(for: leaves[0]))
     }
     
-    @Test func testPageRankConvergence() {
+    @Test func pageRankConvergence() {
         var graph = AdjacencyList()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -246,7 +246,7 @@ struct CentralityAlgorithmTests {
         #expect(iterations < 100) // Should converge before max iterations
     }
     
-    @Test func testPageRankVisitor() {
+    @Test func pageRankVisitor() {
         var startCount = 0
         var endCount = 0
         
@@ -272,7 +272,7 @@ struct CentralityAlgorithmTests {
         #expect(startCount == endCount)
     }
     
-    @Test func testPageRankSumProperty() {
+    @Test func pageRankSumProperty() {
         var graph = AdjacencyList()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -288,7 +288,7 @@ struct CentralityAlgorithmTests {
         #expect(abs(sum - 1.0) < 0.01, "PageRank values should sum to ~1.0, got \(sum)")
     }
     
-    @Test func testPageRankDanglingNodes() {
+    @Test func pageRankDanglingNodes() {
         var graph = AdjacencyList()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -308,22 +308,22 @@ struct CentralityAlgorithmTests {
         #expect(abs(sum - 1.0) < 0.01)
     }
     
-    // MARK: - Betweenness Centrality Tests
+    // MARK: - Core Behavior (Betweenness)
     
-    @Test func testBetweennessEmptyGraph() {
+    @Test func betweennessEmptyGraph() {
         let graph = createEmptyGraph()
         let result = graph.centrality(using: .betweenness())
         #expect(result.values.isEmpty)
     }
     
-    @Test func testBetweennessSingleVertex() {
+    @Test func betweennessSingleVertex() {
         let graph = createSingleVertexGraph()
         let result = graph.centrality(using: .betweenness())
         let vertex = Array(graph.vertices())[0]
         #expect(result.centrality(for: vertex) == 0.0)
     }
     
-    @Test func testBetweennessPathGraph() {
+    @Test func betweennessPathGraph() {
         let graph = createPathGraph()
         let result = graph.centrality(using: .betweenness())
         let vertices = Array(graph.vertices())
@@ -334,7 +334,7 @@ struct CentralityAlgorithmTests {
         #expect(result.centrality(for: middleVertex) > result.centrality(for: vertices[2]))
     }
     
-    @Test func testBetweennessPathGraphExactValues() {
+    @Test func betweennessPathGraphExactValues() {
         var graph = AdjacencyList()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -356,7 +356,7 @@ struct CentralityAlgorithmTests {
         #expect(result.centrality(for: c) == 0.0)
     }
     
-    @Test func testBetweennessVisitor() {
+    @Test func betweennessVisitor() {
         var examinedVertices: Set<DefaultAdjacencyList.VertexDescriptor> = []
         var foundPaths: [(DefaultAdjacencyList.VertexDescriptor, DefaultAdjacencyList.VertexDescriptor, Int)] = []
         
@@ -382,7 +382,7 @@ struct CentralityAlgorithmTests {
         #expect(foundPaths.count > 0)
     }
     
-    @Test func testBetweennessStarGraph() {
+    @Test func betweennessStarGraph() {
         var graph = AdjacencyList()
         let center = graph.addVertex()
         for _ in 0..<5 {
@@ -396,7 +396,7 @@ struct CentralityAlgorithmTests {
         #expect(result.mostCentralVertex() == center)
     }
     
-    @Test func testBetweennessIsolatedVertex() {
+    @Test func betweennessIsolatedVertex() {
         var graph = AdjacencyList()
         let connected = graph.addVertex()
         let isolated = graph.addVertex()
@@ -406,7 +406,7 @@ struct CentralityAlgorithmTests {
         #expect(result.centrality(for: isolated) == 0.0)
     }
     
-    @Test func testBetweennessNormalized() {
+    @Test func betweennessNormalized() {
         let graph = createPathGraph()
         let result = graph.centrality(using: .betweenness(normalized: true))
         
@@ -418,22 +418,22 @@ struct CentralityAlgorithmTests {
         }
     }
     
-    // MARK: - Closeness Centrality Tests
+    // MARK: - Core Behavior (Closeness)
     
-    @Test func testClosenessEmptyGraph() {
+    @Test func closenessEmptyGraph() {
         let graph = createEmptyGraph()
         let result = graph.centrality(using: .closeness())
         #expect(result.values.isEmpty)
     }
     
-    @Test func testClosenessSingleVertex() {
+    @Test func closenessSingleVertex() {
         let graph = createSingleVertexGraph()
         let result = graph.centrality(using: .closeness())
         let vertex = Array(graph.vertices())[0]
         #expect(result.centrality(for: vertex) == 0.0)
     }
     
-    @Test func testClosenessStarGraph() {
+    @Test func closenessStarGraph() {
         var graph = AdjacencyList()
         let center = graph.addVertex()
         for _ in 0..<5 {
@@ -447,7 +447,7 @@ struct CentralityAlgorithmTests {
         #expect(result.mostCentralVertex() == center)
     }
     
-    @Test func testClosenessDisconnectedGraph() {
+    @Test func closenessDisconnectedGraph() {
         let graph = createDisconnectedGraph()
         let result = graph.centrality(using: .closeness())
         
@@ -458,7 +458,7 @@ struct CentralityAlgorithmTests {
         }
     }
     
-    @Test func testClosenessIsolatedVertex() {
+    @Test func closenessIsolatedVertex() {
         var graph = AdjacencyList()
         let connected = graph.addVertex()
         let isolated = graph.addVertex()
@@ -468,7 +468,7 @@ struct CentralityAlgorithmTests {
         #expect(result.centrality(for: isolated) == 0.0)
     }
     
-    @Test func testClosenessVisitor() {
+    @Test func closenessVisitor() {
         var examinedVertices: Set<DefaultAdjacencyList.VertexDescriptor> = []
         var computedDistances: [(DefaultAdjacencyList.VertexDescriptor, DefaultAdjacencyList.VertexDescriptor, Int)] = []
         
@@ -494,22 +494,22 @@ struct CentralityAlgorithmTests {
         #expect(computedDistances.count > 0)
     }
     
-    // MARK: - Eigenvector Centrality Tests
+    // MARK: - Core Behavior (Eigenvector)
     
-    @Test func testEigenvectorEmptyGraph() {
+    @Test func eigenvectorEmptyGraph() {
         let graph = AdjacencyList()
         let result = graph.centrality(using: .eigenvector())
         #expect(result.values.isEmpty)
     }
     
-    @Test func testEigenvectorSingleVertex() {
+    @Test func eigenvectorSingleVertex() {
         var graph = AdjacencyList()
         let vertex = graph.addVertex()
         let result = graph.centrality(using: .eigenvector())
         #expect(result.centrality(for: vertex) == 1.0)
     }
     
-    @Test func testEigenvectorStarGraph() {
+    @Test func eigenvectorStarGraph() {
         var graph = AdjacencyList()
         let center = graph.addVertex()
         for _ in 0..<5 {
@@ -533,7 +533,7 @@ struct CentralityAlgorithmTests {
         // in all cases. The algorithm completes successfully if it converges.
     }
     
-    @Test func testEigenvectorConvergence() {
+    @Test func eigenvectorConvergence() {
         var graph = AdjacencyList()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -559,7 +559,7 @@ struct CentralityAlgorithmTests {
         #expect(iterations < 100)
     }
     
-    @Test func testEigenvectorVisitor() {
+    @Test func eigenvectorVisitor() {
         var startCount = 0
         var endCount = 0
         var convergedCount = 0
@@ -588,9 +588,9 @@ struct CentralityAlgorithmTests {
         #expect(convergedCount >= 0)
     }
     
-    // MARK: - CentralityResult Tests
+    // MARK: - Result Utilities
     
-    @Test func testCentralityResultNormalizedValues() {
+    @Test func centralityResultNormalizedValues() {
         var graph = AdjacencyList()
         let center = graph.addVertex()
         for _ in 0..<5 {
@@ -607,7 +607,7 @@ struct CentralityAlgorithmTests {
         }
     }
     
-    @Test func testCentralityResultMostCentralVertex() {
+    @Test func centralityResultMostCentralVertex() {
         var graph = AdjacencyList()
         let center = graph.addVertex()
         for _ in 0..<5 {
@@ -619,7 +619,7 @@ struct CentralityAlgorithmTests {
         #expect(result.mostCentralVertex() == center)
     }
     
-    @Test func testCentralityResultVerticesByCentrality() {
+    @Test func centralityResultVerticesByCentrality() {
         var graph = AdjacencyList()
         let center = graph.addVertex()
         var leaves: [DefaultAdjacencyList.VertexDescriptor] = []
@@ -639,7 +639,7 @@ struct CentralityAlgorithmTests {
         #expect(sorted.count == graph.vertexCount)
     }
     
-    @Test func testCentralityResultForNonExistentVertex() {
+    @Test func centralityResultForNonExistentVertex() {
         var graph = AdjacencyList()
         let center = graph.addVertex()
         for _ in 0..<5 {
@@ -656,9 +656,9 @@ struct CentralityAlgorithmTests {
         #expect(result.normalizedCentrality(for: newVertex) == 0.0)
     }
     
-    // MARK: - Default Method Tests
+    // MARK: - API Convenience
     
-    @Test func testDefaultCentralityMethod() {
+    @Test func defaultCentralityMethod() {
         var graph = AdjacencyList()
         let center = graph.addVertex()
         for _ in 0..<5 {
@@ -672,9 +672,9 @@ struct CentralityAlgorithmTests {
         #expect(result.values.count == graph.vertexCount)
     }
     
-    // MARK: - Visitor Composition Tests
+    // MARK: - Visitor Support
     
-    @Test func testVisitorComposition() {
+    @Test func composedVisitorsReceiveAllEvents() {
         var callCount1 = 0
         var callCount2 = 0
         
@@ -700,9 +700,9 @@ struct CentralityAlgorithmTests {
         #expect(callCount2 == graph.vertexCount)
     }
     
-    // MARK: - Edge Case Tests
+    // MARK: - Edge Cases
     
-    @Test func testCompleteGraphCentrality() {
+    @Test func completeGraphCentrality() {
         let graph = createCompleteGraph()
         let result = graph.centrality(using: .degree())
         
@@ -714,7 +714,7 @@ struct CentralityAlgorithmTests {
         }
     }
     
-    @Test func testCompleteGraphAllMeasures() {
+    @Test func completeGraphAllMeasures() {
         let graph = createCompleteGraph() // K4 (4 vertices, complete graph)
         let vertices = Array(graph.vertices())
         
@@ -752,7 +752,7 @@ struct CentralityAlgorithmTests {
         #expect(abs(pagerankSum - 1.0) < 0.01)
     }
     
-    @Test func testCycleGraphCentrality() {
+    @Test func cycleGraphCentrality() {
         let graph = createCycleGraph()
         let result = graph.centrality(using: .degree())
         
@@ -764,7 +764,7 @@ struct CentralityAlgorithmTests {
         }
     }
     
-    @Test func testCycleGraphSymmetry() {
+    @Test func cycleGraphSymmetry() {
         let graph = createCycleGraph()
         let vertices = Array(graph.vertices())
         
@@ -787,7 +787,7 @@ struct CentralityAlgorithmTests {
         #expect(abs(sum - 1.0) < 0.01)
     }
     
-    @Test func testNormalizationFormula() throws {
+    @Test func normalizationFormula() throws {
         var graph = AdjacencyList()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -813,7 +813,7 @@ struct CentralityAlgorithmTests {
         }
     }
     
-    @Test func testNormalizationAllValuesEqual() {
+    @Test func normalizationAllValuesEqual() {
         // Test edge case: all values equal -> normalized should be 0.0
         var graph = AdjacencyList()
         let a = graph.addVertex()
@@ -826,7 +826,7 @@ struct CentralityAlgorithmTests {
         #expect(result.normalizedCentrality(for: b) == 0.0)
     }
     
-    @Test func testTwoVertexGraph() {
+    @Test func twoVertexGraph() {
         var graph = AdjacencyList()
         let a = graph.addVertex()
         let b = graph.addVertex()

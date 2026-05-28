@@ -1,7 +1,7 @@
 import Testing
 @testable import Graphs
 
-final class VisitorPatternTests {
+struct VisitorPatternTests {
     @Test func bfs() {
         // Create a simple graph
         var graph = AdjacencyList()
@@ -55,7 +55,7 @@ final class VisitorPatternTests {
         #expect(visitedVertices1 == visitedVertices2) // Both visitors should see the same events
     }
     
-    // MARK: - DFS Tests
+    // MARK: - Depth-First Search
     
     @Test func dfsPreorder() {
         // Create a simple graph
@@ -129,7 +129,7 @@ final class VisitorPatternTests {
         #expect(visitedVertices.contains("B"))
     }
     
-    // MARK: - Shortest Path Tests
+    // MARK: - Shortest Path
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
     @Test func dijkstra() {
@@ -201,7 +201,7 @@ final class VisitorPatternTests {
     
     #endif
 
-    // MARK: - Minimum Spanning Tree Tests
+    // MARK: - Minimum Spanning Tree
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
     @Test func kruskal() {
@@ -254,7 +254,7 @@ final class VisitorPatternTests {
     
     #endif
 
-    // MARK: - Graph Coloring Tests
+    // MARK: - Graph Coloring
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
     @Test func greedyColoring() {
@@ -309,7 +309,7 @@ final class VisitorPatternTests {
     
     #endif
 
-    // MARK: - Hamiltonian Path Tests
+    // MARK: - Hamiltonian Path
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
     @Test func backtrackingHamiltonian() {
@@ -335,7 +335,7 @@ final class VisitorPatternTests {
         #expect(visitedVertices.contains("A"))
     }
     
-    // MARK: - Eulerian Path Tests
+    // MARK: - Eulerian Path
     
     @Test func hierholzer() {
         // Create a simple graph
@@ -360,7 +360,7 @@ final class VisitorPatternTests {
         #expect(visitedVertices.contains("A"))
     }
     
-    // MARK: - Isomorphism Tests
+    // MARK: - Isomorphism
     
     @Test func vf2Isomorphism() {
         // Create two identical graphs
@@ -387,7 +387,7 @@ final class VisitorPatternTests {
     
     #endif
 
-    // MARK: - Random Graph Tests
+    // MARK: - Random Graph
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_GENERATION
     @Test func erdosRenyi() {
@@ -409,7 +409,7 @@ final class VisitorPatternTests {
     
     #endif
 
-    // MARK: - Additional Shortest Path Tests
+    // MARK: - Additional Shortest Path
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
     @Test func floydWarshall() {

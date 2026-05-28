@@ -4,9 +4,9 @@ import Testing
 
 struct CliqueDetectionTests {
     
-    // MARK: - Basic Tests
+    // MARK: - Core Behavior
     
-    @Test func testEmptyGraph() {
+    @Test func emptyGraph() {
         let graph = AdjacencyList()
         let result = graph.findCliques()
         
@@ -15,7 +15,7 @@ struct CliqueDetectionTests {
         #expect(result.cliques.isEmpty)
     }
     
-    @Test func testSingleVertex() {
+    @Test func singleVertex() {
         var graph = AdjacencyList()
         let vertex = graph.addVertex { $0.label = "A" }
         
@@ -26,7 +26,7 @@ struct CliqueDetectionTests {
         #expect(result.cliques == [[vertex]])
     }
     
-    @Test func testTwoVerticesNoEdge() {
+    @Test func twoVerticesNoEdge() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -39,7 +39,7 @@ struct CliqueDetectionTests {
         #expect(result.cliques.contains { Set($0) == Set([b]) })
     }
     
-    @Test func testTwoVerticesWithEdge() {
+    @Test func twoVerticesWithEdge() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -53,9 +53,9 @@ struct CliqueDetectionTests {
         #expect(result.cliques.contains { Set($0) == Set([a, b]) })
     }
     
-    // MARK: - Triangle Tests
+    // MARK: - Triangle Graph
     
-    @Test func testTriangle() {
+    @Test func triangle() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -76,9 +76,9 @@ struct CliqueDetectionTests {
         #expect(result.cliques.contains { Set($0) == Set([a, b, c]) })
     }
     
-    // MARK: - Complete Graph Tests
+    // MARK: - Complete Graph
     
-    @Test func testK4() {
+    @Test func completeK4() {
         var graph = AdjacencyList()
         let vertices = ["A", "B", "C", "D"].map { label in
             graph.addVertex { $0.label = label }
@@ -100,7 +100,7 @@ struct CliqueDetectionTests {
         #expect(result.cliques.contains { Set($0) == Set(vertices) })
     }
     
-    @Test func testK5() {
+    @Test func completeK5() {
         var graph = AdjacencyList()
         let vertices = ["A", "B", "C", "D", "E"].map { label in
             graph.addVertex { $0.label = label }
@@ -122,9 +122,9 @@ struct CliqueDetectionTests {
         #expect(result.cliques.contains { Set($0) == Set(vertices) })
     }
     
-    // MARK: - Complex Graph Tests
+    // MARK: - Complex Graph
     
-    @Test func testGraphWithMultipleCliques() {
+    @Test func graphWithMultipleCliques() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -157,9 +157,9 @@ struct CliqueDetectionTests {
         #expect(result.cliques.contains { Set($0) == Set([c, d, e]) })
     }
     
-    // MARK: - Result Utility Tests
+    // MARK: - Result Utilities
     
-    @Test func testCliquesOfSize() {
+    @Test func cliquesOfSize() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -188,7 +188,7 @@ struct CliqueDetectionTests {
         #expect(size2Cliques.contains { Set($0) == Set([c, d]) })
     }
     
-    @Test func testIsClique() {
+    @Test func isClique() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -208,7 +208,7 @@ struct CliqueDetectionTests {
         #expect(!result.isClique(Set([a, c])))
     }
     
-    @Test func testCliquesContaining() {
+    @Test func cliquesContaining() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -234,9 +234,9 @@ struct CliqueDetectionTests {
         #expect(cliquesWithC.contains { Set($0) == Set([c, d]) })
     }
     
-    // MARK: - Visitor Tests
+    // MARK: - Visitor Support
     
-    @Test func testVisitorCallbacks() {
+    @Test func visitorCallbacks() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -257,9 +257,9 @@ struct CliqueDetectionTests {
         #expect(result.cliques.contains { Set($0) == Set([a, b, c]) })
     }
     
-    // MARK: - Algorithm Comparison Tests
+    // MARK: - Algorithm Comparison
     
-    @Test func testAlgorithmConsistency() {
+    @Test func algorithmConsistency() {
         var graph = AdjacencyList()
         let vertices = ["A", "B", "C", "D", "E"].map { label in
             graph.addVertex { $0.label = label }

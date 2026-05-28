@@ -1,8 +1,10 @@
 @testable import Graphs
 import Testing
 
-struct BFSTests {
-    
+struct BreadthFirstSearchTests {
+
+    // MARK: - Test Graphs
+
     func createMultiLevelTreeGraph() -> some AdjacencyListProtocol {
         var graph = AdjacencyList()
         
@@ -66,7 +68,9 @@ struct BFSTests {
         
         return graph
     }
-    
+
+    // MARK: - Core Behavior
+
     @Test func order() {
         let graph = createMultiLevelTreeGraph()
         
@@ -140,6 +144,107 @@ struct BFSTests {
         let result = graph.traverse(from: root, using: .bfs())
         #expect(result.vertices == [root, a, c, b, d])
         #expect(result.edges == [ra, rc, ab, cd])
+    }
+
+    // MARK: - Multi-Backend Coverage
+
+    @Test func visitsAllReachableVertices_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let a = graph.addVertex { $0.label = "A" }
+            let b = graph.addVertex { $0.label = "B" }
+            let c = graph.addVertex { $0.label = "C" }
+            let isolated = graph.addVertex { $0.label = "X" }
+            graph.addEdge(from: a, to: b)
+            graph.addEdge(from: b, to: c)
+            let result = graph.traverse(from: a, using: .bfs())
+            #expect(result.vertices.count == 3, "[\(backend)] reachable count")
+            #expect(!result.vertices.contains(isolated), "[\(backend)] isolated vertex must not be visited")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    @Test func breadthBeforeDepth_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let root  = graph.addVertex { $0.label = "root" }
+            let l1a   = graph.addVertex { $0.label = "l1a" }
+            let l1b   = graph.addVertex { $0.label = "l1b" }
+            let l2    = graph.addVertex { $0.label = "l2" }
+            graph.addEdge(from: root, to: l1a)
+            graph.addEdge(from: root, to: l1b)
+            graph.addEdge(from: l1a, to: l2)
+            let result = graph.traverse(from: root, using: .bfs())
+            let idx = { result.vertices.firstIndex(of: $0)! }
+            #expect(idx(l1a) < idx(l2), "[\(backend)] l1a must come before l2")
+            #expect(idx(l1b) < idx(l2), "[\(backend)] l1b must come before l2")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    @Test func singleVertex_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let a = graph.addVertex()
+            let result = graph.traverse(from: a, using: .bfs())
+            #expect(result.vertices == [a], "[\(backend)] single-vertex graph visits only that vertex")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    // MARK: - Edge Cases
+
+    /// A self-loop (a → a) must not cause BFS to visit `a` more than once.
+    ///
+    /// The gray/black coloring used by BFS prevents revisiting already-discovered vertices,
+    /// so `a` is colored gray on first discovery and the self-loop is ignored on examination.
+    @Test func selfLoopDoesNotCauseInfiniteVisits() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        graph.addEdge(from: a, to: a)  // self-loop
+        graph.addEdge(from: a, to: b)
+
+        let result = graph.traverse(from: a, using: .bfs())
+        #expect(result.vertices.count == 2, "BFS must visit exactly 2 vertices (a and b), not loop on the self-edge")
+        #expect(result.vertices.first == a)
+        #expect(Set(result.vertices) == Set([a, b]))
+    }
+
+    /// Two parallel edges a → b must not cause BFS to visit `b` twice.
+    ///
+    /// Once `b` is discovered via the first edge, it is colored gray. The second edge to `b`
+    /// is examined but `b` is already discovered, so it is not enqueued again.
+    @Test func parallelEdgesVisitDestinationOnce() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: a, to: b)  // duplicate edge
+        graph.addEdge(from: a, to: c)
+
+        let result = graph.traverse(from: a, using: .bfs())
+        #expect(result.vertices.count == 3, "BFS must visit each vertex exactly once despite parallel edges")
+        #expect(Set(result.vertices) == Set([a, b, c]))
     }
 }
 

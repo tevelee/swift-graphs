@@ -4,7 +4,9 @@ import Testing
 
 struct JohnsonAlgorithmTests {
     
-    @Test func testJohnsonBasic() {
+    // MARK: - Core Behavior
+
+    @Test func johnsonBasic() {
         var graph = AdjacencyList()
         
         // Create a simple test graph: A -> B -> C
@@ -24,7 +26,7 @@ struct JohnsonAlgorithmTests {
         #expect(result.distance(from: b, to: c) == 3.0) // B -> C
     }
     
-    @Test func testJohnsonWithNegativeWeights() {
+    @Test func johnsonHandlesNegativeWeights() {
         var graph = AdjacencyList()
         
         // Create a graph with negative weights: A -> B -> C with negative edge
@@ -44,7 +46,7 @@ struct JohnsonAlgorithmTests {
         #expect(result.distance(from: b, to: c) == -2.0) // B -> C
     }
     
-    @Test func testJohnsonComplex() {
+    @Test func johnsonComplex() {
         var graph = AdjacencyList()
         
         // Create a more complex graph with multiple paths and negative weights
@@ -67,7 +69,9 @@ struct JohnsonAlgorithmTests {
         #expect(result.distance(from: b, to: d) == -1.0) // B -> C -> D (-2 + 1 = -1)
     }
     
-    @Test func testJohnsonUnreachable() {
+    // MARK: - Edge Cases
+
+    @Test func johnsonHandlesUnreachableVertex() {
         var graph = AdjacencyList()
         
         // Create disconnected components
@@ -93,7 +97,7 @@ struct JohnsonAlgorithmTests {
         #expect(result.distance(from: c, to: d) == 2.0)
     }
     
-    @Test func testJohnsonSingleVertex() {
+    @Test func johnsonHandlesSingleVertex() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         
@@ -102,7 +106,7 @@ struct JohnsonAlgorithmTests {
         #expect(result.distance(from: a, to: a) == 0.0)
     }
     
-    @Test func testJohnsonEmptyGraph() {
+    @Test func johnsonHandlesEmptyGraph() {
         let graph = AdjacencyList()
         
         let result = graph.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)))
@@ -110,7 +114,34 @@ struct JohnsonAlgorithmTests {
         #expect(result.distances.isEmpty)
     }
     
-    @Test func testJohnsonNegativeCycle() {
+    @Test func johnsonAllPairsDistances_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let a = graph.addVertex { $0.label = "A" }
+            let b = graph.addVertex { $0.label = "B" }
+            let c = graph.addVertex { $0.label = "C" }
+            graph.addEdge(from: a, to: b) { $0.weight = 2 }
+            graph.addEdge(from: b, to: c) { $0.weight = 3 }
+            graph.addEdge(from: a, to: c) { $0.weight = 10 } // longer direct path
+
+            let result = graph.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)))
+
+            #expect(result.distance(from: a, to: b) == 2.0,  "[\(backend)] a→b costs 2")
+            #expect(result.distance(from: a, to: c) == 5.0,  "[\(backend)] a→b→c (5) beats a→c (10)")
+            #expect(result.distance(from: b, to: c) == 3.0,  "[\(backend)] b→c costs 3")
+            #expect(result.distance(from: a, to: a) == 0.0,  "[\(backend)] self-distance is 0")
+            #expect(result.distance(from: c, to: a) == .infinite, "[\(backend)] no path c→a")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    @Test func johnsonDetectsNegativeCycle() {
         var graph = AdjacencyList()
         
         // Create a graph with a negative cycle: A -> B -> C -> A

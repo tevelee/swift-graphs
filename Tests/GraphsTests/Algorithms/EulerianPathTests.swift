@@ -58,21 +58,21 @@ struct EulerianPathTests {
         return graph
     }
     
-    @Test func testEulerianPathDetection() {
+    @Test func detectsEulerianPath() {
         let graph = createEulerianPathGraph()
         
         #expect(graph.hasEulerianPath())
         #expect(!graph.hasEulerianCycle())
     }
     
-    @Test func testEulerianCycleDetection() {
+    @Test func detectsEulerianCycle() {
         let graph = createEulerianCycleGraph()
         
         #expect(graph.hasEulerianPath())
         #expect(graph.hasEulerianCycle())
     }
     
-    @Test func testEulerianPathFinding() throws {
+    @Test func findsEulerianPath() throws {
         let graph = createEulerianPathGraph()
         
         let path = try #require(graph.eulerianPath(using: Hierholzer()))
@@ -92,7 +92,7 @@ struct EulerianPathTests {
         #expect(edgeLabels == ["AB", "BC", "CD", "DA", "AC"])
     }
     
-    @Test func testEulerianCycleFinding() throws {
+    @Test func findsEulerianCycle() throws {
         let graph = createEulerianCycleGraph()
         
         let cycle = try #require(graph.eulerianCycle(using: Hierholzer()))
@@ -113,7 +113,7 @@ struct EulerianPathTests {
         #expect(edgeLabels == ["AB", "BC", "CD", "DA"])
     }
     
-    @Test func testNoEulerianPath() {
+    @Test func noEulerianPath() {
         let graph = createNoEulerianPathGraph()
         
         #expect(!graph.hasEulerianPath())
@@ -123,7 +123,7 @@ struct EulerianPathTests {
         #expect(path == nil)
     }
     
-    @Test func testSingleVertex() throws {
+    @Test func singleVertex() throws {
         let graph = createSingleVertexGraph()
         
         #expect(graph.hasEulerianPath())
@@ -137,7 +137,7 @@ struct EulerianPathTests {
         #expect(path.source == path.destination)
     }
     
-    @Test func testEmptyGraph() {
+    @Test func emptyGraph() {
         let graph = AdjacencyList()
         
         #expect(!graph.hasEulerianPath())

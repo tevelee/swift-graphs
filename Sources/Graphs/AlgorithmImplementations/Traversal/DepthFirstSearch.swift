@@ -258,6 +258,10 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
                 let vertex = frame.vertex
 
                 if frame.isFirstVisit {
+                    // Guard against duplicate stack entries that can arise from parallel edges:
+                    // if the vertex was already discovered via a sibling parallel edge, skip it.
+                    guard propertyMap[vertex][colorProperty] == .white else { continue }
+
                     time += 1
                     propertyMap[vertex][colorProperty] = .gray
                     propertyMap[vertex][discoveryTimeProperty] = .discovered(time)

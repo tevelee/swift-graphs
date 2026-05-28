@@ -4,7 +4,7 @@ import Testing
 
 struct SPFATests {
 
-    // MARK: - Core Algorithm Tests
+    // MARK: - Core Behavior
 
     @Test func basicShortestPath() {
         var graph = AdjacencyList()
@@ -81,7 +81,7 @@ struct SPFATests {
         #expect(result.hasNegativeCycle == false)
     }
 
-    // MARK: - Path Reconstruction Tests
+    // MARK: - Path Reconstruction
 
     @Test func pathReconstruction() {
         var graph = AdjacencyList()
@@ -160,7 +160,35 @@ struct SPFATests {
         #expect(result.distances[d] == .finite(5.0)) // Picks the shorter A -> C -> D path
     }
 
-    // MARK: - Visitor Tests
+    // MARK: - Multi-Backend Coverage
+
+    @Test func shortestPath_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let a = graph.addVertex { $0.label = "A" }
+            let b = graph.addVertex { $0.label = "B" }
+            let c = graph.addVertex { $0.label = "C" }
+            graph.addEdge(from: a, to: b) { $0.weight = 2 }
+            graph.addEdge(from: b, to: c) { $0.weight = 3 }
+            graph.addEdge(from: a, to: c) { $0.weight = 10 } // longer direct path
+
+            let result = graph.shortestPaths(from: a, using: .spfa(weight: .property(\.weight)))
+
+            #expect(result.distances[a] == .finite(0.0), "[\(backend)] distance to source is 0")
+            #expect(result.distances[b] == .finite(2.0), "[\(backend)] a→b costs 2")
+            #expect(result.distances[c] == .finite(5.0), "[\(backend)] a→b→c (5) cheaper than a→c (10)")
+            #expect(result.hasNegativeCycle == false, "[\(backend)] no negative cycle in this graph")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    // MARK: - Visitor Support
 
     @Test func visitorCallbacks() {
         var graph = AdjacencyList()

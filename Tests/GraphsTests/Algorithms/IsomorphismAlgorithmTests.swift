@@ -4,7 +4,7 @@ import Testing
 
 struct IsomorphismAlgorithmTests {
     
-    // MARK: - Test Data
+    // MARK: - Test Graphs
     
     func createSimpleGraph() -> DefaultAdjacencyList {
         var graph = DefaultAdjacencyList()
@@ -68,9 +68,9 @@ struct IsomorphismAlgorithmTests {
         return graph
     }
     
-    // MARK: - VF2 Algorithm Tests
+    // MARK: - Core Behavior (VF2)
     
-    @Test func testVF2IsomorphicGraphs() {
+    @Test func vf2DetectsIsomorphicGraphs() {
         let graph1 = createSimpleGraph()
         let graph2 = createIsomorphicGraph()
         
@@ -83,7 +83,7 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping?.count == 3)
     }
     
-    @Test func testVF2NonIsomorphicGraphs() {
+    @Test func vf2RejectsNonIsomorphicGraphs() {
         let graph1 = createSimpleGraph()
         let graph2 = createNonIsomorphicGraph()
         
@@ -95,7 +95,7 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping == nil)
     }
     
-    @Test func testVF2SameGraph() {
+    @Test func vf2DetectsSameGraph() {
         let graph = createSimpleGraph()
         let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
         
@@ -106,7 +106,7 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping?.count == 3)
     }
     
-    @Test func testVF2DifferentSizes() {
+    @Test func vf2RejectsDifferentSizes() {
         let graph1 = createSimpleGraph() // 3 vertices
         let graph2 = createPathGraph(vertices: ["A", "B"]) // 2 vertices
         
@@ -116,7 +116,7 @@ struct IsomorphismAlgorithmTests {
         #expect(vf2.findIsomorphism(graph1, graph2) == nil)
     }
     
-    @Test func testVF2PathGraphs() {
+    @Test func vf2PathGraphs() {
         let path1 = createPathGraph(vertices: ["A", "B", "C", "D"])
         let path2 = createPathGraph(vertices: ["W", "X", "Y", "Z"])
         
@@ -129,7 +129,7 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping?.count == 4)
     }
     
-    @Test func testVF2CycleGraphs() {
+    @Test func vf2CycleGraphs() {
         let cycle1 = createCycleGraph(vertices: ["A", "B", "C", "D"])
         let cycle2 = createCycleGraph(vertices: ["W", "X", "Y", "Z"])
         
@@ -142,9 +142,9 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping?.count == 4)
     }
     
-    // MARK: - Weisfeiler-Lehman Algorithm Tests
+    // MARK: - Core Behavior (Weisfeiler-Lehman)
     
-    @Test func testWeisfeilerLehmanIsomorphicGraphs() {
+    @Test func weisfeilerLehmanDetectsIsomorphicGraphs() {
         let graph1 = createSimpleGraph()
         let graph2 = createIsomorphicGraph()
         
@@ -157,7 +157,7 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping?.count == 3)
     }
     
-    @Test func testWeisfeilerLehmanNonIsomorphicGraphs() {
+    @Test func weisfeilerLehmanRejectsNonIsomorphicGraphs() {
         let graph1 = createSimpleGraph()
         let graph2 = createNonIsomorphicGraph()
         
@@ -169,7 +169,7 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping == nil)
     }
     
-    @Test func testWeisfeilerLehmanSameGraph() {
+    @Test func weisfeilerLehmanDetectsSameGraph() {
         let graph = createSimpleGraph()
         let wl = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
         
@@ -180,7 +180,7 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping?.count == 3)
     }
     
-    @Test func testWeisfeilerLehmanDifferentSizes() {
+    @Test func weisfeilerLehmanRejectsDifferentSizes() {
         let graph1 = createSimpleGraph() // 3 vertices
         let graph2 = createPathGraph(vertices: ["A", "B"]) // 2 vertices
         
@@ -190,7 +190,7 @@ struct IsomorphismAlgorithmTests {
         #expect(wl.findIsomorphism(graph1, graph2) == nil)
     }
     
-    @Test func testWeisfeilerLehmanPathGraphs() {
+    @Test func weisfeilerLehmanPathGraphs() {
         let path1 = createPathGraph(vertices: ["A", "B", "C", "D"])
         let path2 = createPathGraph(vertices: ["W", "X", "Y", "Z"])
         
@@ -203,7 +203,7 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping?.count == 4)
     }
     
-    @Test func testWeisfeilerLehmanCycleGraphs() {
+    @Test func weisfeilerLehmanCycleGraphs() {
         let cycle1 = createCycleGraph(vertices: ["A", "B", "C", "D"])
         let cycle2 = createCycleGraph(vertices: ["W", "X", "Y", "Z"])
         
@@ -216,9 +216,9 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping?.count == 4)
     }
     
-    // MARK: - Enhanced Weisfeiler-Lehman Algorithm Tests
+    // MARK: - Core Behavior (Enhanced Weisfeiler-Lehman)
     
-    @Test func testEnhancedWeisfeilerLehmanIsomorphicGraphs() {
+    @Test func enhancedWeisfeilerLehmanDetectsIsomorphicGraphs() {
         let graph1 = createSimpleGraph()
         let graph2 = createIsomorphicGraph()
         
@@ -231,7 +231,7 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping?.count == 3)
     }
     
-    @Test func testEnhancedWeisfeilerLehmanNonIsomorphicGraphs() {
+    @Test func enhancedWeisfeilerLehmanRejectsNonIsomorphicGraphs() {
         let graph1 = createSimpleGraph()
         let graph2 = createNonIsomorphicGraph()
         
@@ -243,9 +243,9 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping == nil)
     }
     
-    // MARK: - Graph Extension Tests
+    // MARK: - API Convenience
     
-    @Test func testGraphIsIsomorphicExtension() {
+    @Test func graphIsIsomorphicExtension() {
         let graph1 = createSimpleGraph()
         let graph2 = createIsomorphicGraph()
         let graph3 = createNonIsomorphicGraph()
@@ -256,7 +256,7 @@ struct IsomorphismAlgorithmTests {
         #expect(!graph1.isIsomorphic(to: graph3, using: vf2))
     }
     
-    @Test func testGraphFindIsomorphismExtension() {
+    @Test func graphFindIsomorphismExtension() {
         let graph1 = createSimpleGraph()
         let graph2 = createIsomorphicGraph()
         let graph3 = createNonIsomorphicGraph()
@@ -271,7 +271,7 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping2 == nil)
     }
     
-    @Test func testGraphIsomorphismResultExtension() {
+    @Test func graphIsomorphismResultExtension() {
         let graph1 = createSimpleGraph()
         let graph2 = createIsomorphicGraph()
         let graph3 = createNonIsomorphicGraph()
@@ -288,9 +288,9 @@ struct IsomorphismAlgorithmTests {
         #expect(result2.mapping == nil)
     }
     
-    // MARK: - Algorithm Selection Tests
+    // MARK: - Algorithm Selection
     
-    @Test func testAlgorithmSelection() {
+    @Test func algorithmSelection() {
         let graph1 = createSimpleGraph()
         let graph2 = createIsomorphicGraph()
         
@@ -303,7 +303,7 @@ struct IsomorphismAlgorithmTests {
     
     // MARK: - Edge Cases
     
-    @Test func testEmptyGraphs() {
+    @Test func emptyGraphs() {
         let empty1 = DefaultAdjacencyList()
         let empty2 = DefaultAdjacencyList()
         
@@ -313,7 +313,7 @@ struct IsomorphismAlgorithmTests {
         #expect(vf2.findIsomorphism(empty1, empty2) != nil)
     }
     
-    @Test func testSingleVertexGraphs() {
+    @Test func singleVertexGraphs() {
         var graph1 = DefaultAdjacencyList()
         graph1.addVertex { $0.label = "A" }
         
@@ -328,7 +328,7 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping?.count == 1)
     }
     
-    @Test func testDisconnectedGraphs() {
+    @Test func disconnectedGraphs() {
         var graph1 = DefaultAdjacencyList()
         let a1 = graph1.addVertex { $0.label = "A1" }
         let b1 = graph1.addVertex { $0.label = "B1" }
@@ -355,9 +355,9 @@ struct IsomorphismAlgorithmTests {
         #expect(mapping?.count == 4)
     }
     
-    // MARK: - withVisitor Pattern Tests
+    // MARK: - Visitor Support
     
-    @Test func testVF2WithVisitor() {
+    @Test func vf2WithVisitor() {
         let graph1 = createSimpleGraph()
         let graph2 = createSimpleGraph()
         
@@ -396,7 +396,7 @@ struct IsomorphismAlgorithmTests {
         #expect(mappingFound != nil)
     }
     
-    @Test func testWeisfeilerLehmanWithVisitor() {
+    @Test func weisfeilerLehmanWithVisitor() {
         let graph1 = createSimpleGraph()
         let graph2 = createSimpleGraph()
         
@@ -435,7 +435,7 @@ struct IsomorphismAlgorithmTests {
         #expect(stabilized != nil)
     }
     
-    @Test func testEnhancedWeisfeilerLehmanWithVisitor() {
+    @Test func enhancedWeisfeilerLehmanWithVisitor() {
         let graph1 = createSimpleGraph()
         let graph2 = createSimpleGraph()
         

@@ -54,7 +54,7 @@ struct HamiltonianPathTests {
         return graph
     }
     
-    @Test func testHamiltonianPathFinding() throws {
+    @Test func findsHamiltonianPath() throws {
         let graph = createCompleteGraph()
         
         let path = try #require(graph.hamiltonianPath(using: BacktrackingHamiltonian()))
@@ -77,7 +77,7 @@ struct HamiltonianPathTests {
         #expect(edgeLabels.count == 3)
     }
     
-    @Test func testHamiltonianPathFromSource() throws {
+    @Test func findsHamiltonianPathFromSource() throws {
         let graph = createCompleteGraph()
         let a = graph.findVertex(labeled: "A")!
         
@@ -94,7 +94,7 @@ struct HamiltonianPathTests {
         #expect(vertexLabels == ["A", "B", "C", "D"])
     }
     
-    @Test func testHamiltonianPathFromSourceToDestination() throws {
+    @Test func findsHamiltonianPathFromSourceToDestination() throws {
         let graph = createCompleteGraph()
         let a = graph.findVertex(labeled: "A")!
         let d = graph.findVertex(labeled: "D")!
@@ -115,7 +115,7 @@ struct HamiltonianPathTests {
         #expect(vertexLabels == ["A", "B", "C", "D"])
     }
     
-    @Test func testHamiltonianCycleFinding() throws {
+    @Test func findsHamiltonianCycle() throws {
         let graph = createCompleteGraph()
         
         let cycle = try #require(graph.hamiltonianCycle(using: BacktrackingHamiltonian()))
@@ -136,7 +136,7 @@ struct HamiltonianPathTests {
         #expect(edgeLabels.count == 4)
     }
     
-    @Test func testHeuristicHamiltonianPath() throws {
+    @Test func heuristicHamiltonianPath() throws {
         let graph = createCompleteGraph()
         
         let path = try #require(graph.hamiltonianPath(using: HeuristicHamiltonian(heuristic: .degreeBased)))
@@ -153,7 +153,7 @@ struct HamiltonianPathTests {
         #expect(vertexLabels.count == 4)
     }
     
-    @Test func testNoHamiltonianPath() {
+    @Test func noHamiltonianPath() {
         let graph = createDisconnectedGraph()
         
         let path = graph.hamiltonianPath(using: BacktrackingHamiltonian())
@@ -163,7 +163,7 @@ struct HamiltonianPathTests {
         #expect(cycle == nil)
     }
     
-    @Test func testSingleVertex() throws {
+    @Test func singleVertex() throws {
         let graph = createSingleVertexGraph()
         
         let path = try #require(graph.hamiltonianPath(using: BacktrackingHamiltonian()))
@@ -174,7 +174,7 @@ struct HamiltonianPathTests {
         #expect(path.edges == [])
     }
     
-    @Test func testTwoVertices() throws {
+    @Test func twoVertices() throws {
         let graph = createTwoVertexGraph()
         
         let path = try #require(graph.hamiltonianPath(using: BacktrackingHamiltonian()))
@@ -186,7 +186,7 @@ struct HamiltonianPathTests {
         #expect(path.edges.count == 1)
     }
     
-    @Test func testEmptyGraph() {
+    @Test func emptyGraph() {
         let graph = AdjacencyList()
         
         let path = graph.hamiltonianPath(using: BacktrackingHamiltonian())

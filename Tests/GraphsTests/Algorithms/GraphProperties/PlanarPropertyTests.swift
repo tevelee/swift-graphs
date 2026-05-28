@@ -3,7 +3,7 @@ import Testing
 
 struct PlanarPropertyTests {
     
-    // MARK: - Test Data Creation
+    // MARK: - Test Graphs
     
     func createEmptyGraph() -> DefaultAdjacencyList {
         return DefaultAdjacencyList()
@@ -147,56 +147,56 @@ struct PlanarPropertyTests {
         return graph
     }
     
-    // MARK: - Basic Tests
+    // MARK: - Core Behavior
     
-    @Test func testEmptyGraph() {
+    @Test func emptyGraph() {
         let graph = createEmptyGraph()
         #expect(graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testSingleVertex() {
+    @Test func singleVertex() {
         let graph = createSingleVertexGraph()
         #expect(graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testTwoVertices() {
+    @Test func twoVertices() {
         let graph = createTwoVertexGraph()
         #expect(graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testTriangle() {
+    @Test func triangle() {
         let graph = createTriangleGraph()
         #expect(graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testK4() {
+    @Test func k4() {
         let graph = createK4Graph()
         #expect(graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testK5() {
+    @Test func k5IsNonPlanar() {
         let graph = createK5Graph()
         #expect(!graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testK33() {
+    @Test func k33IsNonPlanar() {
         let graph = createK33Graph()
         #expect(!graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testPlanarGraph() {
+    @Test func planarGraph() {
         let graph = createPlanarGraph()
         #expect(graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testNonPlanarGraph() {
+    @Test func nonPlanarGraph() {
         let graph = createNonPlanarGraph()
         #expect(!graph.isPlanar(using: .eulerFormula()))
     }
     
-    // MARK: - Edge Case Tests
+    // MARK: - Edge Cases
     
-    @Test func testGraphWithSelfLoops() {
+    @Test func graphWithSelfLoops() {
         var graph = DefaultAdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -208,7 +208,7 @@ struct PlanarPropertyTests {
         #expect(graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testDisconnectedGraph() {
+    @Test func disconnectedGraph() {
         var graph = DefaultAdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -225,9 +225,9 @@ struct PlanarPropertyTests {
         #expect(graph.isPlanar(using: .eulerFormula()))
     }
     
-    // MARK: - Visitor Pattern Tests
+    // MARK: - Visitor Support
     
-    @Test func testVisitorPattern() {
+    @Test func visitorPattern() {
         let graph = createK5Graph()
         var eulerViolations: [(Int, Int, Int)] = []
         var kuratowskiViolations: [String] = []
@@ -251,9 +251,9 @@ struct PlanarPropertyTests {
         #expect(result == false)
     }
     
-    // MARK: - Performance Tests
+    // MARK: - Performance
     
-    @Test func testLargePlanarGraph() {
+    @Test func largePlanarGraph() {
         // Create a moderate-sized planar graph (grid-like structure)
         var graph = DefaultAdjacencyList()
         let size = 5  // Reduced from 10 to avoid exponential explosion

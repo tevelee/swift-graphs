@@ -5,20 +5,20 @@ private typealias TestGraph = AdjacencyList<OrderedVertexStorage, CacheInOutEdge
 
 struct HamiltonianPropertyTests {
     
-    // MARK: - Dirac Theorem Tests
+    // MARK: - Core Behavior (Dirac Theorem)
     
-    @Test func testDiracEmptyGraph() {
+    @Test func diracEmptyGraph() {
         let graph = AdjacencyList()
         #expect(!graph.satisfiesDirac(using: StandardDiracPropertyAlgorithm<AdjacencyList>()))
     }
     
-    @Test func testDiracSingleVertex() {
+    @Test func diracSingleVertex() {
         var graph = AdjacencyList()
         graph.addVertex { $0.label = "A" }
         #expect(!graph.satisfiesDirac(using: StandardDiracPropertyAlgorithm<AdjacencyList>()))
     }
     
-    @Test func testDiracTwoVertices() {
+    @Test func diracTwoVertices() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -26,7 +26,7 @@ struct HamiltonianPropertyTests {
         #expect(!graph.satisfiesDirac(using: StandardDiracPropertyAlgorithm<AdjacencyList>()))
     }
     
-    @Test func testDiracCompleteGraph() {
+    @Test func diracCompleteGraph() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -44,7 +44,7 @@ struct HamiltonianPropertyTests {
         #expect(graph.satisfiesDirac(using: StandardDiracPropertyAlgorithm<AdjacencyList>()))
     }
     
-    @Test func testDiracSatisfiesCondition() {
+    @Test func diracSatisfiesCondition() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -66,7 +66,7 @@ struct HamiltonianPropertyTests {
         #expect(graph.satisfiesDirac(using: StandardDiracPropertyAlgorithm<AdjacencyList>()))
     }
     
-    @Test func testDiracDoesNotSatisfyCondition() {
+    @Test func diracDoesNotSatisfyCondition() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -81,20 +81,20 @@ struct HamiltonianPropertyTests {
         #expect(!graph.satisfiesDirac(using: StandardDiracPropertyAlgorithm<AdjacencyList>()))
     }
     
-    // MARK: - Ore Theorem Tests
+    // MARK: - Core Behavior (Ore Theorem)
     
-    @Test func testOreEmptyGraph() {
+    @Test func oreEmptyGraph() {
         let graph = AdjacencyList()
         #expect(!graph.satisfiesOre(using: StandardOrePropertyAlgorithm<AdjacencyList>()))
     }
     
-    @Test func testOreSingleVertex() {
+    @Test func oreSingleVertex() {
         var graph = AdjacencyList()
         graph.addVertex { $0.label = "A" }
         #expect(!graph.satisfiesOre(using: StandardOrePropertyAlgorithm<AdjacencyList>()))
     }
     
-    @Test func testOreTwoVertices() {
+    @Test func oreTwoVertices() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -102,7 +102,7 @@ struct HamiltonianPropertyTests {
         #expect(!graph.satisfiesOre(using: StandardOrePropertyAlgorithm<AdjacencyList>()))
     }
     
-    @Test func testOreCompleteGraph() {
+    @Test func oreCompleteGraph() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -120,7 +120,7 @@ struct HamiltonianPropertyTests {
         #expect(graph.satisfiesOre(using: StandardOrePropertyAlgorithm<AdjacencyList>()))
     }
     
-    @Test func testOreSatisfiesCondition() {
+    @Test func oreSatisfiesCondition() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -140,7 +140,7 @@ struct HamiltonianPropertyTests {
         #expect(graph.satisfiesOre(using: StandardOrePropertyAlgorithm<AdjacencyList>()))
     }
     
-    @Test func testOreDoesNotSatisfyCondition() {
+    @Test func oreDoesNotSatisfyCondition() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -157,7 +157,7 @@ struct HamiltonianPropertyTests {
         #expect(!graph.satisfiesOre(using: StandardOrePropertyAlgorithm<AdjacencyList>()))
     }
     
-    @Test func testOreWithIsolatedVertices() {
+    @Test func oreWithIsolatedVertices() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -171,10 +171,10 @@ struct HamiltonianPropertyTests {
         #expect(!graph.satisfiesOre(using: StandardOrePropertyAlgorithm<AdjacencyList>()))
     }
     
-    // MARK: - Hybrid Approach Tests
+    // MARK: - Core Behavior (Hybrid)
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
-    @Test func testHybridHamiltonianCycle() {
+    @Test func hybridHamiltonianCycle() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -192,7 +192,7 @@ struct HamiltonianPropertyTests {
         #expect(graph.hasHamiltonianCycle())
     }
     
-    @Test func testHybridHamiltonianPath() {
+    @Test func hybridHamiltonianPath() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -210,7 +210,7 @@ struct HamiltonianPropertyTests {
         #expect(graph.hasHamiltonianPath())
     }
     
-    @Test func testHybridFallbackToAlgorithm() {
+    @Test func hybridFallbackToAlgorithm() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -236,7 +236,7 @@ struct HamiltonianPropertyTests {
         #expect(!graph.hasHamiltonianCycle())
     }
     
-    @Test func testHybridNoHamiltonianPath() {
+    @Test func hybridNoHamiltonianPath() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -253,9 +253,9 @@ struct HamiltonianPropertyTests {
     
     #endif
 
-    // MARK: - Visitor Pattern Tests
+    // MARK: - Visitor Support
 
-    @Test func testDiracVisitor() {
+    @Test func diracVisitor() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -284,7 +284,7 @@ struct HamiltonianPropertyTests {
         #expect(visitorCalls.contains("insufficientVertices(2)"))
     }
     
-    @Test func testOreVisitor() {
+    @Test func oreVisitor() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }

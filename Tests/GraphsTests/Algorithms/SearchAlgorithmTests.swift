@@ -1,7 +1,7 @@
 @testable import Graphs
 import Testing
 
-struct SearchTests {
+struct SearchAlgorithmTests {
     
     @Test func basicSearchAPI() {
         var graph = AdjacencyList()

@@ -3,8 +3,10 @@
 import Testing
 
 struct StronglyConnectedComponentsTests {
-    
-    @Test func testTarjanBasic() {
+
+    // MARK: - Core Behavior
+
+    @Test func tarjanFindsStronglyConnectedVertices() {
         var graph = AdjacencyList()
         
         let a = graph.addVertex { $0.label = "A" }
@@ -24,7 +26,7 @@ struct StronglyConnectedComponentsTests {
         #expect(result.components[0].count == 3)
     }
     
-    @Test func testKosarajuBasic() {
+    @Test func kosarajuFindsStronglyConnectedVertices() {
         var graph = AdjacencyList()
         
         let a = graph.addVertex { $0.label = "A" }
@@ -44,7 +46,7 @@ struct StronglyConnectedComponentsTests {
         #expect(result.components[0].count == 3)
     }
     
-    @Test func testTarjanDisconnected() {
+    @Test func tarjanHandlesDisconnectedGraph() {
         var graph = AdjacencyList()
         
         graph.addVertex { $0.label = "A" }
@@ -63,7 +65,7 @@ struct StronglyConnectedComponentsTests {
         }
     }
     
-    @Test func testKosarajuDisconnected() {
+    @Test func kosarajuHandlesDisconnectedGraph() {
         var graph = AdjacencyList()
         
         graph.addVertex { $0.label = "A" }
@@ -82,7 +84,7 @@ struct StronglyConnectedComponentsTests {
         }
     }
     
-    @Test func testTarjanMultipleSCCs() {
+    @Test func tarjanFindsMultipleSCCs() {
         var graph = AdjacencyList()
         
         let a = graph.addVertex { $0.label = "A" }
@@ -125,7 +127,7 @@ struct StronglyConnectedComponentsTests {
         #expect(threeVertexComponent.count == 3)
     }
     
-    @Test func testKosarajuMultipleSCCs() {
+    @Test func kosarajuFindsMultipleSCCs() {
         var graph = AdjacencyList()
         
         let a = graph.addVertex { $0.label = "A" }
@@ -166,6 +168,36 @@ struct StronglyConnectedComponentsTests {
         #expect(singleVertexComponent.count == 1)
         #expect(twoVertexComponent.count == 2)
         #expect(threeVertexComponent.count == 3)
+    }
+
+    // MARK: - Algorithm Comparison
+
+    @Test func tarjanAndKosarajuAgreeOnComponentCount_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            // Two SCCs: {A,B,C} cycle and {D} isolated
+            let a = graph.addVertex { $0.label = "A" }
+            let b = graph.addVertex { $0.label = "B" }
+            let c = graph.addVertex { $0.label = "C" }
+            _ = graph.addVertex { $0.label = "D" }
+            graph.addEdge(from: a, to: b)
+            graph.addEdge(from: b, to: c)
+            graph.addEdge(from: c, to: a)
+
+            let tarjanResult   = graph.stronglyConnectedComponents(using: .tarjan())
+            let kosarajuResult = graph.stronglyConnectedComponents(using: .kosaraju())
+
+            #expect(tarjanResult.componentCount == 2,   "[\(backend)] Tarjan: 2 SCCs")
+            #expect(kosarajuResult.componentCount == 2, "[\(backend)] Kosaraju: 2 SCCs")
+            #expect(tarjanResult.componentCount == kosarajuResult.componentCount, "[\(backend)] both must agree")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
     }
 }
 #endif

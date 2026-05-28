@@ -4,9 +4,9 @@ import Testing
 
 struct VertexOrderingTests {
     
-    // MARK: - Smallest Last Vertex Ordering Tests
+    // MARK: - Core Behavior (Smallest Last)
     
-    @Test func testSmallestLastVertexOrderingSimpleGraph() {
+    @Test func smallestLastOrderingSimpleGraph() {
         // Create a simple graph: A-B-C with A-D
         // A -- B -- C
         // |
@@ -45,7 +45,7 @@ struct VertexOrderingTests {
         #expect(dPosition > aPosition || dPosition > bPosition)
     }
     
-    @Test func testSmallestLastVertexOrderingCompleteGraph() {
+    @Test func smallestLastOrderingCompleteGraph() {
         // Create a complete graph K4
         var graph = AdjacencyList()
         
@@ -70,7 +70,7 @@ struct VertexOrderingTests {
         #expect(ordering.orderedVertices == [d, c, b, a])
     }
     
-    @Test func testSmallestLastVertexOrderingPathGraph() {
+    @Test func smallestLastOrderingPathGraph() {
         // Create a path graph: A-B-C-D
         var graph = AdjacencyList()
         
@@ -93,7 +93,7 @@ struct VertexOrderingTests {
         #expect(ordering.orderedVertices == [c, b, d, a])
     }
     
-    @Test func testSmallestLastVertexOrderingStarGraph() {
+    @Test func smallestLastOrderingStarGraph() {
         // Create a star graph: center connected to all others
         //   B
         //   |
@@ -124,9 +124,9 @@ struct VertexOrderingTests {
         #expect(ordering.orderedVertices == [c, e, d, b, a])
     }
     
-    // MARK: - Reverse Cuthill-McKee Ordering Tests
+    // MARK: - Core Behavior (Reverse Cuthill-McKee)
     
-    @Test func testReverseCuthillMcKeeOrderingSimpleGraph() {
+    @Test func reverseCuthillMcKeeOrderingSimpleGraph() {
         // Create a simple graph: A-B-C with A-D
         // A -- B -- C
         // |
@@ -152,7 +152,7 @@ struct VertexOrderingTests {
         #expect(ordering.orderedVertices == [c, b, d, a])
     }
     
-    @Test func testReverseCuthillMcKeeOrderingPathGraph() {
+    @Test func reverseCuthillMcKeeOrderingPathGraph() {
         // Create a path graph: A-B-C-D
         var graph = AdjacencyList()
         
@@ -175,7 +175,7 @@ struct VertexOrderingTests {
         #expect(ordering.orderedVertices == [d, c, b, a])
     }
     
-    @Test func testReverseCuthillMcKeeOrderingStarGraph() {
+    @Test func reverseCuthillMcKeeOrderingStarGraph() {
         // Create a star graph: center connected to all others
         //   B
         //   |
@@ -206,7 +206,7 @@ struct VertexOrderingTests {
         #expect(ordering.orderedVertices == [e, d, b, c, a])
     }
     
-    @Test func testReverseCuthillMcKeeOrderingCompleteGraph() {
+    @Test func reverseCuthillMcKeeOrderingCompleteGraph() {
         // Create a complete graph K4
         var graph = AdjacencyList()
         
@@ -233,7 +233,7 @@ struct VertexOrderingTests {
     
     // MARK: - Edge Cases
     
-    @Test func testEmptyGraph() {
+    @Test func emptyGraph() {
         let graph = AdjacencyList()
         
         let smallestLastOrdering = graph.orderVertices(using: SmallestLastVertexOrderingAlgorithm())
@@ -243,7 +243,7 @@ struct VertexOrderingTests {
         #expect(rcmOrdering.orderedVertices.isEmpty)
     }
     
-    @Test func testSingleVertexGraph() {
+    @Test func singleVertexGraph() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         
@@ -254,7 +254,7 @@ struct VertexOrderingTests {
         #expect(rcmOrdering.orderedVertices == [a])
     }
     
-    @Test func testTwoVertexGraph() {
+    @Test func twoVertexGraph() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -272,7 +272,7 @@ struct VertexOrderingTests {
         #expect(rcmOrdering.orderedVertices == [b, a])
     }
     
-    @Test func testDisconnectedGraph() {
+    @Test func disconnectedGraph() {
         // Create two disconnected components: A-B and C-D
         var graph = AdjacencyList()
         
@@ -297,9 +297,9 @@ struct VertexOrderingTests {
         #expect(rcmOrdering.orderedVertices == [d, c, b, a])
     }
     
-    // MARK: - Deterministic Ordering Tests
+    // MARK: - Deterministic Ordering
     
-    @Test func testDeterministicOrdering() {
+    @Test func deterministicOrdering() {
         // Test that multiple runs produce the same result
         var graph = AdjacencyList()
         
@@ -331,7 +331,7 @@ struct VertexOrderingTests {
         #expect(rcm2.orderedVertices == rcm3.orderedVertices)
     }
     
-    @Test func testOrderingConsistency() {
+    @Test func orderingConsistency() {
         // Test that the ordering is consistent with vertex positions
         var graph = AdjacencyList()
         
@@ -364,9 +364,9 @@ struct VertexOrderingTests {
         }
     }
     
-    // MARK: - Complex Graph Tests
+    // MARK: - Complex Graphs
     
-    @Test func testComplexGraphSmallestLast() {
+    @Test func complexGraphSmallestLast() {
         // Create a more complex graph with varying degrees
         //     B
         //    /|\
@@ -408,7 +408,7 @@ struct VertexOrderingTests {
         #expect(ordering.orderedVertices == [e, d, b, c, a])
     }
     
-    @Test func testComplexGraphReverseCuthillMcKee() {
+    @Test func complexGraphReverseCuthillMcKee() {
         // Create the same complex graph
         //     B
         //    /|\
@@ -450,9 +450,43 @@ struct VertexOrderingTests {
         #expect(ordering.orderedVertices == [d, c, e, b, a])
     }
     
-    // MARK: - Algorithm Comparison Tests
-    
-    @Test func testAlgorithmComparison() {
+    // MARK: - Multi-Backend Coverage
+
+    @Test func orderingSpansAllVertices_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let a = graph.addVertex { $0.label = "A" }
+            let b = graph.addVertex { $0.label = "B" }
+            let c = graph.addVertex { $0.label = "C" }
+            let d = graph.addVertex { $0.label = "D" }
+            graph.addEdge(from: a, to: b); graph.addEdge(from: b, to: a)
+            graph.addEdge(from: b, to: c); graph.addEdge(from: c, to: b)
+            graph.addEdge(from: c, to: d); graph.addEdge(from: d, to: c)
+
+            let slOrder  = graph.orderVertices(using: SmallestLastVertexOrderingAlgorithm())
+            let rcmOrder = graph.orderVertices(using: ReverseCuthillMcKeeOrderingAlgorithm())
+
+            #expect(slOrder.orderedVertices.count == 4,  "[\(backend)] Smallest Last must order all 4 vertices")
+            #expect(rcmOrder.orderedVertices.count == 4, "[\(backend)] RCM must order all 4 vertices")
+
+            // Both orderings must contain exactly the same vertex set
+            #expect(Set(slOrder.orderedVertices) == Set([a, b, c, d]),
+                    "[\(backend)] Smallest Last must span all vertices")
+            #expect(Set(rcmOrder.orderedVertices) == Set([a, b, c, d]),
+                    "[\(backend)] RCM must span all vertices")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    // MARK: - Algorithm Comparison
+
+    @Test func algorithmComparison() {
         // Test that both algorithms produce valid orderings for the same graph
         var graph = AdjacencyList()
         

@@ -6,7 +6,7 @@ struct MinimumCutAlgorithmTests {
 
     // MARK: - Two Vertices
 
-    @Test func testTwoVerticesSingleEdge() {
+    @Test func twoVerticesSingleEdge() {
         var graph = AdjacencyList()
 
         let a = graph.addVertex { $0.label = "A" }
@@ -26,7 +26,7 @@ struct MinimumCutAlgorithmTests {
 
     // MARK: - Triangle
 
-    @Test func testTriangleWithDifferentWeights() {
+    @Test func triangleWithDifferentWeights() {
         var graph = AdjacencyList()
 
         let a = graph.addVertex { $0.label = "A" }
@@ -52,7 +52,7 @@ struct MinimumCutAlgorithmTests {
 
     // MARK: - Two Cliques Connected by Weak Edge
 
-    @Test func testTwoCliquesConnectedByWeakEdge() {
+    @Test func twoCliquesConnectedByWeakEdge() {
         var graph = AdjacencyList()
 
         // Clique 1: A, B, C (all connected with weight 10)
@@ -99,7 +99,7 @@ struct MinimumCutAlgorithmTests {
 
     // MARK: - Single Vertex
 
-    @Test func testSingleVertex() {
+    @Test func singleVertex() {
         var graph = AdjacencyList()
         graph.addVertex { $0.label = "A" }
 
@@ -110,7 +110,7 @@ struct MinimumCutAlgorithmTests {
 
     // MARK: - Partition Correctness
 
-    @Test func testPartitionCorrectness() {
+    @Test func partitionCorrectness() {
         var graph = AdjacencyList()
 
         let a = graph.addVertex { $0.label = "A" }
@@ -156,7 +156,7 @@ struct MinimumCutAlgorithmTests {
 
     // MARK: - Convenience API
 
-    @Test func testConvenienceAPI() {
+    @Test func convenienceAPI() {
         var graph = AdjacencyList()
 
         let a = graph.addVertex { $0.label = "A" }
@@ -174,7 +174,7 @@ struct MinimumCutAlgorithmTests {
 
     // MARK: - isCutEdge
 
-    @Test func testIsCutEdge() {
+    @Test func isCutEdge() {
         var graph = AdjacencyList()
 
         let a = graph.addVertex { $0.label = "A" }
@@ -210,7 +210,7 @@ struct MinimumCutAlgorithmTests {
 
     // MARK: - Path Graph
 
-    @Test func testPathGraph() {
+    @Test func pathGraph() {
         var graph = AdjacencyList()
 
         // A --3-- B --1-- C --5-- D

@@ -1,7 +1,7 @@
 @testable import Graphs
 import Testing
 
-struct GraphBasicsTests {
+struct GraphBasicTests {
     @Test func addsVerticesAndEdges_countsAndAdjacency() {
         var graph = AdjacencyList()
 

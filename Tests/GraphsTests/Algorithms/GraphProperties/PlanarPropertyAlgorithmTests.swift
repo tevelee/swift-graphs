@@ -3,7 +3,7 @@ import Testing
 
 struct PlanarPropertyAlgorithmTests {
     
-    // MARK: - Test Data Creation
+    // MARK: - Test Graphs
     
     func createPlanarGraph() -> some AdjacencyListProtocol {
         var graph = AdjacencyList()
@@ -86,137 +86,137 @@ struct PlanarPropertyAlgorithmTests {
         return graph
     }
     
-    // MARK: - Euler Formula Algorithm Tests
+    // MARK: - Core Behavior (Euler Formula)
     
-    @Test func testEulerFormulaEmptyGraph() {
+    @Test func eulerFormulaEmptyGraph() {
         let graph = createEmptyGraph()
         #expect(graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testEulerFormulaSingleVertex() {
+    @Test func eulerFormulaSingleVertex() {
         let graph = createSingleVertexGraph()
         #expect(graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testEulerFormulaTwoVertices() {
+    @Test func eulerFormulaTwoVertices() {
         let graph = createTwoVertexGraph()
         #expect(graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testEulerFormulaPlanarGraph() {
+    @Test func eulerFormulaPlanarGraph() {
         let graph = createPlanarGraph()
         #expect(graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testEulerFormulaNonPlanarK5() {
+    @Test func eulerFormulaNonPlanarK5() {
         let graph = createNonPlanarGraph()
         #expect(!graph.isPlanar(using: .eulerFormula()))
     }
     
-    @Test func testEulerFormulaNonPlanarK33() {
+    @Test func eulerFormulaNonPlanarK33() {
         let graph = createK33Graph()
         #expect(!graph.isPlanar(using: .eulerFormula()))
     }
     
-    // MARK: - Left-Right Algorithm Tests
+    // MARK: - Core Behavior (Left-Right)
     
-    @Test func testLeftRightEmptyGraph() {
+    @Test func leftRightEmptyGraph() {
         let graph = createEmptyGraph()
         #expect(graph.isPlanar(using: .leftRight()))
     }
     
-    @Test func testLeftRightSingleVertex() {
+    @Test func leftRightSingleVertex() {
         let graph = createSingleVertexGraph()
         #expect(graph.isPlanar(using: .leftRight()))
     }
     
-    @Test func testLeftRightTwoVertices() {
+    @Test func leftRightTwoVertices() {
         let graph = createTwoVertexGraph()
         #expect(graph.isPlanar(using: .leftRight()))
     }
     
-    @Test func testLeftRightPlanarGraph() {
+    @Test func leftRightPlanarGraph() {
         let graph = createPlanarGraph()
         #expect(graph.isPlanar(using: .leftRight()))
     }
     
-    @Test func testLeftRightNonPlanarK5() {
+    @Test func leftRightNonPlanarK5() {
         let graph = createNonPlanarGraph()
         #expect(!graph.isPlanar(using: .leftRight()))
     }
     
-    @Test func testLeftRightNonPlanarK33() {
+    @Test func leftRightNonPlanarK33() {
         let graph = createK33Graph()
         #expect(!graph.isPlanar(using: .leftRight()))
     }
     
-    // MARK: - Hopcroft-Tarjan Algorithm Tests
+    // MARK: - Core Behavior (Hopcroft-Tarjan)
     
-    @Test func testHopcroftTarjanEmptyGraph() {
+    @Test func hopcroftTarjanEmptyGraph() {
         let graph = createEmptyGraph()
         #expect(graph.isPlanar(using: .hopcroftTarjan()))
     }
     
-    @Test func testHopcroftTarjanSingleVertex() {
+    @Test func hopcroftTarjanSingleVertex() {
         let graph = createSingleVertexGraph()
         #expect(graph.isPlanar(using: .hopcroftTarjan()))
     }
     
-    @Test func testHopcroftTarjanTwoVertices() {
+    @Test func hopcroftTarjanTwoVertices() {
         let graph = createTwoVertexGraph()
         #expect(graph.isPlanar(using: .hopcroftTarjan()))
     }
     
-    @Test func testHopcroftTarjanPlanarGraph() {
+    @Test func hopcroftTarjanPlanarGraph() {
         let graph = createPlanarGraph()
         #expect(graph.isPlanar(using: .hopcroftTarjan()))
     }
     
-    @Test func testHopcroftTarjanNonPlanarK5() {
+    @Test func hopcroftTarjanNonPlanarK5() {
         let graph = createNonPlanarGraph()
         #expect(!graph.isPlanar(using: .hopcroftTarjan()))
     }
     
-    @Test func testHopcroftTarjanNonPlanarK33() {
+    @Test func hopcroftTarjanNonPlanarK33() {
         let graph = createK33Graph()
         #expect(!graph.isPlanar(using: .hopcroftTarjan()))
     }
     
-    // MARK: - Boyer-Myrvold Algorithm Tests
+    // MARK: - Core Behavior (Boyer-Myrvold)
     
-    @Test func testBoyerMyrvoldEmptyGraph() {
+    @Test func boyerMyrvoldEmptyGraph() {
         let graph = createEmptyGraph()
         #expect(graph.isPlanar(using: .boyerMyrvold()))
     }
     
-    @Test func testBoyerMyrvoldSingleVertex() {
+    @Test func boyerMyrvoldSingleVertex() {
         let graph = createSingleVertexGraph()
         #expect(graph.isPlanar(using: .boyerMyrvold()))
     }
     
-    @Test func testBoyerMyrvoldTwoVertices() {
+    @Test func boyerMyrvoldTwoVertices() {
         let graph = createTwoVertexGraph()
         #expect(graph.isPlanar(using: .boyerMyrvold()))
     }
     
-    @Test func testBoyerMyrvoldPlanarGraph() {
+    @Test func boyerMyrvoldPlanarGraph() {
         let graph = createPlanarGraph()
         #expect(graph.isPlanar(using: .boyerMyrvold()))
     }
     
-    @Test func testBoyerMyrvoldNonPlanarK5() {
+    @Test func boyerMyrvoldNonPlanarK5() {
         let graph = createNonPlanarGraph()
         #expect(!graph.isPlanar(using: .boyerMyrvold()))
     }
     
-    @Test func testBoyerMyrvoldNonPlanarK33() {
+    @Test func boyerMyrvoldNonPlanarK33() {
         let graph = createK33Graph()
         #expect(!graph.isPlanar(using: .boyerMyrvold()))
     }
     
-    // MARK: - Algorithm Consistency Tests
+    // MARK: - Algorithm Comparison
     
-    @Test func testAlgorithmConsistency() {
+    @Test func algorithmConsistency() {
         let planarGraph = createPlanarGraph()
         let nonPlanarGraph = createNonPlanarGraph()
         let k33Graph = createK33Graph()

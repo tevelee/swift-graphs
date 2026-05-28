@@ -1,7 +1,7 @@
 @testable import Graphs
 import Testing
 
-struct DepthLimitedDFSTests {
+struct DepthLimitedSearchTests {
     @Test func depthLimitedDFS_PrunesBeyondLimit() {
         var graph = AdjacencyList()
         let root = graph.addVertex()

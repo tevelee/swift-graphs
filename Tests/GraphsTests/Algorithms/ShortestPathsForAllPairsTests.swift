@@ -4,7 +4,7 @@ import Testing
 
 struct ShortestPathsForAllPairsTests {
     
-    @Test func testFloydWarshallBasic() {
+    @Test func floydWarshallBasic() {
         var graph = AdjacencyList()
         
         // Create a simple test graph: A -> B -> C
@@ -24,7 +24,7 @@ struct ShortestPathsForAllPairsTests {
         #expect(result.distance(from: b, to: c) == 3.0) // B -> C
     }
     
-    @Test func testFloydWarshallComplex() {
+    @Test func floydWarshallComplex() {
         var graph = AdjacencyList()
         
         // Create a more complex graph with multiple paths
@@ -47,7 +47,7 @@ struct ShortestPathsForAllPairsTests {
         #expect(result.distance(from: b, to: d) == 3.0) // B -> C -> D (2 + 1 = 3)
     }
     
-    @Test func testFloydWarshallUnreachable() {
+    @Test func floydWarshallUnreachable() {
         var graph = AdjacencyList()
         
         // Create disconnected components
@@ -73,7 +73,7 @@ struct ShortestPathsForAllPairsTests {
         #expect(result.distance(from: c, to: d) == 2.0)
     }
     
-    @Test func testFloydWarshallSingleVertex() {
+    @Test func floydWarshallSingleVertex() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         
@@ -82,7 +82,7 @@ struct ShortestPathsForAllPairsTests {
         #expect(result.distance(from: a, to: a) == 0.0)
     }
     
-    @Test func testFloydWarshallEmptyGraph() {
+    @Test func floydWarshallEmptyGraph() {
         let graph = AdjacencyList()
         
         let result = graph.shortestPathsForAllPairs(using: .floydWarshall(weight: .property(\.weight)))
@@ -90,9 +90,9 @@ struct ShortestPathsForAllPairsTests {
         #expect(result.distances.isEmpty)
     }
     
-    // MARK: - Johnson's Algorithm Tests
+    // MARK: - Core Behavior (Johnson's)
     
-    @Test func testJohnsonBasic() {
+    @Test func johnsonBasic() {
         var graph = AdjacencyList()
         
         // Create a simple test graph: A -> B -> C
@@ -112,7 +112,7 @@ struct ShortestPathsForAllPairsTests {
         #expect(result.distance(from: b, to: c) == 3.0) // B -> C
     }
     
-    @Test func testJohnsonWithNegativeWeights() {
+    @Test func johnsonHandlesNegativeWeights() {
         var graph = AdjacencyList()
         
         // Create a graph with negative weights: A -> B -> C with negative edge
@@ -132,7 +132,7 @@ struct ShortestPathsForAllPairsTests {
         #expect(result.distance(from: b, to: c) == -2.0) // B -> C
     }
     
-    @Test func testJohnsonComplex() {
+    @Test func johnsonComplex() {
         var graph = AdjacencyList()
         
         // Create a more complex graph with multiple paths and negative weights
@@ -155,7 +155,7 @@ struct ShortestPathsForAllPairsTests {
         #expect(result.distance(from: b, to: d) == -1.0) // B -> C -> D (-2 + 1 = -1)
     }
     
-    @Test func testJohnsonUnreachable() {
+    @Test func johnsonHandlesUnreachableVertex() {
         var graph = AdjacencyList()
         
         // Create disconnected components
@@ -181,7 +181,7 @@ struct ShortestPathsForAllPairsTests {
         #expect(result.distance(from: c, to: d) == 2.0)
     }
     
-    @Test func testJohnsonSingleVertex() {
+    @Test func johnsonHandlesSingleVertex() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         
@@ -190,7 +190,7 @@ struct ShortestPathsForAllPairsTests {
         #expect(result.distance(from: a, to: a) == 0.0)
     }
     
-    @Test func testJohnsonEmptyGraph() {
+    @Test func johnsonHandlesEmptyGraph() {
         let graph = AdjacencyList()
         
         let result = graph.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)))
@@ -198,7 +198,7 @@ struct ShortestPathsForAllPairsTests {
         #expect(result.distances.isEmpty)
     }
     
-    @Test func testJohnsonNegativeCycle() {
+    @Test func johnsonDetectsNegativeCycle() {
         var graph = AdjacencyList()
         
         // Create a graph with a negative cycle: A -> B -> C -> A

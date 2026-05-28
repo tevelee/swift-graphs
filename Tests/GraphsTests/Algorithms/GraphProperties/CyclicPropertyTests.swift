@@ -2,13 +2,13 @@ import Testing
 @testable import Graphs
 
 struct CyclicPropertyTests {
-    @Test func testEmptyGraph() {
+    @Test func emptyGraph() {
         let graph = AdjacencyList()
         #expect(!graph.isCyclic(using: .dfs()))
         #expect(!graph.isCyclic(using: .unionFind()))
     }
     
-    @Test func testSingleVertex() {
+    @Test func singleVertex() {
         var graph = AdjacencyList()
         graph.addVertex { $0.label = "1" }
         
@@ -16,7 +16,7 @@ struct CyclicPropertyTests {
         #expect(!graph.isCyclic(using: .unionFind()))
     }
     
-    @Test func testTwoVerticesConnected() {
+    @Test func twoVerticesConnected() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -26,7 +26,7 @@ struct CyclicPropertyTests {
         #expect(!graph.isCyclic(using: .unionFind()))
     }
     
-    @Test func testTwoVerticesDisconnected() {
+    @Test func twoVerticesDisconnected() {
         var graph = AdjacencyList()
         graph.addVertex { $0.label = "1" }
         graph.addVertex { $0.label = "2" }
@@ -36,7 +36,7 @@ struct CyclicPropertyTests {
         #expect(!graph.isCyclic(using: .unionFind()))
     }
     
-    @Test func testLinearGraph() {
+    @Test func linearGraph() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -51,7 +51,7 @@ struct CyclicPropertyTests {
         #expect(!graph.isCyclic(using: .unionFind()))
     }
 
-    @Test func testSimpleCycle() {
+    @Test func simpleCycle() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -65,7 +65,7 @@ struct CyclicPropertyTests {
         #expect(graph.isCyclic(using: .unionFind()))
     }
     
-    @Test func testLargerCycle() {
+    @Test func largerCycle() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -83,7 +83,7 @@ struct CyclicPropertyTests {
         #expect(graph.isCyclic(using: .unionFind()))
     }
     
-    @Test func testTreeWithCycle() {
+    @Test func treeWithCycle() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -105,7 +105,7 @@ struct CyclicPropertyTests {
         #expect(graph.isCyclic(using: .unionFind()))
     }
     
-    @Test func testComplexAcyclicGraph() {
+    @Test func complexAcyclicGraph() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -131,7 +131,7 @@ struct CyclicPropertyTests {
         #expect(graph.isCyclic(using: .unionFind()))
     }
 
-    @Test func testComplexCyclicGraph() {
+    @Test func complexCyclicGraph() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -153,7 +153,7 @@ struct CyclicPropertyTests {
         #expect(graph.isCyclic(using: .unionFind()))
     }
     
-    @Test func testDisconnectedGraphWithCycle() {
+    @Test func disconnectedGraphWithCycle() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -173,7 +173,7 @@ struct CyclicPropertyTests {
         #expect(graph.isCyclic(using: .unionFind()))
     }
     
-    @Test func testDisconnectedGraphWithoutCycle() {
+    @Test func disconnectedGraphWithoutCycle() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -190,9 +190,9 @@ struct CyclicPropertyTests {
         #expect(!graph.isCyclic(using: .unionFind()))
     }
     
-    // MARK: - Visitor Tests
+    // MARK: - Visitor Support
     
-    @Test func testVisitorCallbacks() {
+    @Test func visitorCallbacks() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -221,7 +221,7 @@ struct CyclicPropertyTests {
         #expect(backEdgeCount > 0)
     }
     
-    @Test func testUnionFindVisitorCallbacks() {
+    @Test func unionFindVisitorCallbacks() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -248,9 +248,9 @@ struct CyclicPropertyTests {
         // This test just verifies the algorithm works correctly
     }
     
-    // MARK: - Performance Tests
+    // MARK: - Performance
     
-    @Test func testPerformanceLargeAcyclicGraph() {
+    @Test func performanceLargeAcyclicGraph() {
         var graph = AdjacencyList()
         let vertexCount = 1000
         
@@ -273,7 +273,7 @@ struct CyclicPropertyTests {
         #expect(!unionFindResult)
     }
     
-    @Test func testPerformanceLargeCyclicGraph() {
+    @Test func performanceLargeCyclicGraph() {
         var graph = AdjacencyList()
         let vertexCount = 1000
         

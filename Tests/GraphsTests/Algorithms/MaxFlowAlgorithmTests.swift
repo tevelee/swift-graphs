@@ -4,9 +4,9 @@ import Testing
 
 struct MaxFlowAlgorithmTests {
     
-    // MARK: - Simple Flow Network Tests
+    // MARK: - Core Behavior
     
-    @Test func testSimpleFlowNetwork() {
+    @Test func simpleFlowNetwork() {
         var graph = AdjacencyList()
         
         // Add vertices
@@ -50,7 +50,7 @@ struct MaxFlowAlgorithmTests {
         #expect(dinicResult.flowValue == 11.0)
     }
     
-    @Test func testComplexFlowNetwork() {
+    @Test func complexFlowNetwork() {
         var graph = AdjacencyList()
         
         // Add vertices
@@ -99,7 +99,7 @@ struct MaxFlowAlgorithmTests {
         #expect(dinicResult.flowValue == 10.0)
     }
     
-    @Test func testMinimumCut() {
+    @Test func minimumCut() {
         var graph = AdjacencyList()
         
         let s = graph.addVertex { $0.label = "s" }
@@ -127,7 +127,7 @@ struct MaxFlowAlgorithmTests {
         // Note: The actual minimum cut may vary depending on the algorithm implementation
     }
     
-    @Test func testNoPathFromSourceToSink() {
+    @Test func noPathFromSourceToSink() {
         var graph = AdjacencyList()
         
         let s = graph.addVertex { $0.label = "s" }
@@ -146,7 +146,7 @@ struct MaxFlowAlgorithmTests {
         #expect(result.flowValue == 0.0)
     }
     
-    @Test func testSingleEdge() {
+    @Test func singleEdge() {
         var graph = AdjacencyList()
         
         let s = graph.addVertex { $0.label = "s" }
@@ -163,7 +163,7 @@ struct MaxFlowAlgorithmTests {
         #expect(result.flowValue == 5.0)
     }
     
-    @Test func testZeroCapacityEdges() {
+    @Test func zeroCapacityEdges() {
         var graph = AdjacencyList()
         
         let s = graph.addVertex { $0.label = "s" }
@@ -180,7 +180,7 @@ struct MaxFlowAlgorithmTests {
         #expect(result.flowValue == 0.0)
     }
     
-    @Test func testPerformance() {
+    @Test func performanceOnLargeGraph() {
         let graph = createLargeFlowNetwork()
         
         // Test performance with Dinic (most efficient)
@@ -193,7 +193,7 @@ struct MaxFlowAlgorithmTests {
         #expect(result.flowValue > 0.0)
     }
     
-    // MARK: - Helper Methods
+    // MARK: - Helpers
     
     private func verifyFlowConservation<G: AdjacencyListProtocol>(
         graph: G,

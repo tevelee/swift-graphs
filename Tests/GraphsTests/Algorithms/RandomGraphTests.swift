@@ -19,10 +19,10 @@ struct SeededRandomNumberGenerator: RandomNumberGenerator {
 @Suite("Random Graph Generation Tests")
 struct RandomGraphTests {
     
-    // MARK: - Erdos-Renyi Tests
+    // MARK: - Core Behavior (Erdős-Rényi)
     
     @Test("Erdos-Renyi basic properties")
-    func testErdosRenyiBasicProperties() {
+    func erdosRenyiBasicProperties() {
         let graph = AdjacencyList.randomGraph(
             vertexCount: 10,
             using: .erdosRenyi(edgeProbability: 0.3)
@@ -35,7 +35,7 @@ struct RandomGraphTests {
     }
     
     @Test("Erdos-Renyi reproducibility with seeded generator")
-    func testErdosRenyiReproducibility() {
+    func erdosRenyiReproducibility() {
         let algorithm = .erdosRenyi(edgeProbability: 0.5) as ErdosRenyi<AdjacencyList>
         let generator = SeededRandomNumberGenerator(seed: 123)
         
@@ -53,7 +53,7 @@ struct RandomGraphTests {
     }
     
     @Test("Erdos-Renyi edge probability effects")
-    func testErdosRenyiEdgeProbability() {
+    func erdosRenyiEdgeProbability() {
         let denseAlgorithm = .erdosRenyi(edgeProbability: 0.9) as ErdosRenyi<AdjacencyList>
         let sparseAlgorithm = .erdosRenyi(edgeProbability: 0.1) as ErdosRenyi<AdjacencyList>
         let generator = SeededRandomNumberGenerator(seed: 1)
@@ -71,7 +71,7 @@ struct RandomGraphTests {
     }
     
     @Test("Erdos-Renyi with AdjacencyMatrix")
-    func testErdosRenyiAdjacencyMatrix() {
+    func erdosRenyiAdjacencyMatrix() {
         let graph = AdjacencyMatrix.randomGraph(
             vertexCount: 8,
             using: .erdosRenyi(edgeProbability: 0.4)
@@ -82,10 +82,10 @@ struct RandomGraphTests {
         #expect(graph.edgeCount >= 0)
     }
     
-    // MARK: - Barabasi-Albert Tests
+    // MARK: - Core Behavior (Barabási-Albert)
     
     @Test("Barabasi-Albert basic properties")
-    func testBarabasiAlbertBasicProperties() {
+    func barabasiAlbertBasicProperties() {
         let graph = AdjacencyList.randomGraph(
             vertexCount: 20,
             using: .barabasiAlbert(averageDegree: 4.0).withGenerator(SeededRandomNumberGenerator(seed: 789))
@@ -96,7 +96,7 @@ struct RandomGraphTests {
     }
     
     @Test("Barabasi-Albert reproducibility with seeded generator")
-    func testBarabasiAlbertReproducibility() {
+    func barabasiAlbertReproducibility() {
         let algorithm = .barabasiAlbert(averageDegree: 3.0) as BarabasiAlbert<AdjacencyList>
         let generator = SeededRandomNumberGenerator(seed: 999)
         
@@ -114,7 +114,7 @@ struct RandomGraphTests {
     }
     
     @Test("Barabasi-Albert scale-free property")
-    func testBarabasiAlbertScaleFreeProperty() {
+    func barabasiAlbertScaleFreeProperty() {
         let graph = AdjacencyList.randomGraph(
             vertexCount: 50,
             using: .barabasiAlbert(averageDegree: 4.0)
@@ -137,7 +137,7 @@ struct RandomGraphTests {
     }
     
     @Test("Barabasi-Albert with AdjacencyMatrix")
-    func testBarabasiAlbertAdjacencyMatrix() {
+    func barabasiAlbertAdjacencyMatrix() {
         let graph = AdjacencyMatrix.randomGraph(
             vertexCount: 15,
             using: .barabasiAlbert(averageDegree: 3.0)
@@ -148,10 +148,10 @@ struct RandomGraphTests {
         #expect(graph.edgeCount > 0)
     }
     
-    // MARK: - Watts-Strogatz Tests
+    // MARK: - Core Behavior (Watts-Strogatz)
     
     @Test("Watts-Strogatz basic properties")
-    func testWattsStrogatzBasicProperties() {
+    func wattsStrogatzBasicProperties() {
         let graph = AdjacencyList.randomGraph(
             vertexCount: 20,
             using: .wattsStrogatz(averageDegree: 6.0, rewiringProbability: 0.3)
@@ -163,7 +163,7 @@ struct RandomGraphTests {
     }
     
     @Test("Watts-Strogatz reproducibility with seeded generator")
-    func testWattsStrogatzReproducibility() {
+    func wattsStrogatzReproducibility() {
         let algorithm = .wattsStrogatz(averageDegree: 4.0, rewiringProbability: 0.5) as WattsStrogatz<AdjacencyList>
         let generator = SeededRandomNumberGenerator(seed: 444)
         
@@ -181,7 +181,7 @@ struct RandomGraphTests {
     }
     
     @Test("Watts-Strogatz rewiring probability effects")
-    func testWattsStrogatzRewiringProbability() {
+    func wattsStrogatzRewiringProbability() {
         let regularAlgorithm = .wattsStrogatz(averageDegree: 4.0, rewiringProbability: 0.1) as WattsStrogatz<AdjacencyList>
         let randomAlgorithm = .wattsStrogatz(averageDegree: 4.0, rewiringProbability: 0.9) as WattsStrogatz<AdjacencyList>
         let generator = SeededRandomNumberGenerator(seed: 555)
@@ -201,7 +201,7 @@ struct RandomGraphTests {
     }
     
     @Test("Watts-Strogatz with AdjacencyMatrix")
-    func testWattsStrogatzAdjacencyMatrix() {
+    func wattsStrogatzAdjacencyMatrix() {
         let graph = AdjacencyMatrix.randomGraph(
             vertexCount: 10,
             using: .wattsStrogatz(averageDegree: 4.0, rewiringProbability: 0.2)
@@ -215,7 +215,7 @@ struct RandomGraphTests {
     // MARK: - Edge Cases
     
     @Test("Empty graph generation")
-    func testEmptyGraph() {
+    func emptyGraph() {
         let graph = AdjacencyList.randomGraph(
             vertexCount: 0,
             using: .erdosRenyi(edgeProbability: 0.5)
@@ -227,7 +227,7 @@ struct RandomGraphTests {
     }
     
     @Test("Single vertex graph")
-    func testSingleVertex() {
+    func singleVertex() {
         let graph = AdjacencyList.randomGraph(
             vertexCount: 1,
             using: .erdosRenyi(edgeProbability: 0.5)
@@ -239,7 +239,7 @@ struct RandomGraphTests {
     }
     
     @Test("Zero probability edge case")
-    func testZeroProbability() {
+    func zeroProbability() {
         let graph = AdjacencyList.randomGraph(
             vertexCount: 5,
             using: .erdosRenyi(edgeProbability: 0.0)
@@ -251,7 +251,7 @@ struct RandomGraphTests {
     }
     
     @Test("One probability edge case")
-    func testOneProbability() {
+    func oneProbability() {
         let graph = AdjacencyList.randomGraph(
             vertexCount: 4,
             using: .erdosRenyi(edgeProbability: 1.0)
@@ -262,10 +262,10 @@ struct RandomGraphTests {
         #expect(graph.edgeCount == 6) // Complete graph with 4 vertices
     }
     
-    // MARK: - Fluent API Tests
+    // MARK: - API Convenience
     
     @Test("Fluent API with different graph types")
-    func testFluentAPI() {
+    func fluentAPI() {
         // Test Erdos-Renyi with AdjacencyList
         let graph1 = AdjacencyList.randomGraph(
             vertexCount: 10,
@@ -299,7 +299,7 @@ struct RandomGraphTests {
     }
     
     @Test("Algorithm protocol conformance")
-    func testRandomGraphAlgorithmProtocol() {
+    func algorithmProtocolConformance() {
         let algorithm = .erdosRenyi(edgeProbability: 0.3) as ErdosRenyi<AdjacencyList>
         let graph = AdjacencyList.randomGraph(vertexCount: 10, using: algorithm)
         
@@ -308,7 +308,7 @@ struct RandomGraphTests {
     }
     
     @Test("Static factory methods")
-    func testRandomGraphFactory() {
+    func staticFactoryMethods() {
         let algorithm = .erdosRenyi(edgeProbability: 0.4) as ErdosRenyi<AdjacencyList>
         let graph = AdjacencyList.randomGraph(vertexCount: 8, using: algorithm)
         

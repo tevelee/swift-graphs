@@ -2,7 +2,7 @@
 @testable import Graphs
 import Testing
 
-struct EdgeStorageBackendsTests {
+struct EdgeStorageBackendTests {
     @Test func cooAdjacencyList_basic() {
         var g = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
 

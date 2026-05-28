@@ -3,7 +3,7 @@ import Testing
 @testable import Graphs
 
 struct BinaryAdjacencyListTests {
-    @Test func testSetChildrenAndNeighbors() {
+    @Test func setChildrenAndNeighbors() {
         var g = AdjacencyList(edgeStore: BinaryEdgeStore())
 
         let a = g.addVertex()
@@ -30,7 +30,7 @@ struct BinaryAdjacencyListTests {
         #expect(g.inDegree(of: c) == 1)
     }
 
-    @Test func testReplacingLeftChild() {
+    @Test func replacingLeftChild() {
         var g = AdjacencyList(edgeStore: BinaryEdgeStore())
 
         let a = g.addVertex()

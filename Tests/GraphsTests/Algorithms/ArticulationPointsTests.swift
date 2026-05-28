@@ -4,6 +4,8 @@ import Testing
 
 struct ArticulationPointsTests {
 
+    // MARK: - Core Behavior
+
     @Test func linearChain() {
         // A - B - C (undirected, modeled as bidirectional edges)
         var graph = AdjacencyList()
@@ -206,6 +208,8 @@ struct ArticulationPointsTests {
         #expect(result.bridges.count == 4)
     }
 
+    // MARK: - API Convenience
+
     @Test func defaultAlgorithmAPI() {
         var graph = AdjacencyList()
 
@@ -221,6 +225,34 @@ struct ArticulationPointsTests {
         // Default API
         let result = graph.articulationPoints()
         #expect(result.cutVertices == [b])
+    }
+
+    // MARK: - Multi-Backend Coverage
+
+    @Test func cutVerticesDetected_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable, G.EdgeDescriptor: Hashable {
+            // Linear chain A - B - C (undirected via bidirectional edges): B is the cut vertex
+            let a = graph.addVertex { $0.label = "A" }
+            let b = graph.addVertex { $0.label = "B" }
+            let c = graph.addVertex { $0.label = "C" }
+            graph.addEdge(from: a, to: b); graph.addEdge(from: b, to: a)
+            graph.addEdge(from: b, to: c); graph.addEdge(from: c, to: b)
+
+            let result = graph.articulationPoints()
+
+            #expect(result.cutVertices.count == 1, "[\(backend)] only B is a cut vertex")
+            #expect(result.isArticulationPoint(b), "[\(backend)] B must be detected as an articulation point")
+            #expect(!result.isArticulationPoint(a), "[\(backend)] A is not a cut vertex")
+            #expect(!result.isArticulationPoint(c), "[\(backend)] C is not a cut vertex")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
     }
 
     @Test func explicitAlgorithmAPI() {

@@ -3,16 +3,16 @@ import Testing
 
 struct TreePropertyTests {
     
-    // MARK: - Test Cases
+    // MARK: - Core Behavior
     
-    @Test func testEmptyGraph() {
+    @Test func emptyGraph() {
         let graph = AdjacencyList()
         #expect(graph.isTree(using: .singlePass()))
         #expect(graph.isTree(using: .dfs()))
         #expect(graph.isTree(using: .bfs()))
     }
     
-    @Test func testSingleVertex() {
+    @Test func singleVertex() {
         var graph = AdjacencyList()
         graph.addVertex { $0.label = "1" }
         
@@ -21,7 +21,7 @@ struct TreePropertyTests {
         #expect(graph.isTree(using: .bfs()))
     }
     
-    @Test func testTwoVerticesConnected() {
+    @Test func twoVerticesConnected() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -32,7 +32,7 @@ struct TreePropertyTests {
         #expect(graph.isTree(using: .bfs()))
     }
     
-    @Test func testTwoVerticesDisconnected() {
+    @Test func twoVerticesDisconnected() {
         var graph = AdjacencyList()
         graph.addVertex { $0.label = "1" }
         graph.addVertex { $0.label = "2" }
@@ -43,7 +43,7 @@ struct TreePropertyTests {
         #expect(!graph.isTree(using: .bfs()))
     }
     
-    @Test func testThreeVerticesTree() {
+    @Test func threeVerticesTree() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -56,7 +56,7 @@ struct TreePropertyTests {
         #expect(graph.isTree(using: .bfs()))
     }
     
-    @Test func testThreeVerticesCycle() {
+    @Test func threeVerticesCycle() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -70,7 +70,7 @@ struct TreePropertyTests {
         #expect(!graph.isTree(using: .bfs()))
     }
     
-    @Test func testTooManyEdges() {
+    @Test func tooManyEdgesIsNotTree() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -84,7 +84,7 @@ struct TreePropertyTests {
         #expect(!graph.isTree(using: .bfs()))
     }
     
-    @Test func testDisconnectedComponents() {
+    @Test func disconnectedComponentsIsNotTree() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -99,7 +99,7 @@ struct TreePropertyTests {
         #expect(!graph.isTree(using: .bfs()))
     }
     
-    @Test func testStarGraph() {
+    @Test func starGraphIsTree() {
         var graph = AdjacencyList()
         let center = graph.addVertex { $0.label = "0" }
         let v1 = graph.addVertex { $0.label = "1" }
@@ -117,7 +117,7 @@ struct TreePropertyTests {
         #expect(graph.isTree(using: .bfs()))
     }
     
-    @Test func testPathGraph() {
+    @Test func pathGraphIsTree() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -135,7 +135,7 @@ struct TreePropertyTests {
         #expect(graph.isTree(using: .bfs()))
     }
     
-    @Test func testComplexCycle() {
+    @Test func complexCycleIsNotTree() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -155,9 +155,9 @@ struct TreePropertyTests {
         #expect(!graph.isTree(using: .bfs()))
     }
     
-    // MARK: - Visitor Tests
+    // MARK: - Visitor Support
     
-    @Test func testVisitorCallbacks() {
+    @Test func visitorCallbacks() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -168,7 +168,7 @@ struct TreePropertyTests {
         #expect(result)
     }
     
-    @Test func testVisitorCallbacksWithCycle() {
+    @Test func visitorCallbacksWithCycle() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -182,9 +182,9 @@ struct TreePropertyTests {
         #expect(!result)
     }
     
-    // MARK: - Performance Tests
+    // MARK: - Performance
     
-    @Test func testPerformanceLargeTree() {
+    @Test func performanceLargeTree() {
         var graph = AdjacencyList()
         
         // Create a large tree (1000 vertices)

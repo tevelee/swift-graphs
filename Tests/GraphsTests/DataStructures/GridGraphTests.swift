@@ -3,7 +3,7 @@ import Testing
 @testable import Graphs
 
 struct GridGraphTests {
-    @Test func testVerticesAndNeighbors() {
+    @Test func verticesAndNeighbors() {
         let g = GridGraph(width: 3, height: 3, allowedDirections: .orthogonal)
         #expect(g.vertexCount == 9)
 

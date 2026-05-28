@@ -1,7 +1,7 @@
 @testable import Graphs
 import Testing
 
-struct SearchDFSOrderTests {
+struct DFSOrderTests {
     
     @Test func preorderVisitsParentBeforeChildren() {
         var graph = AdjacencyList()

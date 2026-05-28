@@ -3,7 +3,7 @@ import Testing
 
 struct EulerianPropertyTests {
     
-    // MARK: - Test Data Creation
+    // MARK: - Test Graphs
     
     func createEulerianPathGraph() -> DefaultAdjacencyList {
         var graph = DefaultAdjacencyList()
@@ -78,77 +78,77 @@ struct EulerianPropertyTests {
         return graph
     }
     
-    // MARK: - Eulerian Path Tests
+    // MARK: - Core Behavior (Eulerian Path)
     
-    @Test func testEulerianPathWithDFS() {
+    @Test func eulerianPathWithDFS() {
         let graph = createEulerianPathGraph()
         #expect(graph.hasEulerianPath(using: .dfs()))
     }
     
-    @Test func testEulerianPathWithBFS() {
+    @Test func eulerianPathWithBFS() {
         let graph = createEulerianPathGraph()
         #expect(graph.hasEulerianPath(using: .bfs()))
     }
     
-    @Test func testNonEulerianPath() {
+    @Test func nonEulerianPath() {
         let graph = createNonEulerianGraph()
         // A 4-cycle has all vertices with degree 2 (even), so it has both Eulerian path and cycle
         #expect(graph.hasEulerianPath(using: .dfs()))
     }
     
-    @Test func testDisconnectedGraphHasNoEulerianPath() {
+    @Test func disconnectedGraphHasNoEulerianPath() {
         let graph = createDisconnectedGraph()
         #expect(!graph.hasEulerianPath(using: .dfs()))
     }
     
-    @Test func testEmptyGraphHasNoEulerianPath() {
+    @Test func emptyGraphHasNoEulerianPath() {
         let graph = createEmptyGraph()
         #expect(!graph.hasEulerianPath(using: .dfs()))
     }
     
-    @Test func testSingleVertexGraphHasEulerianPath() {
+    @Test func singleVertexGraphHasEulerianPath() {
         let graph = createSingleVertexGraph()
         // Single vertex with no edges has degree 0 (even), so it has both Eulerian path and cycle
         #expect(graph.hasEulerianPath(using: .dfs()))
     }
     
-    // MARK: - Eulerian Cycle Tests
+    // MARK: - Core Behavior (Eulerian Cycle)
     
-    @Test func testEulerianCycleWithDFS() {
+    @Test func eulerianCycleWithDFS() {
         let graph = createEulerianCycleGraph()
         #expect(graph.hasEulerianCycle(using: .dfs()))
     }
     
-    @Test func testEulerianCycleWithBFS() {
+    @Test func eulerianCycleWithBFS() {
         let graph = createEulerianCycleGraph()
         #expect(graph.hasEulerianCycle(using: .bfs()))
     }
     
-    @Test func testNonEulerianCycle() {
+    @Test func nonEulerianCycle() {
         let graph = createNonEulerianGraph()
         // A 4-cycle has all vertices with degree 2 (even), so it has an Eulerian cycle
         #expect(graph.hasEulerianCycle(using: .dfs()))
     }
     
-    @Test func testDisconnectedGraphHasNoEulerianCycle() {
+    @Test func disconnectedGraphHasNoEulerianCycle() {
         let graph = createDisconnectedGraph()
         #expect(!graph.hasEulerianCycle(using: .dfs()))
     }
     
-    @Test func testEmptyGraphHasNoEulerianCycle() {
+    @Test func emptyGraphHasNoEulerianCycle() {
         let graph = createEmptyGraph()
         #expect(!graph.hasEulerianCycle(using: .dfs()))
     }
     
-    @Test func testSingleVertexGraphHasEulerianCycle() {
+    @Test func singleVertexGraphHasEulerianCycle() {
         let graph = createSingleVertexGraph()
         // Single vertex with no edges has degree 0 (even), so it has an Eulerian cycle
         #expect(graph.hasEulerianCycle(using: .dfs()))
     }
     
-    // MARK: - Algorithm Consistency Tests
+    // MARK: - Algorithm Comparison
     
-    @Test func testDFSAndBFSConsistency() {
+    @Test func dfsAndBFSConsistency() {
         let testGraphs: [DefaultAdjacencyList] = [
             createEulerianPathGraph(),
             createEulerianCycleGraph(),
@@ -171,7 +171,7 @@ struct EulerianPropertyTests {
     
     // MARK: - Edge Cases
     
-    @Test func testGraphWithSelfLoops() {
+    @Test func graphWithSelfLoops() {
         var graph = DefaultAdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -187,7 +187,7 @@ struct EulerianPropertyTests {
         #expect(hasPath == false || hasCycle == false) // At least one should be false
     }
     
-    @Test func testGraphWithMultipleEdges() {
+    @Test func graphWithMultipleEdges() {
         var graph = DefaultAdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }

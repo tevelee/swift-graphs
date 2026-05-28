@@ -4,6 +4,8 @@ import Testing
 
 struct UniformCostSearchTests {
     
+    // MARK: - Core Behavior
+
     @Test func basicUniformCostSearch() {
         var graph = AdjacencyList()
         let a = graph.addVertex()
@@ -248,6 +250,34 @@ struct UniformCostSearchTests {
         
         let limitedVertices = Array(limited)
         #expect(limitedVertices == [a, b])
+    }
+
+    // MARK: - Multi-Backend Coverage
+
+    @Test func findsOptimalPath_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let start = graph.addVertex { $0.label = "start" }
+            let a     = graph.addVertex { $0.label = "a" }
+            let goal  = graph.addVertex { $0.label = "goal" }
+            // Direct: start→goal costs 10; indirect: start→a→goal costs 1+1 = 2
+            graph.addEdge(from: start, to: goal) { $0.weight = 10 }
+            graph.addEdge(from: start, to: a)    { $0.weight = 1 }
+            graph.addEdge(from: a,     to: goal) { $0.weight = 1 }
+
+            let result = graph.search(from: start, using: .uniformCostSearch(edgeWeight: .property(\.weight)))
+                .first { $0.currentVertex == goal }
+
+            #expect(result != nil, "[\(backend)] goal must be reachable")
+            #expect(result?.currentDistance() == 2, "[\(backend)] UCS must find the cheaper indirect path (cost 2)")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
     }
 }
 #endif

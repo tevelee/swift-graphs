@@ -3,7 +3,7 @@ import Testing
 
 struct BipartitePropertyTests {
     
-    // MARK: - Test Data Creation
+    // MARK: - Test Graphs
     
     func createBipartiteGraph() -> DefaultAdjacencyList {
         var graph = DefaultAdjacencyList()
@@ -91,83 +91,83 @@ struct BipartitePropertyTests {
         return graph
     }
     
-    // MARK: - BFS Algorithm Tests
+    // MARK: - Core Behavior (BFS)
     
-    @Test func testEmptyGraphBFS() {
+    @Test func emptyGraphBFS() {
         let graph = createEmptyGraph()
         #expect(graph.isBipartite(using: .bfs()))
     }
     
-    @Test func testSingleVertexBFS() {
+    @Test func singleVertexBFS() {
         let graph = createSingleVertexGraph()
         #expect(graph.isBipartite(using: .bfs()))
     }
     
-    @Test func testTwoVertexBFS() {
+    @Test func twoVertexBFS() {
         let graph = createTwoVertexGraph()
         #expect(graph.isBipartite(using: .bfs()))
     }
     
-    @Test func testBipartiteGraphBFS() {
+    @Test func bipartiteGraphBFS() {
         let graph = createBipartiteGraph()
         #expect(graph.isBipartite(using: .bfs()))
     }
     
-    @Test func testNonBipartiteGraphBFS() {
+    @Test func nonBipartiteGraphBFS() {
         let graph = createNonBipartiteGraph()
         #expect(!graph.isBipartite(using: .bfs()))
     }
     
-    @Test func testDisconnectedBipartiteGraphBFS() {
+    @Test func disconnectedBipartiteGraphBFS() {
         let graph = createDisconnectedBipartiteGraph()
         #expect(graph.isBipartite(using: .bfs()))
     }
     
-    @Test func testDisconnectedNonBipartiteGraphBFS() {
+    @Test func disconnectedNonBipartiteGraphBFS() {
         let graph = createDisconnectedNonBipartiteGraph()
         #expect(!graph.isBipartite(using: .bfs()))
     }
     
-    // MARK: - DFS Algorithm Tests
+    // MARK: - Core Behavior (DFS)
     
-    @Test func testEmptyGraphDFS() {
+    @Test func emptyGraphDFS() {
         let graph = createEmptyGraph()
         #expect(graph.isBipartite(using: .dfs()))
     }
     
-    @Test func testSingleVertexDFS() {
+    @Test func singleVertexDFS() {
         let graph = createSingleVertexGraph()
         #expect(graph.isBipartite(using: .dfs()))
     }
     
-    @Test func testTwoVertexDFS() {
+    @Test func twoVertexDFS() {
         let graph = createTwoVertexGraph()
         #expect(graph.isBipartite(using: .dfs()))
     }
     
-    @Test func testBipartiteGraphDFS() {
+    @Test func bipartiteGraphDFS() {
         let graph = createBipartiteGraph()
         #expect(graph.isBipartite(using: .dfs()))
     }
     
-    @Test func testNonBipartiteGraphDFS() {
+    @Test func nonBipartiteGraphDFS() {
         let graph = createNonBipartiteGraph()
         #expect(!graph.isBipartite(using: .dfs()))
     }
     
-    @Test func testDisconnectedBipartiteGraphDFS() {
+    @Test func disconnectedBipartiteGraphDFS() {
         let graph = createDisconnectedBipartiteGraph()
         #expect(graph.isBipartite(using: .dfs()))
     }
     
-    @Test func testDisconnectedNonBipartiteGraphDFS() {
+    @Test func disconnectedNonBipartiteGraphDFS() {
         let graph = createDisconnectedNonBipartiteGraph()
         #expect(!graph.isBipartite(using: .dfs()))
     }
     
-    // MARK: - Algorithm Consistency Tests
+    // MARK: - Algorithm Comparison
     
-    @Test func testBFSAndDFSConsistency() {
+    @Test func bfsAndDFSConsistency() {
         let testGraphs: [DefaultAdjacencyList] = [
             createEmptyGraph(),
             createSingleVertexGraph(),
@@ -185,9 +185,9 @@ struct BipartitePropertyTests {
         }
     }
     
-    // MARK: - Visitor Pattern Tests
+    // MARK: - Visitor Support
     
-    @Test func testBFSVisitorPattern() {
+    @Test func bfsVisitorPattern() {
         let graph = createBipartiteGraph()
         var colorAssignments: [(String, Int)] = []
         var colorConflicts: [(String, String, Int)] = []
@@ -215,7 +215,7 @@ struct BipartitePropertyTests {
         #expect(!colorAssignments.isEmpty)
     }
     
-    @Test func testDFSVisitorPattern() {
+    @Test func dfsVisitorPattern() {
         let graph = createNonBipartiteGraph()
         var colorAssignments: [(String, Int)] = []
         var colorConflicts: [(String, String, Int)] = []
@@ -244,7 +244,7 @@ struct BipartitePropertyTests {
     
     // MARK: - Edge Cases
     
-    @Test func testGraphWithSelfLoops() {
+    @Test func graphWithSelfLoops() {
         var graph = DefaultAdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -257,7 +257,7 @@ struct BipartitePropertyTests {
         #expect(!graph.isBipartite(using: .dfs()))
     }
     
-    @Test func testGraphWithMultipleEdges() {
+    @Test func graphWithMultipleEdges() {
         var graph = DefaultAdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }

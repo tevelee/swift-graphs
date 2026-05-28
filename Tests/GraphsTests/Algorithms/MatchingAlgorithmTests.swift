@@ -5,7 +5,7 @@ import Testing
 struct MatchingAlgorithmTests {
     
     @Test
-    func testHopcroftKarpSimpleMatching() {
+    func hopcroftKarpSimpleMatching() {
         var graph = BipartiteAdjacencyList()
         
         // Create a simple bipartite graph
@@ -28,7 +28,7 @@ struct MatchingAlgorithmTests {
     }
     
     @Test
-    func testHopcroftKarpPartialMatching() {
+    func hopcroftKarpPartialMatching() {
         var graph = BipartiteAdjacencyList()
         
         // Create a bipartite graph where not all vertices can be matched
@@ -54,7 +54,7 @@ struct MatchingAlgorithmTests {
     }
     
     @Test
-    func testHopcroftKarpEmptyGraph() {
+    func hopcroftKarpEmptyGraph() {
         let graph = BipartiteAdjacencyList()
         
         // Find maximum matching in empty graph
@@ -67,7 +67,7 @@ struct MatchingAlgorithmTests {
     }
     
     @Test
-    func testHopcroftKarpNoEdges() {
+    func hopcroftKarpNoEdges() {
         var graph = BipartiteAdjacencyList()
         
         // Add vertices but no edges
@@ -86,7 +86,7 @@ struct MatchingAlgorithmTests {
     }
     
     @Test(.disabled("indeterministic"))
-    func testHopcroftKarpComplexMatching() {
+    func hopcroftKarpComplexMatching() {
         var graph = BipartiteAdjacencyList()
         
         // Create a more complex bipartite graph
@@ -116,7 +116,7 @@ struct MatchingAlgorithmTests {
     }
     
     @Test
-    func testMatchingResultQueries() {
+    func matchingResultQueries() {
         var graph = BipartiteAdjacencyList()
         
         let left1 = graph.addVertex(to: .left)
@@ -150,7 +150,7 @@ struct MatchingAlgorithmTests {
     }
     
     @Test
-    func testDefaultMatchingAlgorithm() {
+    func defaultMatchingAlgorithm() {
         var graph = BipartiteAdjacencyList()
         
         let left1 = graph.addVertex(to: .left)

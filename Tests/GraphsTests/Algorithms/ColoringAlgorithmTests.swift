@@ -4,7 +4,7 @@ import Testing
 
 struct ColoringAlgorithmTests {
     
-    // MARK: - Test Data
+    // MARK: - Test Graphs
     
     func createTestGraph() -> some AdjacencyListProtocol {
         var graph = AdjacencyList()
@@ -72,9 +72,9 @@ struct ColoringAlgorithmTests {
         return graph
     }
     
-    // MARK: - Greedy Algorithm Tests
+    // MARK: - Core Behavior (Greedy)
     
-    @Test func testGreedyColoring() {
+    @Test func greedyColoring() {
         let graph = createTestGraph()
         
         let coloring = graph.colorGraph(using: .greedy())
@@ -89,7 +89,7 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: vertices[3]) == 1)
     }
     
-    @Test func testGreedyColoringCompleteGraph() {
+    @Test func greedyColoringCompleteGraph() {
         let graph = createCompleteGraph()
         
         let coloring = graph.colorGraph(using: .greedy())
@@ -104,7 +104,7 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: vertices[3]) == 3)
     }
     
-    @Test func testGreedyColoringBipartiteGraph() {
+    @Test func greedyColoringBipartiteGraph() {
         let graph = createBipartiteGraph()
         
         let coloring = graph.colorGraph(using: .greedy())
@@ -119,9 +119,9 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: vertices[3]) == 1)
     }
     
-    // MARK: - DSatur Algorithm Tests
+    // MARK: - Core Behavior (DSatur)
     
-    @Test func testDSaturColoring() {
+    @Test func dsaturColoring() {
         let graph = createTestGraph()
         
         let coloring = graph.colorGraph(using: .dsatur())
@@ -136,7 +136,7 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: vertices[3]) == 1)
     }
     
-    @Test func testDSaturColoringCompleteGraph() {
+    @Test func dsaturColoringCompleteGraph() {
         let graph = createCompleteGraph()
         
         let coloring = graph.colorGraph(using: .dsatur())
@@ -151,7 +151,7 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: vertices[3]) == 3)
     }
     
-    @Test func testDSaturColoringBipartiteGraph() {
+    @Test func dsaturColoringBipartiteGraph() {
         let graph = createBipartiteGraph()
         
         let coloring = graph.colorGraph(using: .dsatur())
@@ -166,9 +166,9 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: vertices[3]) == 1)
     }
     
-    // MARK: - Welsh-Powell Algorithm Tests
+    // MARK: - Core Behavior (Welsh-Powell)
     
-    @Test func testWelshPowellColoring() {
+    @Test func welshPowellColoring() {
         let graph = createTestGraph()
         
         let coloring = graph.colorGraph(using: .welshPowell())
@@ -183,7 +183,7 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: vertices[3]) == 1)
     }
     
-    @Test func testWelshPowellColoringCompleteGraph() {
+    @Test func welshPowellColoringCompleteGraph() {
         let graph = createCompleteGraph()
         
         let coloring = graph.colorGraph(using: .welshPowell())
@@ -198,7 +198,7 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: vertices[3]) == 3)
     }
     
-    @Test func testWelshPowellColoringBipartiteGraph() {
+    @Test func welshPowellColoringBipartiteGraph() {
         let graph = createBipartiteGraph()
         
         let coloring = graph.colorGraph(using: .welshPowell())
@@ -213,9 +213,9 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: vertices[3]) == 1)
     }
     
-    // MARK: - Algorithm Comparison Tests
+    // MARK: - Algorithm Comparison
     
-    @Test func testAllAlgorithmsProduceProperColoring() {
+    @Test func allAlgorithmsProduceProperColoring() {
         let graph = createTestGraph()
         
         let greedyColoring = graph.colorGraph(using: .greedy())
@@ -243,7 +243,7 @@ struct ColoringAlgorithmTests {
     
     // MARK: - Edge Cases
     
-    @Test func testEmptyGraph() {
+    @Test func emptyGraph() {
         let graph = AdjacencyList()
         
         let coloring = graph.colorGraph(using: .greedy())
@@ -253,7 +253,7 @@ struct ColoringAlgorithmTests {
         #expect(coloring.vertexColors.isEmpty)
     }
     
-    @Test func testSingleVertexGraph() {
+    @Test func singleVertexGraph() {
         var graph = AdjacencyList()
         
         let vertex = graph.addVertex { $0.label = "A" }
@@ -265,7 +265,7 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: vertex) != nil)
     }
     
-    @Test func testTwoVertexGraph() {
+    @Test func twoVertexGraph() {
         var graph = AdjacencyList()
         
         let a = graph.addVertex { $0.label = "A" }
@@ -283,7 +283,7 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: a) != coloring.color(for: b))
     }
     
-    @Test func testDisconnectedGraph() {
+    @Test func disconnectedGraph() {
         var graph = AdjacencyList()
         
         let a = graph.addVertex { $0.label = "A" }
@@ -307,9 +307,9 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: d) == 1)
     }
     
-    // MARK: - Sequential Vertex Coloring Tests
+    // MARK: - Core Behavior (Sequential)
     
-    @Test func testSequentialVertexColoringWithSmallestLastOrdering() {
+    @Test func sequentialColoringWithSmallestLastOrdering() {
         let graph = createTestGraph()
         let coloring = graph.colorGraph(using: .sequential(orderUsing: .reverseCuthillMcKee()))
         
@@ -339,7 +339,7 @@ struct ColoringAlgorithmTests {
         }
     }
     
-    @Test func testSequentialVertexColoringWithReverseCuthillMcKeeOrdering() {
+    @Test func sequentialColoringWithReverseCuthillMcKeeOrdering() {
         let graph = createTestGraph()
         let coloring = graph.colorGraph(using: .sequential(orderUsing: .smallestLastVertex()))
         
@@ -353,7 +353,7 @@ struct ColoringAlgorithmTests {
         #expect(coloring.vertexColors.count == 4)
     }
     
-    @Test func testSequentialVertexColoringEmptyGraph() {
+    @Test func sequentialColoringEmptyGraph() {
         let graph = AdjacencyList()
         let coloring = graph.colorGraph(using: .sequential(orderUsing: .reverseCuthillMcKee()))
         
@@ -362,7 +362,7 @@ struct ColoringAlgorithmTests {
         #expect(coloring.vertexColors.isEmpty)
     }
     
-    @Test func testSequentialVertexColoringSingleVertex() {
+    @Test func sequentialColoringSingleVertex() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         
@@ -374,7 +374,7 @@ struct ColoringAlgorithmTests {
         #expect(coloring.color(for: a) != nil)
     }
     
-    @Test func testSequentialVertexColoringDisconnectedGraph() {
+    @Test func sequentialColoringDisconnectedGraph() {
         var graph = AdjacencyList()
         
         let a = graph.addVertex { $0.label = "A" }
@@ -418,7 +418,7 @@ struct ColoringAlgorithmTests {
         }
     }
     
-    @Test func testSequentialVertexColoringConvenienceExtensions() {
+    @Test func sequentialColoringConvenienceExtensions() {
         let graph = createTestGraph()
         
         // Test sequential coloring convenience
@@ -429,7 +429,7 @@ struct ColoringAlgorithmTests {
         #expect(coloring2.isProper)
     }
     
-    @Test func testSequentialVertexColoringWithCustomOrdering() {
+    @Test func sequentialColoringWithCustomOrdering() {
         let graph = createTestGraph()
         
         // Test with smallest last ordering
@@ -445,9 +445,9 @@ struct ColoringAlgorithmTests {
         #expect(coloring2.chromaticNumber <= 4)
     }
     
-    // MARK: - Example Tests
+    // MARK: - Examples
     
-    @Test func testColoringExample() {
+    @Test func coloringExample() {
         // Create a sample graph - pentagon
         var graph = AdjacencyList()
         

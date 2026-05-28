@@ -107,7 +107,7 @@ struct AllShortestPathsTests {
         return graph
     }
     
-    @Test func testTwoEqualPaths() {
+    @Test func twoEqualPaths() {
         let graph = createMultipleEqualPathsGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -134,7 +134,7 @@ struct AllShortestPathsTests {
         #expect(pathVertexSets.contains(expectedPath2))
     }
     
-    @Test func testThreeEqualPaths() {
+    @Test func threeEqualPaths() {
         let graph = createThreeEqualPathsGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -153,7 +153,7 @@ struct AllShortestPathsTests {
         }
     }
     
-    @Test func testSinglePath() {
+    @Test func singlePath() {
         let graph = createLinearGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -173,7 +173,7 @@ struct AllShortestPathsTests {
         #expect(cost == 5.0)
     }
     
-    @Test func testNoPath() {
+    @Test func noPathReturnsEmpty() {
         let graph = createDisconnectedGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -184,7 +184,7 @@ struct AllShortestPathsTests {
         #expect(paths.isEmpty)
     }
     
-    @Test func testOnlyShortestPathsReturned() {
+    @Test func onlyShortestPathsReturned() {
         let graph = createDiamondGraphDifferentCosts()
         
         let a = graph.findVertex(labeled: "A")!
@@ -202,7 +202,7 @@ struct AllShortestPathsTests {
         #expect(cost == 2.0)
     }
     
-    @Test func testSelfPath() {
+    @Test func selfPath() {
         let graph = createLinearGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -215,7 +215,7 @@ struct AllShortestPathsTests {
         #expect(paths[0].edges.isEmpty)
     }
     
-    @Test func testBacktrackingDijkstraDirectly() {
+    @Test func backtrackingDijkstraDirectly() {
         let graph = createMultipleEqualPathsGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -230,7 +230,7 @@ struct AllShortestPathsTests {
         #expect(result.destination == d)
     }
     
-    @Test func testWithAlgorithmParameter() {
+    @Test func withAlgorithmParameter() {
         let graph = createMultipleEqualPathsGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -245,7 +245,7 @@ struct AllShortestPathsTests {
         #expect(paths.count == 2)
     }
     
-    @Test func testComplexGraph() {
+    @Test func complexGraph() {
         // Create a more complex graph with multiple intersecting paths
         var graph = AdjacencyList()
         
@@ -278,9 +278,9 @@ struct AllShortestPathsTests {
         }
     }
     
-    // MARK: - Until-based API Tests
+    // MARK: - Until-based API
     
-    @Test func testUntilConditionWithMultipleEqualPaths() {
+    @Test func untilConditionWithMultipleEqualPaths() {
         let graph = createMultipleEqualPathsGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -310,7 +310,7 @@ struct AllShortestPathsTests {
         #expect(pathVertexSets.contains(expectedPath2))
     }
     
-    @Test func testUntilConditionWithSinglePath() {
+    @Test func untilConditionWithSinglePath() {
         let graph = createLinearGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -333,7 +333,7 @@ struct AllShortestPathsTests {
         #expect(cost == 5.0)
     }
     
-    @Test func testUntilConditionWithNoMatchingVertex() {
+    @Test func untilConditionWithNoMatchingVertex() {
         let graph = createLinearGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -346,7 +346,7 @@ struct AllShortestPathsTests {
         #expect(paths.isEmpty)
     }
     
-    @Test func testUntilConditionWithSelf() {
+    @Test func untilConditionWithSelf() {
         let graph = createLinearGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -362,7 +362,7 @@ struct AllShortestPathsTests {
         #expect(paths[0].destination == a)
     }
     
-    @Test func testUntilConditionWithComplexGraph() {
+    @Test func untilConditionWithComplexGraph() {
         // Create a graph where we want to find paths until we reach any vertex with label "D" or "E"
         var graph = AdjacencyList()
         
@@ -401,7 +401,7 @@ struct AllShortestPathsTests {
         }
     }
     
-    @Test func testBacktrackingDijkstraUntilDirectly() {
+    @Test func backtrackingDijkstraUntilDirectly() {
         let graph = createMultipleEqualPathsGraph()
         
         let a = graph.findVertex(labeled: "A")!
@@ -417,7 +417,7 @@ struct AllShortestPathsTests {
         #expect(graph[result.destination].label == "D")
     }
     
-    @Test func testUntilWithAlgorithmParameter() {
+    @Test func untilWithAlgorithmParameter() {
         let graph = createMultipleEqualPathsGraph()
         
         let a = graph.findVertex(labeled: "A")!

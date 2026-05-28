@@ -4,9 +4,9 @@ import Testing
 
 struct CommunityDetectionTests {
     
-    // MARK: - Basic Tests
+    // MARK: - Core Behavior
     
-    @Test func testEmptyGraph() {
+    @Test func emptyGraph() {
         let graph = AdjacencyList()
         let result = graph.detectCommunities()
         
@@ -15,7 +15,7 @@ struct CommunityDetectionTests {
         #expect(result.communities.isEmpty)
     }
     
-    @Test func testSingleVertex() {
+    @Test func singleVertex() {
         var graph = AdjacencyList()
         let vertex = graph.addVertex { $0.label = "A" }
         
@@ -25,7 +25,7 @@ struct CommunityDetectionTests {
         #expect(result.communities == [[vertex]])
     }
     
-    @Test func testTwoVerticesNoEdge() {
+    @Test func twoVerticesNoEdge() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -37,7 +37,7 @@ struct CommunityDetectionTests {
         #expect(result.communities.contains { Set($0) == Set([b]) })
     }
     
-    @Test func testTwoVerticesWithEdge() {
+    @Test func twoVerticesWithEdge() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -50,9 +50,9 @@ struct CommunityDetectionTests {
         #expect(result.communities.contains { Set($0) == Set([a, b]) })
     }
     
-    // MARK: - Disconnected Components Tests
+    // MARK: - Disconnected Components
     
-    @Test func testDisconnectedComponents() {
+    @Test func disconnectedComponents() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -73,9 +73,9 @@ struct CommunityDetectionTests {
         #expect(result.communities.contains { Set($0) == Set([c, d]) })
     }
     
-    // MARK: - Well-Known Community Structure Tests
+    // MARK: - Well-Known Community Structures
     
-    @Test func testKarateClubPattern() {
+    @Test func karateClubPattern() {
         var graph = AdjacencyList()
         let vertices = (1...10).map { i in
             graph.addVertex { $0.label = "V\(i)" }
@@ -120,7 +120,7 @@ struct CommunityDetectionTests {
     
     // MARK: - Triangle Community Test
     
-    @Test func testTriangleCommunity() {
+    @Test func triangleCommunity() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -145,9 +145,9 @@ struct CommunityDetectionTests {
         #expect(result.communities.contains { Set($0) == Set([d]) })
     }
     
-    // MARK: - Result Utility Tests
+    // MARK: - Result Utilities
     
-    @Test func testCommunityIndex() {
+    @Test func communityIndex() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -169,7 +169,7 @@ struct CommunityDetectionTests {
         #expect(indexA != indexC) // C should be in different community
     }
     
-    @Test func testCommunityContaining() {
+    @Test func communityContaining() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -191,7 +191,7 @@ struct CommunityDetectionTests {
         #expect(communityA != communityC)
     }
     
-    @Test func testAreInSameCommunity() {
+    @Test func areInSameCommunity() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -207,9 +207,9 @@ struct CommunityDetectionTests {
         #expect(!result.areInSameCommunity(b, c))
     }
     
-    // MARK: - Modularity Tests
+    // MARK: - Modularity
     
-    @Test func testModularityCalculation() {
+    @Test func modularityCalculation() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -229,9 +229,9 @@ struct CommunityDetectionTests {
         #expect(result.modularity > 0.0)
     }
     
-    // MARK: - Visitor Tests
+    // MARK: - Visitor Support
     
-    @Test func testVisitorCallbacks() {
+    @Test func visitorCallbacks() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -249,9 +249,9 @@ struct CommunityDetectionTests {
         #expect(result.modularity >= 0.0)
     }
     
-    // MARK: - Resolution Parameter Tests
+    // MARK: - Resolution Parameter
     
-    @Test func testResolutionParameter() {
+    @Test func resolutionParameter() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -275,9 +275,9 @@ struct CommunityDetectionTests {
         #expect(result2.communityCount > 0)
     }
     
-    // MARK: - Algorithm Comparison Tests
+    // MARK: - Algorithm Comparison
     
-    @Test func testAlgorithmConsistency() {
+    @Test func algorithmConsistency() {
         var graph = AdjacencyList()
         let vertices = ["A", "B", "C", "D", "E"].map { label in
             graph.addVertex { $0.label = label }

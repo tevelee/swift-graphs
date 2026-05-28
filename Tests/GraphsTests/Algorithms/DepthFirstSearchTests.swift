@@ -1,7 +1,9 @@
 @testable import Graphs
 import Testing
 
-struct DFSTests {
+struct DepthFirstSearchTests {
+
+    // MARK: - Test Graphs
     
     func createTreeGraph() -> some AdjacencyListProtocol {
         var graph = AdjacencyList()
@@ -59,7 +61,9 @@ struct DFSTests {
         
         return graph
     }
-    
+
+    // MARK: - Core Behavior
+
     @Test func reconstructsPathsFromPredecessorEdges() {
         let graph = createTreeGraph()
         
@@ -153,6 +157,118 @@ struct DFSTests {
 
         #expect(backEdges.count == 1)
         #expect(treeEdges.count == 2)
+    }
+
+    // MARK: - Multi-Backend Coverage
+
+    @Test func visitsAllReachableVertices_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let a = graph.addVertex { $0.label = "a" }
+            let b = graph.addVertex { $0.label = "b" }
+            let c = graph.addVertex { $0.label = "c" }
+            let isolated = graph.addVertex { $0.label = "x" }
+            graph.addEdge(from: a, to: b)
+            graph.addEdge(from: b, to: c)
+            let result = graph.traverse(from: a, using: .dfs())
+            #expect(result.vertices.count == 3, "[\(backend)] reachable count")
+            #expect(!result.vertices.contains(isolated), "[\(backend)] isolated vertex must not appear")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    @Test func preorderBeforeChildren_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let root = graph.addVertex { $0.label = "root" }
+            let child = graph.addVertex { $0.label = "child" }
+            let leaf = graph.addVertex { $0.label = "leaf" }
+            graph.addEdge(from: root, to: child)
+            graph.addEdge(from: child, to: leaf)
+            let result = graph.traverse(from: root, using: .dfs())
+            let idx = { result.vertices.firstIndex(of: $0)! }
+            #expect(idx(root) < idx(child), "[\(backend)] root before child in preorder")
+            #expect(idx(child) < idx(leaf), "[\(backend)] child before leaf in preorder")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    @Test func singleVertex_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let a = graph.addVertex()
+            let result = graph.traverse(from: a, using: .dfs())
+            #expect(result.vertices == [a], "[\(backend)]")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    // MARK: - Edge Cases
+
+    /// A self-loop (a → a) must be classified as a back edge, not a tree edge,
+    /// and must not cause DFS to visit `a` more than once.
+    ///
+    /// DFS colors vertices gray on first discovery. When examining `a`'s outgoing edges,
+    /// the self-loop points back to a gray vertex — so it fires the `backEdge` hook and
+    /// is skipped, preventing an infinite recursion.
+    @Test func selfLoopIsBackEdgeAndDoesNotRevisitVertex() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        graph.addEdge(from: a, to: a)  // self-loop
+        graph.addEdge(from: a, to: b)
+
+        var backEdges: [Any] = []
+        var treeEdges: [Any] = []
+        DepthFirstSearch(on: graph, from: a)
+            .withVisitor {
+                .init(
+                    treeEdge: { treeEdges.append($0) },
+                    backEdge: { backEdges.append($0) }
+                )
+            }
+            .forEach { _ in }
+
+        let result = graph.traverse(from: a, using: .dfs())
+        #expect(result.vertices.count == 2, "DFS must visit exactly 2 vertices (a and b), not revisit a via self-loop")
+        #expect(backEdges.count >= 1, "The self-loop a→a must be classified as a back edge")
+        #expect(treeEdges.count == 1, "Only the tree edge a→b should be a tree edge")
+    }
+
+    /// Two parallel edges a → b must not cause DFS to visit `b` more than once.
+    ///
+    /// Once `b` is colored gray (discovered), the second parallel edge from `a` to `b`
+    /// is observed as a forward/cross edge and `b` is not pushed onto the DFS stack again.
+    @Test func parallelEdgesVisitDestinationOnce() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: a, to: b)  // duplicate edge
+        graph.addEdge(from: a, to: c)
+
+        let result = graph.traverse(from: a, using: .dfs())
+        #expect(result.vertices.count == 3, "DFS must visit each vertex exactly once despite parallel edges")
+        #expect(Set(result.vertices) == Set([a, b, c]))
     }
 }
 

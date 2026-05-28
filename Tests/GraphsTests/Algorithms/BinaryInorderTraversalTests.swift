@@ -2,8 +2,8 @@
 import Testing
 @testable import Graphs
 
-struct BinaryInorderDFSTests {
-    @Test func testInorderTraversal() {
+struct BinaryInorderTraversalTests {
+    @Test func inorderTraversal() {
         var g = AdjacencyList(edgeStore: BinaryEdgeStore())
 
         let a = g.addVertex()

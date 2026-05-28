@@ -5,7 +5,7 @@ import Testing
 struct BipartiteGraphTests {
     
     @Test
-    func testBipartiteGraphCreation() {
+    func bipartiteGraphCreation() {
         var graph = BipartiteAdjacencyList()
         
         // Add vertices to different partitions
@@ -31,7 +31,7 @@ struct BipartiteGraphTests {
     }
     
     @Test
-    func testBipartiteGraphEdgeAddition() {
+    func bipartiteGraphEdgeAddition() {
         var graph = BipartiteAdjacencyList()
         
         let left1 = graph.addVertex(to: .left)
@@ -54,7 +54,7 @@ struct BipartiteGraphTests {
     }
     
     @Test
-    func testBipartiteGraphPartitionQueries() {
+    func bipartiteGraphPartitionQueries() {
         var graph = BipartiteAdjacencyList()
         
         let left1 = graph.addVertex(to: .left)
@@ -70,7 +70,7 @@ struct BipartiteGraphTests {
     }
     
     @Test
-    func testBipartiteGraphVertexMovement() {
+    func bipartiteGraphVertexMovement() {
         var graph = BipartiteAdjacencyList()
         
         let left1 = graph.addVertex(to: .left)
@@ -90,7 +90,7 @@ struct BipartiteGraphTests {
     }
     
     @Test
-    func testBipartiteGraphAllVertices() {
+    func bipartiteGraphAllVertices() {
         var graph = BipartiteAdjacencyList()
         
         let left1 = graph.addVertex(to: .left)
@@ -108,7 +108,7 @@ struct BipartiteGraphTests {
 struct BipartiteCheckableTests {
     
     @Test
-    func testBipartiteCheckableSimpleBipartite() {
+    func simpleBipartiteGraphIsDetected() {
         // Create a simple bipartite graph using adjacency list
         var graph = AdjacencyList()
         
@@ -138,7 +138,7 @@ struct BipartiteCheckableTests {
     }
     
     @Test
-    func testBipartiteCheckableNonBipartite() {
+    func nonBipartiteGraphIsRejected() {
         // Create a non-bipartite graph (triangle)
         var graph = AdjacencyList()
         
@@ -157,7 +157,7 @@ struct BipartiteCheckableTests {
     }
     
     @Test
-    func testBipartiteCheckableDisconnectedComponents() {
+    func disconnectedComponentsWithNonBipartitePartIsRejected() {
         // Create a graph with multiple components, some bipartite, some not
         var graph = AdjacencyList()
         

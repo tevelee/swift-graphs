@@ -2,13 +2,13 @@ import Testing
 @testable import Graphs
 
 struct ConnectedPropertyTests {    
-    @Test func testEmptyGraph() {
+    @Test func emptyGraph() {
         let graph = AdjacencyList()
         #expect(graph.isConnected(using: .dfs()))
         #expect(graph.isConnected(using: .bfs()))
     }
     
-    @Test func testSingleVertex() {
+    @Test func singleVertex() {
         var graph = AdjacencyList()
         graph.addVertex { $0.label = "1" }
         
@@ -16,7 +16,7 @@ struct ConnectedPropertyTests {
         #expect(graph.isConnected(using: .bfs()))
     }
     
-    @Test func testTwoVerticesConnected() {
+    @Test func twoVerticesConnected() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -26,7 +26,7 @@ struct ConnectedPropertyTests {
         #expect(graph.isConnected(using: .bfs()))
     }
     
-    @Test func testTwoVerticesDisconnected() {
+    @Test func twoVerticesDisconnected() {
         var graph = AdjacencyList()
         graph.addVertex { $0.label = "1" }
         graph.addVertex { $0.label = "2" }
@@ -36,7 +36,7 @@ struct ConnectedPropertyTests {
         #expect(!graph.isConnected(using: .bfs()))
     }
     
-    @Test func testLinearGraph() {
+    @Test func linearGraph() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -51,7 +51,7 @@ struct ConnectedPropertyTests {
         #expect(graph.isConnected(using: .bfs()))
     }
     
-    @Test func testStarGraph() {
+    @Test func starGraph() {
         var graph = AdjacencyList()
         let center = graph.addVertex { $0.label = "0" }
         let v1 = graph.addVertex { $0.label = "1" }
@@ -66,7 +66,7 @@ struct ConnectedPropertyTests {
         #expect(graph.isConnected(using: .bfs()))
     }
     
-    @Test func testCycleGraph() {
+    @Test func cycleGraph() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -82,7 +82,7 @@ struct ConnectedPropertyTests {
         #expect(graph.isConnected(using: .bfs()))
     }
     
-    @Test func testDisconnectedGraph() {
+    @Test func disconnectedGraph() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -99,7 +99,7 @@ struct ConnectedPropertyTests {
         #expect(!graph.isConnected(using: .bfs()))
     }
     
-    @Test func testComplexConnectedGraph() {
+    @Test func complexConnectedGraph() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -121,7 +121,7 @@ struct ConnectedPropertyTests {
         #expect(graph.isConnected(using: .bfs()))
     }
     
-    @Test func testComplexDisconnectedGraph() {
+    @Test func complexDisconnectedGraph() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -142,9 +142,9 @@ struct ConnectedPropertyTests {
         #expect(!graph.isConnected(using: .bfs()))
     }
     
-    // MARK: - Visitor Tests
+    // MARK: - Visitor Support
     
-    @Test func testVisitorCallbacks() {
+    @Test func visitorCallbacks() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -169,9 +169,9 @@ struct ConnectedPropertyTests {
         #expect(examineEdgeCount > 0)
     }
     
-    // MARK: - Performance Tests
+    // MARK: - Performance
     
-    @Test func testPerformanceLargeConnectedGraph() {
+    @Test func performanceLargeConnectedGraph() {
         var graph = AdjacencyList()
         let vertexCount = 1000
         
@@ -196,7 +196,7 @@ struct ConnectedPropertyTests {
         #expect(bfsResult)
     }
     
-    @Test func testPerformanceLargeDisconnectedGraph() {
+    @Test func performanceLargeDisconnectedGraph() {
         var graph = AdjacencyList()
         let vertexCount = 1000
         
