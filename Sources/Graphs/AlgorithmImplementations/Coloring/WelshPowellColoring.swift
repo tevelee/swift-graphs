@@ -49,8 +49,7 @@ public struct WelshPowellColoringAlgorithm<
     @inlinable
     public func color(graph: Graph, visitor: Visitor? = nil) -> GraphColoring<Graph.VertexDescriptor, Color> {
         var vertexColors: [Graph.VertexDescriptor: Color] = [:]
-        var usedColors: Set<Color> = []
-        
+
         // Get all vertices
         let vertices = Array(graph.vertices())
         
@@ -114,7 +113,6 @@ public struct WelshPowellColoringAlgorithm<
             
             // Move to next color
             currentColor = Color(integerValue: currentColor.integerValue + 1)
-            usedColors.insert(currentColor)
         }
         
         // Check if the coloring is proper

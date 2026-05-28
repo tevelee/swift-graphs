@@ -23,6 +23,9 @@ extension IncidenceGraph where VertexDescriptor: Hashable {
     /// Finds the shortest path between two vertices using Dijkstra's algorithm as the default.
     /// This is the most commonly used and efficient algorithm for non-negative edge weights.
     ///
+    /// - Important: All edge weights must be non-negative. For graphs with negative edge weights,
+    ///   use `.bellmanFord` or `.spfa` instead; passing negative weights here produces incorrect results.
+    ///
     /// - Parameters:
     ///   - source: The starting vertex
     ///   - destination: The target vertex

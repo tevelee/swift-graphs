@@ -131,78 +131,50 @@ where Graph.VertexDescriptor: Hashable {
         in graph: Graph,
         visitor: Visitor?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-        var path: [Graph.VertexDescriptor] = []
-        var edges: [Graph.EdgeDescriptor] = []
-        
-        // Create adjacency list with available edges
+        // Each stack entry records the vertex and the edge used to arrive there.
+        // Tracking the incoming edge avoids the post-hoc graph search that breaks
+        // for multigraphs (multiple edges between the same pair of vertices).
+        var pathPairs: [(vertex: Graph.VertexDescriptor, incomingEdge: Graph.EdgeDescriptor?)] = []
+
         var adjacency: [Graph.VertexDescriptor: [Graph.EdgeDescriptor]] = [:]
-        let vertices = Array(graph.vertices())
-        
-        for vertex in vertices {
+        for vertex in graph.vertices() {
             visitor?.examineVertex?(vertex)
             adjacency[vertex] = Array(graph.outgoingEdges(of: vertex))
         }
-        
-        // Hierholzer's algorithm
-        var current = start
-        var stack: [Graph.VertexDescriptor] = [current]
-        visitor?.examineVertex?(current)
-        
+
+        var stack: [(vertex: Graph.VertexDescriptor, incomingEdge: Graph.EdgeDescriptor?)] = [(start, nil)]
+        visitor?.examineVertex?(start)
+
         while !stack.isEmpty {
+            let current = stack.last!.vertex
+
             if let nextEdge = adjacency[current]?.first {
                 visitor?.examineEdge?(nextEdge)
-                
-                // Move to next vertex
-                guard let nextVertex = graph.destination(of: nextEdge) else { 
-                    adjacency[current]?.removeFirst()
-                    continue 
-                }
-                
-                // Remove the used edge
                 adjacency[current]?.removeFirst()
-                
-                stack.append(nextVertex)
-                current = nextVertex
-                visitor?.examineVertex?(current)
+
+                guard let nextVertex = graph.destination(of: nextEdge) else { continue }
+
+                stack.append((nextVertex, nextEdge))
+                visitor?.examineVertex?(nextVertex)
             } else {
-                // No more edges from current vertex, add to path
-                let vertexToAdd = stack.removeLast()
-                path.append(vertexToAdd)
-                visitor?.addToPath?(vertexToAdd)
-                visitor?.backtrack?(vertexToAdd)
-                
-                if let last = stack.last {
-                    current = last
-                }
+                let popped = stack.removeLast()
+                pathPairs.append(popped)
+                visitor?.addToPath?(popped.vertex)
+                visitor?.backtrack?(popped.vertex)
             }
         }
-        
-        // Reverse to get correct order
-        path.reverse()
-        
-        // Build edge list
-        for i in 0..<(path.count - 1) {
-            let from = path[i]
-            let to = path[i + 1]
-            
-            // Find edge between from and to
-            if let edge = graph.outgoingEdges(of: from).first(where: { 
-                graph.destination(of: $0) == to 
-            }) {
-                edges.append(edge)
-                visitor?.addEdgeToPath?(edge)
-            }
+
+        pathPairs.reverse()
+
+        let path = pathPairs.map(\.vertex)
+        // The start vertex has no incoming edge; all subsequent entries do.
+        let edges: [Graph.EdgeDescriptor] = pathPairs.dropFirst().compactMap(\.incomingEdge)
+        for edge in edges {
+            visitor?.addEdgeToPath?(edge)
         }
-        
-        guard path.count > 0, let pathFirst = path.first, let pathLast = path.last else { return nil }
-        
-        let result = Path(
-            source: pathFirst,
-            destination: pathLast,
-            vertices: path,
-            edges: edges
-        )
-        return result
+
+        guard let first = path.first, let last = path.last else { return nil }
+        return Path(source: first, destination: last, vertices: path, edges: edges)
     }
 }
 

@@ -212,11 +212,6 @@ public struct Boruvka<
             if !addedAnyEdge { break }
         }
         
-        // Include all vertices, even those not connected by edges
-        for vertex in graph.vertices() {
-            mstVertices.insert(vertex)
-        }
-        
         let result = MinimumSpanningTree(
             edges: mstEdges,
             totalWeight: totalWeight,

@@ -155,9 +155,9 @@ public struct DSaturColoringAlgorithm<
         
         for vertex in uncoloredVertices {
             let neighbors = Set(graph.successors(of: vertex))
-            let saturationDegree = neighbors.compactMap { neighbor in
+            let saturationDegree = Set(neighbors.compactMap { neighbor in
                 vertexColors[neighbor]
-            }.count
+            }).count
             
             let degree = graph.outDegree(of: vertex)
             

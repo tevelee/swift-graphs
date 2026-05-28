@@ -35,7 +35,7 @@ public struct BFSSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.Vert
         in graph: Graph,
         visitor: Visitor?
     ) -> BreadthFirstSearch<Graph> {
-        BreadthFirstSearch(on: graph, from: source)
+        BreadthFirstSearch(on: graph, from: source, visitor: visitor)
     }
 }
 

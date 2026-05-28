@@ -68,7 +68,7 @@ public struct WeisfeilerLehmanIsomorphism<Graph: IncidenceGraph & VertexListGrap
         guard areLabelMultisetsEqual(labels1, labels2) else { return nil }
         
         // If WL test passes, try to find a mapping using VF2 as a fallback
-        // This is because WL is not complete and may give false positives
+        // This is because WL is not complete and may give false negatives
         let vf2 = VF2Isomorphism<Graph>()
         return vf2.findIsomorphism(graph1, graph2)
     }

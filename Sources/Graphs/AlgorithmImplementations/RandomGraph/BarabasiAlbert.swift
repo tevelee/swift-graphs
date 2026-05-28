@@ -99,6 +99,7 @@ public struct BarabasiAlbert<
                     ) {
                         graph.addEdge(from: newVertex, to: target)
                         visitor?.addEdge?(newVertex, target)
+                        visitor?.updateDegree?(target, graph.degree(of: target))
                     }
                 }
             }
@@ -113,22 +114,32 @@ public struct BarabasiAlbert<
         graph: Graph
     ) -> Vertex? {
         guard !vertices.isEmpty else { return nil }
-        
+
         // Compute degrees on the fly
         let degrees = vertices.map { graph.degree(of: $0) }
         let totalDegree = degrees.reduce(0, +)
-        
+
+        let selected: Vertex?
         if totalDegree == 0 {
-            return vertices.randomElement(using: &generator)
+            selected = vertices.randomElement(using: &generator)
+        } else {
+            let threshold = Int.random(in: 0..<max(1, totalDegree), using: &generator)
+            var cumulative = 0
+            var found: Vertex? = nil
+            for (index, v) in vertices.enumerated() {
+                cumulative += degrees[index]
+                if threshold < cumulative {
+                    found = v
+                    break
+                }
+            }
+            selected = found ?? vertices.last
         }
-        
-        let threshold = Int.random(in: 0..<max(1, totalDegree), using: &generator)
-        var cumulative = 0
-        for (index, v) in vertices.enumerated() {
-            cumulative += degrees[index]
-            if threshold < cumulative { return v }
+
+        if let target = selected {
+            visitor?.selectTarget?(target, Array(vertices))
         }
-        return vertices.last
+        return selected
     }
 }
 

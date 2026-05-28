@@ -131,7 +131,7 @@ public struct FloydWarshall<
 extension FloydWarshall: ShortestPathsForAllPairsAlgorithm {
     @inlinable
     public func shortestPathsForAllPairs(in graph: Graph, visitor: Visitor?) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
-        shortestPathsForAllPairs()
+        shortestPathsForAllPairs(visitor: visitor)
     }
 }
 

@@ -7,11 +7,10 @@
 /// - Complexity: O(V^2 * E) where V is the number of vertices and E is the number of edges
 public struct Dinic<
     Graph: IncidenceGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
-    Flow: AdditiveArithmetic & Comparable & Numeric & FloatingPoint
+    Flow: AdditiveArithmetic & Comparable
 > where
     Graph.VertexDescriptor: Hashable,
-    Graph.EdgeDescriptor: Hashable,
-    Flow.Magnitude == Flow
+    Graph.EdgeDescriptor: Hashable
 {
     /// The vertex type of the graph.
     public typealias Vertex = Graph.VertexDescriptor
@@ -208,45 +207,46 @@ public struct Dinic<
             current[vertex] = 0
         }
         
-        // DFS to find blocking flow
-        func dfs(_ vertex: Vertex, _ flow: Flow) -> Flow {
+        // DFS to find blocking flow. `limit` is the minimum residual seen so far
+        // on the path from source; nil means no upper bound yet (first edge sets it).
+        func dfs(_ vertex: Vertex, _ limit: Flow?) -> Flow {
             if vertex == sink {
-                return flow
+                return limit ?? .zero
             }
-            
+
             let vertexLevel = levelGraph[vertex] ?? Int.max
             let outgoingEdges = Array(graph.outgoingEdges(of: vertex))
-            
+
             for i in (current[vertex] ?? 0)..<outgoingEdges.count {
                 let edge = outgoingEdges[i]
                 guard let destination = graph.destination(of: edge) else { continue }
-                
+
                 let destinationLevel = levelGraph[destination] ?? Int.max
                 let residual = residualCapacities[edge] ?? .zero
-                
+
                 if destinationLevel == vertexLevel + 1 && residual > .zero {
-                    let pushedFlow = dfs(destination, min(flow, residual))
-                    
+                    let newLimit: Flow = limit.map { min($0, residual) } ?? residual
+                    let pushedFlow = dfs(destination, newLimit)
+
                     if pushedFlow > .zero {
                         residualCapacities[edge] = residual - pushedFlow
-                        
-                        // Update backward edge
+
                         if let reverseEdge = findReverseEdge(edge, in: graph) {
                             let reverseResidual = residualCapacities[reverseEdge] ?? .zero
                             residualCapacities[reverseEdge] = reverseResidual + pushedFlow
                         }
-                        
+
                         visitor?.updateFlow?(edge, pushedFlow)
                         return pushedFlow
                     }
                 }
             }
-            
+
             return .zero
         }
-        
+
         while true {
-            let flow = dfs(source, Flow.greatestFiniteMagnitude)
+            let flow = dfs(source, nil)
             if flow == .zero {
                 break
             }

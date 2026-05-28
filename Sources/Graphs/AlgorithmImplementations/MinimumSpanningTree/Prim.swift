@@ -172,10 +172,6 @@ public struct Prim<
             }
         }
         
-        for vertex in graph.vertices() {
-            inMST.insert(vertex)
-        }
-        
         return MinimumSpanningTree(
             edges: mstEdges,
             totalWeight: totalWeight,

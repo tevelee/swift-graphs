@@ -123,19 +123,24 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
     let graph: Graph
     @usableFromInline
     let source: Vertex
+    @usableFromInline
+    let defaultVisitor: Visitor?
 
     /// Creates a new breadth-first search algorithm instance.
     ///
     /// - Parameters:
     ///   - graph: The graph to search in.
     ///   - source: The source vertex.
+    ///   - visitor: An optional visitor to apply during default iteration.
     @inlinable
     public init(
         on graph: Graph,
-        from source: Vertex // TODO: multi source with a set/sequence of vertices
+        from source: Vertex, // TODO: multi source with a set/sequence of vertices
+        visitor: Visitor? = nil
     ) {
         self.graph = graph
         self.source = source
+        self.defaultVisitor = visitor
     }
 
     /// Creates an iterator for the breadth-first search.
@@ -254,7 +259,7 @@ extension BreadthFirstSearch.Iterator: IteratorProtocol {}
 extension BreadthFirstSearch: Sequence {
     @inlinable
     public func makeIterator() -> Iterator {
-        makeIterator(visitor: nil)
+        makeIterator(visitor: defaultVisitor)
     }
 }
 

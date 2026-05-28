@@ -45,13 +45,15 @@ extension IncidenceGraph where VertexDescriptor: Hashable {
     /// - Parameters:
     ///   - source: The starting vertex
     ///   - destination: The target vertex
-    /// - Returns: A sequence of all paths from source to destination
+    ///   - maxLength: Optional maximum number of edges per path; longer paths are pruned.
+    /// - Returns: A lazy sequence of all simple paths from source to destination
     @inlinable
     public func allPaths(
         from source: VertexDescriptor,
-        to destination: VertexDescriptor
+        to destination: VertexDescriptor,
+        maxLength: Int? = nil
     ) -> DFSAllPaths<Self> {
-        allPaths(from: source, to: destination, using: .dfs())
+        DFSAllPaths(graph: self, source: source, destination: destination, maxLength: maxLength)
     }
 }
 #endif

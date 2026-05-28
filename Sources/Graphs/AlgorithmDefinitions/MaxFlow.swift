@@ -3,7 +3,7 @@ public protocol MaxFlowAlgorithm<Graph, Flow> {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & EdgeListGraph & VertexListGraph where Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable
     /// The flow type for edge capacities and flows.
-    associatedtype Flow: AdditiveArithmetic & Comparable & FloatingPoint
+    associatedtype Flow: AdditiveArithmetic & Comparable
     /// The visitor type for observing algorithm progress.
     associatedtype Visitor
     
@@ -145,7 +145,7 @@ extension BidirectionalGraph where Self: EdgeListGraph & VertexListGraph, Vertex
     ///   - capacity: The capacity definition for edge capacities
     /// - Returns: The maximum flow result
     @inlinable
-    public func maximumFlow<Flow: AdditiveArithmetic & Comparable & FloatingPoint>(
+    public func maximumFlow<Flow: AdditiveArithmetic & Comparable>(
         from source: VertexDescriptor,
         to sink: VertexDescriptor,
         capacity: CostDefinition<Self, Flow>

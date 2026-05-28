@@ -26,7 +26,7 @@ public protocol KShortestPathsAlgorithm<Graph, Weight> {
 }
 
 extension IncidenceGraph where VertexDescriptor: Equatable {
-    func kShortestPaths<Weight: AdditiveArithmetic & Comparable>(
+    public func kShortestPaths<Weight: AdditiveArithmetic & Comparable>(
         from source: VertexDescriptor,
         to destination: VertexDescriptor,
         k: Int,
@@ -42,7 +42,7 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
 extension IncidenceGraph where VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
     /// Finds the k shortest paths using Yen's algorithm as the default.
     /// This is the most commonly used algorithm for finding k shortest paths.
-    func kShortestPaths<Weight: Numeric & Comparable>(
+    public func kShortestPaths<Weight: Numeric & Comparable>(
         from source: VertexDescriptor,
         to destination: VertexDescriptor,
         k: Int,

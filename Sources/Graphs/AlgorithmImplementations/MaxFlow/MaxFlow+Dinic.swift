@@ -9,10 +9,9 @@ extension MaxFlowAlgorithm {
         capacityCost: CostDefinition<Graph, Flow>
     ) -> Dinic<Graph, Flow> where
         Graph: IncidenceGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
-        Flow: AdditiveArithmetic & Comparable & Numeric & FloatingPoint,
+        Flow: AdditiveArithmetic & Comparable,
         Graph.VertexDescriptor: Hashable,
         Graph.EdgeDescriptor: Hashable,
-        Flow.Magnitude == Flow,
         Self == Dinic<Graph, Flow> {
         .init(capacityCost: capacityCost)
     }

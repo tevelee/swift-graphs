@@ -104,6 +104,8 @@ public struct UniformCostSearch<
     let source: Vertex
     @usableFromInline
     let edgeWeight: CostDefinition<Graph, Weight>
+    @usableFromInline
+    let defaultVisitor: Visitor?
 
     /// Creates a new uniform cost search algorithm instance.
     ///
@@ -111,15 +113,18 @@ public struct UniformCostSearch<
     ///   - graph: The graph to search in.
     ///   - source: The source vertex.
     ///   - edgeWeight: The cost definition for edge weights.
+    ///   - visitor: An optional visitor to apply during default iteration.
     @inlinable
     public init(
         on graph: Graph,
         from source: Vertex,
-        edgeWeight: CostDefinition<Graph, Weight>
+        edgeWeight: CostDefinition<Graph, Weight>,
+        visitor: Visitor? = nil
     ) {
         self.graph = graph
         self.source = source
         self.edgeWeight = edgeWeight
+        self.defaultVisitor = visitor
     }
 
     /// Creates an iterator for the uniform cost search.
@@ -243,7 +248,7 @@ extension UniformCostSearch.Iterator: IteratorProtocol {}
 extension UniformCostSearch: Sequence {
     @inlinable
     public func makeIterator() -> Iterator {
-        makeIterator(visitor: nil)
+        makeIterator(visitor: defaultVisitor)
     }
 }
 

@@ -175,6 +175,7 @@ extension Dijkstra.Iterator: IteratorProtocol {
 
             for edge in graph.outgoingEdges(of: currentVertex.vertex) {
                 guard let destination = graph.destination(of: edge) else { continue }
+                visitor?.examineEdge?(edge)
                 let edgeWeight = self.edgeWeight.costToExplore(edge, graph)
                 let newDistance = currentDistance + edgeWeight
 
@@ -182,6 +183,9 @@ extension Dijkstra.Iterator: IteratorProtocol {
                     propertyMap[destination][distanceProperty] = newDistance
                     propertyMap[destination][predecessorEdgeProperty] = edge
                     queue.enqueue(Dijkstra.PriorityItem(vertex: destination, cost: newDistance))
+                    visitor?.edgeRelaxed?(edge)
+                } else {
+                    visitor?.edgeNotRelaxed?(edge)
                 }
             }
 

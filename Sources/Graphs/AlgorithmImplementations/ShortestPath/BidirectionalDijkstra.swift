@@ -259,7 +259,7 @@ public struct BidirectionalDijkstra<
             let newCost = currentCost + weight
             
             let currentBestCost = distances[neighbor] ?? .infinite
-            if currentBestCost == nil || newCost < currentBestCost {
+            if newCost < currentBestCost {
                 distances[neighbor] = newCost
                 predecessors[neighbor] = edge
                 queue.enqueue(PriorityItem(vertex: neighbor, cost: newCost, direction: .forward))
@@ -297,7 +297,7 @@ public struct BidirectionalDijkstra<
             let newCost = currentCost + weight
             
             let currentBestCost = distances[neighbor] ?? .infinite
-            if currentBestCost == nil || newCost < currentBestCost {
+            if newCost < currentBestCost {
                 distances[neighbor] = newCost
                 predecessors[neighbor] = edge
                 queue.enqueue(PriorityItem(vertex: neighbor, cost: newCost, direction: .backward))
@@ -369,7 +369,7 @@ extension BidirectionalDijkstra: ShortestPathAlgorithm {
         in graph: Graph,
         visitor: Visitor?
     ) -> Path<Vertex, Edge>? {
-        shortestPath(from: source, to: destination).path
+        shortestPath(from: source, to: destination, visitor: visitor).path
     }
 }
 

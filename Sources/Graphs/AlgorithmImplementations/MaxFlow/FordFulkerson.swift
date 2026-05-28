@@ -8,11 +8,10 @@
 /// - Complexity: O(E * max_flow) where E is the number of edges
 public struct FordFulkerson<
     Graph: IncidenceGraph & BidirectionalGraph & EdgeListGraph & VertexListGraph,
-    Flow: AdditiveArithmetic & Comparable & Numeric & FloatingPoint
+    Flow: AdditiveArithmetic & Comparable
 > where
     Graph.VertexDescriptor: Hashable,
-    Graph.EdgeDescriptor: Hashable,
-    Flow.Magnitude == Flow
+    Graph.EdgeDescriptor: Hashable
 {
     /// The vertex type of the graph.
     public typealias Vertex = Graph.VertexDescriptor
@@ -159,20 +158,19 @@ public struct FordFulkerson<
             if current == sink {
                 // Reconstruct path
                 var path: [Edge] = []
-                var bottleneck: Flow = Flow.greatestFiniteMagnitude
+                var bottleneck: Flow? = nil
                 var vertex = sink
-                
+
                 while let parentVertex = parent[vertex], let edge = parentEdge[vertex] {
                     path.append(edge)
                     let residual = residualCapacities[edge] ?? .zero
-                    if residual < bottleneck {
-                        bottleneck = residual
-                    }
+                    bottleneck = bottleneck.map { min($0, residual) } ?? residual
                     vertex = parentVertex
                 }
-                
+
                 path.reverse()
-                return AugmentingPath(edges: path, bottleneck: bottleneck)
+                guard let b = bottleneck else { return nil }
+                return AugmentingPath(edges: path, bottleneck: b)
             }
             
             // Check outgoing edges

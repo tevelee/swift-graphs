@@ -52,7 +52,7 @@ public struct UniformCostSearchAlgorithm<
         in graph: Graph,
         visitor: Visitor?
     ) -> UniformCostSearch<Graph, Weight> {
-        UniformCostSearch(on: graph, from: source, edgeWeight: edgeWeight)
+        UniformCostSearch(on: graph, from: source, edgeWeight: edgeWeight, visitor: visitor)
     }
 }
 

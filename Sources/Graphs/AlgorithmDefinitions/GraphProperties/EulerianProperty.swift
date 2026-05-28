@@ -1,8 +1,11 @@
 extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, VertexDescriptor: Hashable {
-    /// Checks if the graph has an Eulerian path using connectivity + degree conditions.
-    /// A graph has an Eulerian path if and only if:
-    /// 1. It's connected
-    /// 2. It has exactly 0 or 2 vertices of odd degree
+    /// Checks if the directed graph has an Eulerian path using connectivity + degree conditions.
+    ///
+    /// A directed graph has an Eulerian path if and only if:
+    /// 1. It's connected (weakly)
+    /// 2. At most one vertex has `outDegree - inDegree == 1` (the start vertex)
+    /// 3. At most one vertex has `inDegree - outDegree == 1` (the end vertex)
+    /// 4. All other vertices have equal in-degree and out-degree
     ///
     /// - Parameter connectivityAlgorithm: The connectivity algorithm to use
     /// - Returns: `true` if the graph has an Eulerian path, `false` otherwise
@@ -12,25 +15,33 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
     ) -> Bool {
         // First check connectivity
         guard isConnected(using: connectivityAlgorithm) else { return false }
-        
-        // Then check degree conditions
+
         let vertices = Array(vertices())
         if vertices.isEmpty { return false }
-        
-        var oddDegreeCount = 0
+
+        var startVertices = 0  // outDegree - inDegree == 1
+        var endVertices = 0    // inDegree - outDegree == 1
+
         for vertex in vertices {
-            if degree(of: vertex) % 2 == 1 {
-                oddDegreeCount += 1
+            let diff = outDegree(of: vertex) - inDegree(of: vertex)
+            if diff == 1 {
+                startVertices += 1
+            } else if diff == -1 {
+                endVertices += 1
+            } else if diff != 0 {
+                return false  // |diff| > 1: no Eulerian path possible
             }
         }
-        
-        return oddDegreeCount == 0 || oddDegreeCount == 2
+
+        // Either all balanced (Eulerian cycle, which is also a path), or exactly one start/end
+        return (startVertices == 0 && endVertices == 0) || (startVertices == 1 && endVertices == 1)
     }
-    
-    /// Checks if the graph has an Eulerian cycle using connectivity + degree conditions.
-    /// A graph has an Eulerian cycle if and only if:
-    /// 1. It's connected
-    /// 2. All vertices have even degree
+
+    /// Checks if the directed graph has an Eulerian cycle using connectivity + degree conditions.
+    ///
+    /// A directed graph has an Eulerian cycle if and only if:
+    /// 1. It's connected (weakly)
+    /// 2. Every vertex has equal in-degree and out-degree
     ///
     /// - Parameter connectivityAlgorithm: The connectivity algorithm to use
     /// - Returns: `true` if the graph has an Eulerian cycle, `false` otherwise
@@ -40,17 +51,16 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
     ) -> Bool {
         // First check connectivity
         guard isConnected(using: connectivityAlgorithm) else { return false }
-        
-        // Then check degree conditions
+
         let vertices = Array(vertices())
         if vertices.isEmpty { return false }
-        
+
         for vertex in vertices {
-            if degree(of: vertex) % 2 == 1 {
+            if inDegree(of: vertex) != outDegree(of: vertex) {
                 return false
             }
         }
-        
+
         return true
     }
 }

@@ -35,7 +35,7 @@ public struct DFSSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.Vert
         in graph: Graph,
         visitor: Visitor?
     ) -> DepthFirstSearch<Graph> {
-        DepthFirstSearch(on: graph, from: source)
+        DepthFirstSearch(on: graph, from: source, visitor: visitor)
     }
 }
 

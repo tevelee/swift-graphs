@@ -168,19 +168,24 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
     /// The source vertex.
     @usableFromInline
     let source: Vertex
+    @usableFromInline
+    let defaultVisitor: Visitor?
 
     /// Creates a new depth-first search algorithm instance.
     ///
     /// - Parameters:
     ///   - graph: The graph to search in.
     ///   - source: The source vertex.
+    ///   - visitor: An optional visitor to apply during default iteration.
     @inlinable
     public init(
         on graph: Graph,
-        from source: Vertex
+        from source: Vertex,
+        visitor: Visitor? = nil
     ) {
         self.graph = graph
         self.source = source
+        self.defaultVisitor = visitor
     }
 
     /// Creates an iterator for the depth-first search.
@@ -339,7 +344,7 @@ extension DepthFirstSearch.Iterator: IteratorProtocol {}
 extension DepthFirstSearch: Sequence {
     @inlinable
     public func makeIterator() -> Iterator {
-        makeIterator(visitor: nil)
+        makeIterator(visitor: defaultVisitor)
     }
 }
 

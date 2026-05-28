@@ -79,6 +79,7 @@ public struct BellmanFord<
         
         // Initialize distances
         for vertex in graph.vertices() {
+            visitor?.examineVertex?(vertex)
             distances[vertex] = .infinite
             predecessors[vertex] = nil
         }
@@ -191,7 +192,7 @@ extension BellmanFord: ShortestPathAlgorithm {
         in graph: Graph,
         visitor: Visitor?
     ) -> Path<Vertex, Edge>? {
-        shortestPath(from: source, to: destination)
+        shortestPath(from: source, to: destination, visitor: visitor)
     }
 }
 

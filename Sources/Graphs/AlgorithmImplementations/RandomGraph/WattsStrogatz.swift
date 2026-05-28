@@ -98,32 +98,34 @@ public struct WattsStrogatz<
             vertices.append(vertex)
         }
         
-        // Create initial regular ring lattice
+        // Create initial regular ring lattice; store edge descriptors for later rewiring
         let k = Int(averageDegree) / 2
-        var initialEdges: [(Vertex, Vertex)] = []
+        var initialEdges: [(edgeDescriptor: Graph.EdgeDescriptor, source: Vertex, target: Vertex)] = []
         for i in 0..<vertexCount {
             for j in 1...max(0, k) {
                 let targetIndex = (i + j) % vertexCount
                 let source = vertices[i]
                 let target = vertices[targetIndex]
-                graph.addEdge(from: source, to: target)
-                visitor?.createRingLattice?(source, target)
-                initialEdges.append((source, target))
+                if let edgeDescriptor = graph.addEdge(from: source, to: target) {
+                    visitor?.createRingLattice?(source, target)
+                    initialEdges.append((edgeDescriptor: edgeDescriptor, source: source, target: target))
+                }
             }
         }
-        
-        // Rewire edges with probability p
-        for edge in initialEdges {
+
+        // Rewire edges with probability p: remove the old edge, add a new one
+        for initialEdge in initialEdges {
             if Double.random(in: 0...1, using: &generator) < rewiringProbability {
-                let source = edge.0
+                let source = initialEdge.source
                 if let randomTarget = vertices.randomElement(using: &generator), randomTarget != source {
+                    graph.remove(edge: initialEdge.edgeDescriptor)
                     graph.addEdge(from: source, to: randomTarget)
-                    visitor?.rewireEdge?(source, edge.1, randomTarget)
+                    visitor?.rewireEdge?(source, initialEdge.target, randomTarget)
                 } else {
-                    visitor?.skipRewiring?(source, edge.1, "Self-loop avoided or no target")
+                    visitor?.skipRewiring?(source, initialEdge.target, "Self-loop avoided or no target")
                 }
             } else {
-                visitor?.skipRewiring?(edge.0, edge.1, "Probability check failed")
+                visitor?.skipRewiring?(initialEdge.source, initialEdge.target, "Probability check failed")
             }
         }
     }

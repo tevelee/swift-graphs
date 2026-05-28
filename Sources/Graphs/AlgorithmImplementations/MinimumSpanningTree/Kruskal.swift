@@ -90,15 +90,6 @@ public struct Kruskal<
             rank[vertex] = 0
         }
         
-        for edge in graph.edges() {
-            if let source = graph.source(of: edge), let destination = graph.destination(of: edge) {
-                parent[source] = source
-                parent[destination] = destination
-                rank[source] = 0
-                rank[destination] = 0
-            }
-        }
-        
         func find(_ vertex: Vertex) -> Vertex {
             guard let currentParent = parent[vertex] else {
                 // Initialize if not found
@@ -137,15 +128,12 @@ public struct Kruskal<
             return firstWeight < secondWeight
         }
         
-        for edge in sortedEdges {
-            visitor?.examineEdge?(edge)
-        }
-        
         var mstEdges: [Edge] = []
         var totalWeight = Weight.zero
         var mstVertices: Set<Vertex> = []
-        
+
         for edge in sortedEdges {
+            visitor?.examineEdge?(edge)
             guard let source = graph.source(of: edge),
                   let destination = graph.destination(of: edge) else { continue }
             

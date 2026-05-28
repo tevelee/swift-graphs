@@ -115,7 +115,10 @@ public struct DFSTopologicalSort<Graph: IncidenceGraph & VertexListGraph>: Topol
         if hasCycle {
             visitor?.detectCycle?(cycleVertices)
         }
-        
+
+        // Vertices were appended in finish order; reverse to get topological order
+        sortedVertices.reverse()
+
         return TopologicalSortResult(
             sortedVertices: sortedVertices,
             hasCycle: hasCycle,
@@ -167,15 +170,15 @@ public struct DFSTopologicalSort<Graph: IncidenceGraph & VertexListGraph>: Topol
                         hasCycle = true
                         cycleVertices.append(destination)
                     case .black:
-                        visitor?.forwardEdge?(edge)
+                        visitor?.crossEdge?(edge)
                     }
                 }
-                
+
             case .gray:
                 // Mark as finished and add to sorted list
                 propertyMap[current][colorProperty] = .black
                 visitor?.finishVertex?(current)
-                sortedVertices.insert(current, at: 0) // Insert at beginning for reverse finish time
+                sortedVertices.append(current) // Appended in finish order; reversed after all DFS visits
                 
             case .black:
                 // Already processed

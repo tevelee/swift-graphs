@@ -13,24 +13,35 @@ import OrderedCollections
 /// - Complexity: O(V × E) for unweighted graphs, O(V × E + V² log V) for weighted graphs
 public struct BetweennessCentralityAlgorithm<Graph: IncidenceGraph & VertexListGraph>: CentralityAlgorithm where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = BetweennessCentrality<Graph>.Visitor
-    
+
     /// Whether to normalize the centrality values.
     ///
-    /// When normalized, values are divided by (V-1)(V-2) for undirected graphs,
-    /// making them comparable across graphs of different sizes.
+    /// When normalized, values are scaled to the range [0, 1]:
+    /// - Directed graphs: divided by `(V-1)(V-2)`
+    /// - Undirected graphs (set `isDirected: false`): divided by `(V-1)(V-2)/2`
     public let normalized: Bool
-    
+
+    /// Whether the graph is directed.
+    ///
+    /// This affects normalization. For undirected graphs stored as bidirectional
+    /// (each edge A→B has a reverse B→A), set this to `false` so the normalization
+    /// correctly accounts for the double-counting of each path.
+    public let isDirected: Bool
+
     /// Creates a new betweenness centrality algorithm.
     ///
-    /// - Parameter normalized: Whether to normalize values (default: true)
+    /// - Parameters:
+    ///   - normalized: Whether to normalize values (default: true)
+    ///   - isDirected: Whether the graph is directed (default: true)
     @inlinable
-    public init(normalized: Bool = true) {
+    public init(normalized: Bool = true, isDirected: Bool = true) {
         self.normalized = normalized
+        self.isDirected = isDirected
     }
-    
+
     @inlinable
     public func centrality(in graph: Graph, visitor: Visitor?) -> CentralityResult<Graph.VertexDescriptor> {
-        let betweenness = BetweennessCentrality(on: graph, normalized: normalized)
+        let betweenness = BetweennessCentrality(on: graph, normalized: normalized, isDirected: isDirected)
         return betweenness.compute(visitor: visitor)
     }
 }
@@ -59,11 +70,14 @@ public struct BetweennessCentrality<Graph: IncidenceGraph & VertexListGraph> whe
     let graph: Graph
     @usableFromInline
     let normalized: Bool
-    
+    @usableFromInline
+    let isDirected: Bool
+
     @inlinable
-    public init(on graph: Graph, normalized: Bool) {
+    public init(on graph: Graph, normalized: Bool, isDirected: Bool = true) {
         self.graph = graph
         self.normalized = normalized
+        self.isDirected = isDirected
     }
     
     @inlinable
@@ -154,9 +168,11 @@ public struct BetweennessCentrality<Graph: IncidenceGraph & VertexListGraph> whe
         // Normalize if requested
         if normalized {
             let n = Double(vertices.count)
-            // For directed graphs: divide by (n-1)(n-2)
-            // For undirected graphs, it would be (n-1)(n-2)/2, but we use directed normalization
-            let factor = 1.0 / ((n - 1) * (n - 2))
+            // Directed: (n-1)(n-2) ordered pairs; undirected: (n-1)(n-2)/2 unordered pairs.
+            // For undirected graphs stored as bidirectional, each path is counted twice
+            // (once per direction), so we apply an additional factor of 2 to compensate.
+            let denominator = isDirected ? (n - 1) * (n - 2) : (n - 1) * (n - 2) / 2.0
+            let factor = denominator > 0 ? 1.0 / denominator : 0.0
             for vertex in vertices {
                 betweenness[vertex] = betweenness[vertex, default: 0.0] * factor
             }
