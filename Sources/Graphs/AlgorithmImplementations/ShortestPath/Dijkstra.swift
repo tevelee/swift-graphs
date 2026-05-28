@@ -76,14 +76,6 @@ public struct Dijkstra<
         }
     }
 
-    private enum DistanceProperty: VertexProperty {
-        static var defaultValue: Cost<Weight> { .infinite }
-    }
-
-    private enum PredecessorEdgeProperty: VertexProperty {
-        static var defaultValue: Edge? { nil }
-    }
-
     public struct PriorityItem {
         public typealias Vertex = Graph.VertexDescriptor
         public let vertex: Vertex
@@ -141,9 +133,9 @@ public struct Dijkstra<
         @usableFromInline
         var propertyMap: DictionaryPropertyMap<Vertex, VertexPropertyValues>
         @usableFromInline
-        let distanceProperty: any VertexProperty<Cost>.Type = DistanceProperty.self
+        let distanceProperty: any VertexProperty<Cost>.Type = DistanceProperty<Weight>.self
         @usableFromInline
-        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
+        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty<Edge>.self
 
         @inlinable
         public init(
@@ -169,39 +161,42 @@ public struct Dijkstra<
 extension Dijkstra.Iterator: IteratorProtocol {
     @inlinable
     public mutating func next() -> Dijkstra.Result? {
-        guard let currentVertex = queue.dequeue() else { return nil }
-        
-        if visited.contains(currentVertex.vertex) {
-            return next()
-        }
-        
-        let currentDistance = currentVertex.cost
-        propertyMap[currentVertex.vertex][distanceProperty] = currentDistance
-        
-        visitor?.examineVertex?(currentVertex.vertex)
-        
-        for edge in graph.outgoingEdges(of: currentVertex.vertex) {
-            guard let destination = graph.destination(of: edge) else { continue }
-            let edgeWeight = self.edgeWeight.costToExplore(edge, graph)
-            let newDistance = currentDistance + edgeWeight
-            
-            if newDistance < propertyMap[destination][distanceProperty] {
-                propertyMap[destination][distanceProperty] = newDistance
-                propertyMap[destination][predecessorEdgeProperty] = edge
-                queue.enqueue(Dijkstra.PriorityItem(vertex: destination, cost: newDistance))
+        // Loop, not recurse: stale priority-queue entries are skipped without growing
+        // the call stack. Adversarial graphs (or even routine ones with many distance
+        // updates) can stack hundreds of duplicates per vertex; recursion here was a
+        // latent stack-overflow risk and an unnecessary function call per duplicate.
+        while let currentVertex = queue.dequeue() {
+            if visited.contains(currentVertex.vertex) { continue }
+
+            let currentDistance = currentVertex.cost
+            propertyMap[currentVertex.vertex][distanceProperty] = currentDistance
+
+            visitor?.examineVertex?(currentVertex.vertex)
+
+            for edge in graph.outgoingEdges(of: currentVertex.vertex) {
+                guard let destination = graph.destination(of: edge) else { continue }
+                let edgeWeight = self.edgeWeight.costToExplore(edge, graph)
+                let newDistance = currentDistance + edgeWeight
+
+                if newDistance < propertyMap[destination][distanceProperty] {
+                    propertyMap[destination][distanceProperty] = newDistance
+                    propertyMap[destination][predecessorEdgeProperty] = edge
+                    queue.enqueue(Dijkstra.PriorityItem(vertex: destination, cost: newDistance))
+                }
             }
+
+            visited.insert(currentVertex.vertex)
+            visitor?.finishVertex?(currentVertex.vertex)
+
+            return Dijkstra.Result(
+                source: source,
+                currentVertex: currentVertex.vertex,
+                distanceProperty: distanceProperty,
+                predecessorEdgeProperty: predecessorEdgeProperty,
+                propertyMap: propertyMap
+            )
         }
-        
-        visited.insert(currentVertex.vertex)
-        visitor?.finishVertex?(currentVertex.vertex)
-        
-        return Dijkstra.Result(
-            source: source,
-            currentVertex: currentVertex.vertex,
-            distanceProperty: distanceProperty,
-            predecessorEdgeProperty: predecessorEdgeProperty,
-            propertyMap: propertyMap
-        )
+        return nil
     }
 }
 
@@ -211,6 +206,8 @@ extension Dijkstra: Sequence {
         makeIterator(visitor: nil)
     }
 }
+
+extension Dijkstra.PriorityItem: Sendable where Vertex: Sendable, Weight: Sendable {}
 
 extension Dijkstra.PriorityItem: Equatable {
     @inlinable
@@ -311,4 +308,6 @@ extension Dijkstra.Result {
 }
 
 extension Dijkstra: VisitorSupportingSequence {}
+
+extension Dijkstra.Result: ShortestPathResult {}
 #endif

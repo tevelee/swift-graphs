@@ -29,7 +29,7 @@ public struct Tarjan<Graph: IncidenceGraph & VertexListGraph> where Graph.Vertex
         public var startComponent: ((Vertex) -> Void)?
         /// Called when finishing a component.
         public var finishComponent: (([Vertex]) -> Void)?
-        
+
         /// Creates a new visitor.
         @inlinable
         public init(
@@ -90,6 +90,24 @@ public struct Tarjan<Graph: IncidenceGraph & VertexListGraph> where Graph.Vertex
         static var defaultValue: Bool { false }
     }
 
+    /// DFS stack frame for iterative depth-first search.
+    @usableFromInline
+    struct Frame {
+        /// The vertex being processed.
+        @usableFromInline var vertex: Vertex
+        /// Outgoing edges from this vertex.
+        @usableFromInline var edges: [Edge]
+        /// Current index into the edges array.
+        @usableFromInline var edgeIndex: Int
+
+        @usableFromInline
+        init(vertex: Vertex, edges: [Edge]) {
+            self.vertex = vertex
+            self.edges = edges
+            self.edgeIndex = 0
+        }
+    }
+
     /// The graph to find SCCs in.
     @usableFromInline
     let graph: Graph
@@ -115,75 +133,97 @@ public struct Tarjan<Graph: IncidenceGraph & VertexListGraph> where Graph.Vertex
         let onStackProperty = OnStackProperty.self
 
         var index: UInt = 0
-        var stack: [Vertex] = []
+        var sccStack: [Vertex] = []
+        var frameStack: [Frame] = []
         var components: [[Vertex]] = []
 
-        func strongConnect(_ vertex: Vertex) {
+        for startVertex in graph.vertices() {
+            guard propertyMap[startVertex][colorProperty] == .white else { continue }
+
+            // Initialize root frame
             index += 1
-            propertyMap[vertex][indexProperty] = index
-            propertyMap[vertex][lowLinkProperty] = index
-            propertyMap[vertex][colorProperty] = .gray
-            propertyMap[vertex][onStackProperty] = true
-            stack.append(vertex)
+            propertyMap[startVertex][indexProperty] = index
+            propertyMap[startVertex][lowLinkProperty] = index
+            propertyMap[startVertex][colorProperty] = .gray
+            propertyMap[startVertex][onStackProperty] = true
+            sccStack.append(startVertex)
+            visitor?.discoverVertex?(startVertex)
+            frameStack.append(Frame(vertex: startVertex, edges: Array(graph.outgoingEdges(of: startVertex))))
 
-            visitor?.discoverVertex?(vertex)
+            while !frameStack.isEmpty {
+                let frameIndex = frameStack.count - 1
 
-            for edge in graph.outgoingEdges(of: vertex) {
-                visitor?.examineEdge?(edge)
+                if frameStack[frameIndex].edgeIndex < frameStack[frameIndex].edges.count {
+                    let edge = frameStack[frameIndex].edges[frameStack[frameIndex].edgeIndex]
+                    frameStack[frameIndex].edgeIndex += 1
 
-                guard let destination = graph.destination(of: edge) else { continue }
+                    visitor?.examineEdge?(edge)
 
-                let destinationColor = propertyMap[destination][colorProperty]
+                    guard let destination = graph.destination(of: edge) else { continue }
 
-                switch destinationColor {
-                case .white:
-                    // Tree edge
-                    strongConnect(destination)
+                    let currentVertex = frameStack[frameIndex].vertex
+                    let destinationColor = propertyMap[destination][colorProperty]
+
+                    switch destinationColor {
+                    case .white:
+                        // Tree edge — push child frame
+                        index += 1
+                        propertyMap[destination][indexProperty] = index
+                        propertyMap[destination][lowLinkProperty] = index
+                        propertyMap[destination][colorProperty] = .gray
+                        propertyMap[destination][onStackProperty] = true
+                        sccStack.append(destination)
+                        visitor?.discoverVertex?(destination)
+                        frameStack.append(Frame(vertex: destination, edges: Array(graph.outgoingEdges(of: destination))))
+
+                    case .gray:
+                        // Back edge
+                        visitor?.backEdge?(edge)
+                        if propertyMap[destination][onStackProperty] == true {
+                            let vertexLowLink = propertyMap[currentVertex][lowLinkProperty] ?? 0
+                            let destinationIndex = propertyMap[destination][indexProperty] ?? 0
+                            propertyMap[currentVertex][lowLinkProperty] = min(vertexLowLink, destinationIndex)
+                        }
+
+                    case .black:
+                        // Cross edge
+                        visitor?.crossEdge?(edge)
+                    }
+                } else {
+                    // Frame done — finalize and pop
+                    let frame = frameStack.removeLast()
+                    let vertex = frame.vertex
+
+                    propertyMap[vertex][colorProperty] = .black
+                    visitor?.finishVertex?(vertex)
+
+                    // If vertex is a root node, pop the SCC stack and create a component
+                    let vertexIndex = propertyMap[vertex][indexProperty] ?? 0
                     let vertexLowLink = propertyMap[vertex][lowLinkProperty] ?? 0
-                    let destinationLowLink = propertyMap[destination][lowLinkProperty] ?? 0
-                    propertyMap[vertex][lowLinkProperty] = min(vertexLowLink, destinationLowLink)
 
-                case .gray:
-                    // Back edge
-                    visitor?.backEdge?(edge)
-                    if propertyMap[destination][onStackProperty] == true {
-                        let vertexLowLink = propertyMap[vertex][lowLinkProperty] ?? 0
-                        let destinationIndex = propertyMap[destination][indexProperty] ?? 0
-                        propertyMap[vertex][lowLinkProperty] = min(vertexLowLink, destinationIndex)
+                    if vertexIndex == vertexLowLink {
+                        var component: [Vertex] = []
+                        var w: Vertex
+                        repeat {
+                            w = sccStack.removeLast()
+                            propertyMap[w][onStackProperty] = false
+                            component.append(w)
+                        } while w != vertex
+
+                        visitor?.startComponent?(vertex)
+                        visitor?.finishComponent?(component)
+                        components.append(component)
                     }
 
-                case .black:
-                    // Cross edge
-                    visitor?.crossEdge?(edge)
+                    // Update parent's low-link
+                    if !frameStack.isEmpty {
+                        let parentFrameIndex = frameStack.count - 1
+                        let parentVertex = frameStack[parentFrameIndex].vertex
+                        let parentLowLink = propertyMap[parentVertex][lowLinkProperty] ?? 0
+                        let childLowLink = propertyMap[vertex][lowLinkProperty] ?? 0
+                        propertyMap[parentVertex][lowLinkProperty] = min(parentLowLink, childLowLink)
+                    }
                 }
-            }
-
-            propertyMap[vertex][colorProperty] = .black
-            visitor?.finishVertex?(vertex)
-
-            // If vertex is a root node, pop the stack and create an SCC
-            let vertexIndex = propertyMap[vertex][indexProperty] ?? 0
-            let vertexLowLink = propertyMap[vertex][lowLinkProperty] ?? 0
-
-            if vertexIndex == vertexLowLink {
-                var component: [Vertex] = []
-                var w: Vertex
-                repeat {
-                    w = stack.removeLast()
-                    propertyMap[w][onStackProperty] = false
-                    component.append(w)
-                } while w != vertex
-
-                visitor?.startComponent?(vertex)
-                visitor?.finishComponent?(component)
-                components.append(component)
-            }
-        }
-
-        // Process all vertices
-        for vertex in graph.vertices() {
-            if propertyMap[vertex][colorProperty] == .white {
-                strongConnect(vertex)
             }
         }
 

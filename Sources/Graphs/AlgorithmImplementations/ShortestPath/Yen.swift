@@ -61,8 +61,7 @@ public struct Yen<
     
     /// Creates a new Yen algorithm instance.
     ///
-    /// - Parameters:
-    ///   - edgeWeight: The cost definition for edge weights.
+    /// - Parameter edgeWeight: The cost definition for edge weights.
     @inlinable
     public init(
         edgeWeight: CostDefinition<Graph, Weight>

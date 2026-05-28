@@ -120,16 +120,10 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
     }
 
     @usableFromInline
-    enum PredecessorEdgeProperty: VertexProperty {
-        @usableFromInline
-        static var defaultValue: Edge? { nil }
-    }
-    
-    @usableFromInline
     let graph: Graph
     @usableFromInline
     let source: Vertex
-    
+
     /// Creates a new breadth-first search algorithm instance.
     ///
     /// - Parameters:
@@ -143,7 +137,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
         self.graph = graph
         self.source = source
     }
-    
+
     /// Creates an iterator for the breadth-first search.
     ///
     /// - Parameter visitor: An optional visitor to observe the algorithm's progress.
@@ -171,7 +165,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
         @usableFromInline
         let distanceProperty: any VertexProperty<Distance>.Type = DistanceProperty.self
         @usableFromInline
-        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
+        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty<Edge>.self
         
         /// Creates a new iterator.
         ///

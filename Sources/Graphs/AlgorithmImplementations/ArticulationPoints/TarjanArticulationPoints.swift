@@ -81,11 +81,37 @@ public struct TarjanArticulationPoints<Graph: IncidenceGraph & VertexListGraph> 
         static var defaultValue: UInt? { nil }
     }
 
-    /// Property for tracking parent vertices in the DFS tree.
+    /// DFS stack frame for iterative depth-first search.
     @usableFromInline
-    enum ParentProperty: VertexProperty {
+    struct Frame {
+        /// The vertex being processed.
+        @usableFromInline var vertex: Vertex
+        /// The parent vertex in the DFS tree.
+        @usableFromInline var parentVertex: Vertex?
+        /// Whether this frame is the root of the DFS tree.
+        @usableFromInline var isRoot: Bool
+        /// The tree edge that was used to reach this vertex (nil for root).
+        @usableFromInline var treeEdgeFromParent: Edge?
+        /// Outgoing edges from this vertex.
+        @usableFromInline var edges: [Edge]
+        /// Current index into the edges array.
+        @usableFromInline var edgeIndex: Int
+        /// Number of DFS tree children discovered so far.
+        @usableFromInline var childCount: UInt
+        /// Whether the edge back to the parent has already been skipped.
+        @usableFromInline var skippedParentEdge: Bool
+
         @usableFromInline
-        static var defaultValue: Vertex? { nil }
+        init(vertex: Vertex, parentVertex: Vertex?, isRoot: Bool, treeEdgeFromParent: Edge?, edges: [Edge]) {
+            self.vertex = vertex
+            self.parentVertex = parentVertex
+            self.isRoot = isRoot
+            self.treeEdgeFromParent = treeEdgeFromParent
+            self.edges = edges
+            self.edgeIndex = 0
+            self.childCount = 0
+            self.skippedParentEdge = false
+        }
     }
 
     /// The graph to analyze.
@@ -110,95 +136,127 @@ public struct TarjanArticulationPoints<Graph: IncidenceGraph & VertexListGraph> 
         let colorProperty = ColorProperty.self
         let discoveryTimeProperty = DiscoveryTimeProperty.self
         let lowProperty = LowProperty.self
-        let parentProperty = ParentProperty.self
 
         var timer: UInt = 0
         var cutVertices: Set<Vertex> = []
         var bridges: [Edge] = []
+        var frameStack: [Frame] = []
 
-        func dfs(_ vertex: Vertex, isRoot: Bool) {
+        for startVertex in graph.vertices() {
+            guard propertyMap[startVertex][colorProperty] == .white else { continue }
+
+            // Initialize root frame
             timer += 1
-            propertyMap[vertex][discoveryTimeProperty] = timer
-            propertyMap[vertex][lowProperty] = timer
-            propertyMap[vertex][colorProperty] = .gray
+            propertyMap[startVertex][discoveryTimeProperty] = timer
+            propertyMap[startVertex][lowProperty] = timer
+            propertyMap[startVertex][colorProperty] = .gray
+            visitor?.discoverVertex?(startVertex)
 
-            visitor?.discoverVertex?(vertex)
+            frameStack.append(Frame(
+                vertex: startVertex,
+                parentVertex: nil,
+                isRoot: true,
+                treeEdgeFromParent: nil,
+                edges: Array(graph.outgoingEdges(of: startVertex))
+            ))
 
-            var childCount: UInt = 0
-            let parent = propertyMap[vertex][parentProperty]
-            var skippedParentEdge = false
+            while !frameStack.isEmpty {
+                let frameIndex = frameStack.count - 1
 
-            for edge in graph.outgoingEdges(of: vertex) {
-                visitor?.examineEdge?(edge)
+                if frameStack[frameIndex].edgeIndex < frameStack[frameIndex].edges.count {
+                    let edge = frameStack[frameIndex].edges[frameStack[frameIndex].edgeIndex]
+                    frameStack[frameIndex].edgeIndex += 1
 
-                guard let destination = graph.destination(of: edge) else { continue }
+                    visitor?.examineEdge?(edge)
 
-                let destinationColor = propertyMap[destination][colorProperty]
+                    guard let destination = graph.destination(of: edge) else { continue }
 
-                switch destinationColor {
-                case .white:
-                    // Tree edge
-                    childCount += 1
-                    propertyMap[destination][parentProperty] = vertex
-                    visitor?.treeEdge?(edge)
+                    let currentVertex = frameStack[frameIndex].vertex
+                    let destinationColor = propertyMap[destination][colorProperty]
 
-                    dfs(destination, isRoot: false)
+                    switch destinationColor {
+                    case .white:
+                        // Tree edge — push child frame
+                        frameStack[frameIndex].childCount += 1
+                        visitor?.treeEdge?(edge)
 
-                    let vertexLow = propertyMap[vertex][lowProperty] ?? 0
-                    let destinationLow = propertyMap[destination][lowProperty] ?? 0
-                    propertyMap[vertex][lowProperty] = min(vertexLow, destinationLow)
+                        timer += 1
+                        propertyMap[destination][discoveryTimeProperty] = timer
+                        propertyMap[destination][lowProperty] = timer
+                        propertyMap[destination][colorProperty] = .gray
+                        visitor?.discoverVertex?(destination)
 
-                    // Articulation point check for non-root
-                    if !isRoot {
-                        let vertexDiscovery = propertyMap[vertex][discoveryTimeProperty] ?? 0
-                        if destinationLow >= vertexDiscovery {
-                            if cutVertices.insert(vertex).inserted {
-                                visitor?.foundArticulationPoint?(vertex)
-                            }
+                        frameStack.append(Frame(
+                            vertex: destination,
+                            parentVertex: currentVertex,
+                            isRoot: false,
+                            treeEdgeFromParent: edge,
+                            edges: Array(graph.outgoingEdges(of: destination))
+                        ))
+
+                    case .gray:
+                        // Back edge — skip exactly one edge back to parent (handles multigraphs)
+                        let parentVertex = frameStack[frameIndex].parentVertex
+                        if destination == parentVertex && !frameStack[frameIndex].skippedParentEdge {
+                            frameStack[frameIndex].skippedParentEdge = true
+                        } else {
+                            visitor?.backEdge?(edge)
+                            let vertexLow = propertyMap[currentVertex][lowProperty] ?? 0
+                            let destinationDiscovery = propertyMap[destination][discoveryTimeProperty] ?? 0
+                            propertyMap[currentVertex][lowProperty] = min(vertexLow, destinationDiscovery)
+                        }
+
+                    case .black:
+                        // Already fully processed — can happen in undirected graphs
+                        let vertexLow = propertyMap[currentVertex][lowProperty] ?? 0
+                        let destinationDiscovery = propertyMap[destination][discoveryTimeProperty] ?? 0
+                        propertyMap[currentVertex][lowProperty] = min(vertexLow, destinationDiscovery)
+                    }
+                } else {
+                    // Frame is done — finalize and pop
+                    let frame = frameStack.removeLast()
+                    let vertex = frame.vertex
+
+                    // Root AP check: 2+ DFS tree children
+                    if frame.isRoot && frame.childCount >= 2 {
+                        if cutVertices.insert(vertex).inserted {
+                            visitor?.foundArticulationPoint?(vertex)
                         }
                     }
 
-                    // Bridge check
-                    let vertexDiscovery = propertyMap[vertex][discoveryTimeProperty] ?? 0
-                    if destinationLow > vertexDiscovery {
-                        bridges.append(edge)
-                        visitor?.foundBridge?(edge)
+                    propertyMap[vertex][colorProperty] = .black
+                    visitor?.finishVertex?(vertex)
+
+                    // Propagate low-link and perform AP / bridge checks on the parent
+                    if !frameStack.isEmpty {
+                        let parentFrameIndex = frameStack.count - 1
+                        let parentVertex = frameStack[parentFrameIndex].vertex
+                        let childLow = propertyMap[vertex][lowProperty] ?? 0
+
+                        // Update parent's low-link
+                        let parentLow = propertyMap[parentVertex][lowProperty] ?? 0
+                        propertyMap[parentVertex][lowProperty] = min(parentLow, childLow)
+
+                        // Non-root AP check
+                        if !frameStack[parentFrameIndex].isRoot {
+                            let parentDiscovery = propertyMap[parentVertex][discoveryTimeProperty] ?? 0
+                            if childLow >= parentDiscovery {
+                                if cutVertices.insert(parentVertex).inserted {
+                                    visitor?.foundArticulationPoint?(parentVertex)
+                                }
+                            }
+                        }
+
+                        // Bridge check
+                        if let treeEdge = frame.treeEdgeFromParent {
+                            let parentDiscovery = propertyMap[parentVertex][discoveryTimeProperty] ?? 0
+                            if childLow > parentDiscovery {
+                                bridges.append(treeEdge)
+                                visitor?.foundBridge?(treeEdge)
+                            }
+                        }
                     }
-
-                case .gray:
-                    // Back edge — skip exactly one edge back to parent (handles multigraphs)
-                    if destination == parent && !skippedParentEdge {
-                        skippedParentEdge = true
-                        continue
-                    }
-                    visitor?.backEdge?(edge)
-                    let vertexLow = propertyMap[vertex][lowProperty] ?? 0
-                    let destinationDiscovery = propertyMap[destination][discoveryTimeProperty] ?? 0
-                    propertyMap[vertex][lowProperty] = min(vertexLow, destinationDiscovery)
-
-                case .black:
-                    // Already fully processed — can happen in undirected graphs
-                    let vertexLow = propertyMap[vertex][lowProperty] ?? 0
-                    let destinationDiscovery = propertyMap[destination][discoveryTimeProperty] ?? 0
-                    propertyMap[vertex][lowProperty] = min(vertexLow, destinationDiscovery)
                 }
-            }
-
-            // Root articulation point check: 2+ DFS tree children
-            if isRoot && childCount >= 2 {
-                if cutVertices.insert(vertex).inserted {
-                    visitor?.foundArticulationPoint?(vertex)
-                }
-            }
-
-            propertyMap[vertex][colorProperty] = .black
-            visitor?.finishVertex?(vertex)
-        }
-
-        // Process all vertices
-        for vertex in graph.vertices() {
-            if propertyMap[vertex][colorProperty] == .white {
-                dfs(vertex, isRoot: true)
             }
         }
 

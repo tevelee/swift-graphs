@@ -52,8 +52,7 @@ public struct AStar<
         public typealias Edge = Graph.EdgeDescriptor
         public typealias GScore = AStar.GScore
         
-        @usableFromInline
-        let source: Vertex
+        public let source: Vertex
         public let currentVertex: Vertex
         public let gScoreProperty: any VertexProperty<GScore>.Type
         public let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
@@ -74,14 +73,6 @@ public struct AStar<
             self.predecessorEdgeProperty = predecessorEdgeProperty
             self.propertyMap = propertyMap
         }
-    }
-
-    private enum GScoreProperty: VertexProperty {
-        static var defaultValue: GScore { .infinite }
-    }
-
-    private enum PredecessorEdgeProperty: VertexProperty {
-        static var defaultValue: Edge? { nil }
     }
 
     /// A priority queue item for A* search.
@@ -170,9 +161,9 @@ public struct AStar<
         @usableFromInline
         var propertyMap: DictionaryPropertyMap<Vertex, VertexPropertyValues>
         @usableFromInline
-        let gScoreProperty: any VertexProperty<GScore>.Type = GScoreProperty.self
+        let gScoreProperty: any VertexProperty<GScore>.Type = DistanceProperty<Weight>.self
         @usableFromInline
-        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
+        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty<Edge>.self
 
         @inlinable
         public init(
@@ -262,6 +253,8 @@ extension AStar: Sequence {
 }
 
 extension AStar: VisitorSupporting {}
+
+extension AStar.PriorityItem: Sendable where Vertex: Sendable, FScore: Sendable {}
 
 extension AStar.PriorityItem: Equatable {
     @inlinable
@@ -359,7 +352,16 @@ extension AStar.Result {
     public func hasPath(to vertex: Vertex) -> Bool {
         propertyMap[vertex][gScoreProperty] != .infinite
     }
+
+    /// The distance (g-score) from ``source`` to `vertex`. Alias of ``gScore(of:)`` provided
+    /// for ``ShortestPathResult`` conformance.
+    @inlinable
+    public func distance(of vertex: Vertex) -> Cost<Weight> {
+        gScore(of: vertex)
+    }
 }
+
+extension AStar.Result: ShortestPathResult {}
 
 /// A heuristic function for A* search.
 ///

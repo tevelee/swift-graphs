@@ -138,10 +138,6 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
         static var defaultValue: Time { .undiscovered }
     }
 
-    private enum PredecessorEdgeProperty: VertexProperty {
-        static var defaultValue: Edge? { nil }
-    }
-
     private enum DepthProperty: VertexProperty {
         static var defaultValue: UInt? { nil }
     }
@@ -223,7 +219,7 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
         @usableFromInline
         let finishTimeProperty: any VertexProperty<Time>.Type = FinishTimeProperty.self
         @usableFromInline
-        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
+        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty<Edge>.self
         @usableFromInline
         let depthProperty: any VertexProperty<UInt?>.Type = DepthProperty.self
 
@@ -277,16 +273,22 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
 
                         switch destinationColor {
                             case .white:
-                                let context = Result(
-                                    source: source,
-                                    currentVertex: vertex,
-                                    discoveryTimeProperty: discoveryTimeProperty,
-                                    finishTimeProperty: finishTimeProperty,
-                                    predecessorEdgeProperty: predecessorEdgeProperty,
-                                    depthProperty: depthProperty,
-                                    propertyMap: propertyMap
-                                )
-                                if let veto = visitor?.shouldTraverse, veto((from: vertex, to: destination, via: edge, context: context)) == false { continue }
+                                // Only build the (expensive) Result context if the visitor
+                                // actually has a `shouldTraverse` hook. The Result captures
+                                // the existential property map, costing a retain on every
+                                // edge — was happening for *all* edges of *every* vertex.
+                                if let veto = visitor?.shouldTraverse {
+                                    let context = Result(
+                                        source: source,
+                                        currentVertex: vertex,
+                                        discoveryTimeProperty: discoveryTimeProperty,
+                                        finishTimeProperty: finishTimeProperty,
+                                        predecessorEdgeProperty: predecessorEdgeProperty,
+                                        depthProperty: depthProperty,
+                                        propertyMap: propertyMap
+                                    )
+                                    if veto((from: vertex, to: destination, via: edge, context: context)) == false { continue }
+                                }
                                 propertyMap[destination][predecessorEdgeProperty] = edge
                                 visitor?.treeEdge?(edge)
                                 whiteNeighbors.append(destination)

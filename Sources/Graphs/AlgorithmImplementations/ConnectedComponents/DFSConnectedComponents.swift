@@ -74,32 +74,28 @@ public struct DFSConnectedComponents<Graph: IncidenceGraph & VertexListGraph> wh
         var propertyMap = graph.makeVertexPropertyMap()
         let colorProperty = ColorProperty.self
         var components: [[Vertex]] = []
+        var stack: [Vertex] = []
 
-        func dfs(_ vertex: Vertex, component: inout [Vertex]) {
-            propertyMap[vertex][colorProperty] = .gray
-            visitor?.discoverVertex?(vertex)
-            component.append(vertex)
-
-            for edge in graph.outgoingEdges(of: vertex) {
-                visitor?.examineEdge?(edge)
-                guard let destination = graph.destination(of: edge) else { continue }
-                
-                if propertyMap[destination][colorProperty] == .white {
-                    dfs(destination, component: &component)
-                }
-            }
-
-            propertyMap[vertex][colorProperty] = .black
-        }
-
-        // Process all vertices
         for vertex in graph.vertices() {
-            if propertyMap[vertex][colorProperty] == .white {
-                var component: [Vertex] = []
-                dfs(vertex, component: &component)
-                visitor?.finishComponent?(component)
-                components.append(component)
+            guard propertyMap[vertex][colorProperty] == .white else { continue }
+            var component: [Vertex] = []
+            stack.append(vertex)
+            propertyMap[vertex][colorProperty] = .gray
+            while let current = stack.popLast() {
+                visitor?.discoverVertex?(current)
+                component.append(current)
+                for edge in graph.outgoingEdges(of: current) {
+                    visitor?.examineEdge?(edge)
+                    guard let destination = graph.destination(of: edge) else { continue }
+                    if propertyMap[destination][colorProperty] == .white {
+                        propertyMap[destination][colorProperty] = .gray
+                        stack.append(destination)
+                    }
+                }
+                propertyMap[current][colorProperty] = .black
             }
+            visitor?.finishComponent?(component)
+            components.append(component)
         }
 
         return ConnectedComponentsResult(components: components)

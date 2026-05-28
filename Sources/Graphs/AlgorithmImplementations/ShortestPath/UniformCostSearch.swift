@@ -53,8 +53,8 @@ public struct UniformCostSearch<
         public typealias Vertex = Graph.VertexDescriptor
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
-        @usableFromInline
-        let source: Vertex
+        /// The source vertex from which shortest paths were computed.
+        public let source: Vertex
         /// The current vertex being examined.
         public let currentVertex: Vertex
         /// The distance property type.
@@ -79,18 +79,6 @@ public struct UniformCostSearch<
             self.predecessorEdgeProperty = predecessorEdgeProperty
             self.propertyMap = propertyMap
         }
-    }
-
-    @usableFromInline
-    enum DistanceProperty: VertexProperty {
-        @usableFromInline
-        static var defaultValue: Cost<Weight> { .infinite }
-    }
-
-    @usableFromInline
-    enum PredecessorEdgeProperty: VertexProperty {
-        @usableFromInline
-        static var defaultValue: Edge? { nil }
     }
 
     /// A priority queue item for uniform cost search.
@@ -166,9 +154,9 @@ public struct UniformCostSearch<
         @usableFromInline
         var propertyMap: DictionaryPropertyMap<Vertex, VertexPropertyValues>
         @usableFromInline
-        let distanceProperty: any VertexProperty<Cost>.Type = DistanceProperty.self
+        let distanceProperty: any VertexProperty<Cost>.Type = DistanceProperty<Weight>.self
         @usableFromInline
-        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty.self
+        let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty<Edge>.self
 
         /// Creates a new iterator.
         ///
@@ -416,4 +404,8 @@ extension UniformCostSearch.Result {
 }
 
 extension UniformCostSearch: VisitorSupportingSequence {}
+
+extension UniformCostSearch.Result: ShortestPathResult {}
+
+extension UniformCostSearch.PriorityItem: Sendable where Vertex: Sendable, Weight: Sendable {}
 #endif
