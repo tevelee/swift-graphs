@@ -57,7 +57,7 @@ public struct DFSTopologicalSort<Graph: IncidenceGraph & VertexListGraph>: Topol
     
     /// The color of a vertex in the algorithm.
     @usableFromInline
-    enum Color {
+    enum Color: Sendable {
         /// Undiscovered vertex.
         case white
         /// Discovered but not fully processed vertex.

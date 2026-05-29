@@ -32,6 +32,8 @@ extension DictionaryPropertyMap: MutablePropertyMap {
     }
 }
 
+extension DictionaryPropertyMap: Sendable where Key: Sendable, Value: Sendable {}
+
 extension Graph where VertexDescriptor: Hashable {
     @inlinable
     public func makeVertexPropertyMap() -> DictionaryPropertyMap<VertexDescriptor, VertexPropertyValues> {

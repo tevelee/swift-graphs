@@ -151,3 +151,9 @@ extension AdjacencyList: AdjacencyListProtocol where
     EdgeStore == CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
     VertexPropertyMap == DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
     EdgePropertyMap == DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues> {}
+
+extension AdjacencyList: Sendable where
+    VertexStore: Sendable,
+    EdgeStore: Sendable,
+    VertexPropertyMap: Sendable,
+    EdgePropertyMap: Sendable {}

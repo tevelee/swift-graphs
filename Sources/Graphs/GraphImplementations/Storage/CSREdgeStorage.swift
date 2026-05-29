@@ -160,4 +160,7 @@ public struct CSREdgeStorage<Vertex: Hashable>: EdgeStorage {
     }
 }
 
+extension CSREdgeStorage: Sendable where Vertex: Sendable {}
+extension CSREdgeStorage.Edge: Sendable {}
+
 #endif

@@ -132,4 +132,8 @@ extension BinaryEdgeStore: BinaryEdgeStorage {
         rightEdgeMap[v]
     }
 }
+
+extension BinaryEdgeStore: Sendable where Vertex: Sendable {}
+extension BinaryEdgeStore.Edge: Sendable {}
+
 #endif

@@ -46,7 +46,7 @@ public struct Kosaraju<Graph: BidirectionalGraph & VertexListGraph> where Graph.
 
     /// The color of a vertex in the algorithm.
     @usableFromInline
-    enum Color {
+    enum Color: Sendable {
         /// Undiscovered vertex.
         case white
         /// Discovered but not fully processed vertex.

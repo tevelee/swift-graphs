@@ -25,7 +25,7 @@ extension SerializationFormat {
 /// A serialization format for JSON.
 ///
 /// This format represents graphs as JSON objects with vertices and edges arrays.
-public struct JSONFormat<G: VertexListGraph & EdgeListGraph>: SerializationFormat where G.VertexDescriptor: SerializableDescriptor {
+public struct JSONFormat<G: VertexListGraph & EdgeListGraph & IncidenceGraph>: SerializationFormat where G.VertexDescriptor: SerializableDescriptor {
     private let prettyPrint: Bool
     private let includeMetadata: Bool
     private let directed: Bool?
@@ -59,51 +59,80 @@ public struct JSONFormat<G: VertexListGraph & EdgeListGraph>: SerializationForma
         }
         result["vertices"] = vertices
         
-        // Edges (requires IncidenceGraph)
+        // Edges
         var edges: [[String: Any]] = []
-        if let incidenceGraph = graph as? any IncidenceGraph {
-            for edge in graph.edges() {
-                if let (sourceId, targetId) = try? extractEdgeEndpoints(incidenceGraph: incidenceGraph, edge: edge) {
-                    let edgeDict: [String: Any] = [
-                        "source": sourceId,
-                        "target": targetId
-                    ]
-                    edges.append(edgeDict)
-                }
+        for edge in graph.edges() {
+            guard let source = graph.source(of: edge),
+                  let destination = graph.destination(of: edge)
+            else {
+                throw SerializationError.missingDescriptorIdentifier
             }
+            edges.append([
+                "source": source.serializedIdentifier,
+                "target": destination.serializedIdentifier
+            ])
         }
         result["edges"] = edges
-        
+
         let jsonData = try JSONSerialization.data(
             withJSONObject: result,
             options: prettyPrint ? [.prettyPrinted, .sortedKeys] : [.sortedKeys]
         )
         return jsonData
     }
-    
-    private func extractEdgeEndpoints(
-        incidenceGraph: any IncidenceGraph,
-        edge: Any
-    ) throws -> (String, String)? {
-        return try extractEndpointsHelper(incidenceGraph: incidenceGraph, edge: edge)
+}
+
+extension DeserializationFormat {
+    /// Creates a JSON format for reading graphs back from JSON produced by ``SerializationFormat/json(prettyPrint:includeMetadata:directed:)``.
+    ///
+    /// - Returns: A JSON deserialization format targeting graph type `G`.
+    public static func json<G>() -> Self where Self == JSONFormat<G> {
+        .init()
     }
-    
-    private func extractEndpointsHelper<IG: IncidenceGraph>(
-        incidenceGraph: IG,
-        edge: Any
-    ) throws -> (String, String)? {
-        guard let typedEdge = edge as? IG.EdgeDescriptor else {
-            return nil
+}
+
+extension JSONFormat: DeserializationFormat where G: MutableGraph {
+    /// Reconstructs a graph from JSON produced by ``serialize(_:)``.
+    ///
+    /// Reads the `vertices` and `edges` arrays, creating a vertex per `id` and an edge per
+    /// `source`/`target` pair. Vertex ids serve only as a correspondence map; the reconstructed
+    /// graph assigns its own descriptors. Properties, if present, are ignored by structural
+    /// deserialization.
+    public func deserialize(_ data: Data, into graph: inout G) throws {
+        let object: Any
+        do {
+            object = try JSONSerialization.jsonObject(with: data)
+        } catch {
+            throw SerializationError.invalidFormat("not valid JSON: \(error)")
         }
-        
-        guard let source = incidenceGraph.source(of: typedEdge),
-              let destination = incidenceGraph.destination(of: typedEdge),
-              let sourceSerializable = source as? SerializableDescriptor,
-              let destinationSerializable = destination as? SerializableDescriptor else {
-            return nil
+        guard let root = object as? [String: Any] else {
+            throw SerializationError.invalidFormat("expected a top-level JSON object")
         }
-        
-        return (sourceSerializable.serializedIdentifier, destinationSerializable.serializedIdentifier)
+
+        var idMap: [String: G.VertexDescriptor] = [:]
+        let vertices = root["vertices"] as? [[String: Any]] ?? []
+        for vertex in vertices {
+            guard let id = vertex["id"] as? String else {
+                throw SerializationError.invalidFormat("vertex entry missing string 'id'")
+            }
+            idMap[id] = graph.addVertex()
+        }
+
+        let edges = root["edges"] as? [[String: Any]] ?? []
+        for edge in edges {
+            guard let sourceId = edge["source"] as? String,
+                  let targetId = edge["target"] as? String
+            else {
+                throw SerializationError.invalidFormat("edge entry missing string 'source'/'target'")
+            }
+            guard let source = idMap[sourceId] else {
+                throw SerializationError.unknownVertexReference(sourceId)
+            }
+            guard let target = idMap[targetId] else {
+                throw SerializationError.unknownVertexReference(targetId)
+            }
+            _ = graph.addEdge(from: source, to: target)
+        }
     }
 }
 
@@ -146,9 +175,9 @@ extension JSONFormat: PropertySerializationFormat where G: PropertyGraph, G: Inc
         for edge in graph.edges() {
             guard let source = graph.source(of: edge),
                   let destination = graph.destination(of: edge) else {
-                continue
+                throw SerializationError.missingDescriptorIdentifier
             }
-            
+
             var edgeDict: [String: Any] = [
                 "source": source.serializedIdentifier,
                 "target": destination.serializedIdentifier

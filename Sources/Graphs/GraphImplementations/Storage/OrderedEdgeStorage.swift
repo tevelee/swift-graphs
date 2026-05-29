@@ -110,3 +110,6 @@ public struct OrderedEdgeStorage<Vertex: Hashable>: EdgeStorage {
     @inlinable
     public init() {}
 }
+
+extension OrderedEdgeStorage: Sendable where Vertex: Sendable {}
+extension OrderedEdgeStorage.Edge: Sendable {}

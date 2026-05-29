@@ -1,5 +1,8 @@
 #if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
 import Foundation
+#if canImport(FoundationXML)
+import FoundationXML
+#endif
 
 extension SerializationFormat {
     /// Creates a GraphML format with the specified options.
@@ -23,7 +26,7 @@ extension SerializationFormat {
 ///
 /// This format allows graphs to be represented in a standardized XML format,
 /// supporting complex graph structures and custom data.
-public struct GraphMLFormat<G: VertexListGraph & EdgeListGraph>: SerializationFormat where G.VertexDescriptor: SerializableDescriptor {
+public struct GraphMLFormat<G: VertexListGraph & EdgeListGraph & IncidenceGraph>: SerializationFormat where G.VertexDescriptor: SerializableDescriptor {
     private let directed: Bool
     private let includeSchema: Bool
     
@@ -53,47 +56,90 @@ public struct GraphMLFormat<G: VertexListGraph & EdgeListGraph>: SerializationFo
             xml.append("    <node id=\"\(id)\"/>\n")
         }
         
-        // Edges (requires IncidenceGraph)
-        if let incidenceGraph = graph as? any IncidenceGraph {
-            for edge in graph.edges() {
-                if let (sourceId, targetId) = try? extractEdgeEndpoints(incidenceGraph: incidenceGraph, edge: edge) {
-                    xml.append("    <edge source=\"\(sourceId)\" target=\"\(targetId)\"/>\n")
-                }
+        // Edges
+        for edge in graph.edges() {
+            guard let source = graph.source(of: edge),
+                  let destination = graph.destination(of: edge)
+            else {
+                throw SerializationError.missingDescriptorIdentifier
             }
+            xml.append("    <edge source=\"\(source.serializedIdentifier)\" target=\"\(destination.serializedIdentifier)\"/>\n")
         }
-        
+
         xml.append("  </graph>\n")
         xml.append("</graphml>")
-        
+
         guard let data = xml.data(using: .utf8) else {
             throw SerializationError.encodingFailed(NSError(domain: "UTF8", code: -1))
         }
         return data
     }
-    
-    private func extractEdgeEndpoints(
-        incidenceGraph: any IncidenceGraph,
-        edge: Any
-    ) throws -> (String, String)? {
-        return try extractEndpointsHelper(incidenceGraph: incidenceGraph, edge: edge)
+}
+
+extension DeserializationFormat {
+    /// Creates a GraphML format for reading graphs back from GraphML XML.
+    ///
+    /// - Returns: A GraphML deserialization format targeting graph type `G`.
+    public static func graphML<G>() -> Self where Self == GraphMLFormat<G> {
+        .init()
     }
-    
-    private func extractEndpointsHelper<IG: IncidenceGraph>(
-        incidenceGraph: IG,
-        edge: Any
-    ) throws -> (String, String)? {
-        guard let typedEdge = edge as? IG.EdgeDescriptor else {
-            return nil
+}
+
+/// Collects `<node>` and `<edge>` elements from a GraphML document in document order.
+private final class GraphMLParserDelegate: NSObject, XMLParserDelegate {
+    var nodeIDs: [String] = []
+    var edges: [(source: String, target: String)] = []
+
+    func parser(
+        _ parser: XMLParser,
+        didStartElement elementName: String,
+        namespaceURI: String?,
+        qualifiedName qName: String?,
+        attributes attributeDict: [String: String]
+    ) {
+        switch elementName {
+        case "node":
+            if let id = attributeDict["id"] {
+                nodeIDs.append(id)
+            }
+        case "edge":
+            if let source = attributeDict["source"], let target = attributeDict["target"] {
+                edges.append((source, target))
+            }
+        default:
+            break
         }
-        
-        guard let source = incidenceGraph.source(of: typedEdge),
-              let destination = incidenceGraph.destination(of: typedEdge),
-              let sourceSerializable = source as? SerializableDescriptor,
-              let destinationSerializable = destination as? SerializableDescriptor else {
-            return nil
+    }
+}
+
+extension GraphMLFormat: DeserializationFormat where G: MutableGraph {
+    /// Reconstructs a graph from GraphML produced by ``serialize(_:)``.
+    ///
+    /// Reads `<node id="…"/>` and `<edge source="…" target="…"/>` elements. Node ids serve only
+    /// as a correspondence map; the reconstructed graph assigns its own descriptors. `<data>`
+    /// property values are ignored by structural deserialization.
+    public func deserialize(_ data: Data, into graph: inout G) throws {
+        let parser = XMLParser(data: data)
+        let delegate = GraphMLParserDelegate()
+        parser.delegate = delegate
+        guard parser.parse() else {
+            let reason = parser.parserError.map { "\($0)" } ?? "unknown error"
+            throw SerializationError.invalidFormat("malformed GraphML: \(reason)")
         }
-        
-        return (sourceSerializable.serializedIdentifier, destinationSerializable.serializedIdentifier)
+
+        var idMap: [String: G.VertexDescriptor] = [:]
+        for id in delegate.nodeIDs {
+            idMap[id] = graph.addVertex()
+        }
+        for edge in delegate.edges {
+            guard let source = idMap[edge.source] else {
+                throw SerializationError.unknownVertexReference(edge.source)
+            }
+            guard let target = idMap[edge.target] else {
+                throw SerializationError.unknownVertexReference(edge.target)
+            }
+            _ = graph.addEdge(from: source, to: target)
+        }
     }
 }
 
@@ -147,9 +193,9 @@ extension GraphMLFormat: PropertySerializationFormat where G: PropertyGraph, G: 
         for edge in graph.edges() {
             guard let source = graph.source(of: edge),
                   let destination = graph.destination(of: edge) else {
-                continue
+                throw SerializationError.missingDescriptorIdentifier
             }
-            
+
             let sourceId = source.serializedIdentifier
             let targetId = destination.serializedIdentifier
             xml.append("    <edge source=\"\(sourceId)\" target=\"\(targetId)\">\n")

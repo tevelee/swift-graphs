@@ -14,7 +14,7 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
     public typealias Edge = Graph.EdgeDescriptor
 
     /// The discovery and finish time of a vertex in DFS.
-    public enum Time {
+    public enum Time: Sendable {
         /// The vertex has not been discovered yet.
         case undiscovered
         /// The vertex was discovered at the given time.
@@ -69,7 +69,7 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
     }
 
     /// The color of a vertex in DFS (used for cycle detection).
-    public enum Color {
+    public enum Color: Sendable {
         /// Undiscovered vertex.
         case white
         /// Discovered but not fully processed vertex.

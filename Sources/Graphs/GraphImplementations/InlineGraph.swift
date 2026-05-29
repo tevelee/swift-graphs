@@ -286,3 +286,5 @@ extension InlineGraph: AdjacencyGraph {
     }
 }
 
+extension InlineGraph: Sendable where Vertex: Sendable, Edge: Sendable {}
+

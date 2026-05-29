@@ -441,4 +441,9 @@ extension OrderedSet<GridDirection> {
         lhs.subtracting(rhs)
     }
 }
+
+extension GridGraph: Sendable {}
+extension GridGraph.Vertex: Sendable {}
+extension GridGraph.Edge: Sendable {}
+
 #endif

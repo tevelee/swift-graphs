@@ -53,7 +53,7 @@ public struct Tarjan<Graph: IncidenceGraph & VertexListGraph> where Graph.Vertex
 
     /// The color of a vertex in the algorithm.
     @usableFromInline
-    enum Color {
+    enum Color: Sendable {
         /// Undiscovered vertex.
         case white
         /// Discovered but not fully processed vertex.

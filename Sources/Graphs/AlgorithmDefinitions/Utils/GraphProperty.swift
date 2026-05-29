@@ -3,7 +3,7 @@
 /// Conforming types must provide a default value that is used when a property has not been explicitly set.
 /// Use ``VertexProperty`` for vertex properties and ``EdgeProperty`` for edge properties.
 public protocol GraphProperty<Value> {
-    associatedtype Value
+    associatedtype Value: Sendable
 
     /// The default value for this property.
     static var defaultValue: Value { get }

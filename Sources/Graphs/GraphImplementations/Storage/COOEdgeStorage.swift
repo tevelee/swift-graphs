@@ -106,4 +106,7 @@ public struct COOEdgeStorage<Vertex: Hashable>: EdgeStorage {
         tombstones.insert(edge.id)
     }
 }
+
+extension COOEdgeStorage: Sendable where Vertex: Sendable {}
+
 #endif

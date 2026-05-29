@@ -277,4 +277,6 @@ extension CompleteGraph: EdgeLookupGraph {
     }
 }
 
+extension CompleteGraph: Sendable where Vertex: Sendable {}
+
 #endif

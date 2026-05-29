@@ -72,3 +72,6 @@ public struct OrderedVertexStorage: VertexStorage {
     @inlinable
     public init() {}
 }
+
+extension OrderedVertexStorage: Sendable {}
+extension OrderedVertexStorage.Vertex: Sendable {}

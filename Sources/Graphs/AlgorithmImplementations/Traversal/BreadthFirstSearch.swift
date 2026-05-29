@@ -13,7 +13,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
     public typealias Edge = Graph.EdgeDescriptor
     
     /// The distance from the source vertex.
-    public enum Distance {
+    public enum Distance: Sendable {
         /// The vertex is unreachable.
         case unreachable
         /// The vertex is reachable at the given depth.
@@ -67,7 +67,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
     }
     
     @usableFromInline
-    enum Color: Equatable {
+    enum Color: Equatable, Sendable {
         case white // Undiscovered
         case gray // Discovered but not fully processed
         case black // Fully processed

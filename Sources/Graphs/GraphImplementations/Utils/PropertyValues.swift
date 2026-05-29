@@ -3,7 +3,7 @@
 /// This type provides type-safe storage for vertex properties using a dynamic
 /// property system. It allows storing different types of properties associated
 /// with vertices in a single container.
-public struct VertexPropertyValues: VertexProperties {
+public struct VertexPropertyValues: VertexProperties, Sendable {
     private var storage = PropertyValues()
 
     /// Accesses the value of a specific vertex property.
@@ -32,7 +32,7 @@ public struct VertexPropertyValues: VertexProperties {
 /// This type provides type-safe storage for edge properties using a dynamic
 /// property system. It allows storing different types of properties associated
 /// with edges in a single container.
-public struct EdgePropertyValues: EdgeProperties {
+public struct EdgePropertyValues: EdgeProperties, Sendable {
     private var storage = PropertyValues()
 
     /// Accesses the value of a specific edge property.
@@ -56,8 +56,8 @@ public struct EdgePropertyValues: EdgeProperties {
     public init() {}
 }
 
-private struct PropertyValues {
-    private var storage: [ObjectIdentifier: Any] = [:]
+private struct PropertyValues: Sendable {
+    private var storage: [ObjectIdentifier: any Sendable] = [:]
 
     subscript<P: GraphProperty>(property: P.Type) -> P.Value {
         set { storage[ObjectIdentifier(property)] = newValue }

@@ -46,7 +46,7 @@ extension SerializationFormat {
 ///     edgeProperties: [Weight.self]
 /// )
 /// ```
-public struct DOTFormat<G: VertexListGraph & EdgeListGraph>: SerializationFormat where G.VertexDescriptor: SerializableDescriptor {
+public struct DOTFormat<G: VertexListGraph & EdgeListGraph & IncidenceGraph>: SerializationFormat where G.VertexDescriptor: SerializableDescriptor {
     private let directed: Bool
     private let graphName: String
     private let strict: Bool
@@ -103,15 +103,16 @@ public struct DOTFormat<G: VertexListGraph & EdgeListGraph>: SerializationFormat
             lines.append("  \(id);")
         }
         
-        // Edges (requires IncidenceGraph)
-        if let incidenceGraph = graph as? any IncidenceGraph {
-            for edge in graph.edges() {
-                if let (sourceId, targetId) = try? extractEdgeEndpoints(incidenceGraph: incidenceGraph, edge: edge) {
-                    lines.append("  \(sourceId) \(edgeOp) \(targetId);")
-                }
+        // Edges
+        for edge in graph.edges() {
+            guard let source = graph.source(of: edge),
+                  let destination = graph.destination(of: edge)
+            else {
+                throw SerializationError.missingDescriptorIdentifier
             }
+            lines.append("  \(vertexIdentifier(source)) \(edgeOp) \(vertexIdentifier(destination));")
         }
-        
+
         lines.append("}")
         
         let result = lines.joined(separator: "\n")
@@ -145,44 +146,113 @@ public struct DOTFormat<G: VertexListGraph & EdgeListGraph>: SerializationFormat
         }.joined(separator: ", ")
     }
     
-    private func extractEdgeEndpoints(
-        incidenceGraph: any IncidenceGraph,
-        edge: Any
-    ) throws -> (String, String)? {
-        return try extractEndpointsHelper(incidenceGraph: incidenceGraph, edge: edge)
+}
+
+extension DeserializationFormat {
+    /// Creates a DOT (Graphviz) format for reading graphs back from DOT text.
+    ///
+    /// - Returns: A DOT deserialization format targeting graph type `G`.
+    public static func dot<G>() -> Self where Self == DOTFormat<G> {
+        .init()
     }
-    
-    private func extractEndpointsHelper<IG: IncidenceGraph>(
-        incidenceGraph: IG,
-        edge: Any
-    ) throws -> (String, String)? {
-        guard let typedEdge = edge as? IG.EdgeDescriptor else {
-            return nil
+}
+
+extension DOTFormat: DeserializationFormat where G: MutableGraph {
+    /// Reconstructs a graph from DOT text produced by ``serialize(_:)``.
+    ///
+    /// Parses node statements (`a;`) and edge statements (`a -> b;` or `a -- b;`), including
+    /// quoted identifiers containing spaces. Identifiers serve only as a correspondence map;
+    /// the reconstructed graph assigns its own descriptors. Attribute blocks (`[…]`), default
+    /// `graph`/`node`/`edge` statements, and comments are ignored.
+    public func deserialize(_ data: Data, into graph: inout G) throws {
+        guard let text = String(data: data, encoding: .utf8) else {
+            throw SerializationError.invalidFormat("DOT input is not valid UTF-8")
         }
-        
-        guard let source = incidenceGraph.source(of: typedEdge),
-              let destination = incidenceGraph.destination(of: typedEdge),
-              let sourceSerializable = source as? SerializableDescriptor,
-              let destinationSerializable = destination as? SerializableDescriptor else {
-            return nil
+        guard let open = text.firstIndex(of: "{"), let close = text.lastIndex(of: "}"), open < close else {
+            throw SerializationError.invalidFormat("DOT input missing a '{ … }' body")
         }
-        
-        let sourceId = vertexIdentifier(sourceSerializable)
-        let destinationId = vertexIdentifier(destinationSerializable)
-        
-        return (sourceId, destinationId)
+        let body = text[text.index(after: open)..<close]
+
+        var idMap: [String: G.VertexDescriptor] = [:]
+        func vertex(for id: String) -> G.VertexDescriptor {
+            if let existing = idMap[id] { return existing }
+            let descriptor = graph.addVertex()
+            idMap[id] = descriptor
+            return descriptor
+        }
+
+        for rawStatement in body.split(separator: ";", omittingEmptySubsequences: true) {
+            let statement = rawStatement.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !statement.isEmpty else { continue }
+            // Skip default-attribute statements: graph […], node […], edge […]
+            if let keyword = statement.split(separator: " ", maxSplits: 1).first,
+               keyword == "graph" || keyword == "node" || keyword == "edge" {
+                continue
+            }
+            let ids = Self.parseStatementIdentifiers(statement)
+            guard !ids.isEmpty else { continue }
+            if ids.count == 1 {
+                _ = vertex(for: ids[0])
+            } else {
+                // Chains (a -> b -> c) connect consecutive identifiers.
+                for index in 0..<(ids.count - 1) {
+                    _ = graph.addEdge(from: vertex(for: ids[index]), to: vertex(for: ids[index + 1]))
+                }
+            }
+        }
     }
-    
-    private func vertexIdentifier(_ serializable: SerializableDescriptor) -> String {
-        let id = serializable.serializedIdentifier
-        // Escape if necessary
-        if id.contains(" ") || id.contains("\"") || id.contains("\\") {
-            let escaped = id
-                .replacingOccurrences(of: "\\", with: "\\\\")
-                .replacingOccurrences(of: "\"", with: "\\\"")
-            return "\"\(escaped)\""
+
+    /// Extracts the vertex identifiers from a single DOT statement, unquoting as needed and
+    /// stopping at any trailing attribute block (`[…]`). Edge operators (`->`, `--`) are skipped.
+    @usableFromInline
+    static func parseStatementIdentifiers(_ statement: String) -> [String] {
+        var ids: [String] = []
+        var chars = Array(statement)
+        var i = 0
+        while i < chars.count {
+            let c = chars[i]
+            if c == " " || c == "\t" || c == "\n" || c == "\r" {
+                i += 1
+            } else if c == "[" {
+                break  // attribute block — ignore the rest of the statement
+            } else if c == "-" && i + 1 < chars.count && (chars[i + 1] == ">" || chars[i + 1] == "-") {
+                i += 2  // edge operator
+            } else if c == "\"" {
+                // quoted identifier with escape handling
+                var value = ""
+                i += 1
+                while i < chars.count {
+                    let ch = chars[i]
+                    if ch == "\\" && i + 1 < chars.count {
+                        value.append(chars[i + 1])
+                        i += 2
+                    } else if ch == "\"" {
+                        i += 1
+                        break
+                    } else {
+                        value.append(ch)
+                        i += 1
+                    }
+                }
+                ids.append(value)
+            } else {
+                // bare identifier
+                var value = ""
+                while i < chars.count {
+                    let ch = chars[i]
+                    if ch == " " || ch == "\t" || ch == "\n" || ch == "\r" || ch == "[" || ch == "\"" {
+                        break
+                    }
+                    if ch == "-" && i + 1 < chars.count && (chars[i + 1] == ">" || chars[i + 1] == "-") {
+                        break
+                    }
+                    value.append(ch)
+                    i += 1
+                }
+                if !value.isEmpty { ids.append(value) }
+            }
         }
-        return id
+        return ids
     }
 }
 
@@ -239,9 +309,9 @@ extension DOTFormat: PropertySerializationFormat where G: PropertyGraph, G: Inci
         for edge in graph.edges() {
             guard let source = graph.source(of: edge),
                   let destination = graph.destination(of: edge) else {
-                continue
+                throw SerializationError.missingDescriptorIdentifier
             }
-            
+
             let sourceId = vertexIdentifier(source)
             let destinationId = vertexIdentifier(destination)
             let attributes = extractEdgeProperties(

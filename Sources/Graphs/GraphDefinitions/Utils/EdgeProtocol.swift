@@ -28,4 +28,5 @@ public struct SimpleEdge<Vertex>: EdgeProtocol {
 
 extension SimpleEdge: Equatable where Vertex: Equatable {}
 extension SimpleEdge: Hashable where Vertex: Hashable {}
+extension SimpleEdge: Sendable where Vertex: Sendable {}
 

@@ -128,3 +128,5 @@ public struct CacheInOutEdges<
         base.edgeCount
     }
 }
+
+extension CacheInOutEdges: Sendable where Base: Sendable, Base.Vertex: Sendable, Base.Edge: Sendable {}

@@ -105,5 +105,38 @@ public struct GraphFormatter {
         }
         return string
     }
+
+    /// Reads a graph from serialized `Data` into the given mutable graph.
+    ///
+    /// - Parameters:
+    ///   - data: The serialized representation to read.
+    ///   - format: The deserialization format describing how to parse `data`.
+    ///   - graph: The mutable graph to populate. Existing contents are preserved.
+    /// - Throws: ``SerializationError`` if the data is malformed.
+    public func read<F: DeserializationFormat>(
+        _ data: Data,
+        using format: F,
+        into graph: inout F.G
+    ) throws {
+        try format.deserialize(data, into: &graph)
+    }
+
+    /// Reads a graph from a serialized `String` into the given mutable graph.
+    ///
+    /// - Parameters:
+    ///   - string: The serialized representation to read.
+    ///   - format: The deserialization format describing how to parse `string`.
+    ///   - graph: The mutable graph to populate. Existing contents are preserved.
+    /// - Throws: ``SerializationError`` if the string is not valid UTF-8 or the data is malformed.
+    public func read<F: DeserializationFormat>(
+        _ string: String,
+        using format: F,
+        into graph: inout F.G
+    ) throws {
+        guard let data = string.data(using: .utf8) else {
+            throw SerializationError.invalidFormat("input string is not valid UTF-8")
+        }
+        try format.deserialize(data, into: &graph)
+    }
 }
 #endif
