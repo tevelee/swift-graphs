@@ -169,4 +169,66 @@ struct AlgorithmOnViewsTests {
     }
 
     #endif  // !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
+
+    /// `UndirectedGraphView.edges()` wraps each base edge with `flipped: false`.
+    /// Iterating `edges()` on the undirected view yields the same count as the base graph.
+    /// `source(of:)` and `destination(of:)` on flipped and non-flipped edges must
+    /// correctly swap or preserve endpoints.
+    @Test func undirectedViewEdgeEnumerationAndEndpoints() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b)   // directed edge a→b
+        graph.addEdge(from: b, to: c)   // directed edge b→c
+
+        let u = graph.undirected()
+
+        // EdgeListGraph conformance: edges() yields base edges with flipped=false
+        let uEdges = Array(u.edges())
+        #expect(uEdges.count == 2, "undirected view has same number of base edges as the directed graph")
+        #expect(u.edgeCount == 2)
+        #expect(u.vertexCount == 3)
+
+        // Non-flipped edge: source/destination should match the base edge
+        let nonFlipped = uEdges.first(where: { !$0.flipped })!
+        #expect(u.source(of: nonFlipped) != nil)
+        #expect(u.destination(of: nonFlipped) != nil)
+
+        // Flipped edges appear when iterating outgoing edges of a vertex that
+        // has incoming edges: calling outgoingEdges on b yields a→b (flipped) and b→c (non-flipped)
+        let outgoingFromB = Array(u.outgoingEdges(of: b))
+        #expect(outgoingFromB.count == 2, "b has 1 outgoing + 1 incoming edge → 2 edges in undirected view")
+
+        let flipped = outgoingFromB.first(where: { $0.flipped })!
+        // A flipped edge from b's perspective: the base edge is a→b, so flipped source=b, destination=a
+        #expect(u.source(of: flipped) == b, "flipped edge source is the destination of the base edge")
+        #expect(u.destination(of: flipped) == a, "flipped edge destination is the source of the base edge")
+
+        // incomingEdges delegates to outgoingEdges in UndirectedGraphView
+        let incoming = Array(u.incomingEdges(of: b))
+        #expect(incoming.count == outgoingFromB.count, "incomingEdges mirrors outgoingEdges in undirected view")
+        #expect(u.inDegree(of: b) == u.outDegree(of: b), "inDegree == outDegree in undirected view")
+    }
+
+    /// `UndirectedGraphView` makes a directed graph bidirectional from the algorithm perspective.
+    /// BFS on the undirected view of a one-way chain can traverse in both directions.
+    @Test func bfsOnUndirectedViewReachesVerticesAgainstEdgeDirection() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        // One-way directed: a→b→c (no reverse edges)
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: c)
+
+        // On directed: BFS from c visits only c (no outgoing edges from c)
+        let directedResult = graph.traverse(from: c, using: .bfs())
+        #expect(directedResult.vertices == [c], "c has no outgoing edges in directed graph")
+
+        // On undirected view: BFS from c can follow reversed edges c→b→a
+        let undirectedResult = graph.undirected().traverse(from: c, using: .bfs())
+        #expect(Set(undirectedResult.vertices) == Set([a, b, c]),
+                "undirected BFS from c reaches all vertices via reversed edges")
+    }
 }

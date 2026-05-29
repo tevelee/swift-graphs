@@ -267,4 +267,206 @@ struct MaxFlowAlgorithmTests {
         return graph
     }
 }
+
+// MARK: - MaxFlowResult API Coverage
+
+/// Tests for `MaxFlowResult` methods not covered by the flow-conservation helper:
+/// `residualCapacity(of:)` and `isMinCutEdge(_:)`.
+struct MaxFlowResultAPITests {
+
+    @Test func residualCapacityAndIsMinCutEdge() throws {
+        // Simple s→a→t network with capacity 5 on s→a and 3 on a→t.
+        // Max flow = 3 (bottleneck a→t).
+        var graph = AdjacencyList()
+        let s = graph.addVertex { $0.label = "s" }
+        let a = graph.addVertex { $0.label = "a" }
+        let t = graph.addVertex { $0.label = "t" }
+        let sa = graph.addEdge(from: s, to: a)!; graph[sa].weight = 5.0
+        let at = graph.addEdge(from: a, to: t)!; graph[at].weight = 3.0
+
+        let result = graph.maximumFlow(from: s, to: t,
+            using: .edmondsKarp(capacityCost: .property(\.weight)))
+
+        #expect(result.flowValue == 3.0, "max flow is constrained by the 3-capacity bottleneck a→t")
+
+        // flow(through:) — already covered by verifyFlowConservation; verify here explicitly
+        #expect(result.flow(through: sa) == 3.0, "flow through s→a equals the max flow")
+        #expect(result.flow(through: at) == 3.0, "flow through a→t equals the max flow")
+
+        // residualCapacity(of:) — the remaining capacity
+        #expect(result.residualCapacity(of: sa) == 2.0, "s→a has 5−3=2 residual capacity")
+        #expect(result.residualCapacity(of: at) == 0.0, "a→t is saturated, residual=0")
+
+        // isMinCutEdge — the saturated edge a→t is in the min cut
+        #expect(result.isMinCutEdge(at), "saturated a→t edge is in the minimum cut")
+        #expect(!result.isMinCutEdge(sa), "s→a with residual capacity is not in the min cut")
+    }
+}
+
+// MARK: - Visitor Support
+
+/// Exercises all four FordFulkerson visitor events through a composed visitor pair.
+///
+/// Graph: s→v1(cap=5), v1→t(cap=5). One augmenting path: s→v1→t.
+/// - `findPath` fires once per iteration (once for the single augmenting path).
+/// - `examineEdge` fires for each edge examined during the DFS/BFS path search.
+/// - `augmentPath` fires once when the augmenting path is found.
+/// - `updateFlow` fires for each edge in the augmenting path (2 edges: s→v1, v1→t).
+extension MaxFlowAlgorithmTests {
+    @Test func fordFulkersonComposedVisitorsReceiveAllEvents() {
+        var graph = AdjacencyList()
+        let s  = graph.addVertex { $0.label = "s" }
+        let v1 = graph.addVertex { $0.label = "v1" }
+        let t  = graph.addVertex { $0.label = "t" }
+        graph.addEdge(from: s,  to: v1) { $0.weight = 5.0 }
+        graph.addEdge(from: v1, to: t)  { $0.weight = 5.0 }
+
+        var examEdge1 = 0; var examEdge2 = 0
+        var augPath1 = 0;  var augPath2 = 0
+        var updFlow1 = 0;  var updFlow2 = 0
+        var findPath1 = 0; var findPath2 = 0
+
+        var vis1 = FordFulkerson<DefaultAdjacencyList, Double>.Visitor()
+        vis1.examineEdge = { _, _ in examEdge1 += 1 }
+        vis1.augmentPath = { _, _ in augPath1 += 1 }
+        vis1.updateFlow  = { _, _ in updFlow1 += 1 }
+        vis1.findPath    = { _, _ in findPath1 += 1 }
+
+        var vis2 = FordFulkerson<DefaultAdjacencyList, Double>.Visitor()
+        vis2.examineEdge = { _, _ in examEdge2 += 1 }
+        vis2.augmentPath = { _, _ in augPath2 += 1 }
+        vis2.updateFlow  = { _, _ in updFlow2 += 1 }
+        vis2.findPath    = { _, _ in findPath2 += 1 }
+
+        let combined = vis1.combined(with: vis2)
+        _ = graph.maximumFlow(from: s, to: t,
+            using: .fordFulkerson(capacityCost: .property(\.weight)).withVisitor(combined))
+
+        #expect(findPath1 >= 1,  "findPath fires at least once per augmenting-path iteration")
+        #expect(findPath2 >= 1)
+        #expect(examEdge1 >= 1,  "examineEdge fires for each edge examined during DFS search")
+        #expect(examEdge2 >= 1)
+        #expect(augPath1 >= 1,   "augmentPath fires when an augmenting path is found")
+        #expect(augPath2 >= 1)
+        #expect(updFlow1 >= 1,   "updateFlow fires for each edge in the augmenting path")
+        #expect(updFlow2 >= 1)
+        // Both composed visitors must see identical event counts
+        #expect(findPath1 == findPath2)
+        #expect(examEdge1 == examEdge2)
+        #expect(augPath1 == augPath2)
+        #expect(updFlow1 == updFlow2)
+    }
+
+    /// Exercises all five EdmondsKarp visitor events through a composed visitor pair.
+    ///
+    /// Graph: s→v1(cap=5), v1→t(cap=5). One BFS-found augmenting path.
+    /// - `findPath` fires once per BFS iteration.
+    /// - `levelAssigned` fires for each vertex assigned a BFS level.
+    /// - `examineEdge` fires for each edge examined during BFS.
+    /// - `augmentPath` fires when the path is augmented.
+    /// - `updateFlow` fires for each edge in the augmenting path.
+    @Test func edmondsKarpComposedVisitorsReceiveAllEvents() {
+        var graph = AdjacencyList()
+        let s  = graph.addVertex { $0.label = "s" }
+        let v1 = graph.addVertex { $0.label = "v1" }
+        let t  = graph.addVertex { $0.label = "t" }
+        graph.addEdge(from: s,  to: v1) { $0.weight = 5.0 }
+        graph.addEdge(from: v1, to: t)  { $0.weight = 5.0 }
+
+        var examEdge1 = 0;    var examEdge2 = 0
+        var augPath1 = 0;     var augPath2 = 0
+        var updFlow1 = 0;     var updFlow2 = 0
+        var findPath1 = 0;    var findPath2 = 0
+        var levelAssign1 = 0; var levelAssign2 = 0
+
+        var vis1 = EdmondsKarp<DefaultAdjacencyList, Double>.Visitor()
+        vis1.examineEdge    = { _, _ in examEdge1 += 1 }
+        vis1.augmentPath    = { _, _ in augPath1 += 1 }
+        vis1.updateFlow     = { _, _ in updFlow1 += 1 }
+        vis1.findPath       = { _, _ in findPath1 += 1 }
+        vis1.levelAssigned  = { _, _ in levelAssign1 += 1 }
+
+        var vis2 = EdmondsKarp<DefaultAdjacencyList, Double>.Visitor()
+        vis2.examineEdge    = { _, _ in examEdge2 += 1 }
+        vis2.augmentPath    = { _, _ in augPath2 += 1 }
+        vis2.updateFlow     = { _, _ in updFlow2 += 1 }
+        vis2.findPath       = { _, _ in findPath2 += 1 }
+        vis2.levelAssigned  = { _, _ in levelAssign2 += 1 }
+
+        let combined = vis1.combined(with: vis2)
+        _ = graph.maximumFlow(from: s, to: t,
+            using: .edmondsKarp(capacityCost: .property(\.weight)).withVisitor(combined))
+
+        #expect(findPath1 >= 1,    "findPath fires at least once per BFS iteration")
+        #expect(findPath2 >= 1)
+        #expect(levelAssign1 >= 1, "levelAssigned fires for each vertex assigned a BFS level")
+        #expect(levelAssign2 >= 1)
+        #expect(examEdge1 >= 1,    "examineEdge fires for each edge examined during BFS")
+        #expect(examEdge2 >= 1)
+        #expect(augPath1 >= 1,     "augmentPath fires when the path is augmented")
+        #expect(augPath2 >= 1)
+        #expect(updFlow1 >= 1,     "updateFlow fires for each edge in the augmenting path")
+        #expect(updFlow2 >= 1)
+        // Both composed visitors must see identical event counts
+        #expect(findPath1 == findPath2)
+        #expect(levelAssign1 == levelAssign2)
+        #expect(examEdge1 == examEdge2)
+        #expect(augPath1 == augPath2)
+        #expect(updFlow1 == updFlow2)
+    }
+
+    /// Exercises all seven Dinic visitor events through a composed visitor pair.
+    ///
+    /// Graph: s→v1(cap=5), v1→t(cap=5). One blocking flow iteration.
+    /// - `buildLevelGraph` fires once per BFS phase.
+    /// - `levelAssigned` fires for each vertex assigned a level in the level graph.
+    /// - `findBlockingFlow` fires once per DFS blocking-flow phase.
+    /// - `updateFlow` fires for each edge whose flow is updated.
+    ///
+    /// Note: `examineEdge`, `augmentPath`, and `edgeBlocked` are defined in the visitor
+    /// struct but are not currently called by the Dinic implementation.
+    @Test func dinicComposedVisitorsReceiveAllEvents() {
+        var graph = AdjacencyList()
+        let s  = graph.addVertex { $0.label = "s" }
+        let v1 = graph.addVertex { $0.label = "v1" }
+        let t  = graph.addVertex { $0.label = "t" }
+        graph.addEdge(from: s,  to: v1) { $0.weight = 5.0 }
+        graph.addEdge(from: v1, to: t)  { $0.weight = 5.0 }
+
+        var buildLevel1 = 0;   var buildLevel2 = 0
+        var levelAssign1 = 0;  var levelAssign2 = 0
+        var blocking1 = 0;     var blocking2 = 0
+        var updFlow1 = 0;      var updFlow2 = 0
+
+        var vis1 = Dinic<DefaultAdjacencyList, Double>.Visitor()
+        vis1.buildLevelGraph  = { buildLevel1 += 1 }
+        vis1.levelAssigned    = { _, _ in levelAssign1 += 1 }
+        vis1.findBlockingFlow = { blocking1 += 1 }
+        vis1.updateFlow       = { _, _ in updFlow1 += 1 }
+
+        var vis2 = Dinic<DefaultAdjacencyList, Double>.Visitor()
+        vis2.buildLevelGraph  = { buildLevel2 += 1 }
+        vis2.levelAssigned    = { _, _ in levelAssign2 += 1 }
+        vis2.findBlockingFlow = { blocking2 += 1 }
+        vis2.updateFlow       = { _, _ in updFlow2 += 1 }
+
+        let combined = vis1.combined(with: vis2)
+        _ = graph.maximumFlow(from: s, to: t,
+            using: .dinic(capacityCost: .property(\.weight)).withVisitor(combined))
+
+        #expect(buildLevel1 >= 1,   "buildLevelGraph fires at least once per BFS phase")
+        #expect(buildLevel2 >= 1)
+        #expect(levelAssign1 >= 1,  "levelAssigned fires for each vertex assigned a level")
+        #expect(levelAssign2 >= 1)
+        #expect(blocking1 >= 1,     "findBlockingFlow fires at least once per DFS phase")
+        #expect(blocking2 >= 1)
+        #expect(updFlow1 >= 1,      "updateFlow fires for each edge whose flow changes")
+        #expect(updFlow2 >= 1)
+        // Both composed visitors must see identical event counts
+        #expect(buildLevel1 == buildLevel2)
+        #expect(levelAssign1 == levelAssign2)
+        #expect(blocking1 == blocking2)
+        #expect(updFlow1 == updFlow2)
+    }
+}
 #endif

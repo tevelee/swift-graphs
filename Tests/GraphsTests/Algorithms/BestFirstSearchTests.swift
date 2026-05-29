@@ -96,5 +96,34 @@ struct BestFirstSearchTests {
         #expect(Set(hiFirstLabels) == Set(loFirstLabels))
         #expect(hiFirstLabels != loFirstLabels, "different heuristics should produce different visit orders")
     }
+
+    // MARK: - Visitor Support
+
+    /// `BestFirstTraversal` delegates to A* and forwards its visitor to the underlying sequence.
+    /// Two composed visitors must each receive `examineVertex` for every vertex explored.
+    @Test func composedVisitorsReceiveAllEvents() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: c)
+
+        var examined1 = 0; var examined2 = 0
+
+        var v1 = BestFirstTraversal<DefaultAdjacencyList, Int>.Visitor()
+        v1.examineVertex = { _ in examined1 += 1 }
+
+        var v2 = BestFirstTraversal<DefaultAdjacencyList, Int>.Visitor()
+        v2.examineVertex = { _ in examined2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = BestFirstTraversal<DefaultAdjacencyList, Int>(heuristic: .uniform(0))
+            .traverse(from: a, in: graph, visitor: combined)
+
+        #expect(examined1 == 3, "all 3 vertices in chain a→b→c must be examined")
+        #expect(examined2 == 3)
+        #expect(examined1 == examined2, "both composed visitors must receive identical examineVertex events")
+    }
 }
 #endif

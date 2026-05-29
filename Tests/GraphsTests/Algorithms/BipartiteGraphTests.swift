@@ -160,28 +160,81 @@ struct BipartiteCheckableTests {
     func disconnectedComponentsWithNonBipartitePartIsRejected() {
         // Create a graph with multiple components, some bipartite, some not
         var graph = AdjacencyList()
-        
+
         let v1 = graph.addVertex()
         let v2 = graph.addVertex()
         let v3 = graph.addVertex()
         let v4 = graph.addVertex()
         let v5 = graph.addVertex()
         let v6 = graph.addVertex()
-        
+
         // Bipartite component: v1-v2-v3-v4 (path of length 3)
         _ = graph.addEdge(from: v1, to: v2)
         _ = graph.addEdge(from: v2, to: v3)
         _ = graph.addEdge(from: v3, to: v4)
-        
+
         // Non-bipartite component: v5-v6-v7-v5 (odd cycle)
         let v7 = graph.addVertex()
         _ = graph.addEdge(from: v5, to: v6)
         _ = graph.addEdge(from: v6, to: v7)
         _ = graph.addEdge(from: v7, to: v5)
-        
+
         // The graph should not be bipartite due to the non-bipartite component
         #expect(!graph.isBipartiteSimple())
         #expect(graph.bipartition() == nil)
+    }
+
+    // MARK: - Multi-Backend Coverage
+
+    @Test func bipartitePathDetected_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            // Even-length path a→b→c→d is bipartite (alternating partitions)
+            let a = graph.addVertex { $0.label = "a" }
+            let b = graph.addVertex { $0.label = "b" }
+            let c = graph.addVertex { $0.label = "c" }
+            let d = graph.addVertex { $0.label = "d" }
+            graph.addEdge(from: a, to: b)
+            graph.addEdge(from: b, to: c)
+            graph.addEdge(from: c, to: d)
+
+            #expect(graph.isBipartiteSimple(), "[\(backend)] path a→b→c→d is bipartite")
+            let bp = graph.bipartition()
+            #expect(bp != nil, "[\(backend)] bipartition should be found")
+            if let bp {
+                #expect(bp.left.count + bp.right.count == 4, "[\(backend)] all 4 vertices partitioned")
+            }
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    @Test func nonBipartiteOddCycleRejected_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            // Triangle (odd cycle): not bipartite
+            let a = graph.addVertex { $0.label = "a" }
+            let b = graph.addVertex { $0.label = "b" }
+            let c = graph.addVertex { $0.label = "c" }
+            graph.addEdge(from: a, to: b)
+            graph.addEdge(from: b, to: c)
+            graph.addEdge(from: c, to: a)
+
+            #expect(!graph.isBipartiteSimple(), "[\(backend)] triangle is not bipartite")
+            #expect(graph.bipartition() == nil, "[\(backend)] no bipartition for odd cycle")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
     }
 }
 #endif

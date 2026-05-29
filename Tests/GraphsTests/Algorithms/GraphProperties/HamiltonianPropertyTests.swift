@@ -312,7 +312,66 @@ struct HamiltonianPropertyTests {
         
         let algorithm = StandardOrePropertyAlgorithm<TestGraph>()
         _ = algorithm.satisfiesOre(in: graph, visitor: visitor)
-        
+
         #expect(visitorCalls.contains("insufficientVertices(2)"))
+    }
+
+    // MARK: - Composition
+
+    /// `DiracProperty.Visitor` uses `??` composition: the first non-nil callback wins.
+    /// Calling `combined(with:)` and running the algorithm exercises the composition code.
+    @Test func diracComposedVisitor() {
+        // Build a graph with 4 vertices where Dirac's condition is checked per-vertex
+        var graph = AdjacencyList()
+        let a = graph.addVertex(); let b = graph.addVertex()
+        let c = graph.addVertex(); let d = graph.addVertex()
+        // K4: all pairs connected → each vertex has degree 3 ≥ n/2 = 2 → Dirac satisfied
+        for (u, v) in [(a,b),(a,c),(a,d),(b,c),(b,d),(c,d)] {
+            graph.addEdge(from: u, to: v); graph.addEdge(from: v, to: u)
+        }
+
+        var checkMinDegree = 0
+        var checkVtxDegree = 0
+
+        let v1 = DiracProperty<TestGraph>.Visitor(
+            checkMinimumDegree: { _ in checkMinDegree += 1 },
+            checkVertexDegree:  { _, _, _ in checkVtxDegree += 1 }
+        )
+        // v2 has no callbacks; combined uses v1's via ??
+        let v2 = DiracProperty<TestGraph>.Visitor()
+        let combined = v1.combined(with: v2)
+
+        let result = StandardDiracPropertyAlgorithm<TestGraph>().satisfiesDirac(in: graph, visitor: combined)
+        #expect(result, "K4 satisfies Dirac's condition")
+        #expect(checkMinDegree == 1, "checkMinimumDegree fires once per algorithm run")
+        #expect(checkVtxDegree == 4, "checkVertexDegree fires once per vertex")
+    }
+
+    /// `OreProperty.Visitor` also uses `??` composition. Exercise `combined(with:)` and
+    /// verify the per-pair events fire correctly.
+    @Test func oreComposedVisitor() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex(); let b = graph.addVertex()
+        let c = graph.addVertex(); let d = graph.addVertex()
+        // K4 again — every pair is adjacent, so checkVertexPair fires for each pair
+        for (u, v) in [(a,b),(a,c),(a,d),(b,c),(b,d),(c,d)] {
+            graph.addEdge(from: u, to: v); graph.addEdge(from: v, to: u)
+        }
+
+        var checkCount = 0
+        var checkDegSum = 0
+
+        let v1 = OreProperty<TestGraph>.Visitor(
+            checkVertexPair: { _, _, _ in checkCount += 1 },
+            checkDegreeSum:  { _, _, _, _ in checkDegSum += 1 }
+        )
+        let v2 = OreProperty<TestGraph>.Visitor()
+        let combined = v1.combined(with: v2)
+
+        let result = StandardOrePropertyAlgorithm<TestGraph>().satisfiesOre(in: graph, visitor: combined)
+        #expect(result, "K4 satisfies Ore's condition")
+        // C(4,2) = 6 pairs checked; all adjacent → checkDegreeSum never fires
+        #expect(checkCount == 6, "checkVertexPair fires once per unique pair")
+        #expect(checkDegSum == 0, "checkDegreeSum only fires for non-adjacent pairs")
     }
 }

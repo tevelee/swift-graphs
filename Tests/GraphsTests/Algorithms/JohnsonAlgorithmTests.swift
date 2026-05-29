@@ -143,20 +143,75 @@ struct JohnsonAlgorithmTests {
 
     @Test func johnsonDetectsNegativeCycle() {
         var graph = AdjacencyList()
-        
+
         // Create a graph with a negative cycle: A -> B -> C -> A
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
-        
+
         graph.addEdge(from: a, to: b) { $0.weight = 1 }
         graph.addEdge(from: b, to: c) { $0.weight = 1 }
         graph.addEdge(from: c, to: a) { $0.weight = -3 } // Creates negative cycle
-        
+
         let result = graph.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)))
-        
+
         // Johnson's algorithm should detect the negative cycle and return empty result
         #expect(result.distances.isEmpty)
+    }
+
+    // MARK: - Direct API Coverage
+
+    /// Calls the `shortestPathsForAllPairs(in:)` no-argument conformance method (lines 231–233 in
+    /// Johnson.swift) directly on a `Johnson` instance, bypassing the `graph.shortestPathsForAllPairs(using:)`
+    /// graph extension which calls the `visitor: nil` overload explicitly.
+    @Test func johnsonShortestPathsForAllPairsNoArgConvenienceMethod() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b) { $0.weight = 2.0 }
+        graph.addEdge(from: b, to: c) { $0.weight = 3.0 }
+
+        // Call the no-arg ShortestPathsForAllPairsAlgorithm conformance method directly
+        let result = Johnson<DefaultAdjacencyList, Double>(edgeWeight: .property(\.weight))
+            .shortestPathsForAllPairs(in: graph)
+
+        #expect(result.distance(from: a, to: c) == 5.0, "a→b→c costs 2+3=5")
+        #expect(result.distance(from: a, to: b) == 2.0, "a→b costs 2")
+    }
+
+    // MARK: - Visitor Support
+
+    @Test func composedVisitorsReceiveAllEvents() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b) { $0.weight = 2 }
+        graph.addEdge(from: b, to: c) { $0.weight = 3 }
+
+        var dijkstraStarts1 = 0; var dijkstraStarts2 = 0
+        var dijkstraCompletes1 = 0; var dijkstraCompletes2 = 0
+
+        var v1 = Johnson<DefaultAdjacencyList, Double>.Visitor()
+        v1.startDijkstraFromSource    = { _ in dijkstraStarts1 += 1 }
+        v1.completeDijkstraFromSource = { _ in dijkstraCompletes1 += 1 }
+
+        var v2 = Johnson<DefaultAdjacencyList, Double>.Visitor()
+        v2.startDijkstraFromSource    = { _ in dijkstraStarts2 += 1 }
+        v2.completeDijkstraFromSource = { _ in dijkstraCompletes2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = Johnson<DefaultAdjacencyList, Double>(edgeWeight: .property(\.weight))
+            .shortestPathsForAllPairs(in: graph, visitor: combined)
+
+        // Johnson runs one Dijkstra per vertex (3 vertices → 3 starts and 3 completes each)
+        #expect(dijkstraStarts1 == 3)
+        #expect(dijkstraStarts2 == 3)
+        #expect(dijkstraCompletes1 == 3)
+        #expect(dijkstraCompletes2 == 3)
+        #expect(dijkstraStarts1 == dijkstraStarts2)
+        #expect(dijkstraCompletes1 == dijkstraCompletes2)
     }
 }
 #endif

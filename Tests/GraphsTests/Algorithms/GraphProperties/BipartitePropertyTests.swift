@@ -261,12 +261,97 @@ struct BipartitePropertyTests {
         var graph = DefaultAdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
-        
+
         graph.addEdge(from: a, to: b) { $0.label = "AB1" }
         graph.addEdge(from: a, to: b) { $0.label = "AB2" }
-        
+
         // Multiple edges between same vertices - still bipartite
         #expect(graph.isBipartite(using: .bfs()))
         #expect(graph.isBipartite(using: .dfs()))
+    }
+
+    // MARK: - Composition
+
+    /// Exercises all four `BFSBipartiteProperty.Visitor` events through a composed visitor pair.
+    ///
+    /// Graph: undirected triangle A−B−C (non-bipartite) triggers `colorConflict`.
+    /// Both composed visitors must see identical event counts.
+    @Test func bfsComposedVisitorsReceiveAllEvents() {
+        let graph = createNonBipartiteGraph()  // triangle: always fires colorConflict
+
+        var assign1 = 0;    var assign2 = 0
+        var examVtx1 = 0;   var examVtx2 = 0
+        var examEdge1 = 0;  var examEdge2 = 0
+        var conflict1 = 0;  var conflict2 = 0
+
+        var v1 = BFSBipartiteProperty<DefaultAdjacencyList>.Visitor()
+        v1.assignColor   = { _, _ in assign1 += 1 }
+        v1.examineVertex = { _ in examVtx1 += 1 }
+        v1.examineEdge   = { _ in examEdge1 += 1 }
+        v1.colorConflict = { _, _, _ in conflict1 += 1 }
+
+        var v2 = BFSBipartiteProperty<DefaultAdjacencyList>.Visitor()
+        v2.assignColor   = { _, _ in assign2 += 1 }
+        v2.examineVertex = { _ in examVtx2 += 1 }
+        v2.examineEdge   = { _ in examEdge2 += 1 }
+        v2.colorConflict = { _, _, _ in conflict2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        let algorithm = BFSBipartitePropertyAlgorithm<DefaultAdjacencyList>()
+        let result = algorithm.isBipartite(in: graph, visitor: combined)
+
+        #expect(!result, "triangle is not bipartite")
+        #expect(assign1 >= 1,    "assignColor fires for each colored vertex")
+        #expect(assign2 >= 1)
+        #expect(examVtx1 >= 1,   "examineVertex fires for each dequeued vertex")
+        #expect(examVtx2 >= 1)
+        #expect(examEdge1 >= 1,  "examineEdge fires for each edge examined")
+        #expect(examEdge2 >= 1)
+        #expect(conflict1 >= 1,  "colorConflict fires when the odd cycle is detected")
+        #expect(conflict2 >= 1)
+        #expect(assign1 == assign2)
+        #expect(examVtx1 == examVtx2)
+        #expect(examEdge1 == examEdge2)
+        #expect(conflict1 == conflict2)
+    }
+
+    /// Exercises all four `DFSBipartiteProperty.Visitor` events through a composed visitor pair.
+    @Test func dfsComposedVisitorsReceiveAllEvents() {
+        let graph = createNonBipartiteGraph()
+
+        var assign1 = 0;    var assign2 = 0
+        var examVtx1 = 0;   var examVtx2 = 0
+        var examEdge1 = 0;  var examEdge2 = 0
+        var conflict1 = 0;  var conflict2 = 0
+
+        var v1 = DFSBipartiteProperty<DefaultAdjacencyList>.Visitor()
+        v1.assignColor   = { _, _ in assign1 += 1 }
+        v1.examineVertex = { _ in examVtx1 += 1 }
+        v1.examineEdge   = { _ in examEdge1 += 1 }
+        v1.colorConflict = { _, _, _ in conflict1 += 1 }
+
+        var v2 = DFSBipartiteProperty<DefaultAdjacencyList>.Visitor()
+        v2.assignColor   = { _, _ in assign2 += 1 }
+        v2.examineVertex = { _ in examVtx2 += 1 }
+        v2.examineEdge   = { _ in examEdge2 += 1 }
+        v2.colorConflict = { _, _, _ in conflict2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        let algorithm = DFSBipartitePropertyAlgorithm<DefaultAdjacencyList>()
+        let result = algorithm.isBipartite(in: graph, visitor: combined)
+
+        #expect(!result, "triangle is not bipartite")
+        #expect(assign1 >= 1)
+        #expect(assign2 >= 1)
+        #expect(examVtx1 >= 1)
+        #expect(examVtx2 >= 1)
+        #expect(examEdge1 >= 1)
+        #expect(examEdge2 >= 1)
+        #expect(conflict1 >= 1)
+        #expect(conflict2 >= 1)
+        #expect(assign1 == assign2)
+        #expect(examVtx1 == examVtx2)
+        #expect(examEdge1 == examEdge2)
+        #expect(conflict1 == conflict2)
     }
 }

@@ -190,8 +190,81 @@ struct CyclicPropertyTests {
         #expect(!graph.isCyclic(using: .unionFind()))
     }
     
+    // MARK: - UnionFindCyclicPropertyAlgorithm rank branches
+
+    /// Exercises the `rankX < rankY` branch inside `UnionFindCyclicPropertyAlgorithm.union()`.
+    ///
+    /// Edge ordering matters for rank:
+    /// - a→b first: equal ranks (0 == 0) → parent[b]=a, rank[a]=1 (covers equal branch)
+    /// - c→a next: findRoot(c)=c (rank 0) < findRoot(a)=a (rank 1) → parent[c]=a (covers rankX < rankY)
+    @Test func unionFindAlgorithmRankXLessThanRankYBranch() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b)  // equal ranks → rank[a]=1
+        graph.addEdge(from: c, to: a)  // rootC rank 0 < rootA rank 1 → rankX < rankY branch
+
+        #expect(!graph.isCyclic(using: .unionFind()), "a→b, c→a has no cycle; exercises rankX < rankY in union()")
+    }
+
+    // MARK: - UnionFindCyclicProperty Direct API Coverage
+
+    /// Directly instantiates `UnionFindCyclicProperty` (the lower-level data structure).
+    /// Exercises `examineEdge`, `findRoot`, `unionVertices` visitors and all three union rank branches:
+    /// - a→b: equal ranks → rank[a]=1
+    /// - b→c: findRoot(b)=a (rank 1) > rank[c]=0 → rankX > rankY
+    /// - d→a: findRoot(d)=d (rank 0) < findRoot(a)=a (rank 1) → rankX < rankY
+    @Test func unionFindCyclicPropertyDirectInstantiation_noCycle() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        graph.addEdge(from: a, to: b)  // equal ranks → rank[a]=1
+        graph.addEdge(from: b, to: c)  // rankX(a)=1 > rankY(c)=0 → parent[c]=a
+        graph.addEdge(from: d, to: a)  // rankX(d)=0 < rankY(a)=1 → parent[d]=a (rankX < rankY)
+
+        var uf = UnionFindCyclicProperty(on: graph)
+        var examineEdgeCount = 0
+        var findRootCount = 0
+        var unionCount = 0
+        var cycleCount = 0
+
+        let hasCycle = uf.hasCycle(visitor: .init(
+            examineEdge: { _ in examineEdgeCount += 1 },
+            findRoot: { _, _ in findRootCount += 1 },
+            unionVertices: { _, _ in unionCount += 1 },
+            cycleDetected: { _ in cycleCount += 1 }
+        ))
+
+        #expect(!hasCycle, "a→b, b→c, d→a form a tree with no cycle")
+        #expect(examineEdgeCount == 3, "three edges examined")
+        #expect(unionCount == 3, "three union operations performed")
+        #expect(cycleCount == 0, "no cycle detected")
+    }
+
+    /// Directly instantiates `UnionFindCyclicProperty` on a cyclic graph to exercise
+    /// `cycleDetected` visitor callback and the early-return path.
+    @Test func unionFindCyclicPropertyDirectInstantiation_withCycle() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: c)
+        graph.addEdge(from: c, to: a)  // closes cycle a→b→c→a
+
+        var uf = UnionFindCyclicProperty(on: graph)
+        var cycleEdgeCount = 0
+        let hasCycle = uf.hasCycle(visitor: .init(cycleDetected: { _ in cycleEdgeCount += 1 }))
+
+        #expect(hasCycle, "a→b→c→a has a cycle")
+        #expect(cycleEdgeCount == 1, "cycleDetected fires once")
+    }
+
     // MARK: - Visitor Support
-    
+
     @Test func visitorCallbacks() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }

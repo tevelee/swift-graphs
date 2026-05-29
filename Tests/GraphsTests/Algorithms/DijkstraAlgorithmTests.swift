@@ -119,6 +119,136 @@ struct DijkstraTests {
         #endif
     }
 
+    // MARK: - Result Context API Coverage
+
+    /// `predecessor(in:)`, `predecessorEdge()`, `vertices(in:)`, `edges(in:)` and `path(in:)`
+    /// are currentVertex-based convenience methods on `Dijkstra.Result`. They delegate to the
+    /// explicit-vertex overloads using `currentVertex`. Only safe to call on non-source elements.
+    @Test func dijkstraResultContextMethodsDuringIteration() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b) { $0.weight = 1.0 }
+        graph.addEdge(from: b, to: c) { $0.weight = 2.0 }
+
+        var pathLengths: [Int] = []
+        var edgeLengths: [Int] = []
+        for result in Dijkstra(on: graph, from: a, edgeWeight: .property(\.weight)) {
+            pathLengths.append(result.vertices(in: graph).count)
+            edgeLengths.append(result.edges(in: graph).count)
+            _ = result.path(in: graph)
+            if result.currentVertex != a {
+                _ = result.predecessor(in: graph)
+                _ = result.predecessorEdge()
+            }
+        }
+
+        // a: 1 vertex / 0 edges; b: 2 vertices / 1 edge; c: 3 vertices / 2 edges
+        #expect(pathLengths == [1, 2, 3], "path vertex counts grow along the chain")
+        #expect(edgeLengths == [0, 1, 2], "path edge counts grow along the chain")
+    }
+
+    /// `hasPath(to:)` returns true for reachable vertices and false for unreachable ones.
+    /// `predecessor(of:in:)` returns the tree predecessor or nil for the source.
+    @Test func dijkstraResultHasPathAndPredecessorForExplicitVertices() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let isolated = graph.addVertex { $0.label = "X" }
+        graph.addEdge(from: a, to: b) { $0.weight = 1.0 }
+        graph.addEdge(from: b, to: c) { $0.weight = 2.0 }
+
+        let result = Dijkstra(on: graph, from: a, edgeWeight: .property(\.weight)).reduce(into: nil) { $0 = $1 }
+        #expect(result?.hasPath(to: a) == true,  "source is always reachable")
+        #expect(result?.hasPath(to: b) == true,  "b reachable via a→b")
+        #expect(result?.hasPath(to: c) == true,  "c reachable via a→b→c")
+        #expect(result?.hasPath(to: isolated) == false, "isolated vertex is not reachable")
+
+        #expect(result?.predecessor(of: a, in: graph) == nil, "source has no predecessor")
+        #expect(result?.predecessor(of: b, in: graph) == a,   "b's predecessor is a")
+        #expect(result?.predecessor(of: c, in: graph) == b,   "c's predecessor is b")
+    }
+
+    /// `PriorityItem` is `Equatable` by vertex identity (cost is ignored in `==`).
+    /// This allows the priority queue to identify items by vertex for priority updates.
+    @Test func dijkstraPriorityItemEquatable() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex()
+        let b = graph.addVertex()
+
+        let item1 = Dijkstra<DefaultAdjacencyList, Double>.PriorityItem(vertex: a, cost: .finite(1.0))
+        let item2 = Dijkstra<DefaultAdjacencyList, Double>.PriorityItem(vertex: a, cost: .finite(9.0))
+        let item3 = Dijkstra<DefaultAdjacencyList, Double>.PriorityItem(vertex: b, cost: .finite(1.0))
+
+        #expect(item1 == item2, "same vertex, different cost → equal (vertex identity only)")
+        #expect(item1 != item3, "different vertices → not equal")
+    }
+
+    // MARK: - Visitor Support
+
+    /// Exercises all five Dijkstra visitor events through a composed visitor pair.
+    ///
+    /// Graph: a→b(1), a→c(1), b→c(5).
+    /// - `examineVertex` fires for each of the 3 vertices.
+    /// - `examineEdge` fires for each of the 3 edges.
+    /// - `edgeRelaxed` fires for a→b and a→c (both improve their targets).
+    /// - `edgeNotRelaxed` fires for b→c (c already settled at cost 1 via a→c; b→c would cost 6).
+    /// - `finishVertex` fires for each of the 3 vertices.
+    @Test func composedVisitorsReceiveAllEvents() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        // a→b and a→c cost 1; b→c costs 5 so c settles via a→c (dist=1), not b→c (dist=6)
+        graph.addEdge(from: a, to: b) { $0.weight = 1.0 }
+        graph.addEdge(from: a, to: c) { $0.weight = 1.0 }
+        graph.addEdge(from: b, to: c) { $0.weight = 5.0 }
+
+        var examined1 = 0;   var examined2 = 0
+        var examEdge1 = 0;   var examEdge2 = 0
+        var relaxed1 = 0;    var relaxed2 = 0
+        var notRelaxed1 = 0; var notRelaxed2 = 0
+        var finished1 = 0;   var finished2 = 0
+
+        var v1 = Dijkstra<DefaultAdjacencyList, Double>.Visitor()
+        v1.examineVertex  = { _ in examined1 += 1 }
+        v1.examineEdge    = { _ in examEdge1 += 1 }
+        v1.edgeRelaxed    = { _ in relaxed1 += 1 }
+        v1.edgeNotRelaxed = { _ in notRelaxed1 += 1 }
+        v1.finishVertex   = { _ in finished1 += 1 }
+
+        var v2 = Dijkstra<DefaultAdjacencyList, Double>.Visitor()
+        v2.examineVertex  = { _ in examined2 += 1 }
+        v2.examineEdge    = { _ in examEdge2 += 1 }
+        v2.edgeRelaxed    = { _ in relaxed2 += 1 }
+        v2.edgeNotRelaxed = { _ in notRelaxed2 += 1 }
+        v2.finishVertex   = { _ in finished2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        Dijkstra(on: graph, from: a, edgeWeight: .property(\.weight))
+            .withVisitor { combined }
+            .forEach { _ in }
+
+        #expect(examined1 == 3,    "examineVertex fires once per vertex")
+        #expect(examined2 == 3)
+        #expect(examEdge1 == 3,    "examineEdge fires once per edge (a→b, a→c, b→c)")
+        #expect(examEdge2 == 3)
+        #expect(relaxed1 == 2,     "a→b and a→c both improve their targets")
+        #expect(relaxed2 == 2)
+        #expect(notRelaxed1 >= 1,  "b→c does not improve c (already at cost 1)")
+        #expect(notRelaxed2 >= 1)
+        #expect(finished1 == 3,    "finishVertex fires once per vertex")
+        #expect(finished2 == 3)
+        // Both composed visitors must see identical event counts
+        #expect(examined1 == examined2)
+        #expect(examEdge1 == examEdge2)
+        #expect(relaxed1 == relaxed2)
+        #expect(notRelaxed1 == notRelaxed2)
+        #expect(finished1 == finished2)
+    }
+
     // MARK: - Edge Cases
 
     /// A self-loop (a → a) must not influence Dijkstra's path computation.
@@ -183,6 +313,57 @@ struct DijkstraTests {
         for v in vertices.dropFirst() {
             #expect(result?.distance(of: v) == .finite(1.0), "All K4 neighbors are one direct hop away")
         }
+    }
+
+    // MARK: - ShortestPathUntil API
+
+    /// `shortestPath(from:until:using:)` stops at the first vertex satisfying a condition.
+    /// Unlike `shortestPath(from:to:)`, it doesn't need a specific target — it returns the
+    /// first vertex for which the closure returns `true`.
+    @Test func dijkstraShortestPathUntilCondition() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        graph.addEdge(from: a, to: b) { $0.weight = 1.0 }
+        graph.addEdge(from: b, to: c) { $0.weight = 1.0 }
+        graph.addEdge(from: c, to: d) { $0.weight = 1.0 }
+
+        // Stop at the first vertex whose label contains "C" — should find c via a→b→c
+        let path = graph.shortestPath(from: a, until: { graph[$0].label.hasPrefix("C") },
+                                      using: .dijkstra(weight: .property(\.weight)))
+        #expect(path != nil, "Dijkstra must find path to first vertex satisfying the condition")
+        #expect(path?.destination == c, "first vertex satisfying 'label starts with C' is c")
+        #expect(path?.vertices.count == 3, "path a→b→c includes all 3 intermediate vertices")
+    }
+
+    /// `shortestPath(from:until:)` returns `nil` when no vertex satisfies the condition.
+    @Test func dijkstraShortestPathUntilNoMatch() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        graph.addEdge(from: a, to: b) { $0.weight = 1.0 }
+
+        let path = graph.shortestPath(from: a, until: { graph[$0].label == "Z" },
+                                      using: .dijkstra(weight: .property(\.weight)))
+        #expect(path == nil, "shortestPath(until:) must return nil when no vertex satisfies the condition")
+    }
+
+    /// The default `shortestPath(from:until:weight:)` convenience uses Dijkstra implicitly.
+    @Test func dijkstraShortestPathUntilConvenience() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b) { $0.weight = 2.0 }
+        graph.addEdge(from: b, to: c) { $0.weight = 3.0 }
+
+        // Convenience method without explicit algorithm — uses Dijkstra by default
+        let path = graph.shortestPath(from: a, until: { $0 == c }, weight: .property(\.weight))
+        #expect(path != nil, "convenience shortestPath(until:weight:) must find a path")
+        #expect(path?.destination == c)
+        #expect(path?.vertices.count == 3, "a→b→c path includes all 3 vertices")
     }
 }
 #endif

@@ -139,12 +139,50 @@ struct EulerianPathTests {
     
     @Test func emptyGraph() {
         let graph = AdjacencyList()
-        
+
         #expect(!graph.hasEulerianPath())
         #expect(!graph.hasEulerianCycle())
-        
+
         let path = graph.eulerianPath(using: Hierholzer())
         #expect(path == nil)
+    }
+
+    // MARK: - Visitor Support
+
+    /// Two composed visitors must each receive the same `addEdgeToPath` events —
+    /// one per edge in the Eulerian cycle, and `examineVertex` at least once.
+    @Test func composedVisitorsReceiveAllEvents() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        // Eulerian cycle a→b→c→d→a (each vertex has in-degree == out-degree == 1)
+        graph.addEdge(from: a, to: b) { $0.label = "AB" }
+        graph.addEdge(from: b, to: c) { $0.label = "BC" }
+        graph.addEdge(from: c, to: d) { $0.label = "CD" }
+        graph.addEdge(from: d, to: a) { $0.label = "DA" }
+
+        var edgesAdded1 = 0; var edgesAdded2 = 0
+        var examined1 = 0;   var examined2 = 0
+
+        var v1 = Hierholzer<DefaultAdjacencyList>.Visitor()
+        v1.addEdgeToPath  = { _ in edgesAdded1 += 1 }
+        v1.examineVertex  = { _ in examined1 += 1 }
+
+        var v2 = Hierholzer<DefaultAdjacencyList>.Visitor()
+        v2.addEdgeToPath  = { _ in edgesAdded2 += 1 }
+        v2.examineVertex  = { _ in examined2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = graph.eulerianCycle(using: Hierholzer().withVisitor(combined))
+
+        #expect(edgesAdded1 == 4, "addEdgeToPath must fire once per edge in the 4-cycle")
+        #expect(edgesAdded2 == 4)
+        #expect(examined1 >= 1, "examineVertex must fire at least once")
+        #expect(examined2 >= 1)
+        #expect(edgesAdded1 == edgesAdded2, "both composed visitors must see identical addEdgeToPath events")
+        #expect(examined1 == examined2, "both composed visitors must see identical examineVertex events")
     }
 }
 #endif

@@ -214,8 +214,122 @@ struct PlanarPropertyAlgorithmTests {
         #expect(!graph.isPlanar(using: .boyerMyrvold()))
     }
     
+    // MARK: - Visitor Support
+
+    @Test func boyerMyrvoldComposedVisitorsReceiveAllEvents() {
+        // Need 5+ vertices to bypass the early-return optimization for tiny graphs
+        // A pentagon (5 vertices in a cycle) is planar
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        let e = graph.addVertex { $0.label = "E" }
+        graph.addEdge(from: a, to: b) { $0.label = "AB" }
+        graph.addEdge(from: b, to: c) { $0.label = "BC" }
+        graph.addEdge(from: c, to: d) { $0.label = "CD" }
+        graph.addEdge(from: d, to: e) { $0.label = "DE" }
+        graph.addEdge(from: e, to: a) { $0.label = "EA" }
+
+        var started1 = 0; var started2 = 0
+        var success1 = 0; var success2 = 0
+
+        var v1 = BoyerMyrvoldPlanarPropertyAlgorithm<DefaultAdjacencyList>.Visitor()
+        v1.startEmbedding   = { started1 += 1 }
+        v1.embeddingSuccess = { success1 += 1 }
+
+        var v2 = BoyerMyrvoldPlanarPropertyAlgorithm<DefaultAdjacencyList>.Visitor()
+        v2.startEmbedding   = { started2 += 1 }
+        v2.embeddingSuccess = { success2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = BoyerMyrvoldPlanarPropertyAlgorithm<DefaultAdjacencyList>()
+            .isPlanar(in: graph, visitor: combined)
+
+        #expect(started1 == 1)  // embedding started once
+        #expect(started2 == 1)
+        #expect(success1 == 1)  // planar graph → embedding succeeded
+        #expect(success2 == 1)
+        #expect(started1 == started2)
+        #expect(success1 == success2)
+    }
+
+    @Test func hopcroftTarjanComposedVisitorsReceiveAllEvents() {
+        // Need 5+ vertices to bypass the early-return optimization for tiny graphs
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        let e = graph.addVertex { $0.label = "E" }
+        graph.addEdge(from: a, to: b) { $0.label = "AB" }
+        graph.addEdge(from: b, to: c) { $0.label = "BC" }
+        graph.addEdge(from: c, to: d) { $0.label = "CD" }
+        graph.addEdge(from: d, to: e) { $0.label = "DE" }
+        graph.addEdge(from: e, to: a) { $0.label = "EA" }
+
+        var started1 = 0; var started2 = 0
+        var success1 = 0; var success2 = 0
+
+        var v1 = HopcroftTarjanPlanarPropertyAlgorithm<DefaultAdjacencyList>.Visitor()
+        v1.startDFS         = { started1 += 1 }
+        v1.planaritySuccess = { success1 += 1 }
+
+        var v2 = HopcroftTarjanPlanarPropertyAlgorithm<DefaultAdjacencyList>.Visitor()
+        v2.startDFS         = { started2 += 1 }
+        v2.planaritySuccess = { success2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = HopcroftTarjanPlanarPropertyAlgorithm<DefaultAdjacencyList>()
+            .isPlanar(in: graph, visitor: combined)
+
+        #expect(started1 == 1)
+        #expect(started2 == 1)
+        #expect(success1 == 1)
+        #expect(success2 == 1)
+        #expect(started1 == started2)
+        #expect(success1 == success2)
+    }
+
+    @Test func leftRightComposedVisitorsReceiveAllEvents() {
+        // Need 5+ vertices to bypass the early-return optimization for tiny graphs
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        let e = graph.addVertex { $0.label = "E" }
+        graph.addEdge(from: a, to: b) { $0.label = "AB" }
+        graph.addEdge(from: b, to: c) { $0.label = "BC" }
+        graph.addEdge(from: c, to: d) { $0.label = "CD" }
+        graph.addEdge(from: d, to: e) { $0.label = "DE" }
+        graph.addEdge(from: e, to: a) { $0.label = "EA" }
+
+        var started1 = 0; var started2 = 0
+        var success1 = 0; var success2 = 0
+
+        var v1 = LeftRightPlanarPropertyAlgorithm<DefaultAdjacencyList>.Visitor()
+        v1.startEmbedding   = { started1 += 1 }
+        v1.embeddingSuccess = { success1 += 1 }
+
+        var v2 = LeftRightPlanarPropertyAlgorithm<DefaultAdjacencyList>.Visitor()
+        v2.startEmbedding   = { started2 += 1 }
+        v2.embeddingSuccess = { success2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = LeftRightPlanarPropertyAlgorithm<DefaultAdjacencyList>()
+            .isPlanar(in: graph, visitor: combined)
+
+        #expect(started1 == 1)
+        #expect(started2 == 1)
+        #expect(success1 == 1)
+        #expect(success2 == 1)
+        #expect(started1 == started2)
+        #expect(success1 == success2)
+    }
+
     // MARK: - Algorithm Comparison
-    
+
     @Test func algorithmConsistency() {
         let planarGraph = createPlanarGraph()
         let nonPlanarGraph = createNonPlanarGraph()

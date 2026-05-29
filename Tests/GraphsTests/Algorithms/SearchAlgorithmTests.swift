@@ -129,8 +129,164 @@ struct SearchAlgorithmTests {
         
         let firstD = graph.search(from: a, using: .bfs())
             .first { $0.currentVertex == d }
-        
+
         #expect(firstD != nil)
         #expect(firstD?.depth() == 2)
     }
+
+    // MARK: - Multi-Backend Coverage
+
+    @Test func bfsSearchFindsVertexAtCorrectDepth_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let a = graph.addVertex { $0.label = "a" }
+            let b = graph.addVertex { $0.label = "b" }
+            let c = graph.addVertex { $0.label = "c" }
+            let d = graph.addVertex { $0.label = "d" }
+            graph.addEdge(from: a, to: b)
+            graph.addEdge(from: a, to: c)
+            graph.addEdge(from: b, to: d)
+
+            let found = graph.search(from: a, using: .bfs())
+                .first { graph[$0.currentVertex].label == "d" }
+
+            #expect(found != nil, "[\(backend)] BFS should find vertex 'd'")
+            #expect(found?.depth() == 2, "[\(backend)] 'd' is 2 hops from 'a'")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    @Test func bfsSearchDoesNotCrossDisconnectedComponent_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let a = graph.addVertex { $0.label = "a" }
+            let b = graph.addVertex { $0.label = "b" }
+            _ = graph.addVertex { $0.label = "c" }   // isolated
+            graph.addEdge(from: a, to: b)
+
+            let labels = graph.search(from: a, using: .bfs()).map { graph[$0.currentVertex].label }
+            let found = Array(labels)
+            #expect(found.count == 2, "[\(backend)] BFS from 'a' reaches 'a' and 'b' only")
+            #expect(!found.contains("c"), "[\(backend)] isolated 'c' must not be reached")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    @Test func dfsSearchEmitsVerticesExactlyOnce_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let a = graph.addVertex { $0.label = "a" }
+            let b = graph.addVertex { $0.label = "b" }
+            let c = graph.addVertex { $0.label = "c" }
+            graph.addEdge(from: a, to: b)
+            graph.addEdge(from: a, to: c)
+            graph.addEdge(from: b, to: c)   // diamond: multiple paths to c
+
+            let labels = graph.search(from: a, using: .dfs()).map { graph[$0.currentVertex].label }
+            let all = Array(labels)
+            #expect(all.count == 3, "[\(backend)] each vertex visited exactly once despite multiple paths")
+            #expect(Set(all) == ["a", "b", "c"], "[\(backend)] all three vertices discovered")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
 }
+
+// MARK: - A* Search API
+// These tests exercise AStarSearch — the SearchAlgorithm-conforming wrapper around the core AStar sequence.
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
+struct AStarSearchTests {
+
+    // MARK: - Core Behavior
+
+    @Test func aStarSearchFindsTargetVertex() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b) { $0.weight = 1.0 }
+        graph.addEdge(from: b, to: c) { $0.weight = 1.0 }
+
+        let found = graph.search(from: a, using: .aStar(edgeWeight: .property(\.weight), heuristic: .uniform(0)))
+            .first { $0.currentVertex == c }
+
+        #expect(found != nil, "A* via SearchAlgorithm must find c from a")
+        #expect(found?.currentVertex == c)
+    }
+
+    /// A* with a uniform-0 heuristic explores vertices in ascending cost order — lower-cost neighbors first.
+    @Test func aStarSearchExploreLowerCostFirst() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b) { $0.weight = 1.0 }
+        graph.addEdge(from: a, to: c) { $0.weight = 5.0 }
+
+        let collected = Array(graph.search(from: a, using: .aStar(edgeWeight: .property(\.weight), heuristic: .uniform(0)))
+            .map { $0.currentVertex })
+
+        let bIdx = collected.firstIndex(of: b)!
+        let cIdx = collected.firstIndex(of: c)!
+        #expect(bIdx < cIdx, "A* must explore lower-cost vertex b (cost 1) before higher-cost c (cost 5)")
+    }
+
+    // MARK: - Edge Cases
+
+    @Test func aStarSearchDoesNotReachIsolatedVertex() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let isolated = graph.addVertex { $0.label = "X" }
+        graph.addEdge(from: a, to: b) { $0.weight = 1.0 }
+
+        let found = graph.search(from: a, using: .aStar(edgeWeight: .property(\.weight), heuristic: .uniform(0)))
+            .first { $0.currentVertex == isolated }
+
+        #expect(found == nil, "A* must not reach a vertex with no incoming path from the source")
+    }
+
+    // MARK: - Multi-Backend Coverage
+
+    @Test func aStarSearchFindsVertex_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let a = graph.addVertex { $0.label = "A" }
+            let b = graph.addVertex { $0.label = "B" }
+            let c = graph.addVertex { $0.label = "C" }
+            graph.addEdge(from: a, to: b) { $0.weight = 1.0 }
+            graph.addEdge(from: b, to: c) { $0.weight = 1.0 }
+
+            let found = graph.search(from: a, using: .aStar(edgeWeight: .property(\.weight), heuristic: .uniform(0)))
+                .first { $0.currentVertex == c }
+
+            #expect(found != nil, "[\(backend)] A* search must find c from a")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+}
+#endif  // !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING

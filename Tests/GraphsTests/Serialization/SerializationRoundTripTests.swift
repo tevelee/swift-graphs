@@ -4,9 +4,9 @@ import Testing
 
 /// Tests that verify serialization correctness beyond exact string matching.
 ///
-/// The library currently supports serialization (graph → string) but not deserialization
-/// (string → graph), so full structural round-trips are not possible. These tests instead
-/// check properties that hold across any correctly-implemented serialization:
+/// Full structural round-trips (serialize → deserialize → re-serialize) live in
+/// `SerializationDeserializationTests`. The tests here instead check properties that hold
+/// across any correctly-implemented *serialization*, independent of deserialization:
 ///
 /// 1. **Idempotency** — serializing the same graph twice yields identical output.
 ///    Non-determinism (e.g., HashMap iteration order) would break this.
@@ -147,6 +147,102 @@ struct SerializationRoundTripTests {
                 "Empty graph JSON must report vertexCount = 0")
         #expect(json.contains("\"edgeCount\" : 0"),
                 "Empty graph JSON must report edgeCount = 0")
+    }
+
+    // MARK: - SerializationError descriptions
+
+    @Test func serializationErrorDescriptions() {
+        let e1 = SerializationError.missingDescriptorIdentifier
+        #expect(e1.description.contains("SerializableDescriptor"), "missingDescriptorIdentifier description must name the protocol")
+
+        let e2 = SerializationError.unsupportedPropertyType("MyType")
+        #expect(e2.description.contains("MyType"), "unsupportedPropertyType description must include the type name")
+
+        struct TestError: Error {}
+        let e3 = SerializationError.encodingFailed(TestError())
+        #expect(e3.description.contains("Encoding"), "encodingFailed description must describe the failure")
+    }
+
+    // MARK: - AdjacencyMatrix descriptor identifiers
+
+    @Test func adjacencyMatrixDescriptorIdentifiers() throws {
+        var graph = AdjacencyMatrix()
+        let a = graph.addVertex()   // AdjacencyMatrix.Vertex — covers AdjacencyMatrix.Vertex.serializedIdentifier
+        let b = graph.addVertex()
+        _ = graph.addEdge(from: a, to: b)   // AdjacencyMatrix.Edge — covers AdjacencyMatrix.Edge.serializedIdentifier
+
+        let formatter = GraphFormatter()
+        let dot = try formatter.string(from: graph, using: .dot(directed: true))
+        #expect(dot.contains("v0"), "AdjacencyMatrix vertex serialized id starts with 'v'")
+    }
+
+    // MARK: - GridGraph descriptor identifiers
+
+    #if !GRAPHS_USES_TRAITS || GRAPHS_GRID_GRAPH
+    @Test func gridGraphDescriptorIdentifiers() throws {
+        let g = GridGraph(width: 2, height: 2, allowedDirections: .orthogonal)
+
+        // GridGraph.Vertex.serializedIdentifier: "x_y"
+        let v = GridGraph.Vertex(x: 1, y: 2)
+        #expect(v.serializedIdentifier == "1_2")
+
+        // GridGraph.Edge.serializedIdentifier: "src_to_dst"
+        let e = GridGraph.Edge(source: .init(x: 0, y: 0), destination: .init(x: 1, y: 0))
+        #expect(e.serializedIdentifier.contains("0_0") && e.serializedIdentifier.contains("1_0"))
+
+        // Serializing a GridGraph exercises both GridGraph.Vertex and GridGraph.Edge conformances
+        let formatter = GraphFormatter()
+        let dot = try formatter.string(from: g, using: .dot(directed: true))
+        #expect(dot.contains("0_0"), "GridGraph vertex ids use x_y format")
+    }
+    #endif
+
+    // MARK: - Descriptor identifiers not reachable via formats
+
+    /// `OrderedEdgeStorage.Edge`, `AdjacencyMatrix.Edge`, `String`, and `Int` all conform to
+    /// `SerializableDescriptor`. Their `serializedIdentifier` properties are never called by
+    /// any serialization format (formats use vertex ids for edge endpoints, not edge ids).
+    /// Test them directly to cover the conformances.
+    @Test func remainingDescriptorIdentifiers() throws {
+        // OrderedEdgeStorage.Edge
+        var adjList = AdjacencyList()
+        let u = adjList.addVertex()
+        let v = adjList.addVertex()
+        let edge = adjList.addEdge(from: u, to: v)!
+        #expect(edge.serializedIdentifier.hasPrefix("e"), "OrderedEdgeStorage.Edge id starts with 'e'")
+
+        // AdjacencyMatrix.Edge
+        var matrix = AdjacencyMatrix()
+        let a = matrix.addVertex()
+        let b = matrix.addVertex()
+        let matEdge = matrix.addEdge(from: a, to: b)!
+        #expect(matEdge.serializedIdentifier.hasPrefix("e"), "AdjacencyMatrix.Edge id starts with 'e'")
+
+        // String conformance — vertex descriptors in InlineGraph
+        let s: String = "hello"
+        #expect(s.serializedIdentifier == "hello", "String.serializedIdentifier returns self")
+
+        // Int conformance
+        let n: Int = 42
+        #expect(n.serializedIdentifier == "42", "Int.serializedIdentifier returns string representation")
+    }
+
+    // MARK: - Non-property GraphFormatter.format
+
+    @Test func graphFormatterFormatWithoutProperties() throws {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        graph.addEdge(from: a, to: b)
+
+        let formatter = GraphFormatter()
+        // format(_:using:) without properties — exercises the non-property overload
+        let data = try formatter.format(graph, using: .dot(directed: true))
+        #expect(!data.isEmpty, "format(_:using:) must produce non-empty output")
+
+        // string(from:using:) without properties — exercises that non-property overload
+        let str = try formatter.string(from: graph, using: .dot(directed: true))
+        #expect(str.contains("digraph"), "DOT output must contain 'digraph'")
     }
 }
 #endif

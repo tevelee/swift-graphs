@@ -465,13 +465,156 @@ struct IsomorphismAlgorithmTests {
         
         let algorithm = EnhancedWeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
         let result = algorithm.areIsomorphic(graph1, graph2, visitor: visitor)
-        
+
         #expect(result)
         #expect(!examinedVertices.isEmpty)
         #expect(!examinedEdges.isEmpty)
         #expect(!labeledVertices.isEmpty)
         #expect(!iterations.isEmpty)
         #expect(stabilized != nil)
+    }
+
+    // MARK: - Composition
+
+    /// Exercises all five VF2Isomorphism visitor events through a composed visitor pair.
+    ///
+    /// Two identical triangle graphs (isomorphic). VF2 will discover a mapping, triggering
+    /// `mappingFound`; it tries vertex mappings (`tryMapping`) and examines vertices and edges.
+    /// Since both graphs are isomorphic, backtracking may occur as the algorithm explores the
+    /// search space before finding the full mapping.
+    @Test func vf2ComposedVisitorsReceiveAllEvents() {
+        let graph1 = createSimpleGraph()
+        let graph2 = createSimpleGraph()
+
+        var examVtx1 = 0;    var examVtx2 = 0
+        var tryMap1 = 0;     var tryMap2 = 0
+        var mapFound1 = 0;   var mapFound2 = 0
+
+        var v1 = VF2Isomorphism<DefaultAdjacencyList>.Visitor()
+        v1.examineVertex = { _ in examVtx1 += 1 }
+        v1.tryMapping    = { _, _ in tryMap1 += 1 }
+        v1.mappingFound  = { _ in mapFound1 += 1 }
+
+        var v2 = VF2Isomorphism<DefaultAdjacencyList>.Visitor()
+        v2.examineVertex = { _ in examVtx2 += 1 }
+        v2.tryMapping    = { _, _ in tryMap2 += 1 }
+        v2.mappingFound  = { _ in mapFound2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        let algorithm = VF2Isomorphism<DefaultAdjacencyList>()
+        let result = algorithm.areIsomorphic(graph1, graph2, visitor: combined)
+
+        #expect(result,           "two identical graphs must be isomorphic")
+        #expect(examVtx1 >= 1,    "examineVertex fires during the search")
+        #expect(examVtx2 >= 1)
+        #expect(tryMap1 >= 1,     "tryMapping fires for each candidate vertex pair")
+        #expect(tryMap2 >= 1)
+        #expect(mapFound1 >= 1,   "mappingFound fires when the full isomorphism is found")
+        #expect(mapFound2 >= 1)
+        // Both composed visitors must see identical event counts
+        #expect(examVtx1 == examVtx2)
+        #expect(tryMap1 == tryMap2)
+        #expect(mapFound1 == mapFound2)
+    }
+
+    /// Exercises all five WeisfeilerLehman visitor events through a composed visitor pair.
+    ///
+    /// Two identical triangle graphs (isomorphic). WeisfeilerLehman relabels vertices
+    /// iteratively until labels stabilize, firing label and iteration events.
+    @Test func weisfeilerLehmanComposedVisitorsReceiveAllEvents() {
+        let graph1 = createSimpleGraph()
+        let graph2 = createSimpleGraph()
+
+        var examVtx1 = 0;   var examVtx2 = 0
+        var label1 = 0;     var label2 = 0
+        var iter1 = 0;      var iter2 = 0
+        var stable1 = 0;    var stable2 = 0
+
+        var examEdge1 = 0;  var examEdge2 = 0
+
+        var v1 = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>.Visitor()
+        v1.examineVertex      = { _ in examVtx1 += 1 }
+        v1.examineEdge        = { _ in examEdge1 += 1 }
+        v1.labelVertex        = { _, _ in label1 += 1 }
+        v1.iterationComplete  = { _, _ in iter1 += 1 }
+        v1.labelsStabilized   = { _ in stable1 += 1 }
+
+        var v2 = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>.Visitor()
+        v2.examineVertex      = { _ in examVtx2 += 1 }
+        v2.examineEdge        = { _ in examEdge2 += 1 }
+        v2.labelVertex        = { _, _ in label2 += 1 }
+        v2.iterationComplete  = { _, _ in iter2 += 1 }
+        v2.labelsStabilized   = { _ in stable2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        let algorithm = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+        let result = algorithm.areIsomorphic(graph1, graph2, visitor: combined)
+
+        #expect(result,          "two identical graphs must be isomorphic")
+        #expect(examVtx1 >= 1,   "examineVertex fires during label propagation")
+        #expect(examVtx2 >= 1)
+        #expect(examEdge1 >= 1,  "examineEdge fires for each edge examined in the iteration")
+        #expect(examEdge2 >= 1)
+        #expect(label1 >= 1,     "labelVertex fires for each vertex-label assignment")
+        #expect(label2 >= 1)
+        #expect(iter1 >= 1,      "iterationComplete fires after each WL iteration")
+        #expect(iter2 >= 1)
+        #expect(stable1 >= 1,    "labelsStabilized fires when WL converges (once per graph)")
+        #expect(stable2 >= 1)
+        // Both composed visitors must see identical event counts
+        #expect(examVtx1 == examVtx2)
+        #expect(examEdge1 == examEdge2)
+        #expect(label1 == label2)
+        #expect(iter1 == iter2)
+        #expect(stable1 == stable2)
+    }
+
+    /// Exercises all five `EnhancedWeisfeilerLehmanIsomorphism.Visitor` events through
+    /// a composed visitor pair. Uses two identical triangle graphs (isomorphic).
+    @Test func enhancedWeisfeilerLehmanComposedVisitorsReceiveAllEvents() {
+        let graph1 = createSimpleGraph()
+        let graph2 = createSimpleGraph()
+
+        var examVtx1 = 0;   var examVtx2 = 0
+        var examEdge1 = 0;  var examEdge2 = 0
+        var label1 = 0;     var label2 = 0
+        var iter1 = 0;      var iter2 = 0
+        var stable1 = 0;    var stable2 = 0
+
+        var v1 = EnhancedWeisfeilerLehmanIsomorphism<DefaultAdjacencyList>.Visitor()
+        v1.examineVertex     = { _ in examVtx1 += 1 }
+        v1.examineEdge       = { _ in examEdge1 += 1 }
+        v1.labelVertex       = { _, _ in label1 += 1 }
+        v1.iterationComplete = { _, _ in iter1 += 1 }
+        v1.labelsStabilized  = { _ in stable1 += 1 }
+
+        var v2 = EnhancedWeisfeilerLehmanIsomorphism<DefaultAdjacencyList>.Visitor()
+        v2.examineVertex     = { _ in examVtx2 += 1 }
+        v2.examineEdge       = { _ in examEdge2 += 1 }
+        v2.labelVertex       = { _, _ in label2 += 1 }
+        v2.iterationComplete = { _, _ in iter2 += 1 }
+        v2.labelsStabilized  = { _ in stable2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        let algorithm = EnhancedWeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+        let result = algorithm.areIsomorphic(graph1, graph2, visitor: combined)
+
+        #expect(result,         "two identical triangle graphs must be isomorphic")
+        #expect(examVtx1 >= 1,  "examineVertex fires for each vertex examined")
+        #expect(examVtx2 >= 1)
+        #expect(examEdge1 >= 1, "examineEdge fires for each edge in the label propagation")
+        #expect(examEdge2 >= 1)
+        #expect(label1 >= 1,    "labelVertex fires for each vertex-label assignment")
+        #expect(label2 >= 1)
+        #expect(iter1 >= 1,     "iterationComplete fires after each enhanced WL iteration")
+        #expect(iter2 >= 1)
+        #expect(stable1 >= 1,   "labelsStabilized fires when labels converge")
+        #expect(stable2 >= 1)
+        #expect(examVtx1 == examVtx2)
+        #expect(examEdge1 == examEdge2)
+        #expect(label1 == label2)
+        #expect(iter1 == iter2)
+        #expect(stable1 == stable2)
     }
 }
 #endif

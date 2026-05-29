@@ -266,4 +266,86 @@ struct IterativelyDeepeningDFSTests {
         }
         #expect(vertexCount <= 51)
     }
+
+    // MARK: - Multi-Backend Coverage
+
+    @Test func iddfsFindsAllReachableVertices_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let root = graph.addVertex { $0.label = "root" }
+            let a    = graph.addVertex { $0.label = "a" }
+            let b    = graph.addVertex { $0.label = "b" }
+            let c    = graph.addVertex { $0.label = "c" }
+            graph.addEdge(from: root, to: a)
+            graph.addEdge(from: root, to: b)
+            graph.addEdge(from: a, to: c)
+
+            let result = graph.traverse(from: root, using: .iterativelyDeepeningDFS())
+            let labels = result.vertices.map { graph[$0].label }
+            #expect(result.vertices.count == 4, "[\(backend)] IDDFS finds all 4 reachable vertices")
+            #expect(labels.contains("root"), "[\(backend)] root included")
+            #expect(labels.contains("a"),    "[\(backend)] a included")
+            #expect(labels.contains("b"),    "[\(backend)] b included")
+            #expect(labels.contains("c"),    "[\(backend)] c included")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    @Test func iddfsRespectsMaxDepth_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let root = graph.addVertex { $0.label = "root" }
+            let l1   = graph.addVertex { $0.label = "l1" }
+            let l2   = graph.addVertex { $0.label = "l2" }
+            let l3   = graph.addVertex { $0.label = "l3" }
+            graph.addEdge(from: root, to: l1)
+            graph.addEdge(from: l1, to: l2)
+            graph.addEdge(from: l2, to: l3)
+
+            let result = graph.traverse(from: root, using: .iterativelyDeepeningDFS(maxDepth: 2))
+            let labels = result.vertices.map { graph[$0].label }
+            #expect(result.vertices.count == 3, "[\(backend)] maxDepth=2 visits root, l1, l2 only")
+            #expect(!labels.contains("l3"), "[\(backend)] l3 at depth 3 is pruned by maxDepth=2")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
+
+    @Test func iddfsSameVertexSetAsBFS_allBackends() {
+        func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
+        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+              G.VertexDescriptor: Hashable {
+            let root = graph.addVertex { $0.label = "root" }
+            let a    = graph.addVertex { $0.label = "a" }
+            let b    = graph.addVertex { $0.label = "b" }
+            let c    = graph.addVertex { $0.label = "c" }
+            let d    = graph.addVertex { $0.label = "d" }
+            graph.addEdge(from: root, to: a)
+            graph.addEdge(from: root, to: b)
+            graph.addEdge(from: a, to: c)
+            graph.addEdge(from: b, to: d)
+
+            let iddfsResult = graph.traverse(from: root, using: .iterativelyDeepeningDFS())
+            let bfsResult   = graph.traverse(from: root, using: .bfs())
+            #expect(Set(iddfsResult.vertices) == Set(bfsResult.vertices),
+                    "[\(backend)] IDDFS and BFS discover identical vertex sets")
+        }
+        var g1 = AdjacencyList();   check(&g1, "default")
+        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
+        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
+        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+        #endif
+    }
 }

@@ -295,12 +295,76 @@ struct CommunityDetectionTests {
         
         let result1 = graph.detectCommunities()
         let result2 = graph.detectCommunities(using: .louvain())
-        
+
         // Both should produce valid results (Louvain is non-deterministic)
         #expect(result1.communityCount > 0)
         #expect(result2.communityCount > 0)
         #expect(result1.modularity >= 0.0)
         #expect(result2.modularity >= 0.0)
+    }
+
+    // MARK: - Visitor Support
+
+    /// Exercises all four Louvain visitor events through a composed visitor pair.
+    ///
+    /// Graph: two triangles connected by a weak bridge (clear community structure).
+    /// Louvain will discover communities by moving vertices and improving modularity.
+    /// - `startPhase` fires at the beginning of each Louvain phase.
+    /// - `moveVertex` fires when a vertex is reassigned to a different community.
+    /// - `modularityImproved` fires when moving a vertex increases modularity.
+    /// - `iterationComplete` fires at the end of each phase with the current modularity.
+    @Test func composedVisitorsReceiveAllEvents() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        let e = graph.addVertex { $0.label = "E" }
+        let f = graph.addVertex { $0.label = "F" }
+        // Triangle 1: A-B-C (strong community)
+        graph.addEdge(from: a, to: b) { $0.weight = 1.0 }; graph.addEdge(from: b, to: a) { $0.weight = 1.0 }
+        graph.addEdge(from: b, to: c) { $0.weight = 1.0 }; graph.addEdge(from: c, to: b) { $0.weight = 1.0 }
+        graph.addEdge(from: c, to: a) { $0.weight = 1.0 }; graph.addEdge(from: a, to: c) { $0.weight = 1.0 }
+        // Triangle 2: D-E-F (strong community)
+        graph.addEdge(from: d, to: e) { $0.weight = 1.0 }; graph.addEdge(from: e, to: d) { $0.weight = 1.0 }
+        graph.addEdge(from: e, to: f) { $0.weight = 1.0 }; graph.addEdge(from: f, to: e) { $0.weight = 1.0 }
+        graph.addEdge(from: f, to: d) { $0.weight = 1.0 }; graph.addEdge(from: d, to: f) { $0.weight = 1.0 }
+        // Weak bridge between communities
+        graph.addEdge(from: c, to: d) { $0.weight = 0.1 }; graph.addEdge(from: d, to: c) { $0.weight = 0.1 }
+
+        var startPhase1 = 0;   var startPhase2 = 0
+        var moveVtx1 = 0;      var moveVtx2 = 0
+        var modImprove1 = 0;   var modImprove2 = 0
+        var iterEnd1 = 0;      var iterEnd2 = 0
+
+        var v1 = LouvainCommunityDetection<DefaultAdjacencyList>.Visitor()
+        v1.startPhase          = { _ in startPhase1 += 1 }
+        v1.moveVertex          = { _, _ in moveVtx1 += 1 }
+        v1.modularityImproved  = { _ in modImprove1 += 1 }
+        v1.iterationComplete   = { _, _ in iterEnd1 += 1 }
+
+        var v2 = LouvainCommunityDetection<DefaultAdjacencyList>.Visitor()
+        v2.startPhase          = { _ in startPhase2 += 1 }
+        v2.moveVertex          = { _, _ in moveVtx2 += 1 }
+        v2.modularityImproved  = { _ in modImprove2 += 1 }
+        v2.iterationComplete   = { _, _ in iterEnd2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = LouvainCommunityDetection<DefaultAdjacencyList>(on: graph).detectCommunities(visitor: combined)
+
+        #expect(startPhase1 >= 1,  "startPhase fires at the beginning of each Louvain phase")
+        #expect(startPhase2 >= 1)
+        #expect(moveVtx1 >= 1,     "moveVertex fires when a vertex changes community")
+        #expect(moveVtx2 >= 1)
+        #expect(modImprove1 >= 1,  "modularityImproved fires when modularity increases")
+        #expect(modImprove2 >= 1)
+        #expect(iterEnd1 >= 1,     "iterationComplete fires after each phase")
+        #expect(iterEnd2 >= 1)
+        // Both composed visitors must see identical event counts
+        #expect(startPhase1 == startPhase2)
+        #expect(moveVtx1 == moveVtx2)
+        #expect(modImprove1 == modImprove2)
+        #expect(iterEnd1 == iterEnd2)
     }
 }
 #endif

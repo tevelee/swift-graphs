@@ -699,7 +699,181 @@ struct CentralityAlgorithmTests {
         #expect(callCount1 == graph.vertexCount)
         #expect(callCount2 == graph.vertexCount)
     }
-    
+
+    /// Exercises both `BetweennessCentrality.Visitor` events through a composed visitor pair.
+    ///
+    /// Graph: directed chain A→B→C→D (3 edges).
+    /// Brandes' algorithm calls `examineVertex` for each source vertex (4 times total)
+    /// and `foundShortestPath` for each reachable destination from each source.
+    /// Both composed visitors must see identical event counts.
+    @Test func betweennessComposedVisitorsReceiveAllEvents() {
+        var graph = DefaultAdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        let d = graph.addVertex { $0.label = "D" }
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: c)
+        graph.addEdge(from: c, to: d)
+
+        var examVtx1 = 0; var examVtx2 = 0
+        var foundPath1 = 0; var foundPath2 = 0
+
+        var v1 = BetweennessCentrality<DefaultAdjacencyList>.Visitor()
+        v1.examineVertex    = { _ in examVtx1 += 1 }
+        v1.foundShortestPath = { _, _, _ in foundPath1 += 1 }
+
+        var v2 = BetweennessCentrality<DefaultAdjacencyList>.Visitor()
+        v2.examineVertex    = { _ in examVtx2 += 1 }
+        v2.foundShortestPath = { _, _, _ in foundPath2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = graph.centrality(using: .betweenness(normalized: false).withVisitor(combined))
+
+        // Brandes fires examineVertex once per source vertex (4 sources in a 4-vertex graph)
+        #expect(examVtx1 == 4, "examineVertex must fire once per source vertex")
+        #expect(examVtx2 == 4)
+        // foundShortestPath fires for each BFS discovery — at least 3 (chain has 3 reachable pairs)
+        #expect(foundPath1 >= 3, "foundShortestPath fires for each BFS-discovered vertex")
+        #expect(foundPath2 >= 3)
+        // Both composed visitors must see identical event counts
+        #expect(examVtx1 == examVtx2)
+        #expect(foundPath1 == foundPath2)
+    }
+
+    /// Exercises both `ClosenessCentrality.Visitor` events through a composed visitor pair.
+    ///
+    /// Graph: undirected triangle A−B−C (bidirectional edges).
+    /// `examineVertex` fires once per source vertex (3 times); `computeDistance` fires
+    /// for each BFS discovery from each source. Both composed visitors must see identical counts.
+    @Test func closenessComposedVisitorsReceiveAllEvents() {
+        var graph = DefaultAdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b); graph.addEdge(from: b, to: a)
+        graph.addEdge(from: b, to: c); graph.addEdge(from: c, to: b)
+        graph.addEdge(from: a, to: c); graph.addEdge(from: c, to: a)
+
+        var examVtx1 = 0; var examVtx2 = 0
+        var compDist1 = 0; var compDist2 = 0
+
+        var v1 = ClosenessCentrality<DefaultAdjacencyList>.Visitor()
+        v1.examineVertex  = { _ in examVtx1 += 1 }
+        v1.computeDistance = { _, _, _ in compDist1 += 1 }
+
+        var v2 = ClosenessCentrality<DefaultAdjacencyList>.Visitor()
+        v2.examineVertex  = { _ in examVtx2 += 1 }
+        v2.computeDistance = { _, _, _ in compDist2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = graph.centrality(using: .closeness().withVisitor(combined))
+
+        // examineVertex fires once per vertex used as BFS source (3 vertices)
+        #expect(examVtx1 == 3, "examineVertex fires once per source vertex")
+        #expect(examVtx2 == 3)
+        // computeDistance fires for each BFS-discovered vertex — at least 6 (2 per source in K3)
+        #expect(compDist1 >= 6, "computeDistance fires for each vertex discovered from each source")
+        #expect(compDist2 >= 6)
+        // Both composed visitors must see identical event counts
+        #expect(examVtx1 == examVtx2)
+        #expect(compDist1 == compDist2)
+    }
+
+    /// Exercises all three `EigenvectorCentrality.Visitor` events through a composed visitor pair.
+    ///
+    /// Graph: directed 3-cycle A→B→C→A. All vertices have identical incoming-edge weights,
+    /// so the power iteration converges after a single step (all centralities stay at 1.0).
+    /// `startIteration` fires once per power-iteration step; `endIteration` fires once per step;
+    /// `converge` fires exactly once when convergence is reached.
+    /// Both composed visitors must see identical event counts.
+    @Test func eigenvectorComposedVisitorsReceiveAllEvents() {
+        var graph = DefaultAdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        // Directed 3-cycle: A→B→C→A — strongly connected, converges in 1 iteration
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: c)
+        graph.addEdge(from: c, to: a)
+
+        var startIter1 = 0; var startIter2 = 0
+        var endIter1 = 0;   var endIter2 = 0
+        var converge1 = 0;  var converge2 = 0
+
+        var v1 = EigenvectorCentrality<DefaultAdjacencyList>.Visitor()
+        v1.startIteration = { _ in startIter1 += 1 }
+        v1.endIteration   = { _, _ in endIter1 += 1 }
+        v1.converge       = { _, _ in converge1 += 1 }
+
+        var v2 = EigenvectorCentrality<DefaultAdjacencyList>.Visitor()
+        v2.startIteration = { _ in startIter2 += 1 }
+        v2.endIteration   = { _, _ in endIter2 += 1 }
+        v2.converge       = { _, _ in converge2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = graph.centrality(using: .eigenvector().withVisitor(combined))
+
+        #expect(startIter1 >= 1,  "startIteration fires once per power-iteration step")
+        #expect(startIter2 >= 1)
+        #expect(endIter1 >= 1,    "endIteration fires once per power-iteration step")
+        #expect(endIter2 >= 1)
+        #expect(converge1 == 1,   "converge fires exactly once when convergence is reached")
+        #expect(converge2 == 1)
+        // startIteration and endIteration must fire the same number of times as each other
+        #expect(startIter1 == endIter1)
+        // Both composed visitors must see identical event counts
+        #expect(startIter1 == startIter2)
+        #expect(endIter1 == endIter2)
+        #expect(converge1 == converge2)
+    }
+
+    /// Exercises all three `PageRankCentrality.Visitor` events through a composed visitor pair.
+    ///
+    /// Graph: directed triangle A→B→C→A — converges quickly.
+    /// `startIteration` fires once per iteration step; `endIteration` fires once per step;
+    /// `converge` fires exactly once when convergence is reached.
+    /// Both composed visitors must see identical event counts.
+    @Test func pageRankComposedVisitorsReceiveAllEvents() {
+        var graph = DefaultAdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: c)
+        graph.addEdge(from: c, to: a)
+
+        var startIter1 = 0; var startIter2 = 0
+        var endIter1 = 0;   var endIter2 = 0
+        var converge1 = 0;  var converge2 = 0
+
+        var v1 = PageRankCentrality<DefaultAdjacencyList>.Visitor()
+        v1.startIteration = { _ in startIter1 += 1 }
+        v1.endIteration   = { _, _ in endIter1 += 1 }
+        v1.converge       = { _, _ in converge1 += 1 }
+
+        var v2 = PageRankCentrality<DefaultAdjacencyList>.Visitor()
+        v2.startIteration = { _ in startIter2 += 1 }
+        v2.endIteration   = { _, _ in endIter2 += 1 }
+        v2.converge       = { _, _ in converge2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = graph.centrality(using: .pageRank().withVisitor(combined))
+
+        #expect(startIter1 >= 1,  "startIteration fires once per PageRank iteration")
+        #expect(startIter2 >= 1)
+        #expect(endIter1 >= 1,    "endIteration fires once per PageRank iteration")
+        #expect(endIter2 >= 1)
+        #expect(converge1 == 1,   "converge fires exactly once when PageRank converges")
+        #expect(converge2 == 1)
+        // startIteration and endIteration must fire the same number of times
+        #expect(startIter1 == endIter1)
+        // Both composed visitors must see identical event counts
+        #expect(startIter1 == startIter2)
+        #expect(endIter1 == endIter2)
+        #expect(converge1 == converge2)
+    }
+
     // MARK: - Edge Cases
     
     @Test func completeGraphCentrality() {

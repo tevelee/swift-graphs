@@ -239,5 +239,87 @@ struct SPFATests {
         #expect(result.hasNegativeCycle == true)
         #expect(negativeCycleDetected == true)
     }
+
+    /// Exercises all five SPFA visitor events through a composed visitor pair.
+    ///
+    /// Graph: a→b(1), a→c(1), b→c(5) — c settles via a→c (cost 1), not b→c (cost 6).
+    /// - `examineVertex` fires for a, b, c as they are dequeued.
+    /// - `examineEdge` fires for each of the 3 edges.
+    /// - `edgeRelaxed` fires for a→b and a→c.
+    /// - `edgeNotRelaxed` fires for b→c (c already at cost 1; b→c would be 6).
+    @Test func composedVisitorsReceiveAllEvents() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        // a→b and a→c cost 1; b→c costs 5 so c settles via a→c (dist=1), not b→c (dist=6)
+        graph.addEdge(from: a, to: b) { $0.weight = 1.0 }
+        graph.addEdge(from: a, to: c) { $0.weight = 1.0 }
+        graph.addEdge(from: b, to: c) { $0.weight = 5.0 }
+
+        var examined1 = 0;   var examined2 = 0
+        var examEdge1 = 0;   var examEdge2 = 0
+        var relaxed1 = 0;    var relaxed2 = 0
+        var notRelaxed1 = 0; var notRelaxed2 = 0
+
+        var v1 = SPFA<DefaultAdjacencyList, Double>.Visitor()
+        v1.examineVertex  = { _ in examined1 += 1 }
+        v1.examineEdge    = { _ in examEdge1 += 1 }
+        v1.edgeRelaxed    = { _ in relaxed1 += 1 }
+        v1.edgeNotRelaxed = { _ in notRelaxed1 += 1 }
+
+        var v2 = SPFA<DefaultAdjacencyList, Double>.Visitor()
+        v2.examineVertex  = { _ in examined2 += 1 }
+        v2.examineEdge    = { _ in examEdge2 += 1 }
+        v2.edgeRelaxed    = { _ in relaxed2 += 1 }
+        v2.edgeNotRelaxed = { _ in notRelaxed2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = SPFA(on: graph, edgeWeight: .property(\.weight)).shortestPathsFromSource(a, visitor: combined)
+
+        #expect(examined1 >= 1,    "examineVertex fires as vertices are dequeued")
+        #expect(examined2 >= 1)
+        #expect(examEdge1 == 3,    "examineEdge fires for all 3 edges")
+        #expect(examEdge2 == 3)
+        #expect(relaxed1 == 2,     "a→b and a→c both improve their targets")
+        #expect(relaxed2 == 2)
+        #expect(notRelaxed1 >= 1,  "b→c does not improve c (already at cost 1)")
+        #expect(notRelaxed2 >= 1)
+        // Both composed visitors must see identical event counts
+        #expect(examined1 == examined2)
+        #expect(examEdge1 == examEdge2)
+        #expect(relaxed1 == relaxed2)
+        #expect(notRelaxed1 == notRelaxed2)
+    }
+
+    /// Ensures the `detectNegativeCycle` event propagates through composed visitors.
+    ///
+    /// Graph: a→b(1), b→c(-3), c→a(1) forms a negative cycle (total weight: -1).
+    /// The composed visitor's `detectNegativeCycle` closure must fire for both observers.
+    @Test func composedVisitors_detectNegativeCycleEvent() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b) { $0.weight =  1.0 }
+        graph.addEdge(from: b, to: c) { $0.weight = -3.0 }
+        graph.addEdge(from: c, to: a) { $0.weight =  1.0 }
+
+        var detected1 = 0; var detected2 = 0
+
+        var v1 = SPFA<DefaultAdjacencyList, Double>.Visitor()
+        v1.detectNegativeCycle = { _ in detected1 += 1 }
+
+        var v2 = SPFA<DefaultAdjacencyList, Double>.Visitor()
+        v2.detectNegativeCycle = { _ in detected2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = SPFA(on: graph, edgeWeight: .property(\.weight)).shortestPathsFromSource(a, visitor: combined)
+
+        #expect(detected1 >= 1, "detectNegativeCycle must fire through composed visitor v1")
+        #expect(detected2 >= 1, "detectNegativeCycle must fire through composed visitor v2")
+        #expect(detected1 == detected2, "both composed observers see the same detection events")
+    }
 }
+
 #endif

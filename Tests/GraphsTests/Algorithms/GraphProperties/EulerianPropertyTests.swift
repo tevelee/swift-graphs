@@ -204,3 +204,66 @@ struct EulerianPropertyTests {
         #expect(graph.hasEulerianCycle(using: .dfs()))
     }
 }
+
+// MARK: - Degree-Based Eulerian Properties (EulerianPath.swift free functions)
+
+/// Tests for `hasEulerianPath()` and `hasEulerianCycle()` — the no-argument, degree-counting
+/// free functions defined in `EulerianPath.swift`. These are distinct from the algorithm-based
+/// `hasEulerianPath(using:)` methods tested above.
+///
+/// Degree semantics for directed graphs (AdjacencyList):
+///   - `degree(of: v)` = inDegree(v) + outDegree(v)
+///   - Eulerian path:  exactly 0 or 2 vertices of odd degree
+///   - Eulerian cycle: all vertices have even degree
+struct EulerianDegreePropertyTests {
+
+    @Test func emptyGraph_noEulerianPathOrCycle() {
+        let graph = AdjacencyList()
+        #expect(!graph.hasEulerianPath(),  "empty graph has no Eulerian path")
+        #expect(!graph.hasEulerianCycle(), "empty graph has no Eulerian cycle")
+    }
+
+    @Test func singleVertex_hasEulerianPathAndCycle() {
+        var graph = AdjacencyList()
+        _ = graph.addVertex()
+        // degree 0 (even) → oddDegreeCount = 0 → both path and cycle
+        #expect(graph.hasEulerianPath(),  "isolated vertex satisfies Eulerian path (0 odd-degree vertices)")
+        #expect(graph.hasEulerianCycle(), "isolated vertex satisfies Eulerian cycle (0 odd-degree vertices)")
+    }
+
+    @Test func directedCycle_hasEulerianPathAndCycle() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex()
+        let b = graph.addVertex()
+        let c = graph.addVertex()
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: c)
+        graph.addEdge(from: c, to: a)
+        // Each vertex: inDegree=1, outDegree=1 → degree=2 (even). All even → cycle exists.
+        #expect(graph.hasEulerianPath(),  "3-cycle: all degrees even → Eulerian path exists")
+        #expect(graph.hasEulerianCycle(), "3-cycle: all degrees even → Eulerian cycle exists")
+    }
+
+    @Test func directedChain_hasEulerianPathButNotCycle() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex()
+        let b = graph.addVertex()
+        let c = graph.addVertex()
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: b, to: c)
+        // degree(a)=1 (odd), degree(b)=2 (even), degree(c)=1 (odd) → 2 odd-degree vertices
+        #expect(graph.hasEulerianPath(),   "chain a→b→c has exactly 2 odd-degree vertices → Eulerian path")
+        #expect(!graph.hasEulerianCycle(), "chain a→b→c has odd-degree vertices → no Eulerian cycle")
+    }
+
+    @Test func twoDisconnectedEdges_noEulerianPathOrCycle() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex(); let b = graph.addVertex()
+        let c = graph.addVertex(); let d = graph.addVertex()
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: c, to: d)
+        // degree(a)=1, degree(b)=1, degree(c)=1, degree(d)=1 → 4 odd-degree vertices
+        #expect(!graph.hasEulerianPath(),  "two isolated edges: 4 odd-degree vertices → no Eulerian path")
+        #expect(!graph.hasEulerianCycle(), "two isolated edges: 4 odd-degree vertices → no Eulerian cycle")
+    }
+}

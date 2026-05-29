@@ -277,9 +277,64 @@ struct CliqueDetectionTests {
         
         let result1 = graph.findCliques()
         let result2 = graph.findCliques(using: .bronKerbosch())
-        
+
         #expect(result1.cliqueCount == result2.cliqueCount)
         #expect(result1.maximalCliqueSize == result2.maximalCliqueSize)
+    }
+
+    // MARK: - Visitor Support
+
+    /// Exercises all four BronKerbosch visitor events through a composed visitor pair.
+    ///
+    /// Graph: undirected triangle A−B−C (6 bidirectional directed edges). This graph has exactly
+    /// one maximal clique: {A, B, C}.
+    /// - `foundClique` fires once when the single maximal clique is reported.
+    /// - `exploreClique` fires when the algorithm enters a recursive call with a growing candidate set.
+    /// - `choosePivot` fires at least once when the pivot is selected to prune the search.
+    /// - `backtrack` fires when the algorithm removes a vertex from the current candidate clique.
+    @Test func composedVisitorsReceiveAllEvents() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        // Undirected triangle: 6 directed edges
+        graph.addEdge(from: a, to: b); graph.addEdge(from: b, to: a)
+        graph.addEdge(from: b, to: c); graph.addEdge(from: c, to: b)
+        graph.addEdge(from: c, to: a); graph.addEdge(from: a, to: c)
+
+        var explore1 = 0;  var explore2 = 0
+        var found1 = 0;    var found2 = 0
+        var pivot1 = 0;    var pivot2 = 0
+        var back1 = 0;     var back2 = 0
+
+        var v1 = BronKerboschCliqueDetection<DefaultAdjacencyList>.Visitor()
+        v1.exploreClique = { _ in explore1 += 1 }
+        v1.foundClique   = { _ in found1 += 1 }
+        v1.choosePivot   = { _ in pivot1 += 1 }
+        v1.backtrack     = { _ in back1 += 1 }
+
+        var v2 = BronKerboschCliqueDetection<DefaultAdjacencyList>.Visitor()
+        v2.exploreClique = { _ in explore2 += 1 }
+        v2.foundClique   = { _ in found2 += 1 }
+        v2.choosePivot   = { _ in pivot2 += 1 }
+        v2.backtrack     = { _ in back2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = BronKerboschCliqueDetection<DefaultAdjacencyList>(on: graph).findCliques(visitor: combined)
+
+        #expect(found1 == 1,    "foundClique fires exactly once for the triangle {A,B,C}")
+        #expect(found2 == 1)
+        #expect(explore1 >= 1,  "exploreClique fires as the algorithm recurses into candidate sets")
+        #expect(explore2 >= 1)
+        #expect(pivot1 >= 1,    "choosePivot fires at least once per recursive call")
+        #expect(pivot2 >= 1)
+        #expect(back1 >= 1,     "backtrack fires when removing a vertex from the current clique")
+        #expect(back2 >= 1)
+        // Both composed visitors must see identical event counts
+        #expect(found1 == found2)
+        #expect(explore1 == explore2)
+        #expect(pivot1 == pivot2)
+        #expect(back1 == back2)
     }
 }
 #endif

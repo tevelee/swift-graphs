@@ -232,5 +232,71 @@ struct MinimumCutAlgorithmTests {
         // The weakest link is B--C with weight 2 (1+1 bidirectional)
         #expect(result!.cutWeight == 2.0)
     }
+
+    // MARK: - Visitor Support
+
+    /// Exercises all five StoerWagner visitor events through a composed visitor pair.
+    ///
+    /// Graph: undirected triangle A−B−C with weights 1−1, 2−2, 10−10 (bidirectional).
+    /// The minimum cut isolates B, so the algorithm goes through phases, merges vertices,
+    /// and finds a new minimum cut.
+    /// - `startPhase` fires at the beginning of each phase (V−1 phases for V vertices).
+    /// - `addVertex` fires for each vertex added to the ordering within a phase.
+    /// - `phaseComplete` fires at the end of each phase.
+    /// - `mergeVertices` fires when two vertices are merged after a phase.
+    /// - `newMinimumCut` fires when a new best minimum cut is recorded.
+    @Test func composedVisitorsReceiveAllEvents() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b) { $0.weight = 1.0 }
+        graph.addEdge(from: b, to: a) { $0.weight = 1.0 }
+        graph.addEdge(from: b, to: c) { $0.weight = 2.0 }
+        graph.addEdge(from: c, to: b) { $0.weight = 2.0 }
+        graph.addEdge(from: a, to: c) { $0.weight = 10.0 }
+        graph.addEdge(from: c, to: a) { $0.weight = 10.0 }
+
+        var startPhase1 = 0;    var startPhase2 = 0
+        var addVtx1 = 0;        var addVtx2 = 0
+        var phaseEnd1 = 0;      var phaseEnd2 = 0
+        var merge1 = 0;         var merge2 = 0
+        var newCut1 = 0;        var newCut2 = 0
+
+        var v1 = StoerWagner<DefaultAdjacencyList, Double>.Visitor()
+        v1.startPhase    = { _ in startPhase1 += 1 }
+        v1.addVertex     = { _, _ in addVtx1 += 1 }
+        v1.phaseComplete = { _, _ in phaseEnd1 += 1 }
+        v1.mergeVertices = { _, _ in merge1 += 1 }
+        v1.newMinimumCut = { _ in newCut1 += 1 }
+
+        var v2 = StoerWagner<DefaultAdjacencyList, Double>.Visitor()
+        v2.startPhase    = { _ in startPhase2 += 1 }
+        v2.addVertex     = { _, _ in addVtx2 += 1 }
+        v2.phaseComplete = { _, _ in phaseEnd2 += 1 }
+        v2.mergeVertices = { _, _ in merge2 += 1 }
+        v2.newMinimumCut = { _ in newCut2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = graph.minimumCut(using: .stoerWagner(weight: .property(\.weight)).withVisitor(combined))
+
+        // V−1 = 2 phases for a 3-vertex graph
+        #expect(startPhase1 == 2,  "startPhase fires once per phase (V−1 = 2 phases)")
+        #expect(startPhase2 == 2)
+        #expect(addVtx1 >= 2,      "addVertex fires for each vertex ordered in each phase")
+        #expect(addVtx2 >= 2)
+        #expect(phaseEnd1 == 2,    "phaseComplete fires once per completed phase")
+        #expect(phaseEnd2 == 2)
+        #expect(merge1 >= 1,       "mergeVertices fires once per phase (V−1 merges for 3-vertex graph)")
+        #expect(merge2 >= 1)
+        #expect(newCut1 >= 1,      "newMinimumCut fires when a better cut is found")
+        #expect(newCut2 >= 1)
+        // Both composed visitors must see identical event counts
+        #expect(startPhase1 == startPhase2)
+        #expect(addVtx1 == addVtx2)
+        #expect(phaseEnd1 == phaseEnd2)
+        #expect(merge1 == merge2)
+        #expect(newCut1 == newCut2)
+    }
 }
 #endif

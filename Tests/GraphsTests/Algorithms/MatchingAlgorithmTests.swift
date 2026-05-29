@@ -2,6 +2,13 @@
 import Testing
 @testable import Graphs
 
+private typealias DefaultBipartiteGraph = BipartiteAdjacencyList<
+    OrderedVertexStorage,
+    OrderedEdgeStorage<OrderedVertexStorage.Vertex>,
+    DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
+    DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
+>
+
 struct MatchingAlgorithmTests {
     
     @Test
@@ -163,9 +170,76 @@ struct MatchingAlgorithmTests {
         
         // Test default algorithm (should be Hopcroft-Karp)
         let result = graph.maximumMatching()
-        
+
         #expect(result.matchingSize == 2)
         #expect(result.matchingEdges.count == 2)
+    }
+
+    // MARK: - Visitor Support
+
+    /// Exercises all six HopcroftKarp visitor events through a composed visitor pair.
+    ///
+    /// Graph: bipartite graph L1−R1, L2−R2 (perfect matching of size 2).
+    /// - `startIteration` fires at the start of each BFS phase.
+    /// - `examineVertex` fires for each vertex examined during BFS/DFS.
+    /// - `examineEdge` fires for each edge examined.
+    /// - `findAugmentingPath` fires when an augmenting path is found.
+    /// - `augmentMatching` fires when the matching is augmented along a path.
+    /// - `updateMatching` fires for each left−right vertex pair added to the matching.
+    @Test func composedVisitorsReceiveAllEvents() {
+        var graph = BipartiteAdjacencyList()
+        let left1  = graph.addVertex(to: .left)
+        let left2  = graph.addVertex(to: .left)
+        let right1 = graph.addVertex(to: .right)
+        let right2 = graph.addVertex(to: .right)
+        graph.addEdge(from: left1, to: right1)
+        graph.addEdge(from: left2, to: right2)
+
+        var startIter1 = 0;  var startIter2 = 0
+        var examVtx1 = 0;    var examVtx2 = 0
+        var examEdge1 = 0;   var examEdge2 = 0
+        var augPath1 = 0;    var augPath2 = 0
+        var augMatch1 = 0;   var augMatch2 = 0
+        var updMatch1 = 0;   var updMatch2 = 0
+
+        var v1 = HopcroftKarp<DefaultBipartiteGraph>.Visitor()
+        v1.startIteration      = { _ in startIter1 += 1 }
+        v1.examineVertex       = { _ in examVtx1 += 1 }
+        v1.examineEdge         = { _ in examEdge1 += 1 }
+        v1.findAugmentingPath  = { _ in augPath1 += 1 }
+        v1.augmentMatching     = { _ in augMatch1 += 1 }
+        v1.updateMatching      = { _, _ in updMatch1 += 1 }
+
+        var v2 = HopcroftKarp<DefaultBipartiteGraph>.Visitor()
+        v2.startIteration      = { _ in startIter2 += 1 }
+        v2.examineVertex       = { _ in examVtx2 += 1 }
+        v2.examineEdge         = { _ in examEdge2 += 1 }
+        v2.findAugmentingPath  = { _ in augPath2 += 1 }
+        v2.augmentMatching     = { _ in augMatch2 += 1 }
+        v2.updateMatching      = { _, _ in updMatch2 += 1 }
+
+        let combined = v1.combined(with: v2)
+        _ = graph.maximumMatching(using: .hopcroftKarp().withVisitor(combined))
+
+        #expect(startIter1 >= 1,  "startIteration fires at the start of each BFS phase")
+        #expect(startIter2 >= 1)
+        #expect(examVtx1 >= 1,    "examineVertex fires for each vertex examined")
+        #expect(examVtx2 >= 1)
+        #expect(examEdge1 >= 1,   "examineEdge fires for each edge examined")
+        #expect(examEdge2 >= 1)
+        #expect(augPath1 >= 1,    "findAugmentingPath fires when an augmenting path is found")
+        #expect(augPath2 >= 1)
+        #expect(augMatch1 >= 1,   "augmentMatching fires when the matching is augmented")
+        #expect(augMatch2 >= 1)
+        #expect(updMatch1 >= 1,   "updateMatching fires for each matched pair")
+        #expect(updMatch2 >= 1)
+        // Both composed visitors must see identical event counts
+        #expect(startIter1 == startIter2)
+        #expect(examVtx1 == examVtx2)
+        #expect(examEdge1 == examEdge2)
+        #expect(augPath1 == augPath2)
+        #expect(augMatch1 == augMatch2)
+        #expect(updMatch1 == updMatch2)
     }
 }
 #endif

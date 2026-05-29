@@ -168,6 +168,35 @@ struct KShortestPathsTests {
         #endif
     }
 
+    // MARK: - Visitor Support
+
+    @Test func composedVisitorsReceiveAllEvents() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        let c = graph.addVertex { $0.label = "C" }
+        graph.addEdge(from: a, to: b) { $0.weight = 1 }
+        graph.addEdge(from: b, to: c) { $0.weight = 2 }
+
+        var pathsFound1 = 0; var pathsFound2 = 0
+
+        let v1 = Yen<DefaultAdjacencyList, Double>.Visitor(
+            onPathFound: { _ in pathsFound1 += 1 }
+        )
+        let v2 = Yen<DefaultAdjacencyList, Double>.Visitor(
+            onPathFound: { _ in pathsFound2 += 1 }
+        )
+
+        let combined = v1.combined(with: v2)
+        let paths = Yen<DefaultAdjacencyList, Double>(edgeWeight: .property(\.weight))
+            .kShortestPaths(from: a, to: c, k: 3, in: graph, visitor: combined)
+
+        #expect(paths.count == 1) // only one simple path: a→b→c
+        #expect(pathsFound1 == 1)
+        #expect(pathsFound2 == 1)
+        #expect(pathsFound1 == pathsFound2)
+    }
+
     private func calculatePathCost<Graph: IncidenceGraph & EdgePropertyGraph>(
         _ path: Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>,
         in graph: Graph
