@@ -20,7 +20,7 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
     /// - Returns: `true` if the graph is planar, `false` otherwise
     @inlinable
     public func isPlanar() -> Bool {
-        isPlanar(using: .boyerMyrvold())
+        isPlanar(using: .leftRight())
     }
 }
 
