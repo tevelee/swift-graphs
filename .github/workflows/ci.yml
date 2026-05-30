@@ -38,7 +38,7 @@ jobs:
             traits: "full"
             extra: "--enable-all-traits"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: swift-actions/setup-swift@v2
         with:
           swift-version: ${{ matrix.swift }}
@@ -67,7 +67,7 @@ jobs:
             traits: "full"
             extra: "--enable-all-traits"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build
         run: swift build ${{ matrix.extra }}
       - name: Test
@@ -78,7 +78,7 @@ jobs:
     runs-on: macos-15
     continue-on-error: true  # advisory: codebase has pre-existing style issues
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: swift-actions/setup-swift@v2
         with:
           swift-version: "6.2"
