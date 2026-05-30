@@ -15,19 +15,19 @@ public protocol IncidenceGraph<VertexDescriptor, EdgeDescriptor>: Graph {
     /// - Parameter vertex: The vertex to query
     /// - Returns: A sequence of edge descriptors representing outgoing edges
     func outgoingEdges(of vertex: VertexDescriptor) -> OutgoingEdges
-    
+
     /// Returns the source vertex of the specified edge.
     ///
     /// - Parameter edge: The edge to query
     /// - Returns: The source vertex, or `nil` if the edge is invalid
     func source(of edge: EdgeDescriptor) -> VertexDescriptor?
-    
+
     /// Returns the destination vertex of the specified edge.
     ///
     /// - Parameter edge: The edge to query
     /// - Returns: The destination vertex, or `nil` if the edge is invalid
     func destination(of edge: EdgeDescriptor) -> VertexDescriptor?
-    
+
     /// Returns the number of outgoing edges from the specified vertex.
     ///
     /// - Parameter vertex: The vertex to query

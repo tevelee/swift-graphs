@@ -14,16 +14,16 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
-extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
-    /// Performs topological sort using DFS-based algorithm as the default.
-    /// This is the most commonly used and efficient algorithm for topological sorting.
-    ///
-    /// - Returns: The topological sort result.
-    @inlinable
-    public func topologicalSort() -> TopologicalSortResult<VertexDescriptor> {
-        topologicalSort(using: .dfs())
+    extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+        /// Performs topological sort using DFS-based algorithm as the default.
+        /// This is the most commonly used and efficient algorithm for topological sorting.
+        ///
+        /// - Returns: The topological sort result.
+        @inlinable
+        public func topologicalSort() -> TopologicalSortResult<VertexDescriptor> {
+            topologicalSort(using: .dfs())
+        }
     }
-}
 #endif
 
 /// A protocol for algorithms that perform topological sorting.
@@ -45,9 +45,10 @@ public protocol TopologicalSortAlgorithm<Graph> {
     ) -> TopologicalSortResult<Graph.VertexDescriptor>
 }
 
-extension VisitorWrapper: TopologicalSortAlgorithm where Base: TopologicalSortAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension VisitorWrapper: TopologicalSortAlgorithm
+where Base: TopologicalSortAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
-    
+
     @inlinable
     public func topologicalSort(
         in graph: Base.Graph,
@@ -63,20 +64,20 @@ extension VisitorWrapper: TopologicalSortAlgorithm where Base: TopologicalSortAl
 public struct TopologicalSortResult<Vertex: Hashable> {
     /// The topologically sorted vertices.
     public let sortedVertices: [Vertex]
-    
+
     /// Whether the graph contains a cycle (making topological sort impossible).
     public let hasCycle: Bool
-    
+
     /// The vertices that are part of a cycle (if any).
     public let cycleVertices: [Vertex]
-    
+
     /// Creates a new result with the given sorted vertices.
     public init(sortedVertices: [Vertex], hasCycle: Bool = false, cycleVertices: [Vertex] = []) {
         self.sortedVertices = sortedVertices
         self.hasCycle = hasCycle
         self.cycleVertices = cycleVertices
     }
-    
+
     /// Returns whether the topological sort was successful (no cycles).
     public var isValid: Bool {
         !hasCycle

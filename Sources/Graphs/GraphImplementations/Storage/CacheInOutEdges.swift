@@ -17,7 +17,8 @@ extension EdgeStorage where Edges == OrderedSet<Edge> {
 /// query the incidence structure of a graph.
 public struct CacheInOutEdges<
     Base: EdgeStorage
->: EdgeStorage where
+>: EdgeStorage
+where
     Base.Edges == OrderedSet<Base.Edge>
 {
     public typealias Vertex = Base.Vertex

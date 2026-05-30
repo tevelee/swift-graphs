@@ -11,7 +11,7 @@ public protocol EdgeListGraph: Graph {
     ///
     /// - Returns: A sequence of all edge descriptors in the graph
     func edges() -> Edges
-    
+
     /// The total number of edges in the graph.
     var edgeCount: Int { get }
 }

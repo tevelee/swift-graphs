@@ -1,5 +1,6 @@
-@testable import Graphs
 import Testing
+
+@testable import Graphs
 
 /// Tests that run algorithms through graph views (`reversed()`, `filtered()`, `undirected()`).
 ///
@@ -26,15 +27,21 @@ struct AlgorithmOnViewsTests {
 
         // BFS from c on ORIGINAL: c has no outgoing edges, visits {c} only
         let originalResult = graph.traverse(from: c, using: .bfs())
-        #expect(originalResult.vertices == [c],
-                "BFS from c on directed a→b→c should visit only c (no outgoing edges from c)")
+        #expect(
+            originalResult.vertices == [c],
+            "BFS from c on directed a→b→c should visit only c (no outgoing edges from c)"
+        )
 
         // BFS from c on REVERSED: reversed edges give c→b→a, visits all three
         let reversedResult = graph.reversed().traverse(from: c, using: .bfs())
-        #expect(Set(reversedResult.vertices) == Set([a, b, c]),
-                "BFS from c on reversed graph must reach all vertices via c→b→a")
-        #expect(reversedResult.vertices.first == c,
-                "BFS source c must appear first in the reversed traversal")
+        #expect(
+            Set(reversedResult.vertices) == Set([a, b, c]),
+            "BFS from c on reversed graph must reach all vertices via c→b→a"
+        )
+        #expect(
+            reversedResult.vertices.first == c,
+            "BFS source c must appear first in the reversed traversal"
+        )
     }
 
     /// DFS from source `a` on the original graph visits all reachable vertices in the directed chain.
@@ -50,13 +57,17 @@ struct AlgorithmOnViewsTests {
 
         // On original: DFS from a visits a, b, c (chain follows a→b→c)
         let forwardDFS = graph.traverse(from: a, using: .dfs())
-        #expect(Set(forwardDFS.vertices) == Set([a, b, c]),
-                "DFS from a must visit a, b, c in the original directed chain")
+        #expect(
+            Set(forwardDFS.vertices) == Set([a, b, c]),
+            "DFS from a must visit a, b, c in the original directed chain"
+        )
 
         // On reversed: DFS from c visits c, b, a (chain follows c→b→a)
         let reversedDFS = graph.reversed().traverse(from: c, using: .dfs())
-        #expect(Set(reversedDFS.vertices) == Set([a, b, c]),
-                "DFS from c on reversed graph must visit the same 3 vertices")
+        #expect(
+            Set(reversedDFS.vertices) == Set([a, b, c]),
+            "DFS from c on reversed graph must visit the same 3 vertices"
+        )
     }
 
     // MARK: - FilteredGraphView
@@ -77,15 +88,21 @@ struct AlgorithmOnViewsTests {
 
         // On original: DFS visits all four vertices
         let originalDFS = graph.traverse(from: a, using: .dfs())
-        #expect(Set(originalDFS.vertices) == Set([a, b, c, d]),
-                "DFS on original must visit all 4 vertices")
+        #expect(
+            Set(originalDFS.vertices) == Set([a, b, c, d]),
+            "DFS on original must visit all 4 vertices"
+        )
 
         // Filter out c: the edge b→c disappears, so b becomes a dead end
         let filteredDFS = graph.filterVertices(where: { $0 != c }).traverse(from: a, using: .dfs())
-        #expect(Set(filteredDFS.vertices) == Set([a, b, d]),
-                "DFS on filtered view must visit {a,b,d} but not excluded vertex c")
-        #expect(!filteredDFS.vertices.contains(c),
-                "Excluded vertex c must not appear in the filtered traversal")
+        #expect(
+            Set(filteredDFS.vertices) == Set([a, b, d]),
+            "DFS on filtered view must visit {a,b,d} but not excluded vertex c"
+        )
+        #expect(
+            !filteredDFS.vertices.contains(c),
+            "Excluded vertex c must not appear in the filtered traversal"
+        )
     }
 
     /// BFS on a filtered view should also respect the vertex exclusion.
@@ -103,70 +120,84 @@ struct AlgorithmOnViewsTests {
         let filtered = graph.filterEdges(where: { graph[$0].weight <= 1.5 })
         let bfsResult = filtered.traverse(from: a, using: .bfs())
 
-        #expect(Set(bfsResult.vertices) == Set([a, b, c]),
-                "c is still reachable via a→b→c even when the a→c edge is filtered out")
+        #expect(
+            Set(bfsResult.vertices) == Set([a, b, c]),
+            "c is still reachable via a→b→c even when the a→c edge is filtered out"
+        )
     }
 
     // MARK: - UndirectedGraphView
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 
-    /// ConnectedComponents on an undirected view finds weakly connected components.
-    ///
-    /// With directed edges `a → b` and `c → b`, in the directed graph:
-    /// - DFS from `a` visits `{a, b}` (one component)
-    /// - `c` is unvisited next, forming `{c}` (second component)
-    ///
-    /// On the undirected view, `b`'s incoming edges become outgoing too, so DFS from `a`
-    /// can now reach `c` via the reversed `c→b` edge: one single component `{a,b,c}`.
-    @Test func connectedComponentsOnUndirectedViewFindsWeakComponents() {
-        var graph = AdjacencyList()
-        let a = graph.addVertex { $0.label = "A" }
-        let b = graph.addVertex { $0.label = "B" }
-        let c = graph.addVertex { $0.label = "C" }
-        graph.addEdge(from: a, to: b)   // directed; b is only reachable from a
-        graph.addEdge(from: c, to: b)   // directed; b is also reachable from c, but c isn't from b
+        /// ConnectedComponents on an undirected view finds weakly connected components.
+        ///
+        /// With directed edges `a → b` and `c → b`, in the directed graph:
+        /// - DFS from `a` visits `{a, b}` (one component)
+        /// - `c` is unvisited next, forming `{c}` (second component)
+        ///
+        /// On the undirected view, `b`'s incoming edges become outgoing too, so DFS from `a`
+        /// can now reach `c` via the reversed `c→b` edge: one single component `{a,b,c}`.
+        @Test func connectedComponentsOnUndirectedViewFindsWeakComponents() {
+            var graph = AdjacencyList()
+            let a = graph.addVertex { $0.label = "A" }
+            let b = graph.addVertex { $0.label = "B" }
+            let c = graph.addVertex { $0.label = "C" }
+            graph.addEdge(from: a, to: b)  // directed; b is only reachable from a
+            graph.addEdge(from: c, to: b)  // directed; b is also reachable from c, but c isn't from b
 
-        // Directed: DFS from a reaches {a,b}; c starts its own component {c}
-        let directedCC = graph.connectedComponents(using: .dfs())
-        #expect(directedCC.componentCount == 2,
-                "Directed graph has 2 weakly-connected components: {a,b} and {c}")
+            // Directed: DFS from a reaches {a,b}; c starts its own component {c}
+            let directedCC = graph.connectedComponents(using: .dfs())
+            #expect(
+                directedCC.componentCount == 2,
+                "Directed graph has 2 weakly-connected components: {a,b} and {c}"
+            )
 
-        // Undirected: b's incoming edges become outgoing, linking a and c
-        let undirectedCC = graph.undirected().connectedComponents(using: .dfs())
-        #expect(undirectedCC.componentCount == 1,
-                "Undirected view has 1 component: a, b, c are all weakly connected via b")
-        #expect(undirectedCC.areInSameComponent(a, c),
-                "a and c must be in the same component in the undirected view")
-    }
+            // Undirected: b's incoming edges become outgoing, linking a and c
+            let undirectedCC = graph.undirected().connectedComponents(using: .dfs())
+            #expect(
+                undirectedCC.componentCount == 1,
+                "Undirected view has 1 component: a, b, c are all weakly connected via b"
+            )
+            #expect(
+                undirectedCC.areInSameComponent(a, c),
+                "a and c must be in the same component in the undirected view"
+            )
+        }
 
-    /// Topological sort on a reversed DAG produces the reverse of the original order.
-    ///
-    /// For DAG `a → b → c`, the topological order is `[a, b, c]`.
-    /// The reversed DAG `c → b → a` has topological order `[c, b, a]`,
-    /// which is exactly the reverse of the original order.
-    @Test func topologicalSortOnReversedGraphIsReverseOrder() {
-        var graph = AdjacencyList()
-        let a = graph.addVertex { $0.label = "A" }
-        let b = graph.addVertex { $0.label = "B" }
-        let c = graph.addVertex { $0.label = "C" }
-        graph.addEdge(from: a, to: b)
-        graph.addEdge(from: b, to: c)
+        /// Topological sort on a reversed DAG produces the reverse of the original order.
+        ///
+        /// For DAG `a → b → c`, the topological order is `[a, b, c]`.
+        /// The reversed DAG `c → b → a` has topological order `[c, b, a]`,
+        /// which is exactly the reverse of the original order.
+        @Test func topologicalSortOnReversedGraphIsReverseOrder() {
+            var graph = AdjacencyList()
+            let a = graph.addVertex { $0.label = "A" }
+            let b = graph.addVertex { $0.label = "B" }
+            let c = graph.addVertex { $0.label = "C" }
+            graph.addEdge(from: a, to: b)
+            graph.addEdge(from: b, to: c)
 
-        let originalSort = graph.topologicalSort(using: .kahn())
-        #expect(originalSort.isValid, "linear DAG a→b→c must have a valid topological order")
-        #expect(originalSort.sortedVertices == [a, b, c],
-                "topological order of a→b→c must be [a,b,c]")
+            let originalSort = graph.topologicalSort(using: .kahn())
+            #expect(originalSort.isValid, "linear DAG a→b→c must have a valid topological order")
+            #expect(
+                originalSort.sortedVertices == [a, b, c],
+                "topological order of a→b→c must be [a,b,c]"
+            )
 
-        let reversedSort = graph.reversed().topologicalSort(using: .kahn())
-        #expect(reversedSort.isValid, "reversed linear DAG c→b→a must still be a valid DAG")
-        #expect(reversedSort.sortedVertices == [c, b, a],
-                "topological order of reversed graph must be [c,b,a]")
+            let reversedSort = graph.reversed().topologicalSort(using: .kahn())
+            #expect(reversedSort.isValid, "reversed linear DAG c→b→a must still be a valid DAG")
+            #expect(
+                reversedSort.sortedVertices == [c, b, a],
+                "topological order of reversed graph must be [c,b,a]"
+            )
 
-        // Structural invariant: the reversed DAG's sort is the exact reverse of the original
-        #expect(originalSort.sortedVertices == Array(reversedSort.sortedVertices.reversed()),
-                "topological sort of reversed(G) must be the reverse of sort(G) for a linear DAG")
-    }
+            // Structural invariant: the reversed DAG's sort is the exact reverse of the original
+            #expect(
+                originalSort.sortedVertices == Array(reversedSort.sortedVertices.reversed()),
+                "topological sort of reversed(G) must be the reverse of sort(G) for a linear DAG"
+            )
+        }
 
     #endif  // !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
 
@@ -179,8 +210,8 @@ struct AlgorithmOnViewsTests {
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
-        graph.addEdge(from: a, to: b)   // directed edge a→b
-        graph.addEdge(from: b, to: c)   // directed edge b→c
+        graph.addEdge(from: a, to: b)  // directed edge a→b
+        graph.addEdge(from: b, to: c)  // directed edge b→c
 
         let u = graph.undirected()
 
@@ -228,7 +259,9 @@ struct AlgorithmOnViewsTests {
 
         // On undirected view: BFS from c can follow reversed edges c→b→a
         let undirectedResult = graph.undirected().traverse(from: c, using: .bfs())
-        #expect(Set(undirectedResult.vertices) == Set([a, b, c]),
-                "undirected BFS from c reaches all vertices via reversed edges")
+        #expect(
+            Set(undirectedResult.vertices) == Set([a, b, c]),
+            "undirected BFS from c reaches all vertices via reversed edges"
+        )
     }
 }

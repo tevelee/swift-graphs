@@ -12,7 +12,7 @@ public struct OreProperty<Graph: IncidenceGraph & VertexListGraph & Bidirectiona
         public var checkDegreeSum: ((Graph.VertexDescriptor, Graph.VertexDescriptor, Int, Int) -> Void)?
         /// Called when the degree sum is too low.
         public var degreeSumTooLow: ((Graph.VertexDescriptor, Graph.VertexDescriptor, Int, Int) -> Void)?
-        
+
         /// Creates a new visitor.
         @inlinable
         public init(

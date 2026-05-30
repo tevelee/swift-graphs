@@ -26,13 +26,13 @@ public struct InlineGraph<Vertex: Hashable, Edge: EdgeProtocol<Vertex>> where Ed
     /// Internal storage: maps each vertex to its outgoing edges
     @usableFromInline
     var adjacency: OrderedDictionary<Vertex, [Edge]>
-    
+
     /// Creates an empty inline graph.
     @inlinable
     public init() {
         self.adjacency = OrderedDictionary()
     }
-    
+
     /// Creates an inline graph from a collection of edges.
     ///
     /// All vertices referenced by the edges are automatically added to the graph.
@@ -70,15 +70,15 @@ extension InlineGraph: EdgeMutableGraph where Edge == SimpleEdge<Vertex> {
     }
 }
 
-//public struct Empty: Hashable {
+// public struct Empty: Hashable {
 //    public init() {}
-//}
+// }
 //
-//extension InlineGraph: VertexMutableGraph where Vertex == Empty {
+// extension InlineGraph: VertexMutableGraph where Vertex == Empty {
 //    mutating public func addVertex() -> Empty {
 //        Empty()
 //    }
-//}
+// }
 
 extension InlineGraph where Edge: Equatable {
     /// Adds an edge to the graph.
@@ -98,28 +98,28 @@ extension InlineGraph where Edge: Equatable {
         }
         return edge
     }
-    
-#if swift(>=6.2)
-    /// Removes an edge from the graph.
-    ///
-    /// - Parameter edge: The edge to remove
-    @inlinable
-    public mutating func remove(edge: consuming Edge) {
-        if let edges = adjacency[edge.source] {
-            adjacency[edge.source] = edges.filter { $0 != edge }
+
+    #if swift(>=6.2)
+        /// Removes an edge from the graph.
+        ///
+        /// - Parameter edge: The edge to remove
+        @inlinable
+        public mutating func remove(edge: consuming Edge) {
+            if let edges = adjacency[edge.source] {
+                adjacency[edge.source] = edges.filter { $0 != edge }
+            }
         }
-    }
-#else
-    /// Removes an edge from the graph.
-    ///
-    /// - Parameter edge: The edge to remove
-    @inlinable
-    public mutating func remove(edge: Edge) {
-        if let edges = adjacency[edge.source] {
-            adjacency[edge.source] = edges.filter { $0 != edge }
+    #else
+        /// Removes an edge from the graph.
+        ///
+        /// - Parameter edge: The edge to remove
+        @inlinable
+        public mutating func remove(edge: Edge) {
+            if let edges = adjacency[edge.source] {
+                adjacency[edge.source] = edges.filter { $0 != edge }
+            }
         }
-    }
-#endif
+    #endif
 }
 
 extension InlineGraph where Edge == SimpleEdge<Vertex> {
@@ -136,7 +136,7 @@ extension InlineGraph where Edge == SimpleEdge<Vertex> {
     public init() {
         self.adjacency = OrderedDictionary()
     }
-    
+
     /// Creates an inline graph with simple edges from a list of vertex pairs.
     ///
     /// This convenience initializer allows you to create a graph from edge pairs:
@@ -153,7 +153,7 @@ extension InlineGraph where Edge == SimpleEdge<Vertex> {
     public init(edges: [(source: Vertex, destination: Vertex)]) {
         self.init(edges: edges.map { SimpleEdge(source: $0.source, destination: $0.destination) })
     }
-    
+
     /// Adds an edge from source to destination (convenience for SimpleEdge).
     ///
     /// This method automatically creates a SimpleEdge and adds it to the graph.
@@ -178,22 +178,22 @@ extension InlineGraph: Graph {
 
 extension InlineGraph: IncidenceGraph {
     public typealias OutgoingEdges = [Edge]
-    
+
     @inlinable
     public func outgoingEdges(of vertex: Vertex) -> [Edge] {
         adjacency[vertex] ?? []
     }
-    
+
     @inlinable
     public func source(of edge: Edge) -> Vertex? {
         edge.source
     }
-    
+
     @inlinable
     public func destination(of edge: Edge) -> Vertex? {
         edge.destination
     }
-    
+
     @inlinable
     public func outDegree(of vertex: Vertex) -> Int {
         adjacency[vertex]?.count ?? 0
@@ -205,7 +205,7 @@ extension InlineGraph: VertexListGraph {
     public func vertices() -> OrderedSet<Vertex> {
         OrderedSet(adjacency.keys)
     }
-    
+
     @inlinable
     public var vertexCount: Int {
         adjacency.count
@@ -214,12 +214,12 @@ extension InlineGraph: VertexListGraph {
 
 extension InlineGraph: EdgeListGraph {
     public typealias Edges = [Edge]
-    
+
     @inlinable
     public func edges() -> [Edge] {
         adjacency.values.flatMap { $0 }
     }
-    
+
     @inlinable
     public var edgeCount: Int {
         adjacency.values.reduce(0) { $0 + $1.count }
@@ -241,45 +241,45 @@ extension InlineGraph {
         }
         return vertex
     }
-    
-#if swift(>=6.2)
-    /// Removes a vertex from the graph.
-    ///
-    /// This also removes all edges to and from this vertex.
-    ///
-    /// - Parameter vertex: The vertex to remove
-    @inlinable
-    public mutating func remove(vertex: consuming Vertex) {
-        adjacency.removeValue(forKey: vertex)
-        // Remove all edges pointing to this vertex
-        for key in adjacency.keys {
-            adjacency[key]?.removeAll { edge in
-                edge.destination == vertex
+
+    #if swift(>=6.2)
+        /// Removes a vertex from the graph.
+        ///
+        /// This also removes all edges to and from this vertex.
+        ///
+        /// - Parameter vertex: The vertex to remove
+        @inlinable
+        public mutating func remove(vertex: consuming Vertex) {
+            adjacency.removeValue(forKey: vertex)
+            // Remove all edges pointing to this vertex
+            for key in adjacency.keys {
+                adjacency[key]?.removeAll { edge in
+                    edge.destination == vertex
+                }
             }
         }
-    }
-#else
-    /// Removes a vertex from the graph.
-    ///
-    /// This also removes all edges to and from this vertex.
-    ///
-    /// - Parameter vertex: The vertex to remove
-    @inlinable
-    public mutating func remove(vertex: Vertex) {
-        adjacency.removeValue(forKey: vertex)
-        // Remove all edges pointing to this vertex
-        for key in adjacency.keys {
-            adjacency[key]?.removeAll { edge in
-                edge.destination == vertex
+    #else
+        /// Removes a vertex from the graph.
+        ///
+        /// This also removes all edges to and from this vertex.
+        ///
+        /// - Parameter vertex: The vertex to remove
+        @inlinable
+        public mutating func remove(vertex: Vertex) {
+            adjacency.removeValue(forKey: vertex)
+            // Remove all edges pointing to this vertex
+            for key in adjacency.keys {
+                adjacency[key]?.removeAll { edge in
+                    edge.destination == vertex
+                }
             }
         }
-    }
-#endif
+    #endif
 }
 
 extension InlineGraph: AdjacencyGraph {
     public typealias AdjacentVertices = LazyMapSequence<[Edge], Vertex>
-    
+
     @inlinable
     public func adjacentVertices(of vertex: Vertex) -> LazyMapSequence<[Edge], Vertex> {
         outgoingEdges(of: vertex).lazy.map { $0.destination }
@@ -287,4 +287,3 @@ extension InlineGraph: AdjacencyGraph {
 }
 
 extension InlineGraph: Sendable where Vertex: Sendable, Edge: Sendable {}
-

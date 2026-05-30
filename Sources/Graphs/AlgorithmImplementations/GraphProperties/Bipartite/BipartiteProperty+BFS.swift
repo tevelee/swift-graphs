@@ -3,7 +3,8 @@ extension BipartitePropertyAlgorithm {
     ///
     /// - Returns: A new BFS-based bipartite property algorithm
     @inlinable
-    public static func bfs<Graph: IncidenceGraph & VertexListGraph>() -> Self where Self == BFSBipartitePropertyAlgorithm<Graph>, Graph.VertexDescriptor: Hashable {
+    public static func bfs<Graph: IncidenceGraph & VertexListGraph>() -> Self
+    where Self == BFSBipartitePropertyAlgorithm<Graph>, Graph.VertexDescriptor: Hashable {
         .init()
     }
 }

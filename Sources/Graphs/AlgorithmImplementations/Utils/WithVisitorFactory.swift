@@ -1,7 +1,7 @@
 public protocol VisitorSupportingSequence {
     associatedtype Visitor: Composable where Visitor.Other == Visitor
     associatedtype Iterator: IteratorProtocol
-    
+
     func makeIterator(visitor: Visitor?) -> Iterator
 }
 
@@ -17,7 +17,7 @@ public struct VisitorFactoryWrapper<Base, Visitor> {
     let base: Base
     @usableFromInline
     let makeVisitor: () -> Visitor?
-    
+
     @inlinable
     public init(base: Base, makeVisitor: @escaping () -> Visitor?) {
         self.base = base

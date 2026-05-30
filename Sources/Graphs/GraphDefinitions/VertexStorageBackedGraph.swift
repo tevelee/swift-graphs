@@ -5,7 +5,7 @@
 public protocol VertexStorageBackedGraph: Graph {
     /// The type of vertex storage used by this graph.
     associatedtype VertexStore: VertexStorage where VertexStore.Vertex == VertexDescriptor
-    
+
     /// The vertex storage component.
     var vertexStore: VertexStore { get set }
 }
@@ -13,7 +13,7 @@ public protocol VertexStorageBackedGraph: Graph {
 extension VertexListGraph where Self: VertexStorageBackedGraph {
     @inlinable
     public func vertices() -> VertexStore.Vertices { vertexStore.vertices() }
-    
+
     @inlinable
     public var vertexCount: Int { vertexStore.vertexCount }
 }
@@ -24,11 +24,11 @@ extension MutableGraph where Self: VertexStorageBackedGraph & EdgeStorageBackedG
     public mutating func addVertex() -> VertexDescriptor { vertexStore.addVertex() }
 
     #if swift(>=6.2)
-    @inlinable
-    public mutating func remove(edge: consuming EdgeDescriptor) { edgeStore.remove(edge: edge) }
+        @inlinable
+        public mutating func remove(edge: consuming EdgeDescriptor) { edgeStore.remove(edge: edge) }
     #else
-    @inlinable
-    public mutating func remove(edge: EdgeDescriptor) { edgeStore.remove(edge: edge) }
+        @inlinable
+        public mutating func remove(edge: EdgeDescriptor) { edgeStore.remove(edge: edge) }
     #endif
 }
 
@@ -41,36 +41,34 @@ extension MutableGraph where Self: VertexStorageBackedGraph & EdgeStorageBackedG
     }
 
     #if swift(>=6.2)
-    @inlinable
-    public mutating func remove(vertex: consuming VertexDescriptor) {
-        for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
-        vertexStore.remove(vertex: vertex)
-    }
+        @inlinable
+        public mutating func remove(vertex: consuming VertexDescriptor) {
+            for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
+            vertexStore.remove(vertex: vertex)
+        }
     #else
-    @inlinable
-    public mutating func remove(vertex: VertexDescriptor) {
-        for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
-        vertexStore.remove(vertex: vertex)
-    }
+        @inlinable
+        public mutating func remove(vertex: VertexDescriptor) {
+            for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
+            vertexStore.remove(vertex: vertex)
+        }
     #endif
 }
 
 extension MutableGraph where Self: VertexStorageBackedGraph & EdgeStorageBackedGraph & BidirectionalGraph {
     #if swift(>=6.2)
-    @inlinable
-    public mutating func remove(vertex: consuming VertexDescriptor) {
-        for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
-        for edge in incomingEdges(of: vertex) { remove(edge: edge) }
-        vertexStore.remove(vertex: vertex)
-    }
+        @inlinable
+        public mutating func remove(vertex: consuming VertexDescriptor) {
+            for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
+            for edge in incomingEdges(of: vertex) { remove(edge: edge) }
+            vertexStore.remove(vertex: vertex)
+        }
     #else
-    @inlinable
-    public mutating func remove(vertex: VertexDescriptor) {
-        for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
-        for edge in incomingEdges(of: vertex) { remove(edge: edge) }
-        vertexStore.remove(vertex: vertex)
-    }
+        @inlinable
+        public mutating func remove(vertex: VertexDescriptor) {
+            for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
+            for edge in incomingEdges(of: vertex) { remove(edge: edge) }
+            vertexStore.remove(vertex: vertex)
+        }
     #endif
 }
-
-

@@ -1,5 +1,6 @@
-@testable import Graphs
 import Testing
+
+@testable import Graphs
 
 struct PropertyMapTests {
     @Test func defaultsAndMutationOnVertices() {
@@ -28,10 +29,8 @@ struct PropertyMapTests {
         let a = graph.addVertex()
         enum CustomLabel: VertexProperty { static let defaultValue = "" }
         var map = graph.makeVertexPropertyMap()
-        #expect(map[a][CustomLabel.self] == "")
+        #expect(map[a][CustomLabel.self].isEmpty)
         map[a][CustomLabel.self] = "a"
         #expect(map[a][CustomLabel.self] == "a")
     }
 }
-
-

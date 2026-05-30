@@ -11,7 +11,7 @@ public protocol VertexListGraph: Graph {
     ///
     /// - Returns: A sequence of all vertex descriptors in the graph
     func vertices() -> Vertices
-    
+
     /// The total number of vertices in the graph.
     var vertexCount: Int { get }
 }

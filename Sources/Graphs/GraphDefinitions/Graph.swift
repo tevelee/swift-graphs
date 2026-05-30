@@ -10,7 +10,7 @@
 public protocol Graph<VertexDescriptor, EdgeDescriptor> {
     /// The type used to identify vertices in this graph.
     associatedtype VertexDescriptor
-    
+
     /// The type used to identify edges in this graph.
     associatedtype EdgeDescriptor
 }

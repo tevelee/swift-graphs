@@ -11,7 +11,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
     public typealias Vertex = Graph.VertexDescriptor
     /// The edge type of the graph.
     public typealias Edge = Graph.EdgeDescriptor
-    
+
     /// The distance from the source vertex.
     public enum Distance: Sendable {
         /// The vertex is unreachable.
@@ -19,7 +19,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
         /// The vertex is reachable at the given depth.
         case reachable(depth: UInt)
     }
-    
+
     /// A visitor that can be used to observe the breadth-first search algorithm's progress.
     public struct Visitor {
         /// Called when discovering a new vertex.
@@ -40,7 +40,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
         public var finishVertex: ((Vertex) -> Void)?
         /// Called to determine if an edge should be traversed.
         public var shouldTraverse: (((from: Vertex, to: Vertex, via: Edge, context: Result)) -> Bool)?
-        
+
         /// Creates a new visitor.
         @inlinable
         public init(
@@ -65,14 +65,14 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
             self.shouldTraverse = shouldTraverse
         }
     }
-    
+
     @usableFromInline
     enum Color: Equatable, Sendable {
-        case white // Undiscovered
-        case gray // Discovered but not fully processed
-        case black // Fully processed
+        case white  // Undiscovered
+        case gray  // Discovered but not fully processed
+        case black  // Fully processed
     }
-    
+
     /// The result of a breadth-first search iteration.
     public struct Result {
         /// The vertex type of the graph.
@@ -89,7 +89,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
         public let predecessorEdgeProperty: any VertexProperty<Edge?>.Type
         /// The property map containing distances and predecessors.
         public let propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
-        
+
         /// Creates a new result.
         @inlinable
         public init(
@@ -106,7 +106,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
             self.propertyMap = propertyMap
         }
     }
-    
+
     @usableFromInline
     enum ColorProperty: VertexProperty {
         @usableFromInline
@@ -132,7 +132,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
     @inlinable
     public init(
         on graph: Graph,
-        from source: Vertex // TODO: multi source with a set/sequence of vertices
+        from source: Vertex  // TODO: multi source with a set/sequence of vertices
     ) {
         self.graph = graph
         self.source = source
@@ -146,7 +146,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
     public func makeIterator(visitor: Visitor?) -> Iterator {
         Iterator(graph: graph, source: source, visitor: visitor)
     }
-    
+
     /// An iterator for breadth-first search.
     public struct Iterator {
         @usableFromInline
@@ -166,7 +166,7 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
         let distanceProperty: any VertexProperty<Distance>.Type = DistanceProperty.self
         @usableFromInline
         let predecessorEdgeProperty: any VertexProperty<Edge?>.Type = PredecessorEdgeProperty<Edge>.self
-        
+
         /// Creates a new iterator.
         ///
         /// - Parameters:
@@ -183,12 +183,12 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
             self.source = source
             self.visitor = visitor
             self.propertyMap = graph.makeVertexPropertyMap()
-            
+
             propertyMap[source][colorProperty] = .gray
             propertyMap[source][distanceProperty] = .reachable(depth: 0)
             self.queue.enqueue(source)
         }
-        
+
         /// Gets the next result from the search.
         ///
         /// - Returns: The next result, or `nil` if the search is complete.
@@ -197,16 +197,16 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
             guard let current = queue.dequeue() else {
                 return nil
             }
-            
+
             visitor?.examineVertex?(current)
-            
+
             for edge in graph.outgoingEdges(of: current) {
                 visitor?.examineEdge?(edge)
-                
+
                 guard let destination = graph.destination(of: edge) else { continue }
-                
+
                 let destinationColor = propertyMap[destination][colorProperty]
-                
+
                 switch destinationColor {
                     case .white:
                         // Tree edge - first time discovering this vertex
@@ -234,10 +234,10 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
                         visitor?.nonTreeEdge?(edge)
                 }
             }
-            
+
             propertyMap[current][colorProperty] = .black
             visitor?.finishVertex?(current)
-            
+
             return Result(
                 source: source,
                 currentVertex: current,
@@ -272,7 +272,7 @@ extension BreadthFirstSearch.Result {
                 return 0
         }
     }
-    
+
     /// Gets the predecessor vertex.
     ///
     /// - Parameter graph: The graph.
@@ -283,7 +283,7 @@ extension BreadthFirstSearch.Result {
             orReport: "The currently examined vertex should always have a predecessor"
         )
     }
-    
+
     /// Gets the predecessor edge.
     ///
     /// - Returns: The predecessor edge.
@@ -293,7 +293,7 @@ extension BreadthFirstSearch.Result {
             orReport: "The currently examined vertex should always have a predecessor edge"
         )
     }
-    
+
     /// Gets the vertices in the current path.
     ///
     /// - Parameter graph: The graph.
@@ -302,7 +302,7 @@ extension BreadthFirstSearch.Result {
     public func vertices(in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
         vertices(to: currentVertex, in: graph)
     }
-    
+
     /// Gets the edges in the current path.
     ///
     /// - Parameter graph: The graph.
@@ -311,7 +311,7 @@ extension BreadthFirstSearch.Result {
     public func edges(in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
         edges(to: currentVertex, in: graph)
     }
-    
+
     /// Gets the current path.
     ///
     /// - Parameter graph: The graph.
@@ -320,7 +320,7 @@ extension BreadthFirstSearch.Result {
     public func path(in graph: some IncidenceGraph<Vertex, Edge>) -> [(vertex: Vertex, edge: Edge)] {
         path(to: currentVertex, in: graph)
     }
-    
+
     /// Gets the depth of a vertex.
     ///
     /// - Parameter vertex: The vertex.
@@ -329,7 +329,7 @@ extension BreadthFirstSearch.Result {
     public func depth(of vertex: Vertex) -> BreadthFirstSearch.Distance {
         propertyMap[vertex][distanceProperty]
     }
-    
+
     /// Gets the predecessor of a vertex.
     ///
     /// - Parameters:
@@ -340,7 +340,7 @@ extension BreadthFirstSearch.Result {
     public func predecessor(of vertex: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> Vertex? {
         predecessorEdge(of: vertex).flatMap(graph.source)
     }
-    
+
     /// Gets the predecessor edge of a vertex.
     ///
     /// - Parameter vertex: The vertex.
@@ -349,7 +349,7 @@ extension BreadthFirstSearch.Result {
     public func predecessorEdge(of vertex: Vertex) -> Edge? {
         propertyMap[vertex][predecessorEdgeProperty]
     }
-    
+
     /// Checks if there is a path to a vertex.
     ///
     /// - Parameter vertex: The vertex.
@@ -358,7 +358,7 @@ extension BreadthFirstSearch.Result {
     public func hasPath(to vertex: Vertex) -> Bool {
         propertyMap[vertex][distanceProperty] != .unreachable
     }
-    
+
     /// Gets the vertices to a destination.
     ///
     /// - Parameters:
@@ -369,7 +369,7 @@ extension BreadthFirstSearch.Result {
     public func vertices(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Vertex] {
         [source] + path(to: destination, in: graph).map(\.vertex)
     }
-    
+
     /// Gets the edges to a destination.
     ///
     /// - Parameters:
@@ -380,7 +380,7 @@ extension BreadthFirstSearch.Result {
     public func edges(to destination: Vertex, in graph: some IncidenceGraph<Vertex, Edge>) -> [Edge] {
         path(to: destination, in: graph).map(\.edge)
     }
-    
+
     /// Gets the path to a destination.
     ///
     /// - Parameters:
@@ -404,12 +404,12 @@ extension BreadthFirstSearch.Distance: Equatable {
     @inlinable
     public static func == (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
-        case (.unreachable, .unreachable):
-            return true
-        case (.reachable(let lhsDepth), .reachable(let rhsDepth)):
-            return lhsDepth == rhsDepth
-        default:
-            return false
+            case (.unreachable, .unreachable):
+                return true
+            case (.reachable(let lhsDepth), .reachable(let rhsDepth)):
+                return lhsDepth == rhsDepth
+            default:
+                return false
         }
     }
 }

@@ -18,7 +18,7 @@ extension SearchAlgorithm {
 public struct DFSOrderedSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
     /// The DFS order to use for traversal.
     public let order: DFSOrder<Graph>
-    
+
     /// Creates a new DFS ordered search algorithm.
     ///
     /// - Parameter order: The DFS order to use for traversal.
@@ -26,7 +26,7 @@ public struct DFSOrderedSearch<Graph: IncidenceGraph>: SearchAlgorithm where Gra
     public init(order: DFSOrder<Graph>) {
         self.order = order
     }
-    
+
     /// Performs a depth-first search with specific ordering from the source vertex.
     ///
     /// - Parameters:

@@ -2,10 +2,10 @@
 public protocol AllPathsAlgorithm<Graph> {
     /// The type of graph this algorithm operates on.
     associatedtype Graph: IncidenceGraph
-    
+
     /// The type of sequence returned by the algorithm.
     associatedtype PathSequence: Sequence<Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>>
-    
+
     /// Finds all paths between two vertices.
     ///
     /// - Parameters:
@@ -39,21 +39,21 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
 }
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
-extension IncidenceGraph where VertexDescriptor: Hashable {
-    /// Finds all paths between two vertices using Depth-First Search as the default.
-    ///
-    /// - Parameters:
-    ///   - source: The starting vertex
-    ///   - destination: The target vertex
-    ///   - maxLength: Optional maximum number of edges per path; longer paths are pruned.
-    /// - Returns: A lazy sequence of all simple paths from source to destination
-    @inlinable
-    public func allPaths(
-        from source: VertexDescriptor,
-        to destination: VertexDescriptor,
-        maxLength: Int? = nil
-    ) -> DFSAllPaths<Self> {
-        DFSAllPaths(graph: self, source: source, destination: destination, maxLength: maxLength)
+    extension IncidenceGraph where VertexDescriptor: Hashable {
+        /// Finds all paths between two vertices using Depth-First Search as the default.
+        ///
+        /// - Parameters:
+        ///   - source: The starting vertex
+        ///   - destination: The target vertex
+        ///   - maxLength: Optional maximum number of edges per path; longer paths are pruned.
+        /// - Returns: A lazy sequence of all simple paths from source to destination
+        @inlinable
+        public func allPaths(
+            from source: VertexDescriptor,
+            to destination: VertexDescriptor,
+            maxLength: Int? = nil
+        ) -> DFSAllPaths<Self> {
+            DFSAllPaths(graph: self, source: source, destination: destination, maxLength: maxLength)
+        }
     }
-}
 #endif

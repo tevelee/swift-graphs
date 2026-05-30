@@ -17,11 +17,11 @@ extension SearchAlgorithm {
 public struct BFSSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
     /// The visitor type for observing search progress.
     public typealias Visitor = BreadthFirstSearch<Graph>.Visitor
-    
+
     /// Creates a new BFS search algorithm.
     @inlinable
     public init() {}
-    
+
     /// Performs a breadth-first search from the source vertex.
     ///
     /// - Parameters:

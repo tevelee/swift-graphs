@@ -17,7 +17,7 @@ extension Array: StackProtocol {
     public mutating func push(_ element: Element) {
         append(element)
     }
-    
+
     @inlinable
     public mutating func pop() -> Element? {
         popLast()
@@ -29,7 +29,7 @@ extension Deque: StackProtocol {
     public mutating func push(_ element: Element) {
         append(element)
     }
-    
+
     @inlinable
     public mutating func pop() -> Element? {
         popLast()

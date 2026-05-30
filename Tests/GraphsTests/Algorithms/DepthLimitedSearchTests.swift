@@ -1,5 +1,6 @@
-@testable import Graphs
 import Testing
+
+@testable import Graphs
 
 struct DepthLimitedSearchTests {
     @Test func depthLimitedDFS_PrunesBeyondLimit() {
@@ -70,12 +71,14 @@ struct DepthLimitedSearchTests {
 
     @Test func prunesBeyondLimit_allBackends() {
         func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
-        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
-              G.VertexDescriptor: Hashable {
-            let root  = graph.addVertex { $0.label = "root" }
-            let l1    = graph.addVertex { $0.label = "l1" }
-            let l2    = graph.addVertex { $0.label = "l2" }
-            let l3    = graph.addVertex { $0.label = "l3" }
+        where
+            G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+            G.VertexDescriptor: Hashable
+        {
+            let root = graph.addVertex { $0.label = "root" }
+            let l1 = graph.addVertex { $0.label = "l1" }
+            let l2 = graph.addVertex { $0.label = "l2" }
+            let l3 = graph.addVertex { $0.label = "l3" }
             graph.addEdge(from: root, to: l1)
             graph.addEdge(from: l1, to: l2)
             graph.addEdge(from: l2, to: l3)
@@ -84,11 +87,15 @@ struct DepthLimitedSearchTests {
             #expect(result.vertices.count == 3, "[\(backend)] depth-2 limit visits root, l1, l2 but not l3")
             #expect(!result.vertices.contains(l3), "[\(backend)] l3 at depth 3 must be pruned")
         }
-        var g1 = AdjacencyList();   check(&g1, "default")
-        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        var g1 = AdjacencyList()
+        check(&g1, "default")
+        var g4 = AdjacencyMatrix()
+        check(&g4, "Matrix")
         #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
-        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+            var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            check(&g2, "CSR")
+            var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            check(&g3, "COO")
         #endif
     }
 
@@ -105,16 +112,18 @@ struct DepthLimitedSearchTests {
         graph.addEdge(from: root, to: a)
         graph.addEdge(from: a, to: b)
 
-        var discovered1 = 0; var discovered2 = 0
-        var treeEdges1 = 0;  var treeEdges2 = 0
+        var discovered1 = 0
+        var discovered2 = 0
+        var treeEdges1 = 0
+        var treeEdges2 = 0
 
         var v1 = DepthLimitedDFSTraversal<DefaultAdjacencyList>.Visitor()
         v1.discoverVertex = { _ in discovered1 += 1 }
-        v1.treeEdge       = { _ in treeEdges1 += 1 }
+        v1.treeEdge = { _ in treeEdges1 += 1 }
 
         var v2 = DepthLimitedDFSTraversal<DefaultAdjacencyList>.Visitor()
         v2.discoverVertex = { _ in discovered2 += 1 }
-        v2.treeEdge       = { _ in treeEdges2 += 1 }
+        v2.treeEdge = { _ in treeEdges2 += 1 }
 
         let combined = v1.combined(with: v2)
         _ = DepthLimitedDFSTraversal<DefaultAdjacencyList>(maxDepth: 10)
@@ -128,5 +137,3 @@ struct DepthLimitedSearchTests {
         #expect(treeEdges1 == treeEdges2, "both composed visitors must receive identical treeEdge events")
     }
 }
-
-

@@ -12,7 +12,7 @@ public struct FilteredGraphView<Base: IncidenceGraph>: Graph {
     public let base: Base
     public let includeVertex: (VertexDescriptor) -> Bool
     public let includeEdge: (EdgeDescriptor) -> Bool
-    
+
     /// Creates a new filtered graph view.
     ///
     /// - Parameters:
@@ -37,7 +37,7 @@ extension FilteredGraphView: VertexListGraph where Base: VertexListGraph {
         let baseVertices: Base.Vertices
         @usableFromInline
         let predicate: (Base.VertexDescriptor) -> Bool
-        
+
         @inlinable
         public init(baseVertices: Base.Vertices, predicate: @escaping (Base.VertexDescriptor) -> Bool) {
             self.baseVertices = baseVertices
@@ -57,7 +57,7 @@ extension FilteredGraphView: VertexListGraph where Base: VertexListGraph {
     }
     @inlinable
     public func vertices() -> Vertices { .init(baseVertices: base.vertices(), predicate: includeVertex) }
-    
+
     @inlinable
     public var vertexCount: Int { vertices().reduce(0) { acc, _ in acc + 1 } }
 }
@@ -68,7 +68,7 @@ extension FilteredGraphView: EdgeListGraph where Base: EdgeListGraph {
         let baseEdges: Base.Edges
         @usableFromInline
         let predicate: (Base.EdgeDescriptor) -> Bool
-        
+
         @inlinable
         public init(baseEdges: Base.Edges, predicate: @escaping (Base.EdgeDescriptor) -> Bool) {
             self.baseEdges = baseEdges
@@ -102,15 +102,22 @@ extension FilteredGraphView: IncidenceGraph {
         let vertexOk: (Base.VertexDescriptor) -> Bool
         @usableFromInline
         let edgeOk: (Base.EdgeDescriptor) -> Bool
-        
+
         @inlinable
-        public init(base: Base, vertex: Base.VertexDescriptor, vertexOk: @escaping (Base.VertexDescriptor) -> Bool, edgeOk: @escaping (Base.EdgeDescriptor) -> Bool) {
+        public init(
+            base: Base,
+            vertex: Base.VertexDescriptor,
+            vertexOk: @escaping (Base.VertexDescriptor) -> Bool,
+            edgeOk: @escaping (Base.EdgeDescriptor) -> Bool
+        ) {
             self.base = base
             self.vertex = vertex
             self.vertexOk = vertexOk
             self.edgeOk = edgeOk
         }
-        public func makeIterator() -> Iterator { Iterator(baseIterator: base.outgoingEdges(of: vertex).makeIterator(), base: base, edgeOk: edgeOk, vertexOk: vertexOk) }
+        public func makeIterator() -> Iterator {
+            Iterator(baseIterator: base.outgoingEdges(of: vertex).makeIterator(), base: base, edgeOk: edgeOk, vertexOk: vertexOk)
+        }
         public struct Iterator: IteratorProtocol {
             var baseIterator: Base.OutgoingEdges.Iterator
             let base: Base
@@ -150,7 +157,7 @@ extension FilteredGraphView: IncidenceGraph {
 
 extension IncidenceGraph {
     /// Returns a filtered view of this graph based on vertex and edge predicates.
-    /// 
+    ///
     /// - Parameters:
     ///   - includeVertex: Predicate to determine which vertices to include
     ///   - includeEdge: Predicate to determine which edges to include
@@ -162,18 +169,18 @@ extension IncidenceGraph {
     ) -> FilteredGraphView<Self> {
         FilteredGraphView(base: self, includeVertex: includeVertex, includeEdge: includeEdge)
     }
-    
+
     /// Returns a view containing only vertices that satisfy the given predicate.
-    /// 
+    ///
     /// - Parameter predicate: The condition that vertices must satisfy
     /// - Returns: A `FilteredGraphView` with only the specified vertices
     @inlinable
     public func filterVertices(where predicate: @escaping (VertexDescriptor) -> Bool) -> FilteredGraphView<Self> {
         filtered(includeVertex: predicate)
     }
-    
+
     /// Returns a view containing only edges that satisfy the given predicate.
-    /// 
+    ///
     /// - Parameter predicate: The condition that edges must satisfy
     /// - Returns: A `FilteredGraphView` with only the specified edges
     @inlinable
@@ -186,7 +193,7 @@ extension IncidenceGraph {
 
 extension FilteredGraphView {
     /// Returns a further filtered view of this filtered graph.
-    /// 
+    ///
     /// - Parameters:
     ///   - includeVertex: Additional vertex predicate (combined with existing)
     ///   - includeEdge: Additional edge predicate (combined with existing)

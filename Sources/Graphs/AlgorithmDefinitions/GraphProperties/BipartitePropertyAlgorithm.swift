@@ -30,7 +30,7 @@ public protocol BipartitePropertyAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
     /// The visitor type for observing algorithm progress.
     associatedtype Visitor
-    
+
     /// Checks if the graph is bipartite.
     ///
     /// - Parameters:
@@ -44,9 +44,10 @@ public protocol BipartitePropertyAlgorithm<Graph> {
     ) -> Bool
 }
 
-extension VisitorWrapper: BipartitePropertyAlgorithm where Base: BipartitePropertyAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension VisitorWrapper: BipartitePropertyAlgorithm
+where Base: BipartitePropertyAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
-    
+
     @inlinable
     public func isBipartite(in graph: Base.Graph, visitor: Base.Visitor?) -> Bool {
         base.isBipartite(in: graph, visitor: self.visitor.combined(with: visitor))

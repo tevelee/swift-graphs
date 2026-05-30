@@ -18,10 +18,10 @@ extension SearchAlgorithm {
 public struct IterativelyDeepeningDFSSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
     /// The visitor type for observing search progress.
     public typealias Visitor = DepthFirstSearch<Graph>.Visitor
-    
+
     /// The maximum depth to search, or nil for unlimited.
     public let maxDepth: UInt?
-    
+
     /// Creates a new iteratively deepening DFS search algorithm.
     ///
     /// - Parameter maxDepth: The maximum depth to search, or nil for unlimited.
@@ -29,7 +29,7 @@ public struct IterativelyDeepeningDFSSearch<Graph: IncidenceGraph>: SearchAlgori
     public init(maxDepth: UInt? = nil) {
         self.maxDepth = maxDepth
     }
-    
+
     /// Performs an iteratively deepening DFS search from the source vertex.
     ///
     /// - Parameters:
@@ -55,7 +55,7 @@ public struct IterativelyDeepeningDFSSearch<Graph: IncidenceGraph>: SearchAlgori
 /// An iterator for iteratively deepening DFS search results.
 public struct IterativelyDeepeningDFSSearchIterator<Graph: IncidenceGraph>: Sequence where Graph.VertexDescriptor: Hashable {
     public typealias Iterator = IterativelyDeepeningDFSIterator<Graph>
-    
+
     @usableFromInline
     let graph: Graph
     @usableFromInline
@@ -64,7 +64,7 @@ public struct IterativelyDeepeningDFSSearchIterator<Graph: IncidenceGraph>: Sequ
     let visitor: DepthFirstSearch<Graph>.Visitor?
     @usableFromInline
     let maxDepth: UInt?
-    
+
     @inlinable
     public init(
         graph: Graph,
@@ -77,7 +77,7 @@ public struct IterativelyDeepeningDFSSearchIterator<Graph: IncidenceGraph>: Sequ
         self.visitor = visitor
         self.maxDepth = maxDepth
     }
-    
+
     @inlinable
     public func makeIterator() -> Iterator {
         Iterator(
@@ -91,7 +91,7 @@ public struct IterativelyDeepeningDFSSearchIterator<Graph: IncidenceGraph>: Sequ
 
 extension IterativelyDeepeningDFSSearchIterator: VisitorSupportingSequence {
     public typealias Visitor = DepthFirstSearch<Graph>.Visitor
-    
+
     @inlinable
     public func makeIterator(visitor: Visitor?) -> Iterator {
         Iterator(
@@ -106,7 +106,7 @@ extension IterativelyDeepeningDFSSearchIterator: VisitorSupportingSequence {
 /// An iterator that performs iteratively deepening DFS search.
 public struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorProtocol where Graph.VertexDescriptor: Hashable {
     public typealias Element = DepthFirstSearch<Graph>.Result
-    
+
     @usableFromInline
     let graph: Graph
     @usableFromInline
@@ -115,7 +115,7 @@ public struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorPr
     let visitor: DepthFirstSearch<Graph>.Visitor?
     @usableFromInline
     let maxDepth: UInt?
-    
+
     @usableFromInline
     var currentDepth: UInt = 0
     @usableFromInline
@@ -124,7 +124,7 @@ public struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorPr
     var visitedVertices = Set<Graph.VertexDescriptor>()
     @usableFromInline
     var isComplete = false
-    
+
     @inlinable
     public init(
         graph: Graph,
@@ -137,7 +137,7 @@ public struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorPr
         self.visitor = visitor
         self.maxDepth = maxDepth
     }
-    
+
     @inlinable
     public mutating func next() -> Element? {
         while !isComplete {
@@ -148,7 +148,7 @@ public struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorPr
                     isComplete = true
                     return nil
                 }
-                
+
                 // Create a visitor that respects the depth limit and tracks visited vertices
                 let currentDepthLimit = self.currentDepth
                 let visitor = self.visitor
@@ -158,12 +158,12 @@ public struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorPr
                         return currentDepth < currentDepthLimit
                     }
                 )
-                
+
                 currentIterator = DepthFirstSearch(on: graph, from: source).makeIterator(
                     visitor: depthVisitor.combined(with: visitor)
                 )
             }
-            
+
             // Try to get the next result from the current iterator
             if let result = currentIterator?.next() {
                 // Only return vertices that haven't been visited yet
@@ -174,19 +174,19 @@ public struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorPr
                 // Skip already visited vertices and continue the loop
                 continue
             }
-            
+
             // Current depth is exhausted, move to next depth
             // Add a reasonable maximum depth to prevent infinite loops
             if currentDepth > 1000 {
                 isComplete = true
                 return nil
             }
-            
+
             // Move to next depth
             currentIterator = nil
             currentDepth += 1
         }
-        
+
         return nil
     }
 }

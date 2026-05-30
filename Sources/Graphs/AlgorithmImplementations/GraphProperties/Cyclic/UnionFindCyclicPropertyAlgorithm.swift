@@ -1,11 +1,11 @@
 /// Union-Find-based algorithm for checking if a graph is cyclic.
 public struct UnionFindCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = UnionFindCyclicProperty<Graph>.Visitor
-    
+
     /// Creates a new Union-Find-based cyclic property algorithm.
     @inlinable
     public init() {}
-    
+
     /// Checks if the graph is cyclic using Union-Find.
     ///
     /// - Parameters:
@@ -21,20 +21,20 @@ public struct UnionFindCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexLis
         guard graph.vertexCount > 1 else {
             return false
         }
-        
+
         // Union-Find only works for undirected graphs
         // For directed graphs, we need to convert to undirected first
         // by treating each directed edge as an undirected edge
-        
+
         var parent = [Graph.VertexDescriptor: Graph.VertexDescriptor]()
         var rank = [Graph.VertexDescriptor: Int]()
-        
+
         // Initialize each vertex as its own parent
         for vertex in graph.vertices() {
             parent[vertex] = vertex
             rank[vertex] = 0
         }
-        
+
         // Find root with path compression
         func findRoot(_ vertex: Graph.VertexDescriptor) -> Graph.VertexDescriptor {
             guard var currentParent = parent[vertex] else { return vertex }
@@ -44,19 +44,19 @@ public struct UnionFindCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexLis
             }
             return currentParent
         }
-        
+
         // Union two sets by rank
         func union(_ x: Graph.VertexDescriptor, _ y: Graph.VertexDescriptor) {
             let rootX = findRoot(x)
             let rootY = findRoot(y)
-            
+
             if rootX == rootY {
-                return // Already in the same set
+                return  // Already in the same set
             }
-            
+
             // Union by rank
             guard let rankX = rank[rootX], let rankY = rank[rootY] else { return }
-            
+
             if rankX < rankY {
                 parent[rootX] = rootY
             } else if rankX > rankY {
@@ -66,26 +66,27 @@ public struct UnionFindCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexLis
                 rank[rootX] = rankX + 1
             }
         }
-        
+
         // Process all edges
         for edge in graph.edges() {
             guard let source = graph.source(of: edge),
-                  let destination = graph.destination(of: edge) else { continue }
-            
+                let destination = graph.destination(of: edge)
+            else { continue }
+
             visitor?.examineEdge?(edge)
-            
+
             let rootSource = findRoot(source)
             let rootDestination = findRoot(destination)
-            
+
             if rootSource == rootDestination {
                 // Cycle detected - both vertices are already in the same set
                 visitor?.cycleDetected?(edge)
                 return true
             }
-            
+
             union(source, destination)
         }
-        
+
         return false
     }
 }
@@ -95,13 +96,13 @@ public struct UnionFindCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexLis
 public struct UnionFindCyclicProperty<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Vertex = Graph.VertexDescriptor
     public typealias Edge = Graph.EdgeDescriptor
-    
+
     public struct Visitor {
         public var examineEdge: ((Edge) -> Void)?
         public var findRoot: ((Vertex, Vertex) -> Void)?
         public var unionVertices: ((Vertex, Vertex) -> Void)?
         public var cycleDetected: ((Edge) -> Void)?
-        
+
         public init(
             examineEdge: ((Edge) -> Void)? = nil,
             findRoot: ((Vertex, Vertex) -> Void)? = nil,
@@ -114,50 +115,51 @@ public struct UnionFindCyclicProperty<Graph: IncidenceGraph & VertexListGraph & 
             self.cycleDetected = cycleDetected
         }
     }
-    
+
     private let graph: Graph
     private var parent: [Vertex: Vertex] = [:]
     private var rank: [Vertex: Int] = [:]
-    
+
     init(on graph: Graph) {
         self.graph = graph
-        
+
         // Initialize each vertex as its own parent
         for vertex in graph.vertices() {
             parent[vertex] = vertex
             rank[vertex] = 0
         }
     }
-    
+
     mutating func hasCycle(visitor: Visitor?) -> Bool {
         // Process all edges
         for edge in graph.edges() {
             visitor?.examineEdge?(edge)
-            
+
             guard let source = graph.source(of: edge),
-                  let destination = graph.destination(of: edge) else {
+                let destination = graph.destination(of: edge)
+            else {
                 continue
             }
-            
+
             let rootSource = findRoot(source)
             let rootDestination = findRoot(destination)
-            
+
             visitor?.findRoot?(rootSource, rootDestination)
-            
+
             // If both vertices are in the same set, we found a cycle
             if rootSource == rootDestination {
                 visitor?.cycleDetected?(edge)
                 return true
             }
-            
+
             // Union the two sets
             union(rootSource, rootDestination)
             visitor?.unionVertices?(rootSource, rootDestination)
         }
-        
+
         return false
     }
-    
+
     private mutating func findRoot(_ vertex: Vertex) -> Vertex {
         guard var currentParent = parent[vertex] else { return vertex }
         if currentParent != vertex {
@@ -167,14 +169,14 @@ public struct UnionFindCyclicProperty<Graph: IncidenceGraph & VertexListGraph & 
         }
         return currentParent
     }
-    
+
     private mutating func union(_ x: Vertex, _ y: Vertex) {
         let rootX = findRoot(x)
         let rootY = findRoot(y)
-        
+
         // Union by rank: attach smaller tree under root of larger tree
         guard let rankX = rank[rootX], let rankY = rank[rootY] else { return }
-        
+
         if rankX < rankY {
             parent[rootX] = rootY
         } else if rankX > rankY {

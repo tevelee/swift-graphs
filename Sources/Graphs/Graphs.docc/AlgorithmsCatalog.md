@@ -1028,29 +1028,6 @@ let communities = graph.detectCommunities(using: .louvain())
 - Need hierarchy of communities
 - Most popular method
 
-## Planarity Testing
-
-Determine if graph can be drawn without edge crossings.
-
-### Boyer-Myrvold Algorithm
-
-**Best for:** Planarity testing
-
-```swift
-let isPlanar = graph.isPlanar(using: .boyerMyrvold())
-```
-
-**Characteristics:**
-- **Time Complexity:** O(V)
-- **Space Complexity:** O(V)
-- **Optimal:** Linear time
-- **Outputs:** Planar embedding if exists
-
-**Use when:**
-- Circuit design
-- Geographic networks
-- Graph drawing
-
 ## Centrality Measures
 
 Measure the importance or influence of vertices in a graph.

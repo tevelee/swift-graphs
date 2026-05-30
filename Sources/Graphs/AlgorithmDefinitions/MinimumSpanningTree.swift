@@ -6,7 +6,7 @@ public protocol MinimumSpanningTreeAlgorithm<Graph, Weight> {
     associatedtype Weight: AdditiveArithmetic & Comparable
     /// The visitor type for observing algorithm progress.
     associatedtype Visitor
-    
+
     /// Computes the minimum spanning tree of the graph.
     ///
     /// - Parameters:
@@ -24,7 +24,7 @@ public struct MinimumSpanningTree<Vertex: Hashable, Edge, Weight: AdditiveArithm
     public let totalWeight: Weight
     /// The vertices in the minimum spanning tree.
     public let vertices: Set<Vertex>
-    
+
     /// Creates a new minimum spanning tree result.
     ///
     /// - Parameters:
@@ -37,7 +37,7 @@ public struct MinimumSpanningTree<Vertex: Hashable, Edge, Weight: AdditiveArithm
         self.totalWeight = totalWeight
         self.vertices = vertices
     }
-    
+
     /// Checks if the MST contains a specific vertex.
     ///
     /// - Parameter vertex: The vertex to check
@@ -46,7 +46,7 @@ public struct MinimumSpanningTree<Vertex: Hashable, Edge, Weight: AdditiveArithm
     public func contains(vertex: Vertex) -> Bool {
         vertices.contains(vertex)
     }
-    
+
 }
 
 extension MinimumSpanningTree: Sendable where Vertex: Sendable, Edge: Sendable, Weight: Sendable {}
@@ -57,7 +57,7 @@ extension MinimumSpanningTree {
     public var edgeCount: Int {
         edges.count
     }
-    
+
     /// The number of vertices in the MST.
     @inlinable
     public var vertexCount: Int {
@@ -65,12 +65,16 @@ extension MinimumSpanningTree {
     }
 }
 
-extension VisitorWrapper: MinimumSpanningTreeAlgorithm where Base: MinimumSpanningTreeAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension VisitorWrapper: MinimumSpanningTreeAlgorithm
+where Base: MinimumSpanningTreeAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
     public typealias Weight = Base.Weight
-    
+
     @inlinable
-    public func minimumSpanningTree(in graph: Base.Graph, visitor: Base.Visitor?) -> MinimumSpanningTree<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Weight> {
+    public func minimumSpanningTree(
+        in graph: Base.Graph,
+        visitor: Base.Visitor?
+    ) -> MinimumSpanningTree<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Weight> {
         base.minimumSpanningTree(in: graph, visitor: self.visitor.combined(with: visitor))
     }
 }
@@ -104,17 +108,17 @@ extension MinimumSpanningTree where Edge: Equatable {
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
-extension IncidenceGraph where Self: EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable {
-    /// Finds the minimum spanning tree using Kruskal's algorithm as the default.
-    /// This is a well-known and efficient algorithm for finding MSTs.
-    ///
-    /// - Parameter weight: The cost definition for edge weights
-    /// - Returns: The minimum spanning tree result
-    @inlinable
-    public func minimumSpanningTree<Weight: AdditiveArithmetic & Comparable>(
-        weight: CostDefinition<Self, Weight>
-    ) -> MinimumSpanningTree<VertexDescriptor, EdgeDescriptor, Weight> {
-        minimumSpanningTree(using: .kruskal(weight: weight))
+    extension IncidenceGraph where Self: EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable {
+        /// Finds the minimum spanning tree using Kruskal's algorithm as the default.
+        /// This is a well-known and efficient algorithm for finding MSTs.
+        ///
+        /// - Parameter weight: The cost definition for edge weights
+        /// - Returns: The minimum spanning tree result
+        @inlinable
+        public func minimumSpanningTree<Weight: AdditiveArithmetic & Comparable>(
+            weight: CostDefinition<Self, Weight>
+        ) -> MinimumSpanningTree<VertexDescriptor, EdgeDescriptor, Weight> {
+            minimumSpanningTree(using: .kruskal(weight: weight))
+        }
     }
-}
 #endif

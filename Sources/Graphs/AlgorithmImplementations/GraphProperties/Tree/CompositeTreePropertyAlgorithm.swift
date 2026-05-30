@@ -1,12 +1,12 @@
 /// Composite algorithm for checking if a graph is a tree using separate connected and cyclic algorithms.
 public struct CompositeTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = CompositeTreeProperty<Graph>.Visitor
-    
+
     @usableFromInline
     let connectedAlgorithm: any ConnectedPropertyAlgorithm<Graph>
     @usableFromInline
     let cyclicAlgorithm: any CyclicPropertyAlgorithm<Graph>
-    
+
     /// Creates a new composite tree property algorithm.
     ///
     /// - Parameters:
@@ -20,7 +20,7 @@ public struct CompositeTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListG
         self.connectedAlgorithm = connectedAlgorithm
         self.cyclicAlgorithm = cyclicAlgorithm
     }
-    
+
     /// Checks if the graph is a tree using composite algorithms.
     ///
     /// - Parameters:
@@ -36,75 +36,75 @@ public struct CompositeTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListG
         guard graph.vertexCount > 0 else {
             return true
         }
-        
+
         // Handle single vertex graphs (they are trees)
         guard graph.vertexCount > 1 else {
             return true
         }
-        
+
         // A tree must have exactly V-1 edges
         let expectedEdges = graph.vertexCount - 1
         let actualEdges = graph.edgeCount
-        
+
         visitor?.checkEdgeCount?(expectedEdges, actualEdges)
-        
+
         if actualEdges != expectedEdges {
             visitor?.edgeCountMismatch?(expectedEdges, actualEdges)
             return false
         }
-        
+
         // Check if graph is connected
         visitor?.checkConnectivity?()
         let isConnected = checkConnectivity(graph)
         visitor?.connectivityResult?(isConnected)
-        
+
         if !isConnected {
             return false
         }
-        
+
         // Check if graph is acyclic
         visitor?.checkAcyclicity?()
         let isCyclic = checkAcyclicity(graph)
         visitor?.acyclicityResult?(isCyclic)
-        
+
         // A tree is connected and acyclic
         return !isCyclic
     }
-    
+
     @usableFromInline
     func checkConnectivity(_ graph: Graph) -> Bool {
         // Use DFS to check connectivity
         var visitedVertices = Set<Graph.VertexDescriptor>()
-        
+
         guard let firstVertex = graph.vertices().first(where: { _ in true }) else {
             return true
         }
-        
+
         DepthFirstSearch(on: graph, from: firstVertex)
             .withVisitor { .init(discoverVertex: { visitedVertices.insert($0) }) }
             .forEach { _ in }
-        
+
         return visitedVertices.count == graph.vertexCount
     }
-    
+
     @usableFromInline
     func checkAcyclicity(_ graph: Graph) -> Bool {
         // Use DFS to check for cycles
         var hasCycle = false
-        
+
         var visitedVertices = Set<Graph.VertexDescriptor>()
-        
-        for vertex in graph.vertices() {
-            if !hasCycle && !visitedVertices.contains(vertex) {
-                DepthFirstSearch(on: graph, from: vertex)
-                    .withVisitor { .init(
+
+        for vertex in graph.vertices() where !hasCycle && !visitedVertices.contains(vertex) {
+            DepthFirstSearch(on: graph, from: vertex)
+                .withVisitor {
+                    .init(
                         discoverVertex: { visitedVertices.insert($0) },
                         backEdge: { _ in hasCycle = true }
-                    ) }
-                    .forEach { _ in }
-            }
+                    )
+                }
+                .forEach { _ in }
         }
-        
+
         return hasCycle
     }
 }
@@ -114,7 +114,7 @@ public struct CompositeTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListG
 public struct CompositeTreeProperty<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Vertex = Graph.VertexDescriptor
     public typealias Edge = Graph.EdgeDescriptor
-    
+
     public struct Visitor {
         public var checkEdgeCount: ((Int, Int) -> Void)?
         public var edgeCountMismatch: ((Int, Int) -> Void)?
@@ -122,7 +122,7 @@ public struct CompositeTreeProperty<Graph: IncidenceGraph & VertexListGraph & Ed
         public var connectivityResult: ((Bool) -> Void)?
         public var checkAcyclicity: (() -> Void)?
         public var acyclicityResult: ((Bool) -> Void)?
-        
+
         public init(
             checkEdgeCount: ((Int, Int) -> Void)? = nil,
             edgeCountMismatch: ((Int, Int) -> Void)? = nil,

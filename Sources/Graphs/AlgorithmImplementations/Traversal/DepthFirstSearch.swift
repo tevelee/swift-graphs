@@ -43,7 +43,7 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
         public var finishVertex: ((Vertex) -> Void)?
         /// Called to determine if an edge should be traversed.
         public var shouldTraverse: (((from: Vertex, to: Vertex, via: Edge, context: Result)) -> Bool)?
-        
+
         @inlinable
         public init(
             discoverVertex: ((Vertex) -> Void)? = nil,
@@ -95,7 +95,7 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
         let depthProperty: any VertexProperty<UInt?>.Type
         @usableFromInline
         let propertyMap: any PropertyMap<Vertex, VertexPropertyValues>
-        
+
         /// Creates a new result.
         ///
         /// - Parameters:
@@ -153,7 +153,7 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
         /// The depth of the vertex in the DFS tree.
         @usableFromInline
         let depth: UInt
-        
+
         @inlinable
         public init(vertex: Vertex, isFirstVisit: Bool, depth: UInt) {
             self.vertex = vertex
@@ -252,70 +252,7 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
                 guard let frame = stack.pop() else { break }
                 let vertex = frame.vertex
 
-                if frame.isFirstVisit {
-                    // Guard against duplicate stack entries that can arise from parallel edges:
-                    // if the vertex was already discovered via a sibling parallel edge, skip it.
-                    guard propertyMap[vertex][colorProperty] == .white else { continue }
-
-                    time += 1
-                    propertyMap[vertex][colorProperty] = .gray
-                    propertyMap[vertex][discoveryTimeProperty] = .discovered(time)
-                    propertyMap[vertex][depthProperty] = frame.depth
-
-                    visitor?.discoverVertex?(vertex)
-                    visitor?.examineVertex?(vertex)
-
-                    stack.push(DFSFrame(vertex: vertex, isFirstVisit: false, depth: frame.depth))
-
-                    var whiteNeighbors: [Vertex] = []
-                    for edge in graph.outgoingEdges(of: vertex) {
-                        visitor?.examineEdge?(edge)
-
-                        guard let destination = graph.destination(of: edge) else { continue }
-
-                        let destinationColor = propertyMap[destination][colorProperty]
-
-                        switch destinationColor {
-                            case .white:
-                                // Only build the (expensive) Result context if the visitor
-                                // actually has a `shouldTraverse` hook. The Result captures
-                                // the existential property map, costing a retain on every
-                                // edge — was happening for *all* edges of *every* vertex.
-                                if let veto = visitor?.shouldTraverse {
-                                    let context = Result(
-                                        source: source,
-                                        currentVertex: vertex,
-                                        discoveryTimeProperty: discoveryTimeProperty,
-                                        finishTimeProperty: finishTimeProperty,
-                                        predecessorEdgeProperty: predecessorEdgeProperty,
-                                        depthProperty: depthProperty,
-                                        propertyMap: propertyMap
-                                    )
-                                    if veto((from: vertex, to: destination, via: edge, context: context)) == false { continue }
-                                }
-                                propertyMap[destination][predecessorEdgeProperty] = edge
-                                visitor?.treeEdge?(edge)
-                                whiteNeighbors.append(destination)
-                            case .gray:
-                                visitor?.backEdge?(edge)
-                            case .black:
-                                let sourceDiscoveryTime = propertyMap[vertex][discoveryTimeProperty]
-                                let destinationDiscoveryTime = propertyMap[destination][discoveryTimeProperty]
-
-                                if case .discovered(let sourceTime) = sourceDiscoveryTime,
-                                case .discovered(let destTime) = destinationDiscoveryTime,
-                                sourceTime < destTime {
-                                    visitor?.forwardEdge?(edge)
-                                } else {
-                                    visitor?.crossEdge?(edge)
-                                }
-                        }
-                    }
-
-                    for neighbor in whiteNeighbors.reversed() {
-                        stack.push(DFSFrame(vertex: neighbor, isFirstVisit: true, depth: frame.depth + 1))
-                    }
-                } else {
+                guard frame.isFirstVisit else {
                     time += 1
                     propertyMap[vertex][colorProperty] = .black
                     propertyMap[vertex][finishTimeProperty] = .finished(time)
@@ -330,6 +267,69 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
                         depthProperty: depthProperty,
                         propertyMap: propertyMap
                     )
+                }
+                // Guard against duplicate stack entries that can arise from parallel edges:
+                // if the vertex was already discovered via a sibling parallel edge, skip it.
+                guard propertyMap[vertex][colorProperty] == .white else { continue }
+
+                time += 1
+                propertyMap[vertex][colorProperty] = .gray
+                propertyMap[vertex][discoveryTimeProperty] = .discovered(time)
+                propertyMap[vertex][depthProperty] = frame.depth
+
+                visitor?.discoverVertex?(vertex)
+                visitor?.examineVertex?(vertex)
+
+                stack.push(DFSFrame(vertex: vertex, isFirstVisit: false, depth: frame.depth))
+
+                var whiteNeighbors: [Vertex] = []
+                for edge in graph.outgoingEdges(of: vertex) {
+                    visitor?.examineEdge?(edge)
+
+                    guard let destination = graph.destination(of: edge) else { continue }
+
+                    let destinationColor = propertyMap[destination][colorProperty]
+
+                    switch destinationColor {
+                        case .white:
+                            // Only build the (expensive) Result context if the visitor
+                            // actually has a `shouldTraverse` hook. The Result captures
+                            // the existential property map, costing a retain on every
+                            // edge — was happening for *all* edges of *every* vertex.
+                            if let veto = visitor?.shouldTraverse {
+                                let context = Result(
+                                    source: source,
+                                    currentVertex: vertex,
+                                    discoveryTimeProperty: discoveryTimeProperty,
+                                    finishTimeProperty: finishTimeProperty,
+                                    predecessorEdgeProperty: predecessorEdgeProperty,
+                                    depthProperty: depthProperty,
+                                    propertyMap: propertyMap
+                                )
+                                if veto((from: vertex, to: destination, via: edge, context: context)) == false { continue }
+                            }
+                            propertyMap[destination][predecessorEdgeProperty] = edge
+                            visitor?.treeEdge?(edge)
+                            whiteNeighbors.append(destination)
+                        case .gray:
+                            visitor?.backEdge?(edge)
+                        case .black:
+                            let sourceDiscoveryTime = propertyMap[vertex][discoveryTimeProperty]
+                            let destinationDiscoveryTime = propertyMap[destination][discoveryTimeProperty]
+
+                            if case .discovered(let sourceTime) = sourceDiscoveryTime,
+                                case .discovered(let destTime) = destinationDiscoveryTime,
+                                sourceTime < destTime
+                            {
+                                visitor?.forwardEdge?(edge)
+                            } else {
+                                visitor?.crossEdge?(edge)
+                            }
+                    }
+                }
+
+                for neighbor in whiteNeighbors.reversed() {
+                    stack.push(DFSFrame(vertex: neighbor, isFirstVisit: true, depth: frame.depth + 1))
                 }
             }
 
@@ -450,12 +450,12 @@ extension DepthFirstSearch.Time: Comparable {
     @inlinable
     public static func < (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
-        case (_, .undiscovered): false
-        case (.undiscovered, _): true
-        case (.discovered(let lhsValue), .discovered(let rhsValue)): lhsValue < rhsValue
-        case (.finished(let lhsValue), .finished(let rhsValue)): lhsValue < rhsValue
-        case (.discovered(let lhsValue), .finished(let rhsValue)): lhsValue < rhsValue
-        case (.finished(let lhsValue), .discovered(let rhsValue)): lhsValue < rhsValue
+            case (_, .undiscovered): false
+            case (.undiscovered, _): true
+            case (.discovered(let lhsValue), .discovered(let rhsValue)): lhsValue < rhsValue
+            case (.finished(let lhsValue), .finished(let rhsValue)): lhsValue < rhsValue
+            case (.discovered(let lhsValue), .finished(let rhsValue)): lhsValue < rhsValue
+            case (.finished(let lhsValue), .discovered(let rhsValue)): lhsValue < rhsValue
         }
     }
 }

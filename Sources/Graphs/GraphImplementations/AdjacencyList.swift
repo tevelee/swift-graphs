@@ -14,7 +14,8 @@ public struct AdjacencyList<
     EdgeStore: EdgeStorage,
     VertexPropertyMap: MutablePropertyMap,
     EdgePropertyMap: MutablePropertyMap
-> where
+>
+where
     EdgeStore.Vertex == VertexStore.Vertex,
     VertexPropertyMap.Key == VertexStore.Vertex,
     VertexPropertyMap.Value == VertexPropertyValues,
@@ -25,7 +26,7 @@ public struct AdjacencyList<
     public var edgeStore: EdgeStore
     public var vertexPropertyMap: VertexPropertyMap
     public var edgePropertyMap: EdgePropertyMap
-    
+
     /// Creates a new adjacency list with the specified storage components.
     ///
     /// - Parameters:
@@ -47,7 +48,8 @@ public struct AdjacencyList<
     }
 }
 
-extension AdjacencyList where
+extension AdjacencyList
+where
     VertexStore == OrderedVertexStorage,
     EdgeStore == CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
     VertexPropertyMap == DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
@@ -60,7 +62,8 @@ extension AdjacencyList where
     }
 }
 
-extension AdjacencyList where
+extension AdjacencyList
+where
     VertexStore == OrderedVertexStorage,
     VertexPropertyMap == DictionaryPropertyMap<VertexStore.Vertex, VertexPropertyValues>,
     EdgePropertyMap == DictionaryPropertyMap<EdgeStore.Edge, EdgePropertyValues>
@@ -144,16 +147,21 @@ public protocol AdjacencyListProtocol<VertexDescriptor, EdgeDescriptor>:
     AdjacencyGraph,
     MutableGraph,
     PropertyGraph,
-    MutablePropertyGraph {}
+    MutablePropertyGraph
+{}
 
-extension AdjacencyList: AdjacencyListProtocol where
+extension AdjacencyList: AdjacencyListProtocol
+where
     VertexStore == OrderedVertexStorage,
     EdgeStore == CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
     VertexPropertyMap == DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
-    EdgePropertyMap == DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues> {}
+    EdgePropertyMap == DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
+{}
 
-extension AdjacencyList: Sendable where
+extension AdjacencyList: Sendable
+where
     VertexStore: Sendable,
     EdgeStore: Sendable,
     VertexPropertyMap: Sendable,
-    EdgePropertyMap: Sendable {}
+    EdgePropertyMap: Sendable
+{}

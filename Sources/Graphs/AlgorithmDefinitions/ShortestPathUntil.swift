@@ -19,24 +19,24 @@ extension IncidenceGraph {
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
-extension IncidenceGraph where VertexDescriptor: Hashable {
-    /// Finds the shortest path from source until a condition is met using Dijkstra's algorithm as the default.
-    /// This is useful for finding paths to the first vertex that satisfies a condition.
-    ///
-    /// - Parameters:
-    ///   - source: The starting vertex
-    ///   - condition: A closure that determines when to stop searching
-    ///   - weight: The cost definition for edge weights
-    /// - Returns: The shortest path to the first vertex satisfying the condition, or `nil` if none exists
-    @inlinable
-    public func shortestPath<Weight: Numeric & Comparable>(
-        from source: VertexDescriptor,
-        until condition: @escaping (VertexDescriptor) -> Bool,
-        weight: CostDefinition<Self, Weight>
-    ) -> Path<VertexDescriptor, EdgeDescriptor>? where Weight.Magnitude == Weight {
-        shortestPath(from: source, until: condition, using: .dijkstra(weight: weight))
+    extension IncidenceGraph where VertexDescriptor: Hashable {
+        /// Finds the shortest path from source until a condition is met using Dijkstra's algorithm as the default.
+        /// This is useful for finding paths to the first vertex that satisfies a condition.
+        ///
+        /// - Parameters:
+        ///   - source: The starting vertex
+        ///   - condition: A closure that determines when to stop searching
+        ///   - weight: The cost definition for edge weights
+        /// - Returns: The shortest path to the first vertex satisfying the condition, or `nil` if none exists
+        @inlinable
+        public func shortestPath<Weight: Numeric & Comparable>(
+            from source: VertexDescriptor,
+            until condition: @escaping (VertexDescriptor) -> Bool,
+            weight: CostDefinition<Self, Weight>
+        ) -> Path<VertexDescriptor, EdgeDescriptor>? where Weight.Magnitude == Weight {
+            shortestPath(from: source, until: condition, using: .dijkstra(weight: weight))
+        }
     }
-}
 #endif
 
 /// A protocol for shortest path algorithms that search until a condition is met.
@@ -84,7 +84,8 @@ extension ShortestPathUntilAlgorithm where Graph.VertexDescriptor: Equatable {
     }
 }
 
-extension VisitorWrapper: ShortestPathUntilAlgorithm where Base: ShortestPathUntilAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension VisitorWrapper: ShortestPathUntilAlgorithm
+where Base: ShortestPathUntilAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     @inlinable
     public func shortestPath(
         from source: Base.Graph.VertexDescriptor,

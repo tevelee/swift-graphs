@@ -4,7 +4,7 @@ public protocol VertexOrderingAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph where Graph.VertexDescriptor: Hashable
     /// The visitor type for observing algorithm progress.
     associatedtype Visitor
-    
+
     /// Orders the vertices of a graph.
     ///
     /// - Parameters:
@@ -16,7 +16,7 @@ public protocol VertexOrderingAlgorithm<Graph> {
 
 extension VisitorWrapper: VertexOrderingAlgorithm where Base: VertexOrderingAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
-    
+
     @inlinable
     public func orderVertices(in graph: Base.Graph, visitor: Base.Visitor?) -> [Base.Graph.VertexDescriptor] {
         base.orderVertices(in: graph, visitor: self.visitor.combined(with: visitor))
@@ -27,10 +27,10 @@ extension VisitorWrapper: VertexOrderingAlgorithm where Base: VertexOrderingAlgo
 public struct VertexOrdering<Vertex: Hashable> {
     /// The vertices in the computed order.
     public let orderedVertices: [Vertex]
-    
+
     /// The position of each vertex in the ordering (0-based index).
     public let vertexPositions: [Vertex: Int]
-    
+
     /// Creates a new vertex ordering result.
     ///
     /// - Parameter orderedVertices: The vertices in the computed order
@@ -39,7 +39,7 @@ public struct VertexOrdering<Vertex: Hashable> {
         self.orderedVertices = orderedVertices
         self.vertexPositions = Dictionary(uniqueKeysWithValues: orderedVertices.enumerated().map { ($0.element, $0.offset) })
     }
-    
+
     /// Get the position of a vertex in the ordering.
     ///
     /// - Parameter vertex: The vertex to look up
@@ -48,7 +48,7 @@ public struct VertexOrdering<Vertex: Hashable> {
     public func position(of vertex: Vertex) -> Int? {
         vertexPositions[vertex]
     }
-    
+
     /// Get the vertex at a specific position.
     ///
     /// - Parameter position: The 0-based position
@@ -78,23 +78,23 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
-extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, VertexDescriptor: Hashable {
-    /// Orders vertices using Smallest Last Vertex Ordering as the default.
-    /// This is particularly effective for graph coloring algorithms.
-    ///
-    /// - Returns: A vertex ordering containing the ordered vertices
-    @inlinable
-    public func orderVertices() -> VertexOrdering<VertexDescriptor> {
-        orderVertices(using: .smallestLastVertex())
-    }
+    extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, VertexDescriptor: Hashable {
+        /// Orders vertices using Smallest Last Vertex Ordering as the default.
+        /// This is particularly effective for graph coloring algorithms.
+        ///
+        /// - Returns: A vertex ordering containing the ordered vertices
+        @inlinable
+        public func orderVertices() -> VertexOrdering<VertexDescriptor> {
+            orderVertices(using: .smallestLastVertex())
+        }
 
-    /// Orders vertices using Reverse Cuthill-McKee algorithm for bandwidth reduction.
-    /// This is particularly effective for reducing matrix bandwidth.
-    ///
-    /// - Returns: A vertex ordering containing the ordered vertices
-    @inlinable
-    public func orderVerticesForBandwidthReduction() -> VertexOrdering<VertexDescriptor> {
-        orderVertices(using: .reverseCuthillMcKee())
+        /// Orders vertices using Reverse Cuthill-McKee algorithm for bandwidth reduction.
+        /// This is particularly effective for reducing matrix bandwidth.
+        ///
+        /// - Returns: A vertex ordering containing the ordered vertices
+        @inlinable
+        public func orderVerticesForBandwidthReduction() -> VertexOrdering<VertexDescriptor> {
+            orderVertices(using: .reverseCuthillMcKee())
+        }
     }
-}
 #endif

@@ -5,7 +5,7 @@
 public protocol PropertyMap<Key, Value> {
     /// The type of keys used to access values.
     associatedtype Key
-    
+
     /// The type of values stored in the map.
     associatedtype Value
 

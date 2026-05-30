@@ -20,7 +20,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
         if vertices.isEmpty { return false }
 
         var startVertices = 0  // outDegree - inDegree == 1
-        var endVertices = 0    // inDegree - outDegree == 1
+        var endVertices = 0  // inDegree - outDegree == 1
 
         for vertex in vertices {
             let diff = outDegree(of: vertex) - inDegree(of: vertex)
@@ -55,10 +55,8 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
         let vertices = Array(vertices())
         if vertices.isEmpty { return false }
 
-        for vertex in vertices {
-            if inDegree(of: vertex) != outDegree(of: vertex) {
-                return false
-            }
+        for vertex in vertices where inDegree(of: vertex) != outDegree(of: vertex) {
+            return false
         }
 
         return true
@@ -76,7 +74,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
     public func hasEulerianPath() -> Bool {
         hasEulerianPath(using: .dfs())
     }
-    
+
     /// Checks if the graph has an Eulerian cycle using DFS-based connectivity algorithm as the default.
     /// This is the most commonly used and efficient algorithm for Eulerian cycle checking.
     ///

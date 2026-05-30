@@ -6,7 +6,7 @@ public protocol ShortestPathsForAllPairsAlgorithm<Graph, Weight> {
     associatedtype Weight: AdditiveArithmetic & Comparable
     /// The visitor type for observing algorithm progress.
     associatedtype Visitor
-    
+
     /// Computes shortest paths between all pairs of vertices.
     ///
     /// - Parameters:
@@ -22,7 +22,7 @@ public struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: AdditiveArit
     public let distances: [Vertex: [Vertex: Cost<Weight>]]
     /// The predecessors for reconstructing paths.
     public let predecessors: [Vertex: [Vertex: Edge?]]
-    
+
     /// Creates a new all-pairs shortest paths result.
     ///
     /// - Parameters:
@@ -33,7 +33,7 @@ public struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: AdditiveArit
         self.distances = distances
         self.predecessors = predecessors
     }
-    
+
     /// Gets the distance between two vertices.
     ///
     /// - Parameters:
@@ -44,7 +44,7 @@ public struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: AdditiveArit
     public func distance(from source: Vertex, to destination: Vertex) -> Cost<Weight>? {
         distances[source]?[destination]
     }
-    
+
     /// Checks if there is a path between two vertices.
     ///
     /// - Parameters:
@@ -59,7 +59,7 @@ public struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: AdditiveArit
             case .finite: return true
         }
     }
-    
+
     /// Gets the shortest path between two vertices.
     ///
     /// - Parameters:
@@ -72,12 +72,12 @@ public struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: AdditiveArit
         guard predecessors[source]?[destination] != nil else {
             return nil
         }
-        
+
         // Reconstruct path by following predecessors
         var current = destination
         var vertices: [Vertex] = [destination]
         var edges: [Edge] = []
-        
+
         while let edge = predecessors[source]?[current] {
             guard let edge = edge else { break }
             edges.insert(edge, at: 0)
@@ -86,9 +86,9 @@ public struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: AdditiveArit
             vertices.insert(predecessor, at: 0)
             current = predecessor
         }
-        
+
         vertices.insert(source, at: 0)
-        
+
         return Path(
             source: source,
             destination: destination,
@@ -101,7 +101,7 @@ public struct AllPairsShortestPaths<Vertex: Hashable, Edge, Weight: AdditiveArit
 extension AllPairsShortestPaths: Sendable where Vertex: Sendable, Edge: Sendable, Weight: Sendable {}
 
 extension AllPairsShortestPaths {
-    
+
 }
 
 extension IncidenceGraph where Self: VertexListGraph {
@@ -120,27 +120,31 @@ extension IncidenceGraph where Self: VertexListGraph {
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
-extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
-    /// Finds shortest paths between all pairs of vertices using Floyd-Warshall algorithm as the default.
-    /// This is efficient for dense graphs and when you need all-pairs shortest paths.
-    ///
-    /// - Parameter weight: The cost definition for edge weights.
-    /// - Returns: The shortest paths between all pairs of vertices.
-    @inlinable
-    public func shortestPathsForAllPairs<Weight: AdditiveArithmetic & Comparable>(
-        weight: CostDefinition<Self, Weight>
-    ) -> AllPairsShortestPaths<VertexDescriptor, EdgeDescriptor, Weight> {
-        shortestPathsForAllPairs(using: .floydWarshall(weight: weight))
+    extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+        /// Finds shortest paths between all pairs of vertices using Floyd-Warshall algorithm as the default.
+        /// This is efficient for dense graphs and when you need all-pairs shortest paths.
+        ///
+        /// - Parameter weight: The cost definition for edge weights.
+        /// - Returns: The shortest paths between all pairs of vertices.
+        @inlinable
+        public func shortestPathsForAllPairs<Weight: AdditiveArithmetic & Comparable>(
+            weight: CostDefinition<Self, Weight>
+        ) -> AllPairsShortestPaths<VertexDescriptor, EdgeDescriptor, Weight> {
+            shortestPathsForAllPairs(using: .floydWarshall(weight: weight))
+        }
     }
-}
 #endif
 
-extension VisitorWrapper: ShortestPathsForAllPairsAlgorithm where Base: ShortestPathsForAllPairsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension VisitorWrapper: ShortestPathsForAllPairsAlgorithm
+where Base: ShortestPathsForAllPairsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
     public typealias Weight = Base.Weight
-    
+
     @inlinable
-    public func shortestPathsForAllPairs(in graph: Base.Graph, visitor: Base.Visitor?) -> AllPairsShortestPaths<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Weight> {
+    public func shortestPathsForAllPairs(
+        in graph: Base.Graph,
+        visitor: Base.Visitor?
+    ) -> AllPairsShortestPaths<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Weight> {
         base.shortestPathsForAllPairs(in: graph, visitor: self.visitor.combined(with: visitor))
     }
 }

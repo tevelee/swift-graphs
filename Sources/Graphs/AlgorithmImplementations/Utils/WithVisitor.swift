@@ -1,7 +1,7 @@
 /// A protocol for types that support visitors.
 public protocol VisitorSupporting {
     associatedtype Visitor: Composable where Visitor.Other == Visitor
-    
+
     func withVisitor(_ visitor: Visitor) -> VisitorWrapper<Self, Visitor>
 }
 
@@ -18,7 +18,7 @@ public struct VisitorWrapper<Base, Visitor> {
     let base: Base
     @usableFromInline
     let visitor: Visitor
-    
+
     @inlinable
     public init(base: Base, visitor: Visitor) {
         self.base = base

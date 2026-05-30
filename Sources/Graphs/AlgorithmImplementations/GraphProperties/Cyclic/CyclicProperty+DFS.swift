@@ -3,7 +3,8 @@ extension CyclicPropertyAlgorithm {
     ///
     /// - Returns: A new DFS-based cyclic property algorithm
     @inlinable
-    public static func dfs<Graph: IncidenceGraph & VertexListGraph>() -> Self where Self == DFSCyclicPropertyAlgorithm<Graph>, Graph.VertexDescriptor: Hashable {
+    public static func dfs<Graph: IncidenceGraph & VertexListGraph>() -> Self
+    where Self == DFSCyclicPropertyAlgorithm<Graph>, Graph.VertexDescriptor: Hashable {
         .init()
     }
 }

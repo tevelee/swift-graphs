@@ -22,11 +22,11 @@ extension Graph {
 public struct ComputedVertexPropertyGraph<Base: Graph, Property: VertexProperty> where Base.VertexDescriptor: Hashable {
     public var base: Base
     public let compute: (Base.VertexDescriptor, Base) -> Property.Value
-    
+
     public typealias UnderlyingPropertyMap = DictionaryPropertyMap<Base.VertexDescriptor, VertexPropertyValues>
     @usableFromInline
     var _vertexPropertyMap = UnderlyingPropertyMap(defaultValue: VertexPropertyValues())
-    
+
     @inlinable
     public init(base: Base, compute: @escaping (Base.VertexDescriptor, Base) -> Property.Value) {
         self.base = base
@@ -41,46 +41,46 @@ extension ComputedVertexPropertyGraph: Graph where Base: Graph {
 
 extension ComputedVertexPropertyGraph: VertexListGraph where Base: VertexListGraph {
     public typealias Vertices = Base.Vertices
-    
+
     @inlinable
     public func vertices() -> Vertices { base.vertices() }
-    
+
     @inlinable
     public var vertexCount: Int { base.vertexCount }
 }
 
 extension ComputedVertexPropertyGraph: EdgeListGraph where Base: EdgeListGraph {
     public typealias Edges = Base.Edges
-    
+
     @inlinable
     public func edges() -> Edges { base.edges() }
-    
+
     @inlinable
     public var edgeCount: Int { base.edgeCount }
 }
 
 extension ComputedVertexPropertyGraph: IncidenceGraph where Base: IncidenceGraph {
     public typealias OutgoingEdges = Base.OutgoingEdges
-    
+
     @inlinable
     public func outgoingEdges(of vertex: VertexDescriptor) -> OutgoingEdges { base.outgoingEdges(of: vertex) }
-    
+
     @inlinable
     public func source(of edge: EdgeDescriptor) -> VertexDescriptor? { base.source(of: edge) }
-    
+
     @inlinable
     public func destination(of edge: EdgeDescriptor) -> VertexDescriptor? { base.destination(of: edge) }
-    
+
     @inlinable
     public func outDegree(of vertex: VertexDescriptor) -> Int { base.outDegree(of: vertex) }
 }
 
 extension ComputedVertexPropertyGraph: BidirectionalGraph where Base: BidirectionalGraph {
     public typealias IncomingEdges = Base.IncomingEdges
-    
+
     @inlinable
     public func incomingEdges(of vertex: VertexDescriptor) -> IncomingEdges { base.incomingEdges(of: vertex) }
-    
+
     @inlinable
     public func inDegree(of vertex: VertexDescriptor) -> Int { base.inDegree(of: vertex) }
 }
@@ -91,17 +91,17 @@ extension ComputedVertexPropertyGraph: EdgeMutableGraph where Base: EdgeMutableG
     public mutating func addEdge(from source: VertexDescriptor, to destination: VertexDescriptor) -> EdgeDescriptor? {
         base.addEdge(from: source, to: destination)
     }
-    
+
     #if swift(>=6.2)
-    @inlinable
-    public mutating func remove(edge: consuming EdgeDescriptor) {
-        base.remove(edge: edge)
-    }
+        @inlinable
+        public mutating func remove(edge: consuming EdgeDescriptor) {
+            base.remove(edge: edge)
+        }
     #else
-    @inlinable
-    public mutating func remove(edge: EdgeDescriptor) {
-        base.remove(edge: edge)
-    }
+        @inlinable
+        public mutating func remove(edge: EdgeDescriptor) {
+            base.remove(edge: edge)
+        }
     #endif
 }
 
@@ -110,17 +110,17 @@ extension ComputedVertexPropertyGraph: VertexMutableGraph where Base: VertexMuta
     public mutating func addVertex() -> VertexDescriptor {
         base.addVertex()
     }
-    
+
     #if swift(>=6.2)
-    @inlinable
-    public mutating func remove(vertex: consuming VertexDescriptor) {
-        base.remove(vertex: vertex)
-    }
+        @inlinable
+        public mutating func remove(vertex: consuming VertexDescriptor) {
+            base.remove(vertex: vertex)
+        }
     #else
-    @inlinable
-    public mutating func remove(vertex: VertexDescriptor) {
-        base.remove(vertex: vertex)
-    }
+        @inlinable
+        public mutating func remove(vertex: VertexDescriptor) {
+            base.remove(vertex: vertex)
+        }
     #endif
 }
 
@@ -157,7 +157,8 @@ extension ComputedVertexPropertyGraph: VertexPropertyGraph {
 public struct ComputedVertexPropertyMap<
     Base: PropertyMap,
     Property: VertexProperty
->: PropertyMap where
+>: PropertyMap
+where
     Base.Value: VertexProperties
 {
     public var base: Base

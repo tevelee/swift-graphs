@@ -1,5 +1,6 @@
-@testable import Graphs
 import Testing
+
+@testable import Graphs
 
 struct AdjacencyMatrixTests {
     @Test func addsVerticesAndEdges_countsAndAdjacency() {
@@ -57,5 +58,3 @@ struct AdjacencyMatrixTests {
         #expect(g.vertexCount == 1)
     }
 }
-
-

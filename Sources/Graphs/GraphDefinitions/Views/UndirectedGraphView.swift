@@ -7,19 +7,20 @@ import OrderedCollections
 /// This is useful for algorithms that work on undirected graphs.
 public struct UndirectedGraphView<
     Base: BidirectionalGraph
->: Graph where
+>: Graph
+where
     Base.EdgeDescriptor: Hashable
 {
     public typealias VertexDescriptor = Base.VertexDescriptor
-    
+
     /// An edge descriptor in the undirected graph view.
     public struct EdgeDescriptor: Hashable {
         /// The underlying edge from the base graph.
         public let base: Base.EdgeDescriptor
-        
+
         /// Whether this edge is flipped (represents the reverse direction).
         public let flipped: Bool
-        
+
         /// Creates a new undirected edge descriptor.
         ///
         /// - Parameters:
@@ -33,7 +34,7 @@ public struct UndirectedGraphView<
     }
 
     public let base: Base
-    
+
     /// Creates a new undirected graph view.
     ///
     /// - Parameter base: The underlying bidirectional graph
@@ -47,7 +48,7 @@ extension UndirectedGraphView: VertexListGraph where Base: VertexListGraph {
     public typealias Vertices = Base.Vertices
     @inlinable
     public func vertices() -> Vertices { base.vertices() }
-    
+
     @inlinable
     public var vertexCount: Int { base.vertexCount }
 }
@@ -56,23 +57,23 @@ extension UndirectedGraphView: EdgeListGraph where Base: EdgeListGraph {
     public struct Edges: Sequence {
         @usableFromInline
         let baseEdges: Base.Edges
-        
+
         @inlinable
         public init(baseEdges: Base.Edges) {
             self.baseEdges = baseEdges
         }
-        
+
         @inlinable
         public func makeIterator() -> Iterator { Iterator(baseIterator: baseEdges.makeIterator()) }
         public struct Iterator: IteratorProtocol {
             @usableFromInline
             var baseIterator: Base.Edges.Iterator
-            
+
             @inlinable
             public init(baseIterator: Base.Edges.Iterator) {
                 self.baseIterator = baseIterator
             }
-            
+
             @inlinable
             public mutating func next() -> EdgeDescriptor? {
                 baseIterator.next().map { EdgeDescriptor(base: $0, flipped: false) }
@@ -91,15 +92,17 @@ extension UndirectedGraphView: IncidenceGraph {
         let base: Base
         @usableFromInline
         let vertex: Base.VertexDescriptor
-        
+
         @inlinable
         public init(base: Base, vertex: Base.VertexDescriptor) {
             self.base = base
             self.vertex = vertex
         }
-        
+
         @inlinable
-        public func makeIterator() -> Iterator { Iterator(base: base, vertex: vertex, outIt: base.outgoingEdges(of: vertex).makeIterator(), inIt: base.incomingEdges(of: vertex).makeIterator()) }
+        public func makeIterator() -> Iterator {
+            Iterator(base: base, vertex: vertex, outIt: base.outgoingEdges(of: vertex).makeIterator(), inIt: base.incomingEdges(of: vertex).makeIterator())
+        }
         public struct Iterator: IteratorProtocol {
             @usableFromInline
             let base: Base
@@ -109,7 +112,7 @@ extension UndirectedGraphView: IncidenceGraph {
             var outIt: Base.OutgoingEdges.Iterator
             @usableFromInline
             var inIt: Base.IncomingEdges.Iterator
-            
+
             @inlinable
             public init(base: Base, vertex: Base.VertexDescriptor, outIt: Base.OutgoingEdges.Iterator, inIt: Base.IncomingEdges.Iterator) {
                 self.base = base
@@ -158,7 +161,7 @@ extension UndirectedGraphView: BidirectionalGraph {
 
 extension BidirectionalGraph where EdgeDescriptor: Hashable {
     /// Returns an undirected view of this bidirectional graph.
-    /// 
+    ///
     /// In the undirected view, each edge can be traversed in both directions,
     /// effectively treating the graph as undirected.
     /// - Returns: An `UndirectedGraphView` that represents the undirected graph
@@ -172,11 +175,10 @@ extension BidirectionalGraph where EdgeDescriptor: Hashable {
 
 extension UndirectedGraphView {
     /// Returns a directed view of this undirected graph.
-    /// 
+    ///
     /// - Returns: The original bidirectional graph
     @inlinable
     func directed() -> Base {
         base
     }
 }
-

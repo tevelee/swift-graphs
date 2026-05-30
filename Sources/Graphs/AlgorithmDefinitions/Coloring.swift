@@ -6,7 +6,7 @@ public protocol ColoringAlgorithm<Graph, Color> {
     associatedtype Color: Hashable & Equatable
     /// The visitor type for observing algorithm progress.
     associatedtype Visitor
-    
+
     /// Colors the graph using this algorithm.
     ///
     /// - Parameters:
@@ -31,7 +31,7 @@ public struct GraphColoring<Vertex: Hashable, Color: Hashable & Equatable> {
     public let colorCount: Int
     /// Whether the coloring is proper (no adjacent vertices have the same color).
     public let isProper: Bool
-    
+
     /// Creates a new graph coloring result.
     ///
     /// - Parameters:
@@ -43,7 +43,7 @@ public struct GraphColoring<Vertex: Hashable, Color: Hashable & Equatable> {
         self.colorCount = Set(vertexColors.values).count
         self.isProper = isProper
     }
-    
+
     /// Gets the color assigned to a specific vertex.
     ///
     /// - Parameter vertex: The vertex to get the color for.
@@ -52,7 +52,7 @@ public struct GraphColoring<Vertex: Hashable, Color: Hashable & Equatable> {
     public func color(for vertex: Vertex) -> Color? {
         vertexColors[vertex]
     }
-    
+
     /// Gets all vertices that are assigned a specific color.
     ///
     /// - Parameter color: The color to find vertices for.
@@ -63,7 +63,7 @@ public struct GraphColoring<Vertex: Hashable, Color: Hashable & Equatable> {
             vertexColor == color ? vertex : nil
         }
     }
-    
+
     /// The chromatic number of the graph (minimum number of colors needed).
     @inlinable
     public var chromaticNumber: Int {
@@ -89,16 +89,16 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
-extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
-    /// Colors the graph using the Greedy algorithm as the default.
-    /// This is a simple and efficient algorithm that works well for most graphs.
-    ///
-    /// - Returns: The graph coloring result using integer colors.
-    @inlinable
-    public func colorGraph() -> GraphColoring<VertexDescriptor, Int> {
-        colorGraph(using: .greedy())
+    extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+        /// Colors the graph using the Greedy algorithm as the default.
+        /// This is a simple and efficient algorithm that works well for most graphs.
+        ///
+        /// - Returns: The graph coloring result using integer colors.
+        @inlinable
+        public func colorGraph() -> GraphColoring<VertexDescriptor, Int> {
+            colorGraph(using: .greedy())
+        }
     }
-}
 #endif
 
 /// A protocol for color types that can be represented as integers.
@@ -114,7 +114,7 @@ extension Int: IntegerBasedColor {
     public init(integerValue value: Int) {
         self = value
     }
-    
+
     @inlinable
     public var integerValue: Int {
         self
@@ -126,7 +126,7 @@ extension IntegerBasedColor where Self: RawRepresentable, Self.RawValue == Int {
     public init(integerValue value: Int) {
         self = Self(rawValue: value)!
     }
-    
+
     @inlinable
     public var integerValue: Int {
         self.rawValue

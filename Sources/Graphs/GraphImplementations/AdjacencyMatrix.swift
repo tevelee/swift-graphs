@@ -26,7 +26,7 @@ public struct AdjacencyMatrix {
     // Property maps
     public var vertexPropertyMap: DictionaryPropertyMap<Vertex, VertexPropertyValues> = .init(defaultValue: .init())
     public var edgePropertyMap: DictionaryPropertyMap<Edge, EdgePropertyValues> = .init(defaultValue: .init())
-    
+
     /// Creates a new empty adjacency matrix.
     @inlinable
     public init() {}
@@ -66,7 +66,7 @@ extension AdjacencyMatrix: EdgeLookupGraph {
 extension AdjacencyMatrix: VertexListGraph {
     @inlinable
     public func vertices() -> OrderedSet<Vertex> { verticesStore }
-    
+
     @inlinable
     public var vertexCount: Int { verticesStore.count }
 }
@@ -74,7 +74,7 @@ extension AdjacencyMatrix: VertexListGraph {
 extension AdjacencyMatrix: EdgeListGraph {
     @inlinable
     public func edges() -> OrderedSet<Edge> { edgesStore.keys }
-    
+
     @inlinable
     public var edgeCount: Int { edgesStore.count }
 }
@@ -84,20 +84,18 @@ extension AdjacencyMatrix: IncidenceGraph {
     public func outgoingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
         guard let i = index(of: vertex) else { return [] }
         var result: OrderedSet<Edge> = []
-        for j in 0 ..< matrix.count {
-            if matrix[i][j] {
-                if let e = edge(from: vertex, to: verticesStore[j]) { result.updateOrAppend(e) }
-            }
+        for j in 0 ..< matrix.count where matrix[i][j] {
+            if let e = edge(from: vertex, to: verticesStore[j]) { result.updateOrAppend(e) }
         }
         return result
     }
 
     @inlinable
     public func source(of edge: Edge) -> Vertex? { edgesStore[edge]?.source }
-    
+
     @inlinable
     public func destination(of edge: Edge) -> Vertex? { edgesStore[edge]?.destination }
-    
+
     @inlinable
     public func outDegree(of vertex: Vertex) -> Int { outgoingEdges(of: vertex).count }
 }
@@ -107,14 +105,12 @@ extension AdjacencyMatrix: BidirectionalGraph {
     public func incomingEdges(of vertex: Vertex) -> OrderedSet<Edge> {
         guard let j = index(of: vertex) else { return [] }
         var result: OrderedSet<Edge> = []
-        for i in 0 ..< matrix.count {
-            if matrix[i][j] {
-                if let e = edge(from: verticesStore[i], to: vertex) { result.updateOrAppend(e) }
-            }
+        for i in 0 ..< matrix.count where matrix[i][j] {
+            if let e = edge(from: verticesStore[i], to: vertex) { result.updateOrAppend(e) }
         }
         return result
     }
-    
+
     @inlinable
     public func inDegree(of vertex: Vertex) -> Int { incomingEdges(of: vertex).count }
 }
@@ -138,27 +134,27 @@ extension AdjacencyMatrix: MutableGraph {
     }
 
     #if swift(>=6.2)
-    @inlinable
-    public mutating func remove(edge: consuming Edge) {
-        guard let ep = edgesStore.removeValue(forKey: edge) else { return }
-        if let i = index(of: ep.source), let j = index(of: ep.destination) { matrix[i][j] = false }
-        // Update the O(1) lookup table
-        edgeLookup[ep.source]?[ep.destination] = nil
-        if edgeLookup[ep.source]?.isEmpty == true {
-            edgeLookup[ep.source] = nil
+        @inlinable
+        public mutating func remove(edge: consuming Edge) {
+            guard let ep = edgesStore.removeValue(forKey: edge) else { return }
+            if let i = index(of: ep.source), let j = index(of: ep.destination) { matrix[i][j] = false }
+            // Update the O(1) lookup table
+            edgeLookup[ep.source]?[ep.destination] = nil
+            if edgeLookup[ep.source]?.isEmpty == true {
+                edgeLookup[ep.source] = nil
+            }
         }
-    }
     #else
-    @inlinable
-    public mutating func remove(edge: Edge) {
-        guard let ep = edgesStore.removeValue(forKey: edge) else { return }
-        if let i = index(of: ep.source), let j = index(of: ep.destination) { matrix[i][j] = false }
-        // Update the O(1) lookup table
-        edgeLookup[ep.source]?[ep.destination] = nil
-        if edgeLookup[ep.source]?.isEmpty == true {
-            edgeLookup[ep.source] = nil
+        @inlinable
+        public mutating func remove(edge: Edge) {
+            guard let ep = edgesStore.removeValue(forKey: edge) else { return }
+            if let i = index(of: ep.source), let j = index(of: ep.destination) { matrix[i][j] = false }
+            // Update the O(1) lookup table
+            edgeLookup[ep.source]?[ep.destination] = nil
+            if edgeLookup[ep.source]?.isEmpty == true {
+                edgeLookup[ep.source] = nil
+            }
         }
-    }
     #endif
 
     @inlinable
@@ -174,49 +170,49 @@ extension AdjacencyMatrix: MutableGraph {
     }
 
     #if swift(>=6.2)
-    @inlinable
-    public mutating func remove(vertex: consuming Vertex) {
-        guard let idx = index(of: vertex) else { return }
-        // Remove incident edges
-        for e in outgoingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
-        for e in incomingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
-        // Clean up the O(1) lookup table
-        edgeLookup[vertex] = nil
-        for (source, var destinations) in edgeLookup {
-            destinations[vertex] = nil
-            if destinations.isEmpty {
-                edgeLookup[source] = nil
-            } else {
-                edgeLookup[source] = destinations
+        @inlinable
+        public mutating func remove(vertex: consuming Vertex) {
+            guard let idx = index(of: vertex) else { return }
+            // Remove incident edges
+            for e in outgoingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
+            for e in incomingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
+            // Clean up the O(1) lookup table
+            edgeLookup[vertex] = nil
+            for (source, var destinations) in edgeLookup {
+                destinations[vertex] = nil
+                if destinations.isEmpty {
+                    edgeLookup[source] = nil
+                } else {
+                    edgeLookup[source] = destinations
+                }
             }
+            // Remove row and column
+            matrix.remove(at: idx)
+            for i in 0 ..< matrix.count { matrix[i].remove(at: idx) }
+            verticesStore.remove(vertex)
         }
-        // Remove row and column
-        matrix.remove(at: idx)
-        for i in 0 ..< matrix.count { matrix[i].remove(at: idx) }
-        verticesStore.remove(vertex)
-    }
     #else
-    @inlinable
-    public mutating func remove(vertex: Vertex) {
-        guard let idx = index(of: vertex) else { return }
-        // Remove incident edges
-        for e in outgoingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
-        for e in incomingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
-        // Clean up the O(1) lookup table
-        edgeLookup[vertex] = nil
-        for (source, var destinations) in edgeLookup {
-            destinations[vertex] = nil
-            if destinations.isEmpty {
-                edgeLookup[source] = nil
-            } else {
-                edgeLookup[source] = destinations
+        @inlinable
+        public mutating func remove(vertex: Vertex) {
+            guard let idx = index(of: vertex) else { return }
+            // Remove incident edges
+            for e in outgoingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
+            for e in incomingEdges(of: vertex) { edgesStore.removeValue(forKey: e) }
+            // Clean up the O(1) lookup table
+            edgeLookup[vertex] = nil
+            for (source, var destinations) in edgeLookup {
+                destinations[vertex] = nil
+                if destinations.isEmpty {
+                    edgeLookup[source] = nil
+                } else {
+                    edgeLookup[source] = destinations
+                }
             }
+            // Remove row and column
+            matrix.remove(at: idx)
+            for i in 0 ..< matrix.count { matrix[i].remove(at: idx) }
+            verticesStore.remove(vertex)
         }
-        // Remove row and column
-        matrix.remove(at: idx)
-        for i in 0 ..< matrix.count { matrix[i].remove(at: idx) }
-        verticesStore.remove(vertex)
-    }
     #endif
 }
 
@@ -226,12 +222,12 @@ extension AdjacencyMatrix: AdjacencyGraph {
         guard let idx = index(of: vertex) else { return [] }
         var result: OrderedSet<Vertex> = []
         // Outgoing neighbors: row scan
-        for j in 0 ..< matrix.count {
-            if matrix[idx][j] { result.updateOrAppend(verticesStore[j]) }
+        for j in 0 ..< matrix.count where matrix[idx][j] {
+            result.updateOrAppend(verticesStore[j])
         }
         // Incoming neighbors: column scan
-        for i in 0 ..< matrix.count {
-            if matrix[i][idx] { result.updateOrAppend(verticesStore[i]) }
+        for i in 0 ..< matrix.count where matrix[i][idx] {
+            result.updateOrAppend(verticesStore[i])
         }
         return result
     }
@@ -250,5 +246,3 @@ extension AdjacencyMatrix {
     @usableFromInline
     func index(of v: Vertex) -> Int? { verticesStore.firstIndex(of: v) }
 }
-
-

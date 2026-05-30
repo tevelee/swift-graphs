@@ -21,5 +21,3 @@ extension EdgeLookupGraph where Self: IncidenceGraph, VertexDescriptor: Equatabl
         return nil
     }
 }
-
-

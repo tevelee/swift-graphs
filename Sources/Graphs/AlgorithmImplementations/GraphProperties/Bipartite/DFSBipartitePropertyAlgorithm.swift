@@ -1,11 +1,11 @@
 /// DFS-based algorithm for checking if a graph is bipartite.
 public struct DFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = DFSBipartiteProperty<Graph>.Visitor
-    
+
     /// Creates a new DFS-based bipartite property algorithm.
     @inlinable
     public init() {}
-    
+
     /// Checks if the graph is bipartite using DFS.
     ///
     /// - Parameters:
@@ -19,36 +19,34 @@ public struct DFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGr
     ) -> Bool {
         // Handle empty graphs and single vertex graphs
         guard graph.vertexCount > 0 else {
-            return true // Empty graph is considered bipartite
+            return true  // Empty graph is considered bipartite
         }
-        
+
         guard graph.vertexCount > 1 else {
-            return true // Single vertex graph is bipartite
+            return true  // Single vertex graph is bipartite
         }
-        
+
         // Color map: 0 = uncolored, 1 = color A, 2 = color B
         var color = [Graph.VertexDescriptor: Int]()
         var isBipartite = true
-        
+
         // Process each connected component using DFS
-        for vertex in graph.vertices() {
-            if color[vertex] == nil && isBipartite {
-                // Start DFS from this unvisited vertex
-                color[vertex] = 1 // Assign first color
-                visitor?.assignColor?(vertex, 1)
-                
-                isBipartite = dfsBipartiteCheck(
-                    from: vertex,
-                    in: graph,
-                    color: &color,
-                    visitor: visitor
-                )
-            }
+        for vertex in graph.vertices() where color[vertex] == nil && isBipartite {
+            // Start DFS from this unvisited vertex
+            color[vertex] = 1  // Assign first color
+            visitor?.assignColor?(vertex, 1)
+
+            isBipartite = dfsBipartiteCheck(
+                from: vertex,
+                in: graph,
+                color: &color,
+                visitor: visitor
+            )
         }
-        
+
         return isBipartite
     }
-    
+
     @usableFromInline
     func dfsBipartiteCheck(
         from vertex: Graph.VertexDescriptor,
@@ -58,20 +56,20 @@ public struct DFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGr
     ) -> Bool {
         guard let currentColor = color[vertex] else { return false }
         let nextColor = currentColor == 1 ? 2 : 1
-        
+
         visitor?.examineVertex?(vertex)
-        
+
         // Check all neighbors
         for edge in graph.outgoingEdges(of: vertex) {
             guard let neighbor = graph.destination(of: edge) else { continue }
-            
+
             visitor?.examineEdge?(edge)
-            
+
             if color[neighbor] == nil {
                 // Neighbor is uncolored, assign opposite color and recurse
                 color[neighbor] = nextColor
                 visitor?.assignColor?(neighbor, nextColor)
-                
+
                 if !dfsBipartiteCheck(
                     from: neighbor,
                     in: graph,
@@ -87,7 +85,7 @@ public struct DFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGr
                 return false
             }
         }
-        
+
         return true
     }
 }
@@ -97,13 +95,13 @@ public struct DFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGr
 public struct DFSBipartiteProperty<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
     public typealias Vertex = Graph.VertexDescriptor
     public typealias Edge = Graph.EdgeDescriptor
-    
+
     public struct Visitor {
         public var assignColor: ((Vertex, Int) -> Void)?
         public var examineVertex: ((Vertex) -> Void)?
         public var examineEdge: ((Edge) -> Void)?
         public var colorConflict: ((Vertex, Vertex, Int) -> Void)?
-        
+
         public init(
             assignColor: ((Vertex, Int) -> Void)? = nil,
             examineVertex: ((Vertex) -> Void)? = nil,

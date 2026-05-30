@@ -69,15 +69,15 @@ struct PlanarEmbeddingFuzzTests {
             let result = graph.planarEmbedding(using: .leftRight())
 
             switch result {
-            case .planar(let embedding):
-                planarSeen += 1
-                #expect(embedding.isValid)
-                // Connected graph => V - E + F == 2.
-                #expect(embedding.eulerCharacteristic == 2)
-            case .nonPlanar(let certificate):
-                nonPlanarSeen += 1
-                #expect(!certificateGraph(certificate).isPlanar(using: .leftRight()))
-                #expect(certificate.kind == .k5 || certificate.kind == .k33)
+                case .planar(let embedding):
+                    planarSeen += 1
+                    #expect(embedding.isValid)
+                    // Connected graph => V - E + F == 2.
+                    #expect(embedding.eulerCharacteristic == 2)
+                case .nonPlanar(let certificate):
+                    nonPlanarSeen += 1
+                    #expect(!certificateGraph(certificate).isPlanar(using: .leftRight()))
+                    #expect(certificate.kind == .k5 || certificate.kind == .k33)
             }
         }
 

@@ -1,10 +1,8 @@
 {
-    "fileScopedDeclarationPrivacy":
-    {
+    "fileScopedDeclarationPrivacy": {
         "accessLevel": "private"
     },
-    "indentation":
-    {
+    "indentation": {
         "spaces": 4
     },
     "indentConditionalCompilationBlocks": true,
@@ -18,9 +16,8 @@
     "multiElementCollectionTrailingCommas": true,
     "prioritizeKeepingFunctionOutputTogether": true,
     "respectsExistingLineBreaks": true,
-    "rules":
-    {
-        "AllPublicDeclarationsHaveDocumentation": true,
+    "rules": {
+        "AllPublicDeclarationsHaveDocumentation": false,
         "AlwaysUseLiteralForEmptyCollectionInit": false,
         "AlwaysUseLowerCamelCase": true,
         "AmbiguousTrailingClosureOverload": true,
@@ -49,7 +46,7 @@
         "OneVariableDeclarationPerLine": true,
         "OnlyOneTrailingClosureArgument": true,
         "OrderedImports": true,
-        "ReplaceForEachWithForLoop": true,
+        "ReplaceForEachWithForLoop": false,
         "ReturnVoidInsteadOfEmptyTuple": true,
         "TypeNamesShouldBeCapitalized": true,
         "UseEarlyExits": true,
@@ -59,8 +56,8 @@
         "UseSingleLinePropertyGetter": false,
         "UseSynthesizedInitializer": true,
         "UseTripleSlashForDocumentationComments": true,
-        "UseWhereClausesInForLoops": true,
-        "ValidateDocumentationComments": true
+        "UseWhereClausesInForLoops": false,
+        "ValidateDocumentationComments": false
     },
     "spacesAroundRangeFormationOperators": true,
     "tabWidth": 4,

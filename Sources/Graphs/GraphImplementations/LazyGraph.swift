@@ -7,7 +7,7 @@ import OrderedCollections
 /// useful for large graphs or graphs with regular structure.
 public struct LazyIncidenceGraph<Vertex, Edge: EdgeProtocol<Vertex>, Edges: Collection<Edge>> {
     public let edgeProvider: (VertexDescriptor) -> Edges
-    
+
     @inlinable
     public init(edges: @escaping (VertexDescriptor) -> Edges) {
         self.edgeProvider = edges
@@ -24,17 +24,17 @@ extension LazyIncidenceGraph: IncidenceGraph {
     public func outgoingEdges(of vertex: Vertex) -> Edges {
         edgeProvider(vertex)
     }
-    
+
     @inlinable
     public func source(of edge: Edge) -> Vertex? {
         edge.source
     }
-    
+
     @inlinable
     public func destination(of edge: Edge) -> Vertex? {
         edge.destination
     }
-    
+
     @inlinable
     public func outDegree(of vertex: Vertex) -> Int {
         edgeProvider(vertex).count
@@ -43,14 +43,15 @@ extension LazyIncidenceGraph: IncidenceGraph {
 
 extension LazyIncidenceGraph {
     @inlinable
-    public init<Neighbors: Collection<Vertex>>(neighbors: @escaping (VertexDescriptor) -> Neighbors) where Edges == LazyMapCollection<Neighbors, SimpleEdge<Vertex>> {
+    public init<Neighbors: Collection<Vertex>>(neighbors: @escaping (VertexDescriptor) -> Neighbors)
+    where Edges == LazyMapCollection<Neighbors, SimpleEdge<Vertex>> {
         self.edgeProvider = { source in
             neighbors(source).lazy.map {
                 SimpleEdge(source: source, destination: $0)
             }
         }
     }
-    
+
     /// Materializes the lazy graph into a concrete AdjacencyList.
     ///
     /// This function traverses the lazy graph starting from the given source vertex
@@ -68,28 +69,29 @@ extension LazyIncidenceGraph {
         using traversalAlgorithm: some TraversalAlgorithm<Self>
     ) -> some AdjacencyListProtocol where Vertex: Hashable, Edge: EdgeProtocol<Vertex> {
         let result = traverse(from: source, using: traversalAlgorithm)
-        
+
         var graph = AdjacencyList()
-        
+
         let uniqueVertices = OrderedSet(result.vertices)
-        
+
         var vertexMapping: [Vertex: OrderedVertexStorage.Vertex] = [:]
         for vertex in uniqueVertices {
             vertexMapping[vertex] = graph.addVertex()
         }
-        
+
         for edge in result.edges {
             guard let sourceVertex = self.source(of: edge),
-                  let destinationVertex = self.destination(of: edge),
-                  let mappedSource = vertexMapping[sourceVertex],
-                  let mappedDestination = vertexMapping[destinationVertex] else { continue }
-            
+                let destinationVertex = self.destination(of: edge),
+                let mappedSource = vertexMapping[sourceVertex],
+                let mappedDestination = vertexMapping[destinationVertex]
+            else { continue }
+
             graph.addEdge(from: mappedSource, to: mappedDestination)
         }
-        
+
         return graph
     }
-    
+
     /// Materializes the lazy graph into a concrete AdjacencyList using DFS traversal.
     ///
     /// This is a convenience method that uses DFS traversal by default.

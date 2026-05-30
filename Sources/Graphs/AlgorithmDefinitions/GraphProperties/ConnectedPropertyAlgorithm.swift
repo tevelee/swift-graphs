@@ -30,7 +30,7 @@ public protocol ConnectedPropertyAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
     /// The visitor type for observing algorithm progress.
     associatedtype Visitor
-    
+
     /// Checks if the graph is connected.
     ///
     /// - Parameters:
@@ -44,9 +44,10 @@ public protocol ConnectedPropertyAlgorithm<Graph> {
     ) -> Bool
 }
 
-extension VisitorWrapper: ConnectedPropertyAlgorithm where Base: ConnectedPropertyAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension VisitorWrapper: ConnectedPropertyAlgorithm
+where Base: ConnectedPropertyAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
-    
+
     @inlinable
     public func isConnected(in graph: Base.Graph, visitor: Base.Visitor?) -> Bool {
         base.isConnected(in: graph, visitor: self.visitor.combined(with: visitor))
