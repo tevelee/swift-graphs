@@ -1,5 +1,7 @@
 # Swift Graphs
 
+[![CI](https://github.com/tevelee/swift-graphs/actions/workflows/ci.yml/badge.svg)](https://github.com/tevelee/swift-graphs/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/tevelee/swift-graphs/branch/main/graph/badge.svg)](https://codecov.io/gh/tevelee/swift-graphs)
 [![Swift Package Index](https://img.shields.io/endpoint?url=https://swiftpackageindex.com/api/packages/tevelee/swift-graphs/badge?type=swift-versions)](https://swiftpackageindex.com/tevelee/swift-graphs)
 [![Swift Package Index](https://img.shields.io/endpoint?url=https://swiftpackageindex.com/api/packages/tevelee/swift-graphs/badge?type=platforms)](https://swiftpackageindex.com/tevelee/swift-graphs)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.txt)

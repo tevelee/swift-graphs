@@ -1,0 +1,82 @@
+name: Bug report
+description: Something isn't working correctly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please fill in as much detail as you can — a minimal reproduction is the single most helpful thing you can provide.
+
+  - type: dropdown
+    id: swift-version
+    attributes:
+      label: Swift version
+      options:
+        - "6.2"
+        - "6.0"
+        - "5.9"
+        - Other (specify in description)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      multiple: true
+      options:
+        - macOS
+        - Linux
+        - iOS
+        - tvOS
+        - watchOS
+        - visionOS
+    validations:
+      required: true
+
+  - type: input
+    id: graph-type
+    attributes:
+      label: Graph type(s) used
+      placeholder: "e.g. AdjacencyList, GridGraph, InlineGraph<String, ...>"
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      placeholder: "What should have happened?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      placeholder: "What happened instead? Include any error messages or wrong output."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: A self-contained snippet that demonstrates the issue. The simpler the better.
+      render: swift
+      placeholder: |
+        import Graphs
+
+        var graph = AdjacencyList()
+        let a = graph.addVertex()
+        // ...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and this hasn't been reported before
+          required: true
+        - label: I can reproduce this on the latest `main` branch
+          required: false
