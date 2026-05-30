@@ -20,10 +20,10 @@ extension TraversalAlgorithm {
 public struct IterativelyDeepeningDFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
     /// The visitor type for observing traversal progress.
     public typealias Visitor = DepthFirstSearch<Graph>.Visitor
-    
+
     /// The maximum depth to traverse, or nil for unlimited.
     public let maxDepth: UInt?
-    
+
     /// Creates a new iteratively deepening DFS traversal algorithm.
     ///
     /// - Parameter maxDepth: The maximum depth to traverse, or nil for unlimited.
@@ -31,7 +31,7 @@ public struct IterativelyDeepeningDFSTraversal<Graph: IncidenceGraph>: Traversal
     public init(maxDepth: UInt? = nil) {
         self.maxDepth = maxDepth
     }
-    
+
     /// Performs an iteratively deepening DFS traversal from the source vertex.
     ///
     /// - Parameters:
@@ -49,7 +49,7 @@ public struct IterativelyDeepeningDFSTraversal<Graph: IncidenceGraph>: Traversal
         var allEdges: [Graph.EdgeDescriptor] = []
         var visitedVertices = Set<Graph.VertexDescriptor>()
         var visitorCalledVertices = Set<Graph.VertexDescriptor>()
-        
+
         // Perform IDDFS by increasing depth limit
         var depth = 0
         while true {
@@ -57,10 +57,10 @@ public struct IterativelyDeepeningDFSTraversal<Graph: IncidenceGraph>: Traversal
             if let maxDepth = maxDepth, depth > maxDepth {
                 break
             }
-            
+
             var depthVertices: [Graph.VertexDescriptor] = []
             var depthEdges: [Graph.EdgeDescriptor] = []
-            
+
             // Create a visitor that collects vertices and edges for this depth
             let depthVisitor = DepthFirstSearch<Graph>.Visitor(
                 discoverVertex: { vertex in
@@ -102,31 +102,29 @@ public struct IterativelyDeepeningDFSTraversal<Graph: IncidenceGraph>: Traversal
                     return shouldTraverse && visitorShouldTraverse
                 }
             )
-            
+
             // Perform DFS with current depth limit
             DepthFirstSearch(on: graph, from: source)
                 .withVisitor { depthVisitor }
                 .forEach { _ in }
-            
+
             // Add newly discovered vertices to the result
-            for vertex in depthVertices {
-                if visitedVertices.insert(vertex).inserted {
-                    allVertices.append(vertex)
-                }
+            for vertex in depthVertices where visitedVertices.insert(vertex).inserted {
+                allVertices.append(vertex)
             }
             allEdges.append(contentsOf: depthEdges)
-            
+
             // If we didn't discover any new vertices at this depth, we've explored everything
             if depthVertices.isEmpty {
                 break
             }
-            
+
             depth += 1
         }
-        
+
         return TraversalResult(vertices: allVertices, edges: allEdges)
     }
-    
+
 }
 
 extension IterativelyDeepeningDFSTraversal: VisitorSupporting {}

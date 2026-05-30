@@ -22,7 +22,7 @@ public protocol RandomGraphAlgorithm<Graph> {
 
 extension VisitorWrapper: RandomGraphAlgorithm where Base: RandomGraphAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Visitor = Base.Visitor
-    
+
     @inlinable
     public func appendRandomGraph<RNG: RandomNumberGenerator>(
         into graph: inout Base.Graph,
@@ -63,18 +63,18 @@ extension RandomGraphConstructible where VertexDescriptor: Hashable {
         vertexCount: Int,
         using algorithm: Algorithm
     ) -> Self {
-        var graph = Self.init()
+        var graph = Self()
         var rng = SystemRandomNumberGenerator()
         algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &rng, visitor: nil)
         return graph
     }
-    
+
     static func randomGraph<Algorithm: RandomGraphAlgorithm<Self>>(
         vertexCount: Int,
         using algorithm: Algorithm,
         visitor: Algorithm.Visitor?
     ) -> Self {
-        var graph = Self.init()
+        var graph = Self()
         var rng = SystemRandomNumberGenerator()
         algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &rng, visitor: visitor)
         return graph
@@ -84,35 +84,35 @@ extension RandomGraphConstructible where VertexDescriptor: Hashable {
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_GENERATION
-extension RandomGraphConstructible where VertexDescriptor: Hashable {
-    /// Creates a random graph using Erdos-Renyi model as the default.
-    /// This is the most commonly used random graph model with uniform edge probability.
-    static func randomGraph(
-        vertexCount: Int,
-        edgeProbability: Double = 0.5
-    ) -> Self {
-        randomGraph(vertexCount: vertexCount, using: .erdosRenyi(edgeProbability: edgeProbability))
-    }
+    extension RandomGraphConstructible where VertexDescriptor: Hashable {
+        /// Creates a random graph using Erdos-Renyi model as the default.
+        /// This is the most commonly used random graph model with uniform edge probability.
+        static func randomGraph(
+            vertexCount: Int,
+            edgeProbability: Double = 0.5
+        ) -> Self {
+            randomGraph(vertexCount: vertexCount, using: .erdosRenyi(edgeProbability: edgeProbability))
+        }
 
-    /// Creates a random graph using Barabasi-Albert model for scale-free networks.
-    /// This generates graphs with power-law degree distribution.
-    static func randomScaleFreeGraph(
-        vertexCount: Int,
-        averageDegree: Double = 2.0
-    ) -> Self where Self: BidirectionalGraph {
-        randomGraph(vertexCount: vertexCount, using: .barabasiAlbert(averageDegree: averageDegree))
-    }
+        /// Creates a random graph using Barabasi-Albert model for scale-free networks.
+        /// This generates graphs with power-law degree distribution.
+        static func randomScaleFreeGraph(
+            vertexCount: Int,
+            averageDegree: Double = 2.0
+        ) -> Self where Self: BidirectionalGraph {
+            randomGraph(vertexCount: vertexCount, using: .barabasiAlbert(averageDegree: averageDegree))
+        }
 
-    /// Creates a random graph using Watts-Strogatz model for small-world networks.
-    /// This generates graphs with high clustering and short path lengths.
-    static func randomSmallWorldGraph(
-        vertexCount: Int,
-        averageDegree: Double = 4.0,
-        rewiringProbability: Double = 0.1
-    ) -> Self {
-        randomGraph(vertexCount: vertexCount, using: .wattsStrogatz(averageDegree: averageDegree, rewiringProbability: rewiringProbability))
+        /// Creates a random graph using Watts-Strogatz model for small-world networks.
+        /// This generates graphs with high clustering and short path lengths.
+        static func randomSmallWorldGraph(
+            vertexCount: Int,
+            averageDegree: Double = 4.0,
+            rewiringProbability: Double = 0.1
+        ) -> Self {
+            randomGraph(vertexCount: vertexCount, using: .wattsStrogatz(averageDegree: averageDegree, rewiringProbability: rewiringProbability))
+        }
     }
-}
 #endif
 
 extension MutableGraph where VertexDescriptor: Hashable {

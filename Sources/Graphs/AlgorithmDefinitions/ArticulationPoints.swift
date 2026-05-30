@@ -11,13 +11,13 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     }
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
-    /// Finds articulation points (cut vertices) and bridges (cut edges) using Tarjan's algorithm as the default.
-    ///
-    /// - Returns: The articulation points result containing cut vertices and bridges
-    @inlinable
-    public func articulationPoints() -> ArticulationPointsResult<VertexDescriptor, EdgeDescriptor> {
-        articulationPoints(using: .tarjan())
-    }
+        /// Finds articulation points (cut vertices) and bridges (cut edges) using Tarjan's algorithm as the default.
+        ///
+        /// - Returns: The articulation points result containing cut vertices and bridges
+        @inlinable
+        public func articulationPoints() -> ArticulationPointsResult<VertexDescriptor, EdgeDescriptor> {
+            articulationPoints(using: .tarjan())
+        }
     #endif
 }
 
@@ -40,7 +40,8 @@ public protocol ArticulationPointsAlgorithm<Graph> {
     ) -> ArticulationPointsResult<Graph.VertexDescriptor, Graph.EdgeDescriptor>
 }
 
-extension VisitorWrapper: ArticulationPointsAlgorithm where Base: ArticulationPointsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension VisitorWrapper: ArticulationPointsAlgorithm
+where Base: ArticulationPointsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
 
     @inlinable

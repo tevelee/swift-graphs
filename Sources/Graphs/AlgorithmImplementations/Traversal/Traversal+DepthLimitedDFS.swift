@@ -19,10 +19,10 @@ extension TraversalAlgorithm {
 public struct DepthLimitedDFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
     /// The visitor type for observing traversal progress.
     public typealias Visitor = DepthFirstSearch<Graph>.Visitor
-    
+
     /// The maximum depth to traverse.
     public let maxDepth: UInt
-    
+
     /// Creates a new depth-limited DFS traversal algorithm.
     ///
     /// - Parameter maxDepth: The maximum depth to traverse.

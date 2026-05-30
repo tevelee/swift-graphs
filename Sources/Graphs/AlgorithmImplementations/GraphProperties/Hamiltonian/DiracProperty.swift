@@ -10,7 +10,7 @@ public struct DiracProperty<Graph: IncidenceGraph & VertexListGraph & Bidirectio
         public var checkVertexDegree: ((Graph.VertexDescriptor, Int, Int) -> Void)?
         /// Called when a vertex's degree is too low.
         public var degreeTooLow: ((Graph.VertexDescriptor, Int, Int) -> Void)?
-        
+
         /// Creates a new visitor.
         @inlinable
         public init(

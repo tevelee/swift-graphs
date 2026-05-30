@@ -1,13 +1,13 @@
 @testable import Graphs
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_SERIALIZATION
-enum Label: VertexProperty, EdgeProperty, SerializableProperty {
-    static let defaultValue = ""
-}
+    enum Label: VertexProperty, EdgeProperty, SerializableProperty {
+        static let defaultValue = ""
+    }
 #else
-enum Label: VertexProperty, EdgeProperty {
-    static let defaultValue = ""
-}
+    enum Label: VertexProperty, EdgeProperty {
+        static let defaultValue = ""
+    }
 #endif
 
 extension VertexProperties {
@@ -23,7 +23,6 @@ extension EdgeProperties {
         set { self[Label.self] = newValue }
     }
 }
-
 
 extension AdjacencyList {
     func traverse(

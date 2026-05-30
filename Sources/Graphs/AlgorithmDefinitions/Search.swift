@@ -35,10 +35,10 @@ extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
 public protocol SearchAlgorithm<Graph> {
     /// The type of graph this algorithm operates on.
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
-    
+
     /// The type of sequence returned by the search.
     associatedtype SearchSequence: Sequence
-    
+
     /// The type of visitor used for algorithm events.
     associatedtype Visitor
 
@@ -59,7 +59,7 @@ public protocol SearchAlgorithm<Graph> {
 extension VisitorWrapper: SearchAlgorithm where Base: SearchAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
     public typealias SearchSequence = Base.SearchSequence
-    
+
     @inlinable
     public func search(
         from source: Base.Graph.VertexDescriptor,

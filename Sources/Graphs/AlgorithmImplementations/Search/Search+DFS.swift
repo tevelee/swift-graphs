@@ -17,11 +17,11 @@ extension SearchAlgorithm {
 public struct DFSSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
     /// The visitor type for observing search progress.
     public typealias Visitor = DepthFirstSearch<Graph>.Visitor
-    
+
     /// Creates a new DFS search algorithm.
     @inlinable
     public init() {}
-    
+
     /// Performs a depth-first search from the source vertex.
     ///
     /// - Parameters:

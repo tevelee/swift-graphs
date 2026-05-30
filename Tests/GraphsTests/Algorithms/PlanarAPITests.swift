@@ -17,7 +17,7 @@ struct PlanarAPITests {
     private func petersen() -> DefaultAdjacencyList {
         var g = AdjacencyList()
         let v = (0 ..< 10).map { i in g.addVertex { $0.label = "\(i)" } }
-        for (a, b) in [(0,1),(1,2),(2,3),(3,4),(4,0),(0,5),(1,6),(2,7),(3,8),(4,9),(5,7),(7,9),(9,6),(6,8),(8,5)] {
+        for (a, b) in [(0, 1), (1, 2), (2, 3), (3, 4), (4, 0), (0, 5), (1, 6), (2, 7), (3, 8), (4, 9), (5, 7), (7, 9), (9, 6), (6, 8), (8, 5)] {
             g.addEdge(from: v[a], to: v[b]) { $0.label = "" }
         }
         return g
@@ -107,7 +107,8 @@ struct PlanarAPITests {
     }
 
     @Test func embeddingComposedVisitorsReceiveAllEvents() {
-        var count1 = 0; var count2 = 0
+        var count1 = 0
+        var count2 = 0
         var v1 = LeftRightPlanarEmbedding<DefaultAdjacencyList>.Visitor()
         var v2 = LeftRightPlanarEmbedding<DefaultAdjacencyList>.Visitor()
         v1.start = { count1 += 1 }
@@ -153,7 +154,8 @@ struct PlanarAPITests {
     }
 
     @Test func drawingComposedVisitorsReceiveAllEvents() {
-        var count1 = 0; var count2 = 0
+        var count1 = 0
+        var count2 = 0
         var v1 = ChrobakPayneDrawing<DefaultAdjacencyList>.Visitor()
         var v2 = ChrobakPayneDrawing<DefaultAdjacencyList>.Visitor()
         v1.start = { count1 += 1 }
@@ -188,7 +190,7 @@ struct PlanarAPITests {
     @Test func k5CertificateHasTenEdges() throws {
         var g = AdjacencyList()
         let v = (0 ..< 5).map { i in g.addVertex { $0.label = "\(i)" } }
-        for a in 0 ..< 5 { for b in (a+1) ..< 5 { g.addEdge(from: v[a], to: v[b]) { $0.label = "" } } }
+        for a in 0 ..< 5 { for b in (a + 1) ..< 5 { g.addEdge(from: v[a], to: v[b]) { $0.label = "" } } }
         let cert = try #require(g.planarEmbedding(using: .leftRight()).kuratowskiSubgraph)
         #expect(cert.kind == .k5)
         #expect(cert.edgeCount == 10)
@@ -197,7 +199,7 @@ struct PlanarAPITests {
     @Test func kuratowskiBranchVerticesHaveCorrectDegree() throws {
         var g = AdjacencyList()
         let v = (0 ..< 5).map { i in g.addVertex { $0.label = "\(i)" } }
-        for a in 0 ..< 5 { for b in (a+1) ..< 5 { g.addEdge(from: v[a], to: v[b]) { $0.label = "" } } }
+        for a in 0 ..< 5 { for b in (a + 1) ..< 5 { g.addEdge(from: v[a], to: v[b]) { $0.label = "" } } }
         let cert = try #require(g.planarEmbedding(using: .leftRight()).kuratowskiSubgraph)
         // Every K5 branch vertex appears in exactly 4 edges of the certificate.
         var degree = [DefaultAdjacencyList.VertexDescriptor: Int]()
@@ -211,7 +213,7 @@ struct PlanarAPITests {
         // The Petersen graph passes the edge-count bound (15 <= 3*10-6=24) but is non-planar.
         // Only the correct LR core catches it; the old heuristic returned true.
         #if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
-        #expect(!petersen().isPlanar())
+            #expect(!petersen().isPlanar())
         #endif
     }
 }

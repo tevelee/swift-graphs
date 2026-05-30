@@ -18,7 +18,7 @@ public protocol EdgeProtocol<Vertex> {
 public struct SimpleEdge<Vertex>: EdgeProtocol {
     public let source: Vertex
     public let destination: Vertex
-    
+
     @inlinable
     public init(source: Vertex, destination: Vertex) {
         self.source = source
@@ -29,4 +29,3 @@ public struct SimpleEdge<Vertex>: EdgeProtocol {
 extension SimpleEdge: Equatable where Vertex: Equatable {}
 extension SimpleEdge: Hashable where Vertex: Hashable {}
 extension SimpleEdge: Sendable where Vertex: Sendable {}
-

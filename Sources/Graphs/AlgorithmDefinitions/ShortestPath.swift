@@ -19,27 +19,27 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
-extension IncidenceGraph where VertexDescriptor: Hashable {
-    /// Finds the shortest path between two vertices using Dijkstra's algorithm as the default.
-    /// This is the most commonly used and efficient algorithm for non-negative edge weights.
-    ///
-    /// - Important: All edge weights must be non-negative. For graphs with negative edge weights,
-    ///   use `.bellmanFord` or `.spfa` instead; passing negative weights here produces incorrect results.
-    ///
-    /// - Parameters:
-    ///   - source: The starting vertex
-    ///   - destination: The target vertex
-    ///   - weight: The cost definition for edge weights
-    /// - Returns: The shortest path, or `nil` if no path exists
-    @inlinable
-    public func shortestPath<Weight: Numeric & Comparable>(
-        from source: VertexDescriptor,
-        to destination: VertexDescriptor,
-        weight: CostDefinition<Self, Weight>
-    ) -> Path<VertexDescriptor, EdgeDescriptor>? where Weight.Magnitude == Weight {
-        shortestPath(from: source, to: destination, using: .dijkstra(weight: weight))
+    extension IncidenceGraph where VertexDescriptor: Hashable {
+        /// Finds the shortest path between two vertices using Dijkstra's algorithm as the default.
+        /// This is the most commonly used and efficient algorithm for non-negative edge weights.
+        ///
+        /// - Important: All edge weights must be non-negative. For graphs with negative edge weights,
+        ///   use `.bellmanFord` or `.spfa` instead; passing negative weights here produces incorrect results.
+        ///
+        /// - Parameters:
+        ///   - source: The starting vertex
+        ///   - destination: The target vertex
+        ///   - weight: The cost definition for edge weights
+        /// - Returns: The shortest path, or `nil` if no path exists
+        @inlinable
+        public func shortestPath<Weight: Numeric & Comparable>(
+            from source: VertexDescriptor,
+            to destination: VertexDescriptor,
+            weight: CostDefinition<Self, Weight>
+        ) -> Path<VertexDescriptor, EdgeDescriptor>? where Weight.Magnitude == Weight {
+            shortestPath(from: source, to: destination, using: .dijkstra(weight: weight))
+        }
     }
-}
 #endif
 
 /// A protocol for shortest path algorithms.

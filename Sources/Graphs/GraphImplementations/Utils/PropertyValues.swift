@@ -21,7 +21,7 @@ public struct VertexPropertyValues: VertexProperties, Sendable {
             yield &value
         }
     }
-    
+
     /// Creates a new empty vertex property values container.
     @inlinable
     public init() {}
@@ -50,7 +50,7 @@ public struct EdgePropertyValues: EdgeProperties, Sendable {
             yield &value
         }
     }
-    
+
     /// Creates a new empty edge property values container.
     @inlinable
     public init() {}
@@ -77,4 +77,3 @@ private struct PropertyValues: Sendable {
         }
     }
 }
-

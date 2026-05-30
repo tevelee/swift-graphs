@@ -78,7 +78,10 @@ extension VisitorWrapper: MinimumCutAlgorithm where Base: MinimumCutAlgorithm, B
     public typealias Weight = Base.Weight
 
     @inlinable
-    public func minimumCut(in graph: Base.Graph, visitor: Base.Visitor?) -> MinimumCutResult<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Weight>? {
+    public func minimumCut(
+        in graph: Base.Graph,
+        visitor: Base.Visitor?
+    ) -> MinimumCutResult<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Weight>? {
         base.minimumCut(in: graph, visitor: self.visitor.combined(with: visitor))
     }
 }
@@ -99,16 +102,16 @@ extension IncidenceGraph {
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
-extension IncidenceGraph where Self: EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
-    /// Finds the global minimum cut using Stoer-Wagner's algorithm as the default.
-    ///
-    /// - Parameter weight: The cost definition for edge weights
-    /// - Returns: The minimum cut result, or `nil` if the graph has fewer than 2 vertices
-    @inlinable
-    public func minimumCut<Weight: Numeric & Comparable>(
-        weight: CostDefinition<Self, Weight>
-    ) -> MinimumCutResult<VertexDescriptor, EdgeDescriptor, Weight>? {
-        minimumCut(using: .stoerWagner(weight: weight))
+    extension IncidenceGraph where Self: EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
+        /// Finds the global minimum cut using Stoer-Wagner's algorithm as the default.
+        ///
+        /// - Parameter weight: The cost definition for edge weights
+        /// - Returns: The minimum cut result, or `nil` if the graph has fewer than 2 vertices
+        @inlinable
+        public func minimumCut<Weight: Numeric & Comparable>(
+            weight: CostDefinition<Self, Weight>
+        ) -> MinimumCutResult<VertexDescriptor, EdgeDescriptor, Weight>? {
+            minimumCut(using: .stoerWagner(weight: weight))
+        }
     }
-}
 #endif

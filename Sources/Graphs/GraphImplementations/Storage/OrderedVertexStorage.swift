@@ -67,7 +67,7 @@ public struct OrderedVertexStorage: VertexStorage {
     public mutating func remove(vertex: Vertex) {
         _vertices.remove(vertex)
     }
-    
+
     /// Creates a new empty ordered vertex storage.
     @inlinable
     public init() {}

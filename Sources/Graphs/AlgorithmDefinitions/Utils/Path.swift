@@ -5,16 +5,16 @@
 public struct Path<Vertex, Edge> {
     /// The starting vertex of the path.
     public let source: Vertex
-    
+
     /// The ending vertex of the path.
     public let destination: Vertex
-    
+
     /// The sequence of vertices in the path, including source and destination.
     public let vertices: [Vertex]
-    
+
     /// The sequence of edges in the path.
     public let edges: [Edge]
-    
+
     /// Creates a new path.
     ///
     /// - Parameters:

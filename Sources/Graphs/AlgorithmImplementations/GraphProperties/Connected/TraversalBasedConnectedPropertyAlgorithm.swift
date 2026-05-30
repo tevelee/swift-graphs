@@ -1,12 +1,13 @@
 /// A connected property algorithm based on graph traversal.
-public struct TraversalBasedConnectedPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph, Traversal: TraversalAlgorithm> where Graph.VertexDescriptor: Hashable, Traversal.Graph == Graph {
+public struct TraversalBasedConnectedPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph, Traversal: TraversalAlgorithm>
+where Graph.VertexDescriptor: Hashable, Traversal.Graph == Graph {
     public typealias Visitor = Traversal.Visitor
-    
+
     @usableFromInline
     let using: Traversal
     @usableFromInline
     let startingVertex: (Graph) -> Graph.VertexDescriptor?
-    
+
     /// Creates a new traversal-based connected property algorithm.
     ///
     /// - Parameters:
@@ -20,7 +21,7 @@ public struct TraversalBasedConnectedPropertyAlgorithm<Graph: IncidenceGraph & V
         self.using = traversalAlgorithm
         self.startingVertex = startingVertex
     }
-    
+
     /// Checks if the graph is connected using traversal.
     ///
     /// - Parameters:
@@ -36,25 +37,25 @@ public struct TraversalBasedConnectedPropertyAlgorithm<Graph: IncidenceGraph & V
         guard graph.vertexCount > 0 else {
             return true
         }
-        
+
         // Handle single vertex graphs
         guard graph.vertexCount > 1 else {
             return true
         }
-        
+
         // Start traversal from the first vertex
         guard let firstVertex = startingVertex(graph) ?? graph.vertices().first(where: { _ in true }) else {
             return true
         }
-        
+
         // Perform the traversal using the provided algorithm
         let result = using.traverse(from: firstVertex, in: graph, visitor: visitor)
-        
+
         // Count unique vertices visited
         let uniqueVertices = Set(result.vertices)
         let verticesVisited = uniqueVertices.count
         let totalVertices = graph.vertexCount
-        
+
         // Graph is connected if we visited all vertices
         return verticesVisited == totalVertices
     }

@@ -1,5 +1,6 @@
-@testable import Graphs
 import Testing
+
+@testable import Graphs
 
 struct MemoizedGraphTests {
 
@@ -28,7 +29,7 @@ struct MemoizedGraphTests {
         let base = countingLazyGraph(edges: [0: [1, 2], 1: [2], 2: []], counter: counter)
         let memo = base.memoized()
 
-        for v in 0...2 {
+        for v in 0 ... 2 {
             let baseEdges = Array(base.outgoingEdges(of: v)).map(\.destination)
             let memoEdges = memo.outgoingEdges(of: v).map(\.destination)
             #expect(baseEdges == memoEdges)
@@ -125,17 +126,17 @@ struct MemoizedGraphTests {
     // MARK: - VertexListGraph / EdgeListGraph forwarding
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_COMPLETE_GRAPH
-    @Test func verticesForwarded() {
-        let g = CompleteGraph(count: 4).memoized()
-        #expect(g.vertexCount == 4)
-        #expect(Array(g.vertices()) == [0, 1, 2, 3])
-    }
+        @Test func verticesForwarded() {
+            let g = CompleteGraph(count: 4).memoized()
+            #expect(g.vertexCount == 4)
+            #expect(Array(g.vertices()) == [0, 1, 2, 3])
+        }
 
-    @Test func edgesForwarded() {
-        let g = CompleteGraph(count: 3).memoized()
-        #expect(g.edgeCount == 6)
-        #expect(Array(g.edges()).count == 6)
-    }
+        @Test func edgesForwarded() {
+            let g = CompleteGraph(count: 3).memoized()
+            #expect(g.edgeCount == 6)
+            #expect(Array(g.edges()).count == 6)
+        }
     #endif
 
     // MARK: - AdjacencyGraph

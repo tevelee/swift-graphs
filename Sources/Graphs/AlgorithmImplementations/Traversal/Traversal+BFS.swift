@@ -17,11 +17,11 @@ extension TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
 public struct BFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
     /// The visitor type for observing traversal progress.
     public typealias Visitor = BreadthFirstSearch<Graph>.Visitor
-    
+
     /// Creates a new BFS traversal algorithm.
     @inlinable
     public init() {}
-    
+
     /// Performs a breadth-first traversal from the source vertex.
     ///
     /// - Parameters:
@@ -53,7 +53,7 @@ public struct BFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Grap
                 visitor
             }
             .forEach { _ in }
-        
+
         return TraversalResult(
             vertices: vertices,
             edges: edges

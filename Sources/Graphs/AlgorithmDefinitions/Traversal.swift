@@ -35,7 +35,7 @@ extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
 public protocol TraversalAlgorithm<Graph> {
     /// The type of graph this algorithm operates on.
     associatedtype Graph: IncidenceGraph
-    
+
     /// The type of visitor used for algorithm events.
     associatedtype Visitor
 
@@ -60,10 +60,10 @@ public protocol TraversalAlgorithm<Graph> {
 public struct TraversalResult<Vertex, Edge> {
     /// The vertices visited during the traversal.
     public let vertices: [Vertex]
-    
+
     /// The edges traversed during the traversal.
     public let edges: [Edge]
-    
+
     /// Creates a new traversal result.
     ///
     /// - Parameters:
@@ -80,7 +80,7 @@ extension TraversalResult: Sendable where Vertex: Sendable, Edge: Sendable {}
 
 extension VisitorWrapper: TraversalAlgorithm where Base: TraversalAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
-    
+
     @inlinable
     public func traverse(
         from source: Base.Graph.VertexDescriptor,

@@ -18,23 +18,23 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
         if satisfiesDirac(using: diracAlgorithm) || satisfiesOre(using: oreAlgorithm) {
             return true
         }
-        
+
         // Fall back to more expensive algorithms
         return cycleAlgorithm.hamiltonianCycle(in: self, visitor: nil) != nil
     }
-    
+
     #if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
-    /// Convenience method using standard algorithms.
-    ///
-    /// - Returns: `true` if the graph has a Hamiltonian cycle, `false` otherwise
-    @inlinable
-    public func hasHamiltonianCycle() -> Bool {
-        hasHamiltonianCycle(
-            using: StandardDiracPropertyAlgorithm<Self>(),
-            oreAlgorithm: StandardOrePropertyAlgorithm<Self>(),
-            cycleAlgorithm: .backtracking()
-        )
-    }
+        /// Convenience method using standard algorithms.
+        ///
+        /// - Returns: `true` if the graph has a Hamiltonian cycle, `false` otherwise
+        @inlinable
+        public func hasHamiltonianCycle() -> Bool {
+            hasHamiltonianCycle(
+                using: StandardDiracPropertyAlgorithm<Self>(),
+                oreAlgorithm: StandardOrePropertyAlgorithm<Self>(),
+                cycleAlgorithm: .backtracking()
+            )
+        }
     #endif
 }
 
@@ -58,23 +58,23 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
         if satisfiesDirac(using: diracAlgorithm) || satisfiesOre(using: oreAlgorithm) {
             return true
         }
-        
+
         // Fall back to more expensive algorithms
         return pathAlgorithm.hamiltonianPath(in: self, visitor: nil) != nil
     }
-    
+
     #if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
-    /// Convenience method using standard algorithms.
-    ///
-    /// - Returns: `true` if the graph has a Hamiltonian path, `false` otherwise
-    @inlinable
-    public func hasHamiltonianPath() -> Bool {
-        hasHamiltonianPath(
-            using: StandardDiracPropertyAlgorithm<Self>(),
-            oreAlgorithm: StandardOrePropertyAlgorithm<Self>(),
-            pathAlgorithm: .backtracking()
-        )
-    }
+        /// Convenience method using standard algorithms.
+        ///
+        /// - Returns: `true` if the graph has a Hamiltonian path, `false` otherwise
+        @inlinable
+        public func hasHamiltonianPath() -> Bool {
+            hasHamiltonianPath(
+                using: StandardDiracPropertyAlgorithm<Self>(),
+                oreAlgorithm: StandardOrePropertyAlgorithm<Self>(),
+                pathAlgorithm: .backtracking()
+            )
+        }
     #endif
 }
 
@@ -89,7 +89,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
     ) -> Bool {
         algorithm.satisfiesDirac(in: self, visitor: nil)
     }
-    
+
     /// Checks if the graph satisfies Ore's theorem using the specified algorithm.
     ///
     /// - Parameter algorithm: The Ore property algorithm to use
@@ -113,7 +113,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
     public func satisfiesDirac() -> Bool {
         satisfiesDirac(using: .standard())
     }
-    
+
     /// Checks if the graph satisfies Ore's theorem using standard algorithm as the default.
     /// This is the most commonly used algorithm for checking Ore's condition.
     ///
@@ -130,7 +130,7 @@ public protocol DiracPropertyAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph & BidirectionalGraph where Graph.VertexDescriptor: Hashable
     /// The visitor type for observing algorithm progress.
     associatedtype Visitor
-    
+
     /// Checks if the graph satisfies Dirac's theorem for Hamiltonian cycles.
     ///
     /// - Parameters:
@@ -150,7 +150,7 @@ public protocol OrePropertyAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph & BidirectionalGraph where Graph.VertexDescriptor: Hashable
     /// The visitor type for observing algorithm progress.
     associatedtype Visitor
-    
+
     /// Checks if the graph satisfies Ore's theorem for Hamiltonian cycles.
     ///
     /// - Parameters:
@@ -166,7 +166,7 @@ public protocol OrePropertyAlgorithm<Graph> {
 
 extension VisitorWrapper: DiracPropertyAlgorithm where Base: DiracPropertyAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
-    
+
     @inlinable
     public func satisfiesDirac(in graph: Base.Graph, visitor: Base.Visitor?) -> Bool {
         base.satisfiesDirac(in: graph, visitor: self.visitor.combined(with: visitor))
@@ -175,7 +175,7 @@ extension VisitorWrapper: DiracPropertyAlgorithm where Base: DiracPropertyAlgori
 
 extension VisitorWrapper: OrePropertyAlgorithm where Base: OrePropertyAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
-    
+
     @inlinable
     public func satisfiesOre(in graph: Base.Graph, visitor: Base.Visitor?) -> Bool {
         base.satisfiesOre(in: graph, visitor: self.visitor.combined(with: visitor))

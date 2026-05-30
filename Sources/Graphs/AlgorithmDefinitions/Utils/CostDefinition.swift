@@ -6,7 +6,7 @@
 public struct CostDefinition<Graph: Graphs.Graph, Cost> {
     /// A function that computes the cost of exploring an edge.
     public let costToExplore: (Graph.EdgeDescriptor, Graph) -> Cost
-    
+
     /// Creates a new cost definition.
     ///
     /// - Parameter costToExplore: A function that computes the cost of an edge

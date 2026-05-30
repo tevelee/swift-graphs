@@ -15,7 +15,7 @@ extension TreePropertyAlgorithm {
             cyclicAlgorithm: cyclicAlgorithm
         )
     }
-    
+
     /// Creates a DFS-based composite tree property algorithm.
     ///
     /// - Returns: A new DFS-based composite tree property algorithm
@@ -26,7 +26,7 @@ extension TreePropertyAlgorithm {
             cyclicAlgorithm: .dfs()
         )
     }
-    
+
     /// Creates a BFS-based composite tree property algorithm.
     ///
     /// - Returns: A new BFS-based composite tree property algorithm

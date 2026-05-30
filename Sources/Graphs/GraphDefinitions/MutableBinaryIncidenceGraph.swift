@@ -13,7 +13,7 @@ public protocol MutableBinaryIncidenceGraph: BinaryIncidenceGraph, MutableGraph 
     @discardableResult
     @inlinable
     mutating func setLeftNeighbor(of parent: VertexDescriptor, to child: VertexDescriptor) -> EdgeDescriptor?
-    
+
     /// Sets the right neighbor of a parent vertex to a child vertex.
     ///
     /// - Parameters:

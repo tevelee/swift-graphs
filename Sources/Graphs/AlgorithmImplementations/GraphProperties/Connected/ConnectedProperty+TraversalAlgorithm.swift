@@ -14,7 +14,7 @@ extension ConnectedPropertyAlgorithm {
             startingVertex ?? graph.vertices().first(where: { _ in true })
         }
     }
-    
+
     /// Creates a DFS-based connected property algorithm.
     ///
     /// - Returns: A new DFS-based connected property algorithm
@@ -22,7 +22,7 @@ extension ConnectedPropertyAlgorithm {
     public static func dfs<Graph>() -> Self where Self == TraversalBasedConnectedPropertyAlgorithm<Graph, DFSTraversal<Graph>> {
         .traversing(using: .dfs())
     }
-    
+
     /// Creates a BFS-based connected property algorithm.
     ///
     /// - Returns: A new BFS-based connected property algorithm
@@ -32,4 +32,5 @@ extension ConnectedPropertyAlgorithm {
     }
 }
 
-extension TraversalBasedConnectedPropertyAlgorithm: ConnectedPropertyAlgorithm where Traversal.Visitor: Composable, Traversal.Visitor.Other == Traversal.Visitor {}
+extension TraversalBasedConnectedPropertyAlgorithm: ConnectedPropertyAlgorithm
+where Traversal.Visitor: Composable, Traversal.Visitor.Other == Traversal.Visitor {}

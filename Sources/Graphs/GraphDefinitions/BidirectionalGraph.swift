@@ -13,13 +13,13 @@ public protocol BidirectionalGraph: IncidenceGraph {
     /// - Parameter vertex: The vertex to query
     /// - Returns: A sequence of edge descriptors representing incoming edges
     func incomingEdges(of vertex: VertexDescriptor) -> IncomingEdges
-    
+
     /// Returns the number of incoming edges to the specified vertex.
     ///
     /// - Parameter vertex: The vertex to query
     /// - Returns: The in-degree of the vertex
     func inDegree(of vertex: VertexDescriptor) -> Int
-    
+
     /// Returns the total degree (in-degree + out-degree) of the specified vertex.
     ///
     /// - Parameter vertex: The vertex to query
@@ -48,7 +48,7 @@ extension BidirectionalGraph {
     public func degree(of vertex: VertexDescriptor) -> Int {
         inDegree(of: vertex) + outDegree(of: vertex)
     }
-    
+
     /// Determines whether the specified vertex is isolated (has no edges).
     ///
     /// - Parameter vertex: The vertex to check

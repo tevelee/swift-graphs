@@ -111,7 +111,10 @@ struct PlanarDrawingTests {
         return crossings
     }
 
-    private func distinctPointCount(_ graph: DefaultAdjacencyList, _ drawing: PlanarDrawing<DefaultAdjacencyList.VertexDescriptor>) -> (distinct: Int, total: Int) {
+    private func distinctPointCount(
+        _ graph: DefaultAdjacencyList,
+        _ drawing: PlanarDrawing<DefaultAdjacencyList.VertexDescriptor>
+    ) -> (distinct: Int, total: Int) {
         let points = graph.vertices().map { drawing.position(of: $0)! }
         return (Set(points).count, points.count)
     }

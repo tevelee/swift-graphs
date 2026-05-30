@@ -97,7 +97,7 @@ public struct OrderedEdgeStorage<Vertex: Hashable>: EdgeStorage {
         _edges[edge] = (source, destination)
         return edge
     }
-    
+
     /// Removes an edge from storage.
     ///
     /// - Parameter edge: The edge to remove
@@ -105,7 +105,7 @@ public struct OrderedEdgeStorage<Vertex: Hashable>: EdgeStorage {
     public mutating func remove(edge: Edge) {
         _edges[edge] = nil
     }
-    
+
     /// Creates a new empty ordered edge storage.
     @inlinable
     public init() {}

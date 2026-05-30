@@ -1,3 +1,3 @@
 #if !GRAPHS_USES_TRAITS || GRAPHS_GENERATION
-extension AdjacencyMatrix: RandomGraphConstructible {}
+    extension AdjacencyMatrix: RandomGraphConstructible {}
 #endif

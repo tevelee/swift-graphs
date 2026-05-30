@@ -119,44 +119,45 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
-extension IncidenceGraph where VertexDescriptor: Hashable {
-    /// Finds all shortest paths from source until a condition is met using backtracking Dijkstra's algorithm as the default.
-    /// This algorithm finds all paths that have the same minimum cost.
-    ///
-    /// - Parameters:
-    ///   - source: The starting vertex
-    ///   - condition: A closure that determines when to stop searching
-    ///   - weight: The cost definition for edge weights
-    /// - Returns: An array of all paths with the minimum cost
-    @inlinable
-    public func allShortestPaths<Weight: Numeric & Comparable>(
-        from source: VertexDescriptor,
-        until condition: @escaping (VertexDescriptor) -> Bool,
-        weight: CostDefinition<Self, Weight>
-    ) -> [Path<VertexDescriptor, EdgeDescriptor>] where Weight.Magnitude == Weight {
-        allShortestPaths(from: source, until: condition, using: .backtrackingDijkstra(weight: weight))
-    }
+    extension IncidenceGraph where VertexDescriptor: Hashable {
+        /// Finds all shortest paths from source until a condition is met using backtracking Dijkstra's algorithm as the default.
+        /// This algorithm finds all paths that have the same minimum cost.
+        ///
+        /// - Parameters:
+        ///   - source: The starting vertex
+        ///   - condition: A closure that determines when to stop searching
+        ///   - weight: The cost definition for edge weights
+        /// - Returns: An array of all paths with the minimum cost
+        @inlinable
+        public func allShortestPaths<Weight: Numeric & Comparable>(
+            from source: VertexDescriptor,
+            until condition: @escaping (VertexDescriptor) -> Bool,
+            weight: CostDefinition<Self, Weight>
+        ) -> [Path<VertexDescriptor, EdgeDescriptor>] where Weight.Magnitude == Weight {
+            allShortestPaths(from: source, until: condition, using: .backtrackingDijkstra(weight: weight))
+        }
 
-    /// Finds all shortest paths between two vertices using backtracking Dijkstra's algorithm as the default.
-    /// This algorithm finds all paths that have the same minimum cost.
-    ///
-    /// - Parameters:
-    ///   - source: The starting vertex
-    ///   - destination: The target vertex
-    ///   - weight: The cost definition for edge weights
-    /// - Returns: An array of all paths with the minimum cost
-    @inlinable
-    public func allShortestPaths<Weight: Numeric & Comparable>(
-        from source: VertexDescriptor,
-        to destination: VertexDescriptor,
-        weight: CostDefinition<Self, Weight>
-    ) -> [Path<VertexDescriptor, EdgeDescriptor>] where Weight.Magnitude == Weight {
-        allShortestPaths(from: source, to: destination, using: .backtrackingDijkstra(weight: weight))
+        /// Finds all shortest paths between two vertices using backtracking Dijkstra's algorithm as the default.
+        /// This algorithm finds all paths that have the same minimum cost.
+        ///
+        /// - Parameters:
+        ///   - source: The starting vertex
+        ///   - destination: The target vertex
+        ///   - weight: The cost definition for edge weights
+        /// - Returns: An array of all paths with the minimum cost
+        @inlinable
+        public func allShortestPaths<Weight: Numeric & Comparable>(
+            from source: VertexDescriptor,
+            to destination: VertexDescriptor,
+            weight: CostDefinition<Self, Weight>
+        ) -> [Path<VertexDescriptor, EdgeDescriptor>] where Weight.Magnitude == Weight {
+            allShortestPaths(from: source, to: destination, using: .backtrackingDijkstra(weight: weight))
+        }
     }
-}
 #endif
 
-extension VisitorWrapper: AllShortestPathsUntilAlgorithm where Base: AllShortestPathsUntilAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension VisitorWrapper: AllShortestPathsUntilAlgorithm
+where Base: AllShortestPathsUntilAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     @inlinable
     public func allShortestPaths(
         from source: Base.Graph.VertexDescriptor,
@@ -168,7 +169,8 @@ extension VisitorWrapper: AllShortestPathsUntilAlgorithm where Base: AllShortest
     }
 }
 
-extension VisitorWrapper: AllShortestPathsAlgorithm where Base: AllShortestPathsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension VisitorWrapper: AllShortestPathsAlgorithm
+where Base: AllShortestPathsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Weight = Base.Weight
 
     @inlinable

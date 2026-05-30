@@ -14,7 +14,7 @@
 /// The `Composable` extension for each visitor goes in a separate `*Visitor+Composition.swift` file.
 public protocol Composable {
     associatedtype Other
-    
+
     func combined(with other: Other) -> Self
 }
 

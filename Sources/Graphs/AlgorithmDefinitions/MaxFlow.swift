@@ -6,7 +6,7 @@ public protocol MaxFlowAlgorithm<Graph, Flow> {
     associatedtype Flow: AdditiveArithmetic & Comparable
     /// The visitor type for observing algorithm progress.
     associatedtype Visitor
-    
+
     /// Computes the maximum flow from source to sink.
     ///
     /// - Parameters:
@@ -27,22 +27,22 @@ public protocol MaxFlowAlgorithm<Graph, Flow> {
 public struct MaxFlowResult<Vertex: Hashable, Edge: Hashable, Flow: AdditiveArithmetic & Comparable> {
     /// The maximum flow value.
     public let flowValue: Flow
-    
+
     /// The flow through each edge.
     public let edgeFlows: [Edge: Flow]
-    
+
     /// The residual capacity of each edge.
     public let residualCapacities: [Edge: Flow]
-    
+
     /// The minimum cut edges (edges that are saturated in the maximum flow).
     public let minCutEdges: [Edge]
-    
+
     /// The source side vertices of the minimum cut.
     public let sourceSideVertices: Set<Vertex>
-    
+
     /// The sink side vertices of the minimum cut.
     public let sinkSideVertices: Set<Vertex>
-    
+
     /// Creates a new maximum flow result.
     ///
     /// - Parameters:
@@ -68,7 +68,7 @@ public struct MaxFlowResult<Vertex: Hashable, Edge: Hashable, Flow: AdditiveArit
         self.sourceSideVertices = sourceSideVertices
         self.sinkSideVertices = sinkSideVertices
     }
-    
+
     /// Get the flow through a specific edge.
     ///
     /// - Parameter edge: The edge to get the flow for.
@@ -77,7 +77,7 @@ public struct MaxFlowResult<Vertex: Hashable, Edge: Hashable, Flow: AdditiveArit
     public func flow(through edge: Edge) -> Flow {
         edgeFlows[edge] ?? .zero
     }
-    
+
     /// Get the residual capacity of a specific edge.
     ///
     /// - Parameter edge: The edge to get the residual capacity for.
@@ -86,7 +86,7 @@ public struct MaxFlowResult<Vertex: Hashable, Edge: Hashable, Flow: AdditiveArit
     public func residualCapacity(of edge: Edge) -> Flow {
         residualCapacities[edge] ?? .zero
     }
-    
+
     /// Check if an edge is part of the minimum cut.
     ///
     /// - Parameter edge: The edge to check.
@@ -102,7 +102,7 @@ extension MaxFlowResult: Sendable where Vertex: Sendable, Edge: Sendable, Flow: 
 extension VisitorWrapper: MaxFlowAlgorithm where Base: MaxFlowAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
     public typealias Flow = Base.Flow
-    
+
     @inlinable
     public func maximumFlow(
         from source: Base.Graph.VertexDescriptor,
@@ -135,22 +135,22 @@ extension IncidenceGraph {
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
-extension BidirectionalGraph where Self: EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
-    /// Finds the maximum flow using Edmonds-Karp algorithm as the default.
-    /// This is a well-known and efficient algorithm for maximum flow problems.
-    ///
-    /// - Parameters:
-    ///   - source: The source vertex
-    ///   - sink: The sink vertex
-    ///   - capacity: The capacity definition for edge capacities
-    /// - Returns: The maximum flow result
-    @inlinable
-    public func maximumFlow<Flow: AdditiveArithmetic & Comparable>(
-        from source: VertexDescriptor,
-        to sink: VertexDescriptor,
-        capacity: CostDefinition<Self, Flow>
-    ) -> MaxFlowResult<VertexDescriptor, EdgeDescriptor, Flow> {
-        maximumFlow(from: source, to: sink, using: .edmondsKarp(capacityCost: capacity))
+    extension BidirectionalGraph where Self: EdgeListGraph & VertexListGraph, VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
+        /// Finds the maximum flow using Edmonds-Karp algorithm as the default.
+        /// This is a well-known and efficient algorithm for maximum flow problems.
+        ///
+        /// - Parameters:
+        ///   - source: The source vertex
+        ///   - sink: The sink vertex
+        ///   - capacity: The capacity definition for edge capacities
+        /// - Returns: The maximum flow result
+        @inlinable
+        public func maximumFlow<Flow: AdditiveArithmetic & Comparable>(
+            from source: VertexDescriptor,
+            to sink: VertexDescriptor,
+            capacity: CostDefinition<Self, Flow>
+        ) -> MaxFlowResult<VertexDescriptor, EdgeDescriptor, Flow> {
+            maximumFlow(from: source, to: sink, using: .edmondsKarp(capacityCost: capacity))
+        }
     }
-}
 #endif

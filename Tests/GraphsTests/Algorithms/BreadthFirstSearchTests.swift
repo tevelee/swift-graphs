@@ -1,5 +1,6 @@
-@testable import Graphs
 import Testing
+
+@testable import Graphs
 
 struct BreadthFirstSearchTests {
 
@@ -7,7 +8,7 @@ struct BreadthFirstSearchTests {
 
     func createMultiLevelTreeGraph() -> some AdjacencyListProtocol {
         var graph = AdjacencyList()
-        
+
         let root = graph.addVertex { $0.label = "root" }
         let a = graph.addVertex { $0.label = "a" }
         let b = graph.addVertex { $0.label = "b" }
@@ -15,37 +16,37 @@ struct BreadthFirstSearchTests {
         let x = graph.addVertex { $0.label = "x" }
         let y = graph.addVertex { $0.label = "y" }
         let z = graph.addVertex { $0.label = "z" }
-        
+
         graph.addEdge(from: root, to: a)
         graph.addEdge(from: root, to: b)
         graph.addEdge(from: root, to: c)
         graph.addEdge(from: a, to: x)
         graph.addEdge(from: a, to: y)
         graph.addEdge(from: a, to: z)
-        
+
         return graph
     }
-    
+
     func createSimpleTreeGraph() -> some AdjacencyListProtocol {
         var graph = AdjacencyList()
-        
+
         let root = graph.addVertex { $0.label = "root" }
         let a = graph.addVertex { $0.label = "a" }
         let b = graph.addVertex { $0.label = "b" }
         let c = graph.addVertex { $0.label = "c" }
         let d = graph.addVertex { $0.label = "d" }
-        
+
         graph.addEdge(from: root, to: a)
         graph.addEdge(from: root, to: c)
         graph.addEdge(from: a, to: b)
         graph.addEdge(from: c, to: d)
-        
+
         return graph
     }
-    
+
     func createComplexTreeGraph() -> some AdjacencyListProtocol {
         var graph = AdjacencyList()
-        
+
         let root = graph.addVertex { $0.label = "root" }
         let a = graph.addVertex { $0.label = "a" }
         let b = graph.addVertex { $0.label = "b" }
@@ -54,7 +55,7 @@ struct BreadthFirstSearchTests {
         let e = graph.addVertex { $0.label = "e" }
         let f = graph.addVertex { $0.label = "f" }
         let g = graph.addVertex { $0.label = "g" }
-        
+
         graph.addEdge(from: root, to: a)
         graph.addEdge(from: root, to: b)
         graph.addEdge(from: a, to: c)
@@ -65,7 +66,7 @@ struct BreadthFirstSearchTests {
         graph.addEdge(from: d, to: f)
         graph.addEdge(from: d, to: g)
         graph.addEdge(from: e, to: g)
-        
+
         return graph
     }
 
@@ -73,16 +74,16 @@ struct BreadthFirstSearchTests {
 
     @Test func order() {
         let graph = createMultiLevelTreeGraph()
-        
+
         let root = graph.findVertex(labeled: "root")!
-        
+
         let result = graph.traverse(from: root, using: .bfs())
         #expect(result.vertexLabels(in: graph) == ["root", "a", "b", "c", "x", "y", "z"])
     }
-    
+
     @Test func startsAtSourceAndComputesDistancesAndPaths() {
         let graph = createSimpleTreeGraph()
-        
+
         let root = graph.findVertex(labeled: "root")!
         let a = graph.findVertex(labeled: "a")!
         let b = graph.findVertex(labeled: "b")!
@@ -107,7 +108,7 @@ struct BreadthFirstSearchTests {
 
     @Test func visitorReportsDiscoveryThenExaminationInBFSOrder() {
         let graph = createComplexTreeGraph()
-        
+
         let root = graph.findVertex(labeled: "root")!
 
         var discovered: [Any] = []
@@ -128,13 +129,13 @@ struct BreadthFirstSearchTests {
 
     @Test func traversalWrapperReturnsBFSVertexAndEdgeOrder() {
         let graph = createSimpleTreeGraph()
-        
+
         let root = graph.findVertex(labeled: "root")!
         let a = graph.findVertex(labeled: "a")!
         let b = graph.findVertex(labeled: "b")!
         let c = graph.findVertex(labeled: "c")!
         let d = graph.findVertex(labeled: "d")!
-        
+
         let edges = Array(graph.edges())
         let ra = edges.first { graph.source(of: $0) == root && graph.destination(of: $0) == a }!
         let rc = edges.first { graph.source(of: $0) == root && graph.destination(of: $0) == c }!
@@ -150,8 +151,10 @@ struct BreadthFirstSearchTests {
 
     @Test func visitsAllReachableVertices_allBackends() {
         func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
-        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
-              G.VertexDescriptor: Hashable {
+        where
+            G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+            G.VertexDescriptor: Hashable
+        {
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -162,22 +165,28 @@ struct BreadthFirstSearchTests {
             #expect(result.vertices.count == 3, "[\(backend)] reachable count")
             #expect(!result.vertices.contains(isolated), "[\(backend)] isolated vertex must not be visited")
         }
-        var g1 = AdjacencyList();   check(&g1, "default")
-        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        var g1 = AdjacencyList()
+        check(&g1, "default")
+        var g4 = AdjacencyMatrix()
+        check(&g4, "Matrix")
         #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
-        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+            var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            check(&g2, "CSR")
+            var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            check(&g3, "COO")
         #endif
     }
 
     @Test func breadthBeforeDepth_allBackends() {
         func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
-        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
-              G.VertexDescriptor: Hashable {
-            let root  = graph.addVertex { $0.label = "root" }
-            let l1a   = graph.addVertex { $0.label = "l1a" }
-            let l1b   = graph.addVertex { $0.label = "l1b" }
-            let l2    = graph.addVertex { $0.label = "l2" }
+        where
+            G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+            G.VertexDescriptor: Hashable
+        {
+            let root = graph.addVertex { $0.label = "root" }
+            let l1a = graph.addVertex { $0.label = "l1a" }
+            let l1b = graph.addVertex { $0.label = "l1b" }
+            let l2 = graph.addVertex { $0.label = "l2" }
             graph.addEdge(from: root, to: l1a)
             graph.addEdge(from: root, to: l1b)
             graph.addEdge(from: l1a, to: l2)
@@ -186,27 +195,37 @@ struct BreadthFirstSearchTests {
             #expect(idx(l1a) < idx(l2), "[\(backend)] l1a must come before l2")
             #expect(idx(l1b) < idx(l2), "[\(backend)] l1b must come before l2")
         }
-        var g1 = AdjacencyList();   check(&g1, "default")
-        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        var g1 = AdjacencyList()
+        check(&g1, "default")
+        var g4 = AdjacencyMatrix()
+        check(&g4, "Matrix")
         #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
-        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+            var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            check(&g2, "CSR")
+            var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            check(&g3, "COO")
         #endif
     }
 
     @Test func singleVertex_allBackends() {
         func check<G: TestablePropertyGraph>(_ graph: inout G, _ backend: String)
-        where G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
-              G.VertexDescriptor: Hashable {
+        where
+            G.VertexProperties == VertexPropertyValues, G.EdgeProperties == EdgePropertyValues,
+            G.VertexDescriptor: Hashable
+        {
             let a = graph.addVertex()
             let result = graph.traverse(from: a, using: .bfs())
             #expect(result.vertices == [a], "[\(backend)] single-vertex graph visits only that vertex")
         }
-        var g1 = AdjacencyList();   check(&g1, "default")
-        var g4 = AdjacencyMatrix(); check(&g4, "Matrix")
+        var g1 = AdjacencyList()
+        check(&g1, "default")
+        var g4 = AdjacencyMatrix()
+        check(&g4, "Matrix")
         #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-        var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges()); check(&g2, "CSR")
-        var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges()); check(&g3, "COO")
+            var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            check(&g2, "CSR")
+            var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            check(&g3, "COO")
         #endif
     }
 
@@ -231,28 +250,34 @@ struct BreadthFirstSearchTests {
         graph.addEdge(from: a, to: c)
         graph.addEdge(from: b, to: c)
 
-        var discovered1 = 0; var discovered2 = 0
-        var examined1 = 0;   var examined2 = 0
-        var examEdge1 = 0;   var examEdge2 = 0
-        var tree1 = 0;       var tree2 = 0
-        var nonTree1 = 0;    var nonTree2 = 0
-        var finished1 = 0;   var finished2 = 0
+        var discovered1 = 0
+        var discovered2 = 0
+        var examined1 = 0
+        var examined2 = 0
+        var examEdge1 = 0
+        var examEdge2 = 0
+        var tree1 = 0
+        var tree2 = 0
+        var nonTree1 = 0
+        var nonTree2 = 0
+        var finished1 = 0
+        var finished2 = 0
 
         var v1 = BreadthFirstSearch<DefaultAdjacencyList>.Visitor()
         v1.discoverVertex = { _ in discovered1 += 1 }
-        v1.examineVertex  = { _ in examined1 += 1 }
-        v1.examineEdge    = { _ in examEdge1 += 1 }
-        v1.treeEdge       = { _ in tree1 += 1 }
-        v1.nonTreeEdge    = { _ in nonTree1 += 1 }
-        v1.finishVertex   = { _ in finished1 += 1 }
+        v1.examineVertex = { _ in examined1 += 1 }
+        v1.examineEdge = { _ in examEdge1 += 1 }
+        v1.treeEdge = { _ in tree1 += 1 }
+        v1.nonTreeEdge = { _ in nonTree1 += 1 }
+        v1.finishVertex = { _ in finished1 += 1 }
 
         var v2 = BreadthFirstSearch<DefaultAdjacencyList>.Visitor()
         v2.discoverVertex = { _ in discovered2 += 1 }
-        v2.examineVertex  = { _ in examined2 += 1 }
-        v2.examineEdge    = { _ in examEdge2 += 1 }
-        v2.treeEdge       = { _ in tree2 += 1 }
-        v2.nonTreeEdge    = { _ in nonTree2 += 1 }
-        v2.finishVertex   = { _ in finished2 += 1 }
+        v2.examineVertex = { _ in examined2 += 1 }
+        v2.examineEdge = { _ in examEdge2 += 1 }
+        v2.treeEdge = { _ in tree2 += 1 }
+        v2.nonTreeEdge = { _ in nonTree2 += 1 }
+        v2.finishVertex = { _ in finished2 += 1 }
 
         let combined = v1.combined(with: v2)
         BreadthFirstSearch(on: graph, from: a)
@@ -260,17 +285,17 @@ struct BreadthFirstSearchTests {
             .forEach { _ in }
 
         // discoverVertex does NOT fire for source a; fires for b and c
-        #expect(discovered1 == 2,  "discoverVertex fires for b and c (not source a)")
+        #expect(discovered1 == 2, "discoverVertex fires for b and c (not source a)")
         #expect(discovered2 == 2)
-        #expect(examined1 == 3,    "examineVertex fires for a, b, c when dequeued")
+        #expect(examined1 == 3, "examineVertex fires for a, b, c when dequeued")
         #expect(examined2 == 3)
-        #expect(examEdge1 == 3,    "examineEdge fires for all 3 edges")
+        #expect(examEdge1 == 3, "examineEdge fires for all 3 edges")
         #expect(examEdge2 == 3)
-        #expect(tree1 == 2,        "treeEdge fires for a→b and a→c")
+        #expect(tree1 == 2, "treeEdge fires for a→b and a→c")
         #expect(tree2 == 2)
-        #expect(nonTree1 == 1,     "nonTreeEdge fires for b→c (c already discovered)")
+        #expect(nonTree1 == 1, "nonTreeEdge fires for b→c (c already discovered)")
         #expect(nonTree2 == 1)
-        #expect(finished1 == 3,    "finishVertex fires for a, b, c")
+        #expect(finished1 == 3, "finishVertex fires for a, b, c")
         #expect(finished2 == 3)
         // Both composed visitors must see identical event counts
         #expect(discovered1 == discovered2)
@@ -311,7 +336,7 @@ struct BreadthFirstSearchTests {
         // a: path=[a] (1 vertex, 0 edges); b: path=[a,b] (2 vertices, 1 edge); c: path=[a,b,c] (3 vertices, 2 edges)
         #expect(pathLengths == [1, 2, 3], "path vertex counts grow along the chain")
         #expect(edgeLengths == [0, 1, 2], "path edge counts grow along the chain")
-        #expect(pathSteps  == [0, 1, 2], "path(in:) step counts grow along the chain")
+        #expect(pathSteps == [0, 1, 2], "path(in:) step counts grow along the chain")
     }
 
     /// `hasPath(to:)` returns true for reachable vertices and false for unreachable ones.
@@ -326,14 +351,14 @@ struct BreadthFirstSearchTests {
         graph.addEdge(from: b, to: c)
 
         let result = BreadthFirstSearch(on: graph, from: a).reduce(into: nil) { $0 = $1 }
-        #expect(result?.hasPath(to: a) == true,  "source is always reachable")
-        #expect(result?.hasPath(to: b) == true,  "b reachable via a→b")
-        #expect(result?.hasPath(to: c) == true,  "c reachable via a→b→c")
+        #expect(result?.hasPath(to: a) == true, "source is always reachable")
+        #expect(result?.hasPath(to: b) == true, "b reachable via a→b")
+        #expect(result?.hasPath(to: c) == true, "c reachable via a→b→c")
         #expect(result?.hasPath(to: isolated) == false, "isolated vertex is not reachable from source")
 
         #expect(result?.predecessor(of: a, in: graph) == nil, "source has no predecessor")
-        #expect(result?.predecessor(of: b, in: graph) == a,   "b's predecessor is a")
-        #expect(result?.predecessor(of: c, in: graph) == b,   "c's predecessor is b")
+        #expect(result?.predecessor(of: b, in: graph) == a, "b's predecessor is a")
+        #expect(result?.predecessor(of: c, in: graph) == b, "c's predecessor is b")
     }
 
     // MARK: - Edge Cases
@@ -373,5 +398,3 @@ struct BreadthFirstSearchTests {
         #expect(Set(result.vertices) == Set([a, b, c]))
     }
 }
-
-

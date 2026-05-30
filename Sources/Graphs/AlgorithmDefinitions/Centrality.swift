@@ -12,7 +12,7 @@ public protocol CentralityAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
     /// The visitor type for observing algorithm progress.
     associatedtype Visitor
-    
+
     /// Computes centrality values for all vertices in the graph.
     ///
     /// - Parameters:
@@ -24,7 +24,7 @@ public protocol CentralityAlgorithm<Graph> {
 
 extension VisitorWrapper: CentralityAlgorithm where Base: CentralityAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
-    
+
     @inlinable
     public func centrality(in graph: Base.Graph, visitor: Base.Visitor?) -> CentralityResult<Base.Graph.VertexDescriptor> {
         base.centrality(in: graph, visitor: self.visitor.combined(with: visitor))
@@ -38,31 +38,31 @@ extension VisitorWrapper: CentralityAlgorithm where Base: CentralityAlgorithm, B
 public struct CentralityResult<Vertex: Hashable> {
     /// The raw centrality values for each vertex.
     public let values: [Vertex: Double]
-    
+
     /// The normalized centrality values (0.0 to 1.0).
     ///
     /// Values are normalized using min-max scaling: (value - min) / (max - min).
     /// If all values are equal, normalized values are set to 0.0.
     public let normalizedValues: [Vertex: Double]
-    
+
     /// Creates a new centrality result.
     ///
     /// - Parameter values: The centrality values for each vertex.
     @inlinable
     public init(values: [Vertex: Double]) {
         self.values = values
-        
+
         // Normalize values to [0, 1]
         guard !values.isEmpty else {
             self.normalizedValues = [:]
             return
         }
-        
+
         let allValues = values.values
         let maxValue = allValues.max() ?? 1.0
         let minValue = allValues.min() ?? 0.0
         let range = maxValue - minValue
-        
+
         if range > 0 {
             self.normalizedValues = values.mapValues { ($0 - minValue) / range }
         } else {
@@ -70,7 +70,7 @@ public struct CentralityResult<Vertex: Hashable> {
             self.normalizedValues = values.mapValues { _ in 0.0 }
         }
     }
-    
+
     /// Gets the centrality value for a specific vertex.
     ///
     /// - Parameter vertex: The vertex to get the centrality for.
@@ -79,7 +79,7 @@ public struct CentralityResult<Vertex: Hashable> {
     public func centrality(for vertex: Vertex) -> Double {
         values[vertex] ?? 0.0
     }
-    
+
     /// Gets the normalized centrality value for a specific vertex.
     ///
     /// - Parameter vertex: The vertex to get the normalized centrality for.
@@ -88,7 +88,7 @@ public struct CentralityResult<Vertex: Hashable> {
     public func normalizedCentrality(for vertex: Vertex) -> Double {
         normalizedValues[vertex] ?? 0.0
     }
-    
+
     /// Returns vertices sorted by centrality (highest first).
     ///
     /// - Returns: An array of vertices sorted by centrality in descending order.
@@ -96,7 +96,7 @@ public struct CentralityResult<Vertex: Hashable> {
     public func verticesByCentrality() -> [Vertex] {
         values.sorted { $0.value > $1.value }.map { $0.key }
     }
-    
+
     /// Returns the vertex with the highest centrality.
     ///
     /// - Returns: The vertex with the highest centrality, or `nil` if the result is empty.
@@ -124,18 +124,17 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
-extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
-    /// Computes degree centrality as the default.
-    ///
-    /// Degree centrality is the simplest centrality measure, counting the number
-    /// of connections each vertex has. This is a fast O(V + E) algorithm suitable
-    /// for most initial analyses.
-    ///
-    /// - Returns: The centrality result using degree centrality.
-    @inlinable
-    public func centrality() -> CentralityResult<VertexDescriptor> {
-        centrality(using: .degree())
+    extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable {
+        /// Computes degree centrality as the default.
+        ///
+        /// Degree centrality is the simplest centrality measure, counting the number
+        /// of connections each vertex has. This is a fast O(V + E) algorithm suitable
+        /// for most initial analyses.
+        ///
+        /// - Returns: The centrality result using degree centrality.
+        @inlinable
+        public func centrality() -> CentralityResult<VertexDescriptor> {
+            centrality(using: .degree())
+        }
     }
-}
 #endif
-

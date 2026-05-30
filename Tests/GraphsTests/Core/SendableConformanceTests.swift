@@ -1,5 +1,6 @@
-@testable import Graphs
 import Testing
+
+@testable import Graphs
 
 /// Compile-time and runtime checks that graph types and storage backends conform to `Sendable`
 /// and therefore can safely cross actor / `Task` boundaries.
@@ -34,19 +35,19 @@ struct SendableConformanceTests {
     }
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-    @Test func csrEdgeStorageIsSendable() async {
-        var store = CSREdgeStorage<Int>()
-        _ = store.addEdge(from: 1, to: 2)
-        let count = await Task.detached { store.edgeCount }.value
-        #expect(count == 1)
-    }
+        @Test func csrEdgeStorageIsSendable() async {
+            var store = CSREdgeStorage<Int>()
+            _ = store.addEdge(from: 1, to: 2)
+            let count = await Task.detached { store.edgeCount }.value
+            #expect(count == 1)
+        }
 
-    @Test func cooEdgeStorageIsSendable() async {
-        var store = COOEdgeStorage<Int>()
-        _ = store.addEdge(from: 1, to: 2)
-        let count = await Task.detached { store.edgeCount }.value
-        #expect(count == 1)
-    }
+        @Test func cooEdgeStorageIsSendable() async {
+            var store = COOEdgeStorage<Int>()
+            _ = store.addEdge(from: 1, to: 2)
+            let count = await Task.detached { store.edgeCount }.value
+            #expect(count == 1)
+        }
     #endif
 
     // MARK: - InlineGraph (no trait guard)
@@ -72,24 +73,23 @@ struct SendableConformanceTests {
     // MARK: - GridGraph (trait-gated)
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_GRID_GRAPH
-    @Test func gridGraphIsSendable() async {
-        let grid = GridGraph(width: 3, height: 3, allowedDirections: .orthogonal)
-        let count = await Task.detached { grid.vertexCount }.value
-        #expect(count == 9)
-    }
+        @Test func gridGraphIsSendable() async {
+            let grid = GridGraph(width: 3, height: 3, allowedDirections: .orthogonal)
+            let count = await Task.detached { grid.vertexCount }.value
+            #expect(count == 9)
+        }
     #endif
 
     // MARK: - CompleteGraph (trait-gated)
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_COMPLETE_GRAPH
-    @Test func completeGraphIsSendable() async {
-        let graph = CompleteGraph(vertices: [1, 2, 3])
-        let count = await Task.detached { graph.vertexCount }.value
-        #expect(count == 3)
-    }
+        @Test func completeGraphIsSendable() async {
+            let graph = CompleteGraph(vertices: [1, 2, 3])
+            let count = await Task.detached { graph.vertexCount }.value
+            #expect(count == 3)
+        }
     #endif
 }
-
 
 // Static assertion: if this function compiles the default AdjacencyList() satisfies Sendable.
 // It is never called at runtime.

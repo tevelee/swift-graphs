@@ -5,7 +5,7 @@
 public protocol VertexPropertyGraph: Graph {
     /// The type of properties associated with vertices.
     associatedtype VertexProperties: Graphs.VertexProperties
-    
+
     /// The type of property map used to store vertex properties.
     associatedtype VertexPropertyMap: PropertyMap<VertexDescriptor, VertexProperties>
 
@@ -42,7 +42,7 @@ extension VertexPropertyGraph where Self: VertexListGraph {
 public protocol EdgePropertyGraph: Graph {
     /// The type of properties associated with edges.
     associatedtype EdgeProperties: Graphs.EdgeProperties
-    
+
     /// The type of property map used to store edge properties.
     associatedtype EdgePropertyMap: PropertyMap<EdgeDescriptor, EdgeProperties>
 

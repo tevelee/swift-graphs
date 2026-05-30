@@ -40,7 +40,11 @@ public protocol EdgeMutablePropertyGraph: EdgePropertyGraph, EdgeMutableGraph wh
 extension EdgeMutablePropertyGraph {
     @discardableResult
     @inlinable
-    public mutating func addEdge(from source: VertexDescriptor, to destination: VertexDescriptor, configure: (inout EdgePropertyMap.Value) -> Void) -> EdgeDescriptor? {
+    public mutating func addEdge(
+        from source: VertexDescriptor,
+        to destination: VertexDescriptor,
+        configure: (inout EdgePropertyMap.Value) -> Void
+    ) -> EdgeDescriptor? {
         guard let edge = addEdge(from: source, to: destination) else { return nil }
         configure(&edgePropertyMap[edge])
         return edge
@@ -87,14 +91,14 @@ extension MutablePropertyGraph where Self: VertexPropertyGraph {
         .mapValues { label in
             addVertex { $0[keyPath: property] = label }
         }
-        
+
         for (sourceLabel, destinationLabel) in edges {
             let source = labelToVertex[sourceLabel]!
             let destination = labelToVertex[destinationLabel]!
             addEdge(from: source, to: destination)
         }
     }
-    
+
     /// Adds multiple edges to the graph by creating vertices from labels using a result builder.
     ///
     /// Vertices with the same label are automatically deduplicated.
@@ -133,14 +137,14 @@ extension MutablePropertyGraph where Self: VertexPropertyGraph & EdgePropertyGra
         .mapValues { label in
             addVertex { $0[keyPath: property] = label }
         }
-        
+
         for (sourceLabel, destinationLabel, configure) in edges {
             let source = labelToVertex[sourceLabel]!
             let destination = labelToVertex[destinationLabel]!
             addEdge(from: source, to: destination, configure: configure)
         }
     }
-    
+
     /// Adds multiple edges to the graph by creating vertices from labels, with edge property configuration using a result builder.
     ///
     /// Vertices with the same label are automatically deduplicated.
@@ -151,7 +155,9 @@ extension MutablePropertyGraph where Self: VertexPropertyGraph & EdgePropertyGra
     @inlinable
     public mutating func addEdges<V: Hashable>(
         providing property: WritableKeyPath<VertexProperties, V>,
-        @ArrayBuilder<(source: V, destination: V, configure: (inout EdgeProperties) -> Void)> edges: () -> [(source: V, destination: V, configure: (inout EdgeProperties) -> Void)]
+        @ArrayBuilder<(source: V, destination: V, configure: (inout EdgeProperties) -> Void)> edges: () -> [(
+            source: V, destination: V, configure: (inout EdgeProperties) -> Void
+        )]
     ) {
         let builtEdges = edges().map { ($0.source, $0.destination, $0.configure) }
         addEdges(providing: property, edges: builtEdges)

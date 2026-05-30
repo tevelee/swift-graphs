@@ -27,14 +27,14 @@ extension Cost where Weight: AdditiveArithmetic {
                 return .finite(lhsValue + rhsValue)
         }
     }
-    
+
     @inlinable
     public static func + (lhs: Self, rhs: Weight) -> Self {
         switch lhs {
-        case .infinite:
-            return .infinite
-        case .finite(let lhsValue):
-            return .finite(lhsValue + rhs)
+            case .infinite:
+                return .infinite
+            case .finite(let lhsValue):
+                return .finite(lhsValue + rhs)
         }
     }
 }

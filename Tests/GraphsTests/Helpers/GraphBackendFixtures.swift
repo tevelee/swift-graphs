@@ -1,5 +1,6 @@
-@testable import Graphs
 import Testing
+
+@testable import Graphs
 
 /// Combined protocol constraint for graphs that support full algorithm testing with label and weight properties.
 ///

@@ -6,7 +6,7 @@ public protocol KShortestPathsAlgorithm<Graph, Weight> {
     associatedtype Weight: AdditiveArithmetic & Comparable
     /// The visitor type for observing algorithm progress.
     associatedtype Visitor
-    
+
     /// Finds the k shortest paths from source to destination.
     ///
     /// - Parameters:
@@ -39,24 +39,24 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
-extension IncidenceGraph where VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
-    /// Finds the k shortest paths using Yen's algorithm as the default.
-    /// This is the most commonly used algorithm for finding k shortest paths.
-    public func kShortestPaths<Weight: Numeric & Comparable>(
-        from source: VertexDescriptor,
-        to destination: VertexDescriptor,
-        k: Int,
-        weight: CostDefinition<Self, Weight>
-    ) -> [Path<VertexDescriptor, EdgeDescriptor>] where Weight.Magnitude == Weight {
-        kShortestPaths(from: source, to: destination, k: k, using: .yen(weight: weight))
+    extension IncidenceGraph where VertexDescriptor: Hashable, EdgeDescriptor: Hashable {
+        /// Finds the k shortest paths using Yen's algorithm as the default.
+        /// This is the most commonly used algorithm for finding k shortest paths.
+        public func kShortestPaths<Weight: Numeric & Comparable>(
+            from source: VertexDescriptor,
+            to destination: VertexDescriptor,
+            k: Int,
+            weight: CostDefinition<Self, Weight>
+        ) -> [Path<VertexDescriptor, EdgeDescriptor>] where Weight.Magnitude == Weight {
+            kShortestPaths(from: source, to: destination, k: k, using: .yen(weight: weight))
+        }
     }
-}
 #endif
 
 extension VisitorWrapper: KShortestPathsAlgorithm where Base: KShortestPathsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
     public typealias Weight = Base.Weight
-    
+
     @inlinable
     public func kShortestPaths(
         from source: Base.Graph.VertexDescriptor,

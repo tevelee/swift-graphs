@@ -15,7 +15,7 @@ extension Deque: QueueProtocol {
     public mutating func enqueue(_ element: Element) {
         append(element)
     }
-    
+
     @inlinable
     public mutating func dequeue() -> Element? {
         popFirst()

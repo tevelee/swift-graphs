@@ -110,7 +110,8 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     }
 }
 
-extension VisitorWrapper: SingleSourceShortestPathAlgorithm where Base: SingleSourceShortestPathAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension VisitorWrapper: SingleSourceShortestPathAlgorithm
+where Base: SingleSourceShortestPathAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     @inlinable
     public func shortestPaths(
         from source: Base.Graph.VertexDescriptor,

@@ -1,6 +1,7 @@
-@testable import Graphs
 import DequeModule
 import Testing
+
+@testable import Graphs
 
 struct GraphBasicTests {
     @Test func addsVerticesAndEdges_countsAndAdjacency() {
@@ -66,11 +67,11 @@ struct GraphBasicTests {
         #expect(graph.degree(of: d) == 0, "d isolated → degree 0")
 
         // isIsolated — degree == 0
-        #expect(graph.isIsolated(vertex: d),  "d has no edges")
+        #expect(graph.isIsolated(vertex: d), "d has no edges")
         #expect(!graph.isIsolated(vertex: a), "a has outgoing edges")
 
         // isSource — inDegree == 0
-        #expect(graph.isSource(vertex: a),  "a has no incoming edges")
+        #expect(graph.isSource(vertex: a), "a has no incoming edges")
         #expect(!graph.isSource(vertex: b), "b has one incoming edge from a")
         #expect(!graph.isSource(vertex: c), "c has incoming edges from a and b")
 
@@ -85,8 +86,8 @@ struct GraphBasicTests {
         // root2: outDegree=2, inDegree=0 → degree=2 → NOT a leaf
         // leaf1: outDegree=0, inDegree=1 → degree=1 → IS a leaf
         // isolated2: degree=0 → NOT a leaf
-        #expect(leafGraph.isLeaf(vertex: leaf1),     "leaf with one incoming edge has degree 1")
-        #expect(!leafGraph.isLeaf(vertex: root2),    "root with two outgoing edges has degree 2")
+        #expect(leafGraph.isLeaf(vertex: leaf1), "leaf with one incoming edge has degree 1")
+        #expect(!leafGraph.isLeaf(vertex: root2), "root with two outgoing edges has degree 2")
         #expect(!leafGraph.isLeaf(vertex: isolated2), "isolated vertex has degree 0, not 1")
     }
 
@@ -135,8 +136,10 @@ struct GraphBasicTests {
         // A, B, C, D deduped; X, Y, Z never appear (shouldAdd is true)
         let labels = Set(graph.vertices().map { graph[$0].label })
         #expect(labels.contains("A") && labels.contains("B") && labels.contains("C") && labels.contains("D"))
-        #expect(!labels.contains("X") && !labels.contains("Y") && !labels.contains("Z"),
-                "false branches must not add vertices")
+        #expect(
+            !labels.contains("X") && !labels.contains("Y") && !labels.contains("Z"),
+            "false branches must not add vertices"
+        )
         // 5 edges: A→B, B→C, C→D, A→C, A→D
         #expect(graph.edgeCount == 5)
     }
@@ -165,7 +168,7 @@ struct GraphBasicTests {
             providing: \.label,
             edges: [
                 (source: "A", destination: "B", configure: { $0.weight = 1.0 }),
-                (source: "B", destination: "C", configure: { $0.weight = 2.0 })
+                (source: "B", destination: "C", configure: { $0.weight = 2.0 }),
             ]
         )
 
@@ -192,5 +195,3 @@ struct GraphBasicTests {
         #expect(stack.pop() == nil, "pop on empty returns nil")
     }
 }
-
-

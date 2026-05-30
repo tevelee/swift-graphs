@@ -7,14 +7,14 @@ public protocol VertexMutableGraph: Graph {
     ///
     /// - Returns: The descriptor of the newly added vertex
     mutating func addVertex() -> VertexDescriptor
-    
+
     /// Removes a vertex from the graph.
     ///
     /// - Parameter vertex: The vertex to remove
     #if swift(>=6.2)
-    mutating func remove(vertex: consuming VertexDescriptor)
+        mutating func remove(vertex: consuming VertexDescriptor)
     #else
-    mutating func remove(vertex: VertexDescriptor)
+        mutating func remove(vertex: VertexDescriptor)
     #endif
 }
 
@@ -31,14 +31,14 @@ public protocol EdgeMutableGraph: Graph {
     /// - Returns: The descriptor of the newly added edge, or `nil` if the edge could not be added
     @discardableResult
     mutating func addEdge(from source: VertexDescriptor, to destination: VertexDescriptor) -> EdgeDescriptor?
-    
+
     /// Removes an edge from the graph.
     ///
     /// - Parameter edge: The edge to remove
     #if swift(>=6.2)
-    mutating func remove(edge: consuming EdgeDescriptor)
+        mutating func remove(edge: consuming EdgeDescriptor)
     #else
-    mutating func remove(edge: EdgeDescriptor)
+        mutating func remove(edge: EdgeDescriptor)
     #endif
 }
 

@@ -7,14 +7,14 @@ extension TraversalAlgorithm {
 
 public struct DFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
     public typealias Visitor = DepthFirstSearch<Graph>.Visitor
-    
+
     public let order: DFSOrder<Graph>
-    
+
     @inlinable
     public init(order: DFSOrder<Graph>) {
         self.order = order
     }
-    
+
     @inlinable
     public func traverse(
         from source: Graph.VertexDescriptor,

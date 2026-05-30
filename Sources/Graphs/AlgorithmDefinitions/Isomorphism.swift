@@ -4,7 +4,7 @@ public protocol IsomorphismAlgorithm<Graph> {
     associatedtype Graph: IncidenceGraph & VertexListGraph & EdgeListGraph where Graph.VertexDescriptor: Hashable
     /// The visitor type for observing algorithm progress.
     associatedtype Visitor
-    
+
     /// Determines if two graphs are isomorphic.
     ///
     /// - Parameters:
@@ -14,7 +14,7 @@ public protocol IsomorphismAlgorithm<Graph> {
     /// - Returns: `true` if the graphs are isomorphic, `false` otherwise
     @inlinable
     func areIsomorphic(_ graph1: Graph, _ graph2: Graph, visitor: Visitor?) -> Bool
-    
+
     /// Finds an isomorphism mapping between two graphs.
     ///
     /// - Parameters:
@@ -28,14 +28,18 @@ public protocol IsomorphismAlgorithm<Graph> {
 
 extension VisitorWrapper: IsomorphismAlgorithm where Base: IsomorphismAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
     public typealias Graph = Base.Graph
-    
+
     @inlinable
     public func areIsomorphic(_ graph1: Base.Graph, _ graph2: Base.Graph, visitor: Base.Visitor?) -> Bool {
         base.areIsomorphic(graph1, graph2, visitor: self.visitor.combined(with: visitor))
     }
-    
+
     @inlinable
-    public func findIsomorphism(_ graph1: Base.Graph, _ graph2: Base.Graph, visitor: Base.Visitor?) -> [Base.Graph.VertexDescriptor: Base.Graph.VertexDescriptor]? {
+    public func findIsomorphism(
+        _ graph1: Base.Graph,
+        _ graph2: Base.Graph,
+        visitor: Base.Visitor?
+    ) -> [Base.Graph.VertexDescriptor: Base.Graph.VertexDescriptor]? {
         base.findIsomorphism(graph1, graph2, visitor: self.visitor.combined(with: visitor))
     }
 }
@@ -46,7 +50,7 @@ public struct IsomorphismResult<Vertex: Hashable> {
     public let isIsomorphic: Bool
     /// The isomorphism mapping, if one exists.
     public let mapping: [Vertex: Vertex]?
-    
+
     /// Creates a new isomorphism result.
     ///
     /// - Parameters:
@@ -76,7 +80,7 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
     ) -> Bool {
         algorithm.areIsomorphic(self, other, visitor: nil)
     }
-    
+
     /// Finds an isomorphism mapping to another graph.
     ///
     /// - Parameters:
@@ -90,7 +94,7 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
     ) -> [VertexDescriptor: VertexDescriptor]? {
         algorithm.findIsomorphism(self, other, visitor: nil)
     }
-    
+
     /// Checks isomorphism and returns detailed result.
     ///
     /// - Parameters:
@@ -110,34 +114,33 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
 // MARK: - Default Implementations
 
 #if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
-extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDescriptor: Hashable {
-    /// Checks if this graph is isomorphic to another graph using VF2 algorithm as the default.
-    /// VF2 is a well-known and efficient algorithm for graph isomorphism.
-    ///
-    /// - Parameter other: The graph to compare against
-    /// - Returns: `true` if the graphs are isomorphic, `false` otherwise
-    @inlinable
-    public func isIsomorphic(to other: Self) -> Bool {
-        isIsomorphic(to: other, using: .vf2())
-    }
+    extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDescriptor: Hashable {
+        /// Checks if this graph is isomorphic to another graph using VF2 algorithm as the default.
+        /// VF2 is a well-known and efficient algorithm for graph isomorphism.
+        ///
+        /// - Parameter other: The graph to compare against
+        /// - Returns: `true` if the graphs are isomorphic, `false` otherwise
+        @inlinable
+        public func isIsomorphic(to other: Self) -> Bool {
+            isIsomorphic(to: other, using: .vf2())
+        }
 
-    /// Finds an isomorphism mapping to another graph using VF2 algorithm as the default.
-    ///
-    /// - Parameter other: The graph to compare against
-    /// - Returns: A mapping from vertices of this graph to vertices of the other graph, or `nil` if not isomorphic
-    @inlinable
-    public func findIsomorphism(to other: Self) -> [VertexDescriptor: VertexDescriptor]? {
-        findIsomorphism(to: other, using: .vf2())
-    }
+        /// Finds an isomorphism mapping to another graph using VF2 algorithm as the default.
+        ///
+        /// - Parameter other: The graph to compare against
+        /// - Returns: A mapping from vertices of this graph to vertices of the other graph, or `nil` if not isomorphic
+        @inlinable
+        public func findIsomorphism(to other: Self) -> [VertexDescriptor: VertexDescriptor]? {
+            findIsomorphism(to: other, using: .vf2())
+        }
 
-    /// Checks isomorphism and returns detailed result using VF2 algorithm as the default.
-    ///
-    /// - Parameter other: The graph to compare against
-    /// - Returns: An `IsomorphismResult` containing the isomorphism status and mapping
-    @inlinable
-    public func isomorphismResult(with other: Self) -> IsomorphismResult<VertexDescriptor> {
-        isomorphismResult(with: other, using: .vf2())
+        /// Checks isomorphism and returns detailed result using VF2 algorithm as the default.
+        ///
+        /// - Parameter other: The graph to compare against
+        /// - Returns: An `IsomorphismResult` containing the isomorphism status and mapping
+        @inlinable
+        public func isomorphismResult(with other: Self) -> IsomorphismResult<VertexDescriptor> {
+            isomorphismResult(with: other, using: .vf2())
+        }
     }
-}
 #endif
-
