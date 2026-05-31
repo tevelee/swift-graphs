@@ -99,13 +99,13 @@ let path = graph.shortestPath(
 )
 ```
 
-Add tests under `Tests/GraphsTests/Algorithms/` using Swift Testing (``@Test`` / `#expect`), and your algorithm is done.
+Add tests under `Tests/GraphsTests/Algorithms/` using Swift Testing (`@Test` / `#expect`), and your algorithm is done.
 
 ## Topics
 
 ### Related
 
-- <doc:Concepts/AlgorithmInterfaces>
-- <doc:Concepts/VisitorPattern>
-- <doc:Concepts/PluggableArchitecture>
-- <doc:Concepts/PropertiesAndPropertyMaps>
+- <doc:AlgorithmInterfaces>
+- <doc:VisitorPattern>
+- <doc:PluggableArchitecture>
+- <doc:PropertiesAndPropertyMaps>

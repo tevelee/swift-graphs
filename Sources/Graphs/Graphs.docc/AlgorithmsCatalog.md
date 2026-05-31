@@ -1171,7 +1171,7 @@ let centrality = graph.centrality(using: .eigenvector())
 
 ## See Also
 
-- <doc:Concepts/AlgorithmInterfaces> - Creating custom algorithms
-- <doc:Concepts/VisitorPattern> - Observing algorithm execution
-- <doc:Concepts/Architecture> - Library architecture overview
+- <doc:AlgorithmInterfaces>
+- <doc:VisitorPattern>
+- <doc:Architecture>
 

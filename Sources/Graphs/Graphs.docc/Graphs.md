@@ -21,24 +21,24 @@ Swift Graphs provides flexible graph representations with a small core API and e
 New to Swift Graphs? Start here:
 
 - <doc:GettingStarted>
-- <doc:Concepts/GraphConcepts>
-- <doc:Concepts/ChoosingGraphType>
+- <doc:GraphConcepts>
+- <doc:ChoosingGraphType>
 
 ## Core Concepts
 
 Learn the foundational ideas behind Swift Graphs:
 
-- <doc:Concepts/ProtocolOrientedDesign>
-- <doc:Concepts/Architecture>
-- <doc:Concepts/PluggableArchitecture>
-- <doc:Concepts/PropertiesAndPropertyMaps>
-- <doc:Concepts/AlgorithmInterfaces>
-- <doc:Concepts/VisitorPattern>
+- <doc:ProtocolOrientedDesign>
+- <doc:Architecture>
+- <doc:PluggableArchitecture>
+- <doc:PropertiesAndPropertyMaps>
+- <doc:AlgorithmInterfaces>
+- <doc:VisitorPattern>
 
 ## Guides
 
-- <doc:Concepts/AddingAnAlgorithm>
-- <doc:Concepts/ChoosingStorageBackend>
+- <doc:AddingAnAlgorithm>
+- <doc:ChoosingStorageBackend>
 
 ## Graph Types
 
@@ -54,7 +54,7 @@ Swift Graphs provides multiple graph implementations optimized for different use
 
 ### Choosing a Graph Type
 
-See <doc:Concepts/ChoosingGraphType> for detailed guidance.
+See <doc:ChoosingGraphType> for detailed guidance.
 
 ## Algorithms
 
@@ -118,22 +118,22 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 ### Essentials
 
 - <doc:GettingStarted>
-- <doc:Concepts/GraphConcepts>
-- <doc:Concepts/ChoosingGraphType>
+- <doc:GraphConcepts>
+- <doc:ChoosingGraphType>
 
 ### Core Concepts
 
-- <doc:Concepts/ProtocolOrientedDesign>
-- <doc:Concepts/Architecture>
-- <doc:Concepts/PluggableArchitecture>
-- <doc:Concepts/AlgorithmInterfaces>
-- <doc:Concepts/VisitorPattern>
-- <doc:Concepts/PropertiesAndPropertyMaps>
+- <doc:ProtocolOrientedDesign>
+- <doc:Architecture>
+- <doc:PluggableArchitecture>
+- <doc:AlgorithmInterfaces>
+- <doc:VisitorPattern>
+- <doc:PropertiesAndPropertyMaps>
 
 ### Guides
 
-- <doc:Concepts/AddingAnAlgorithm>
-- <doc:Concepts/ChoosingStorageBackend>
+- <doc:AddingAnAlgorithm>
+- <doc:ChoosingStorageBackend>
 
 ### Graph Implementations
 

@@ -271,13 +271,13 @@ Now that you've created your first graph, explore these topics:
 
 ### Learn Core Concepts
 
-- <doc:Concepts/GraphConcepts>
-- <doc:Concepts/ProtocolOrientedDesign>
-- <doc:Concepts/PropertiesAndPropertyMaps>
+- <doc:GraphConcepts>
+- <doc:ProtocolOrientedDesign>
+- <doc:PropertiesAndPropertyMaps>
 
 ### Choose the Right Graph Type
 
-- <doc:Concepts/ChoosingGraphType>
+- <doc:ChoosingGraphType>
 
 ### Explore Algorithms
 
@@ -285,9 +285,9 @@ Now that you've created your first graph, explore these topics:
 
 ### Advanced Topics
 
-- <doc:Concepts/AlgorithmInterfaces>
-- <doc:Concepts/VisitorPattern>
-- <doc:Concepts/PluggableArchitecture>
+- <doc:AlgorithmInterfaces>
+- <doc:VisitorPattern>
+- <doc:PluggableArchitecture>
 
 ## Common Patterns
 
@@ -362,8 +362,8 @@ let path = graph.shortestPath(
 
 ## Getting Help
 
-- Read the <doc:Concepts/GraphConcepts> for deeper understanding
+- Read the <doc:GraphConcepts> for deeper understanding
 - Check the algorithm documentation for usage examples
 - Review the test suite in the repository for more examples
 
-Ready to dive deeper? Continue with <doc:Concepts/GraphConcepts>.
+Ready to dive deeper? Continue with <doc:GraphConcepts>.

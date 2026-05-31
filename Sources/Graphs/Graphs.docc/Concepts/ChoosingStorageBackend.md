@@ -70,7 +70,7 @@ This is what the default initializer does. Drop the wrapper if you never run an 
 
 ## Property maps
 
-By default, properties are stored in `DictionaryPropertyMap<Key, Values>`. The same pluggability applies — provide a custom ``MutablePropertyMap`` to back properties by an array (when descriptors are dense integer ids), a database, or any other store. See <doc:Concepts/PropertiesAndPropertyMaps>.
+By default, properties are stored in `DictionaryPropertyMap<Key, Values>`. The same pluggability applies — provide a custom ``MutablePropertyMap`` to back properties by an array (when descriptors are dense integer ids), a database, or any other store. See <doc:PropertiesAndPropertyMaps>.
 
 ## Quick decision table
 
@@ -85,6 +85,6 @@ By default, properties are stored in `DictionaryPropertyMap<Key, Values>`. The s
 
 ### Related
 
-- <doc:Concepts/PluggableArchitecture>
-- <doc:Concepts/ChoosingGraphType>
-- <doc:Concepts/PropertiesAndPropertyMaps>
+- <doc:PluggableArchitecture>
+- <doc:ChoosingGraphType>
+- <doc:PropertiesAndPropertyMaps>
