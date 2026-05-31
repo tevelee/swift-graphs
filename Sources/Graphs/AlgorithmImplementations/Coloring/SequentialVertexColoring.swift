@@ -49,7 +49,7 @@
         ///
         /// - Parameter orderingAlgorithm: The vertex ordering algorithm to use
         @inlinable
-        public init(using orderingAlgorithm: any VertexOrderingAlgorithm<Graph>) {
+        public init(using orderingAlgorithm: some VertexOrderingAlgorithm<Graph>) {
             self.orderingAlgorithm = orderingAlgorithm
         }
 

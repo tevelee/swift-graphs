@@ -1,0 +1,88 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - "Sources/**"
+      - "Package*.swift"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # Build and validate documentation on every PR — catches broken symbol links early.
+  build:
+    name: Build DocC
+    runs-on: macos-15
+    env:
+      GENERATING_DOCS: "1"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.2"
+
+      - name: Resolve swift-docc-plugin
+        run: swift package resolve
+
+      - name: Build documentation
+        # All traits are enabled via the manifest when GENERATING_DOCS is set — the docc
+        # plugin does not accept --enable-all-traits on the command line.
+        run: |
+          swift package \
+            --allow-writing-to-directory .build/docs \
+            generate-documentation \
+            --target Graphs \
+            --output-path .build/docs \
+            --transform-for-static-hosting \
+            --hosting-base-path swift-graphs \
+            --warnings-as-errors
+
+  # Deploy to GitHub Pages on every push to main.
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: macos-15
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}documentation/graphs
+    env:
+      GENERATING_DOCS: "1"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.2"
+
+      - name: Resolve swift-docc-plugin
+        run: swift package resolve
+
+      - name: Build documentation
+        run: |
+          swift package \
+            --allow-writing-to-directory ./docs \
+            generate-documentation \
+            --target Graphs \
+            --output-path ./docs \
+            --transform-for-static-hosting \
+            --hosting-base-path swift-graphs
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5

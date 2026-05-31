@@ -210,7 +210,7 @@
         @usableFromInline
         static func parseStatementIdentifiers(_ statement: String) -> [String] {
             var ids: [String] = []
-            var chars = Array(statement)
+            let chars = Array(statement)
             var i = 0
             while i < chars.count {
                 let c = chars[i]

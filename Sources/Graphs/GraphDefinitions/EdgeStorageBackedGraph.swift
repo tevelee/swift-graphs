@@ -18,7 +18,7 @@ extension EdgeListGraph where Self: EdgeStorageBackedGraph {
     public var edgeCount: Int { edgeStore.edgeCount }
 }
 
-extension IncidenceGraph where Self: EdgeStorageBackedGraph, OutgoingEdges == EdgeStore.Edges {
+extension EdgeStorageBackedGraph where Self: IncidenceGraph, OutgoingEdges == EdgeStore.Edges {
     @inlinable
     public func outgoingEdges(of vertex: VertexDescriptor) -> OutgoingEdges { edgeStore.outgoingEdges(of: vertex) }
 
@@ -32,8 +32,7 @@ extension IncidenceGraph where Self: EdgeStorageBackedGraph, OutgoingEdges == Ed
     public func outDegree(of vertex: VertexDescriptor) -> Int { edgeStore.outDegree(of: vertex) }
 }
 
-// Defaults for bidirectional incidence via the backing store
-extension BidirectionalGraph where Self: EdgeStorageBackedGraph, IncomingEdges == EdgeStore.Edges {
+extension EdgeStorageBackedGraph where Self: BidirectionalGraph, IncomingEdges == EdgeStore.Edges {
     @inlinable
     public func incomingEdges(of vertex: VertexDescriptor) -> IncomingEdges { edgeStore.incomingEdges(of: vertex) }
 

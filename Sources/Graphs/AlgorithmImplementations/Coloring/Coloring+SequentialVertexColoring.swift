@@ -6,7 +6,7 @@
         /// - Returns: A new Sequential Vertex Coloring algorithm
         @inlinable
         public static func sequential<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph>(
-            orderUsing orderingAlgorithm: any VertexOrderingAlgorithm<Graph>
+            orderUsing orderingAlgorithm: some VertexOrderingAlgorithm<Graph>
         ) -> Self where Self == SequentialVertexColoringAlgorithm<Graph, Int>, Graph.VertexDescriptor: Hashable {
             .init(using: orderingAlgorithm)
         }

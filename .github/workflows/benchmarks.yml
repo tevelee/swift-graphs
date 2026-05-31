@@ -1,0 +1,115 @@
+name: Benchmarks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "Sources/**"
+      - "Benchmarks/**"
+      - "Package*.swift"
+  workflow_dispatch:
+
+permissions:
+  pull-requests: write
+
+jobs:
+  compare:
+    name: Benchmark comparison
+    runs-on: macos-15
+    continue-on-error: true  # advisory only — CI noise is expected on shared runners
+    steps:
+      - name: Install jemalloc
+        run: brew install jemalloc
+
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.2"
+
+      # ── Base branch ──────────────────────────────────────────────────────────
+      - name: Checkout base branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.base_ref }}
+          path: base
+
+      - name: Run benchmarks on base and save baseline
+        working-directory: base
+        run: |
+          # Runs every benchmark suite and persists results to
+          # Benchmarks/.benchmarkBaselines/ci-base/
+          swift package --package-path Benchmarks benchmark baseline update ci-base \
+            --no-progress
+
+      # ── PR head ──────────────────────────────────────────────────────────────
+      - name: Checkout PR head
+        uses: actions/checkout@v6
+        with:
+          path: pr
+
+      - name: Copy baseline into PR workspace
+        run: |
+          mkdir -p pr/Benchmarks/.benchmarkBaselines
+          cp -r base/Benchmarks/.benchmarkBaselines/. pr/Benchmarks/.benchmarkBaselines/
+
+      - name: Compare PR head against base baseline
+        working-directory: pr
+        # Runs the full suite, compares against the saved baseline, writes
+        # a human-readable delta table to stdout.  The exit code is non-zero
+        # when regressions exceed the threshold — we capture it but don't fail CI.
+        run: |
+          swift package --package-path Benchmarks benchmark baseline compare ci-base \
+            --no-progress \
+            2>&1 | tee ../benchmark-delta.txt || true
+
+      # ── Comment ──────────────────────────────────────────────────────────────
+      - name: Post results as PR comment
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            let delta = '';
+            try {
+              delta = fs.readFileSync('benchmark-delta.txt', 'utf8').trim();
+            } catch {
+              delta = 'Benchmark comparison unavailable (build error or no matching benchmarks).';
+            }
+
+            const MARKER = '<!-- swift-graphs-benchmarks -->';
+            const body = [
+              MARKER,
+              '## ⚡ Benchmark comparison',
+              '',
+              '<details>',
+              '<summary>Show results — release build, macOS 15, p90</summary>',
+              '',
+              '```',
+              delta || 'No differences found.',
+              '```',
+              '',
+              '</details>',
+              '',
+              '> ℹ️ Results may vary due to runner noise. Regressions are **advisory** — they do not block merge.',
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.startsWith(MARKER));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

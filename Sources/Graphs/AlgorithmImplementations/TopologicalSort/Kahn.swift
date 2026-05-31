@@ -58,7 +58,7 @@
         ) -> TopologicalSortResult<Graph.VertexDescriptor> {
             var inDegree: OrderedDictionary<Vertex, Int> = [:]
             var sortedVertices: [Vertex] = []
-            var queue = Deque<Vertex>()
+            var queue: Deque<Vertex> = []
 
             // Calculate in-degrees for all vertices
             for vertex in graph.vertices() {

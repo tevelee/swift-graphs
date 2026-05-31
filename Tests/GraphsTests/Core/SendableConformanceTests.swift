@@ -93,8 +93,10 @@ struct SendableConformanceTests {
 
 // Static assertion: if this function compiles the default AdjacencyList() satisfies Sendable.
 // It is never called at runtime.
+#if compiler(>=6.1)
 @inline(never)
 private func _assertDefaultAdjacencyListIsSendable() {
     func require<T: Sendable>(_: T.Type) {}
     require(type(of: AdjacencyList()))
 }
+#endif

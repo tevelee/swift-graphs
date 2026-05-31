@@ -71,7 +71,7 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
     ///
     /// - Parameters:
     ///   - other: The graph to compare against
-    ///   - using: The isomorphism algorithm to use
+    ///   - algorithm: The isomorphism algorithm to use
     /// - Returns: `true` if the graphs are isomorphic, `false` otherwise
     @inlinable
     public func isIsomorphic<Algorithm: IsomorphismAlgorithm<Self>>(
@@ -85,7 +85,7 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
     ///
     /// - Parameters:
     ///   - other: The graph to compare against
-    ///   - using: The isomorphism algorithm to use
+    ///   - algorithm: The isomorphism algorithm to use
     /// - Returns: A mapping from vertices of this graph to vertices of the other graph, or `nil` if not isomorphic
     @inlinable
     public func findIsomorphism<Algorithm: IsomorphismAlgorithm<Self>>(
@@ -99,7 +99,7 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
     ///
     /// - Parameters:
     ///   - other: The graph to compare against
-    ///   - using: The isomorphism algorithm to use
+    ///   - algorithm: The isomorphism algorithm to use
     /// - Returns: An `IsomorphismResult` containing the isomorphism status and mapping
     @inlinable
     public func isomorphismResult<Algorithm: IsomorphismAlgorithm<Self>>(

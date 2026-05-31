@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & discussions
+    url: https://github.com/tevelee/swift-graphs/discussions
+    about: Ask questions, share ideas, and discuss usage of swift-graphs
+  - name: Swift Package Index documentation
+    url: https://swiftpackageindex.com/tevelee/swift-graphs/documentation/graphs
+    about: Browse the full API reference and guides

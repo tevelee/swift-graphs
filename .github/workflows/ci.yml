@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  test-macos:
+    name: Test · macOS · Swift ${{ matrix.swift }}${{ matrix.traits && format(' · {0} traits', matrix.traits) || '' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Swift 5.9 — validates Package.swift (no language mode override, build-only: Swift Testing not available)
+          - os: macos-14
+            swift: "5.9"
+            extra: ""
+            build_only: true
+          # Swift 6.0 — validates Package@swift-6.0.swift (strict concurrency, no traits)
+          - os: macos-15
+            swift: "6.0"
+            extra: ""
+          # Swift 6.2 default traits — validates Package@swift-6.2.swift (Pathfinding + Connectivity)
+          - os: macos-15
+            swift: "6.2"
+            traits: "default"
+            extra: ""
+          # Swift 6.2 all traits — full feature coverage across every algorithm family
+          - os: macos-15
+            swift: "6.2"
+            traits: "full"
+            extra: "--enable-all-traits"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: ${{ matrix.swift }}
+      - name: Build
+        run: swift build ${{ matrix.extra }}
+      - name: Test
+        if: ${{ !matrix.build_only }}
+        run: swift test ${{ matrix.extra }}
+
+  test-linux:
+    name: Test · Linux · Swift ${{ matrix.swift }}${{ matrix.traits && format(' · {0} traits', matrix.traits) || '' }}
+    runs-on: ubuntu-latest
+    container:
+      image: swift:${{ matrix.swift }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Swift 5.9 — validates Package.swift on Linux (build-only: Swift Testing not available)
+          - swift: "5.9"
+            extra: ""
+            build_only: true
+          # Swift 6.0 — validates Package@swift-6.0.swift on Linux
+          - swift: "6.0"
+            extra: ""
+          # Swift 6.2 all traits — full coverage on Linux
+          - swift: "6.2"
+            traits: "full"
+            extra: "--enable-all-traits"
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build
+        run: swift build ${{ matrix.extra }}
+      - name: Test
+        if: ${{ !matrix.build_only }}
+        run: swift test ${{ matrix.extra }}
+
+  lint:
+    name: Lint
+    runs-on: macos-15
+    continue-on-error: true  # advisory: codebase has pre-existing style issues
+    steps:
+      - uses: actions/checkout@v6
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.2"
+
+      - name: Install linters
+        run: brew install swift-format swiftlint
+
+      - name: swift-format
+        run: swift-format lint --recursive Sources Tests
+
+      - name: SwiftLint
+        run: swiftlint lint --reporter github-actions-logging

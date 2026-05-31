@@ -1,0 +1,35 @@
+name: Feature / algorithm request
+description: Propose a new algorithm, graph type, or API addition
+labels: ["enhancement"]
+body:
+  - type: input
+    id: feature-name
+    attributes:
+      label: What would you like added?
+      placeholder: "e.g. betweenness centrality, hexagonal GridGraph, Yen's k-shortest-paths"
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Why do you need it?
+      description: Describe the use case. What problem does it solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: api-sketch
+    attributes:
+      label: Proposed API (optional)
+      render: swift
+      placeholder: |
+        let paths = graph.kShortestPaths(from: source, to: destination, k: 3, using: .yen())
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Would you like to contribute?
+      options:
+        - label: Yes, I'd like to implement this
+        - label: I can help with review or testing

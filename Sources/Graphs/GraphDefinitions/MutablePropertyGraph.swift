@@ -15,18 +15,25 @@ extension VertexMutablePropertyGraph {
         return vertex
     }
 
+    // Swift 5.9/6.0 SIL bug: see DictionaryPropertyMap for details.
+    #if compiler(>=6.1)
     @inlinable
     public subscript(vertex: VertexPropertyMap.Key) -> VertexPropertyMap.Value {
         set { vertexPropertyMap[vertex] = newValue }
-        _read {
-            yield vertexPropertyMap[vertex]
-        }
+        _read { yield vertexPropertyMap[vertex] }
         _modify {
             var value = vertexPropertyMap[vertex]
             defer { vertexPropertyMap[vertex] = value }
             yield &value
         }
     }
+    #else
+    @inlinable
+    public subscript(vertex: VertexPropertyMap.Key) -> VertexPropertyMap.Value {
+        get { vertexPropertyMap[vertex] }
+        set { vertexPropertyMap[vertex] = newValue }
+    }
+    #endif
 }
 
 /// A protocol for graphs that support mutable edge properties.
@@ -50,18 +57,25 @@ extension EdgeMutablePropertyGraph {
         return edge
     }
 
+    // Swift 5.9/6.0 SIL bug: see DictionaryPropertyMap for details.
+    #if compiler(>=6.1)
     @inlinable
     public subscript(edge: EdgePropertyMap.Key) -> EdgePropertyMap.Value {
         set { edgePropertyMap[edge] = newValue }
-        _read {
-            yield edgePropertyMap[edge]
-        }
+        _read { yield edgePropertyMap[edge] }
         _modify {
             var value = edgePropertyMap[edge]
             defer { edgePropertyMap[edge] = value }
             yield &value
         }
     }
+    #else
+    @inlinable
+    public subscript(edge: EdgePropertyMap.Key) -> EdgePropertyMap.Value {
+        get { edgePropertyMap[edge] }
+        set { edgePropertyMap[edge] = newValue }
+    }
+    #endif
 }
 
 /// A protocol for graphs that support mutable properties for both vertices and edges.

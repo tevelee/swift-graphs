@@ -87,7 +87,7 @@
             }
             distances[source] = .finite(.zero)
 
-            var queue = Deque<Vertex>()
+            var queue: Deque<Vertex> = []
             var inQueue = Set<Vertex>()
             var enqueueCount: [Vertex: Int] = [:]
 

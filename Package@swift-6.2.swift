@@ -1,6 +1,9 @@
 // swift-tools-version: 6.2
 
+import Foundation
 import PackageDescription
+
+let generatingDocs = ProcessInfo.processInfo.environment["GENERATING_DOCS"] != nil
 
 let package = Package(
     name: "Graphs",
@@ -19,7 +22,7 @@ let package = Package(
         )
     ],
     traits: [
-        .default(enabledTraits: ["Pathfinding", "Connectivity"]),
+        .default(enabledTraits: generatingDocs ? ["Full"] : ["Pathfinding", "Connectivity"]),
         .trait(name: "Pathfinding"),
         .trait(name: "Connectivity"),
         .trait(name: "Optimization"),
@@ -93,3 +96,9 @@ let package = Package(
         ),
     ]
 )
+
+if generatingDocs {
+    package.dependencies.append(
+        .package(url: "https://github.com/apple/swift-docc-plugin.git", from: "1.0.0")
+    )
+}
