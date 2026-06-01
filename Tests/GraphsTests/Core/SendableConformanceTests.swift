@@ -82,7 +82,7 @@ struct SendableConformanceTests {
 
     // MARK: - CompleteGraph (trait-gated)
 
-    #if !GRAPHS_USES_TRAITS || GRAPHS_COMPLETE_GRAPH
+    #if !GRAPHS_USES_TRAITS || GRAPHS_GRAPH_FAMILIES
         @Test func completeGraphIsSendable() async {
             let graph = CompleteGraph(vertices: [1, 2, 3])
             let count = await Task.detached { graph.vertexCount }.value

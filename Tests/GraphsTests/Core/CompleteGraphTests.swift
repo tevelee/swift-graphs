@@ -1,4 +1,4 @@
-#if !GRAPHS_USES_TRAITS || GRAPHS_COMPLETE_GRAPH
+#if !GRAPHS_USES_TRAITS || GRAPHS_GRAPH_FAMILIES
     @testable import Graphs
     import Testing
 

@@ -125,7 +125,7 @@ struct MemoizedGraphTests {
 
     // MARK: - VertexListGraph / EdgeListGraph forwarding
 
-    #if !GRAPHS_USES_TRAITS || GRAPHS_COMPLETE_GRAPH
+    #if !GRAPHS_USES_TRAITS || GRAPHS_GRAPH_FAMILIES
         @Test func verticesForwarded() {
             let g = CompleteGraph(count: 4).memoized()
             #expect(g.vertexCount == 4)

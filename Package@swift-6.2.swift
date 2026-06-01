@@ -33,7 +33,7 @@ let package = Package(
         .trait(name: "GridGraph"),
         .trait(name: "BipartiteGraph"),
         .trait(name: "SpecializedStorage"),
-        .trait(name: "CompleteGraph"),
+        .trait(name: "GraphFamilies"),
         .trait(name: "Full", enabledTraits: [
             "Pathfinding",
             "Connectivity",
@@ -45,7 +45,7 @@ let package = Package(
             "GridGraph",
             "BipartiteGraph",
             "SpecializedStorage",
-            "CompleteGraph",
+            "GraphFamilies",
         ]),
     ],
     dependencies: [
@@ -72,7 +72,8 @@ let package = Package(
                 .define("GRAPHS_GRID_GRAPH", .when(traits: ["GridGraph"])),
                 .define("GRAPHS_BIPARTITE_GRAPH", .when(traits: ["BipartiteGraph"])),
                 .define("GRAPHS_SPECIALIZED_STORAGE", .when(traits: ["SpecializedStorage"])),
-                .define("GRAPHS_COMPLETE_GRAPH", .when(traits: ["CompleteGraph"])),
+                .define("GRAPHS_COMPLETE_GRAPH", .when(traits: ["GraphFamilies"])),
+                .define("GRAPHS_GRAPH_FAMILIES", .when(traits: ["GraphFamilies"])),
             ]
         ),
         .testTarget(
@@ -91,7 +92,8 @@ let package = Package(
                 .define("GRAPHS_GRID_GRAPH", .when(traits: ["GridGraph"])),
                 .define("GRAPHS_BIPARTITE_GRAPH", .when(traits: ["BipartiteGraph"])),
                 .define("GRAPHS_SPECIALIZED_STORAGE", .when(traits: ["SpecializedStorage"])),
-                .define("GRAPHS_COMPLETE_GRAPH", .when(traits: ["CompleteGraph"])),
+                .define("GRAPHS_COMPLETE_GRAPH", .when(traits: ["GraphFamilies"])),
+                .define("GRAPHS_GRAPH_FAMILIES", .when(traits: ["GraphFamilies"])),
             ]
         ),
     ]

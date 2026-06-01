@@ -1,4 +1,4 @@
-#if !GRAPHS_USES_TRAITS || GRAPHS_COMPLETE_GRAPH
+#if !GRAPHS_USES_TRAITS || GRAPHS_GRAPH_FAMILIES
 
     /// A complete directed graph (K_n) on a fixed vertex set.
     ///
