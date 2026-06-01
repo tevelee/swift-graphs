@@ -35,9 +35,7 @@ jobs:
       - name: Run benchmarks on base and save baseline
         working-directory: base
         run: |
-          # Runs every benchmark suite and persists results to
-          # Benchmarks/.benchmarkBaselines/ci-base/
-          swift package --package-path Benchmarks benchmark baseline update ci-base \
+          swift package --package-path Benchmarks --allow-writing-to-package-directory benchmark baseline update base \
             --no-progress
 
       # ── PR head ──────────────────────────────────────────────────────────────
@@ -46,19 +44,27 @@ jobs:
         with:
           path: pr
 
-      - name: Copy baseline into PR workspace
+      - name: Copy base baseline into PR workspace
         run: |
           mkdir -p pr/Benchmarks/.benchmarkBaselines
           cp -r base/Benchmarks/.benchmarkBaselines/. pr/Benchmarks/.benchmarkBaselines/
 
+      - name: Run benchmarks on PR head and save baseline
+        working-directory: pr
+        run: |
+          swift package --package-path Benchmarks --allow-writing-to-package-directory benchmark baseline update head \
+            --no-progress
+
       - name: Compare PR head against base baseline
         working-directory: pr
-        # Runs the full suite, compares against the saved baseline, writes
-        # a human-readable delta table to stdout.  The exit code is non-zero
-        # when regressions exceed the threshold — we capture it but don't fail CI.
+        # Compares two saved baselines — no re-run needed.  The exit code is
+        # non-zero when regressions exceed the threshold; captured but not fatal.
+        # --format markdown folds passing benchmarks into <details> to keep the
+        # PR comment small and shows regressions prominently.
         run: |
-          swift package --package-path Benchmarks benchmark baseline compare ci-base \
+          swift package --package-path Benchmarks --allow-writing-to-package-directory benchmark baseline compare base head \
             --no-progress \
+            --format markdown \
             2>&1 | tee ../benchmark-delta.txt || true
 
       # ── Comment ──────────────────────────────────────────────────────────────
@@ -74,19 +80,17 @@ jobs:
               delta = 'Benchmark comparison unavailable (build error or no matching benchmarks).';
             }
 
+            const MAX_BODY = 60000;
+            if (delta.length > MAX_BODY) {
+              delta = delta.slice(0, MAX_BODY) + '\n\n…(truncated — see full log in Actions)';
+            }
+
             const MARKER = '<!-- swift-graphs-benchmarks -->';
             const body = [
               MARKER,
               '## ⚡ Benchmark comparison',
               '',
-              '<details>',
-              '<summary>Show results — release build, macOS 15, p90</summary>',
-              '',
-              '```',
-              delta || 'No differences found.',
-              '```',
-              '',
-              '</details>',
+              delta || '_No differences found._',
               '',
               '> ℹ️ Results may vary due to runner noise. Regressions are **advisory** — they do not block merge.',
             ].join('\n');
