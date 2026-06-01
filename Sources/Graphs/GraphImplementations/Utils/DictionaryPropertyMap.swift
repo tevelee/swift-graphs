@@ -22,22 +22,22 @@ extension DictionaryPropertyMap: MutablePropertyMap {
     // coroutines appear in @inlinable code (stack: DiagnoseStaticExclusivity::run()).
     // Fixed in Swift 6.2+. Plain get/set is the fallback.
     #if compiler(>=6.2)
-    @inlinable
-    public subscript(key: Key) -> Value {
-        set { values[key] = newValue }
-        _read { yield values[key] ?? defaultValue }
-        _modify {
-            var value = values[key] ?? defaultValue
-            defer { values[key] = value }
-            yield &value
+        @inlinable
+        public subscript(key: Key) -> Value {
+            set { values[key] = newValue }
+            _read { yield values[key] ?? defaultValue }
+            _modify {
+                var value = values[key] ?? defaultValue
+                defer { values[key] = value }
+                yield &value
+            }
         }
-    }
     #else
-    @inlinable
-    public subscript(key: Key) -> Value {
-        get { values[key] ?? defaultValue }
-        set { values[key] = newValue }
-    }
+        @inlinable
+        public subscript(key: Key) -> Value {
+            get { values[key] ?? defaultValue }
+            set { values[key] = newValue }
+        }
     #endif
 }
 

@@ -83,13 +83,13 @@
         /// Linux Foundation's XMLParser accepts some truncated inputs without reporting a parse
         /// error, so this test is macOS-only.
         #if !os(Linux)
-        @Test func graphMLInvalidFormatThrows() {
-            let formatter = GraphFormatter()
-            var graph = AdjacencyList()
-            #expect(throws: SerializationError.self) {
-                try formatter.read("<graphml><graph><node id=", using: .graphML(), into: &graph)
+            @Test func graphMLInvalidFormatThrows() {
+                let formatter = GraphFormatter()
+                var graph = AdjacencyList()
+                #expect(throws: SerializationError.self) {
+                    try formatter.read("<graphml><graph><node id=", using: .graphML(), into: &graph)
+                }
             }
-        }
         #endif
 
         // MARK: - DOT

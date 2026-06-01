@@ -6,26 +6,26 @@
 public struct VertexPropertyValues: VertexProperties {
     private var storage = PropertyValues()
 
+    // Swift 5.9–6.1 SIL crash: see DictionaryPropertyMap for details.
     /// Accesses the value of a specific vertex property.
     ///
     /// - Parameter property: The type of property to access
     /// - Returns: The current value of the property
-    // Swift 5.9–6.1 SIL crash: see DictionaryPropertyMap for details.
     #if compiler(>=6.2)
-    public subscript<P: VertexProperty>(property: P.Type) -> P.Value {
-        set { storage[property] = newValue }
-        _read { yield storage[property] }
-        _modify {
-            var value: P.Value = storage[property]
-            defer { storage[property] = value }
-            yield &value
+        public subscript<P: VertexProperty>(property: P.Type) -> P.Value {
+            set { storage[property] = newValue }
+            _read { yield storage[property] }
+            _modify {
+                var value: P.Value = storage[property]
+                defer { storage[property] = value }
+                yield &value
+            }
         }
-    }
     #else
-    public subscript<P: VertexProperty>(property: P.Type) -> P.Value {
-        get { storage[property] }
-        set { storage[property] = newValue }
-    }
+        public subscript<P: VertexProperty>(property: P.Type) -> P.Value {
+            get { storage[property] }
+            set { storage[property] = newValue }
+        }
     #endif
 
     /// Creates a new empty vertex property values container.
@@ -41,26 +41,26 @@ public struct VertexPropertyValues: VertexProperties {
 public struct EdgePropertyValues: EdgeProperties {
     private var storage = PropertyValues()
 
+    // Swift 5.9–6.1 SIL crash: see DictionaryPropertyMap for details.
     /// Accesses the value of a specific edge property.
     ///
     /// - Parameter property: The type of property to access
     /// - Returns: The current value of the property
-    // Swift 5.9–6.1 SIL crash: see DictionaryPropertyMap for details.
     #if compiler(>=6.2)
-    public subscript<P: EdgeProperty>(property: P.Type) -> P.Value {
-        set { storage[property] = newValue }
-        _read { yield storage[property] }
-        _modify {
-            var value: P.Value = storage[property]
-            defer { storage[property] = value }
-            yield &value
+        public subscript<P: EdgeProperty>(property: P.Type) -> P.Value {
+            set { storage[property] = newValue }
+            _read { yield storage[property] }
+            _modify {
+                var value: P.Value = storage[property]
+                defer { storage[property] = value }
+                yield &value
+            }
         }
-    }
     #else
-    public subscript<P: EdgeProperty>(property: P.Type) -> P.Value {
-        get { storage[property] }
-        set { storage[property] = newValue }
-    }
+        public subscript<P: EdgeProperty>(property: P.Type) -> P.Value {
+            get { storage[property] }
+            set { storage[property] = newValue }
+        }
     #endif
 
     /// Creates a new empty edge property values container.
@@ -69,41 +69,41 @@ public struct EdgePropertyValues: EdgeProperties {
 }
 
 #if compiler(>=6.2)
-private struct PropertyValues: Sendable {
-    private var storage: [ObjectIdentifier: any Sendable] = [:]
+    private struct PropertyValues: Sendable {
+        private var storage: [ObjectIdentifier: any Sendable] = [:]
 
-    subscript<P: GraphProperty>(property: P.Type) -> P.Value {
-        set { storage[ObjectIdentifier(property)] = newValue }
-        _read {
-            let key = ObjectIdentifier(property)
-            if let value = storage[key] as? P.Value {
-                yield value
-            } else {
-                yield P.defaultValue
+        subscript<P: GraphProperty>(property: P.Type) -> P.Value {
+            set { storage[ObjectIdentifier(property)] = newValue }
+            _read {
+                let key = ObjectIdentifier(property)
+                if let value = storage[key] as? P.Value {
+                    yield value
+                } else {
+                    yield P.defaultValue
+                }
+            }
+            _modify {
+                let key = ObjectIdentifier(property)
+                var value = (storage[key] as? P.Value) ?? P.defaultValue
+                defer { storage[key] = value }
+                yield &value
             }
         }
-        _modify {
-            let key = ObjectIdentifier(property)
-            var value = (storage[key] as? P.Value) ?? P.defaultValue
-            defer { storage[key] = value }
-            yield &value
-        }
     }
-}
-extension VertexPropertyValues: Sendable {}
-extension EdgePropertyValues: Sendable {}
+    extension VertexPropertyValues: Sendable {}
+    extension EdgePropertyValues: Sendable {}
 #else
-private struct PropertyValues {
-    private var storage: [ObjectIdentifier: Any] = [:]
+    private struct PropertyValues {
+        private var storage: [ObjectIdentifier: Any] = [:]
 
-    subscript<P: GraphProperty>(property: P.Type) -> P.Value {
-        get {
-            let key = ObjectIdentifier(property)
-            return (storage[key] as? P.Value) ?? P.defaultValue
-        }
-        set {
-            storage[ObjectIdentifier(property)] = newValue
+        subscript<P: GraphProperty>(property: P.Type) -> P.Value {
+            get {
+                let key = ObjectIdentifier(property)
+                return (storage[key] as? P.Value) ?? P.defaultValue
+            }
+            set {
+                storage[ObjectIdentifier(property)] = newValue
+            }
         }
     }
-}
 #endif

@@ -17,22 +17,22 @@ extension VertexMutablePropertyGraph {
 
     // Swift 5.9–6.1 SIL crash: see DictionaryPropertyMap for details.
     #if compiler(>=6.2)
-    @inlinable
-    public subscript(vertex: VertexPropertyMap.Key) -> VertexPropertyMap.Value {
-        set { vertexPropertyMap[vertex] = newValue }
-        _read { yield vertexPropertyMap[vertex] }
-        _modify {
-            var value = vertexPropertyMap[vertex]
-            defer { vertexPropertyMap[vertex] = value }
-            yield &value
+        @inlinable
+        public subscript(vertex: VertexPropertyMap.Key) -> VertexPropertyMap.Value {
+            set { vertexPropertyMap[vertex] = newValue }
+            _read { yield vertexPropertyMap[vertex] }
+            _modify {
+                var value = vertexPropertyMap[vertex]
+                defer { vertexPropertyMap[vertex] = value }
+                yield &value
+            }
         }
-    }
     #else
-    @inlinable
-    public subscript(vertex: VertexPropertyMap.Key) -> VertexPropertyMap.Value {
-        get { vertexPropertyMap[vertex] }
-        set { vertexPropertyMap[vertex] = newValue }
-    }
+        @inlinable
+        public subscript(vertex: VertexPropertyMap.Key) -> VertexPropertyMap.Value {
+            get { vertexPropertyMap[vertex] }
+            set { vertexPropertyMap[vertex] = newValue }
+        }
     #endif
 }
 
@@ -59,22 +59,22 @@ extension EdgeMutablePropertyGraph {
 
     // Swift 5.9–6.1 SIL crash: see DictionaryPropertyMap for details.
     #if compiler(>=6.2)
-    @inlinable
-    public subscript(edge: EdgePropertyMap.Key) -> EdgePropertyMap.Value {
-        set { edgePropertyMap[edge] = newValue }
-        _read { yield edgePropertyMap[edge] }
-        _modify {
-            var value = edgePropertyMap[edge]
-            defer { edgePropertyMap[edge] = value }
-            yield &value
+        @inlinable
+        public subscript(edge: EdgePropertyMap.Key) -> EdgePropertyMap.Value {
+            set { edgePropertyMap[edge] = newValue }
+            _read { yield edgePropertyMap[edge] }
+            _modify {
+                var value = edgePropertyMap[edge]
+                defer { edgePropertyMap[edge] = value }
+                yield &value
+            }
         }
-    }
     #else
-    @inlinable
-    public subscript(edge: EdgePropertyMap.Key) -> EdgePropertyMap.Value {
-        get { edgePropertyMap[edge] }
-        set { edgePropertyMap[edge] = newValue }
-    }
+        @inlinable
+        public subscript(edge: EdgePropertyMap.Key) -> EdgePropertyMap.Value {
+            get { edgePropertyMap[edge] }
+            set { edgePropertyMap[edge] = newValue }
+        }
     #endif
 }
 

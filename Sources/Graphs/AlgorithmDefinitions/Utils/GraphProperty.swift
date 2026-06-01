@@ -8,9 +8,9 @@ public protocol GraphProperty<Value> {
     // (Weight, Edge) lack a Sendable constraint. 6.2+ relaxed this. Restoring the constraint
     // on 6.2+ lets PropertyValues use typed `any Sendable` storage.
     #if compiler(>=6.2)
-    associatedtype Value: Sendable
+        associatedtype Value: Sendable
     #else
-    associatedtype Value
+        associatedtype Value
     #endif
 
     /// The default value for this property.
