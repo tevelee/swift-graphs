@@ -18,10 +18,10 @@ public struct DictionaryPropertyMap<Key: Hashable, Value> {
 }
 
 extension DictionaryPropertyMap: MutablePropertyMap {
-    // Swift 5.9/6.0 have a SIL LinearLifetimeChecker bug that causes compiler crashes
-    // ("UNREACHABLE at LinearLifetimeCheckerPrivate.h") when _read/_modify coroutines are
-    // used in @inlinable code. Fixed in Swift 6.1+. Plain get/set is the fallback.
-    #if compiler(>=6.1)
+    // Swift 5.9–6.1 crash in the SIL DiagnoseStaticExclusivity pass when _read/_modify
+    // coroutines appear in @inlinable code (stack: DiagnoseStaticExclusivity::run()).
+    // Fixed in Swift 6.2+. Plain get/set is the fallback.
+    #if compiler(>=6.2)
     @inlinable
     public subscript(key: Key) -> Value {
         set { values[key] = newValue }
