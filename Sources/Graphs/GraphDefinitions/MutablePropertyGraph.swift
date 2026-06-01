@@ -15,8 +15,8 @@ extension VertexMutablePropertyGraph {
         return vertex
     }
 
-    // Swift 5.9/6.0 SIL bug: see DictionaryPropertyMap for details.
-    #if compiler(>=6.1)
+    // Swift 5.9–6.1 SIL crash: see DictionaryPropertyMap for details.
+    #if compiler(>=6.2)
     @inlinable
     public subscript(vertex: VertexPropertyMap.Key) -> VertexPropertyMap.Value {
         set { vertexPropertyMap[vertex] = newValue }
@@ -57,8 +57,8 @@ extension EdgeMutablePropertyGraph {
         return edge
     }
 
-    // Swift 5.9/6.0 SIL bug: see DictionaryPropertyMap for details.
-    #if compiler(>=6.1)
+    // Swift 5.9–6.1 SIL crash: see DictionaryPropertyMap for details.
+    #if compiler(>=6.2)
     @inlinable
     public subscript(edge: EdgePropertyMap.Key) -> EdgePropertyMap.Value {
         set { edgePropertyMap[edge] = newValue }

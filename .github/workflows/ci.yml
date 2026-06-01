@@ -28,6 +28,10 @@ jobs:
           - os: macos-15
             swift: "6.0"
             extra: ""
+          # Swift 6.1 — validates Package@swift-6.0.swift on 6.1 toolchain (catches compiler(>=6.x) guard regressions)
+          - os: macos-15
+            swift: "6.1"
+            extra: ""
           # Swift 6.2 default traits — validates Package@swift-6.2.swift (Pathfinding + Connectivity)
           - os: macos-15
             swift: "6.2"
@@ -64,6 +68,9 @@ jobs:
             build_only: true
           # Swift 6.0 — validates Package@swift-6.0.swift on Linux
           - swift: "6.0"
+            extra: ""
+          # Swift 6.1 — validates Package@swift-6.0.swift on Linux 6.1 toolchain
+          - swift: "6.1"
             extra: ""
           # Swift 6.2 all traits — full coverage on Linux
           - swift: "6.2"

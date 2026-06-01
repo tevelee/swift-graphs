@@ -10,8 +10,8 @@ public struct VertexPropertyValues: VertexProperties {
     ///
     /// - Parameter property: The type of property to access
     /// - Returns: The current value of the property
-    // Swift 5.9/6.0 SIL bug: see DictionaryPropertyMap for details.
-    #if compiler(>=6.1)
+    // Swift 5.9–6.1 SIL crash: see DictionaryPropertyMap for details.
+    #if compiler(>=6.2)
     public subscript<P: VertexProperty>(property: P.Type) -> P.Value {
         set { storage[property] = newValue }
         _read { yield storage[property] }
@@ -45,8 +45,8 @@ public struct EdgePropertyValues: EdgeProperties {
     ///
     /// - Parameter property: The type of property to access
     /// - Returns: The current value of the property
-    // Swift 5.9/6.0 SIL bug: see DictionaryPropertyMap for details.
-    #if compiler(>=6.1)
+    // Swift 5.9–6.1 SIL crash: see DictionaryPropertyMap for details.
+    #if compiler(>=6.2)
     public subscript<P: EdgeProperty>(property: P.Type) -> P.Value {
         set { storage[property] = newValue }
         _read { yield storage[property] }
@@ -68,7 +68,7 @@ public struct EdgePropertyValues: EdgeProperties {
     public init() {}
 }
 
-#if compiler(>=6.1)
+#if compiler(>=6.2)
 private struct PropertyValues: Sendable {
     private var storage: [ObjectIdentifier: any Sendable] = [:]
 
