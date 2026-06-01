@@ -14,24 +14,45 @@ jobs:
   greet:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/first-interaction@v1
+      - uses: actions/github-script@v7
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          pr-message: |
-            👋 Thanks for your first pull request to swift-graphs, @${{ github.actor }}!
+          script: |
+            const sender = context.payload.sender.login;
+            const isPR = context.payload.pull_request !== undefined;
 
-            A maintainer will review it shortly. While you wait, please make sure:
-            - [ ] `swift test --enable-all-traits` passes locally (this runs the full suite including trait-gated algorithms)
-            - [ ] New public API has `///` doc comments
-            - [ ] The PR has a label set (helps the automated release notes)
+            if (isPR) {
+              const pulls = await github.paginate(github.rest.pulls.list, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'all',
+              });
+              const priorPRs = pulls.filter(
+                p => p.user.login === sender && p.number < context.issue.number
+              );
+              if (priorPRs.length > 0) return;
 
-            See [CONTRIBUTING.md](https://github.com/tevelee/swift-graphs/blob/main/CONTRIBUTING.md) for the full guide.
-          issue-message: |
-            👋 Thanks for opening your first issue in swift-graphs, @${{ github.actor }}!
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `👋 Thanks for your first pull request to swift-graphs, @${sender}!\n\nA maintainer will review it shortly. While you wait, please make sure:\n- [ ] \`swift test --enable-all-traits\` passes locally (this runs the full suite including trait-gated algorithms)\n- [ ] New public API has \`///\` doc comments\n- [ ] The PR has a label set (helps the automated release notes)\n\nSee [CONTRIBUTING.md](https://github.com/tevelee/swift-graphs/blob/main/CONTRIBUTING.md) for the full guide.`,
+              });
+            } else {
+              const issues = await github.paginate(github.rest.issues.listForRepo, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                creator: sender,
+                state: 'all',
+              });
+              const priorIssues = issues.filter(
+                i => i.pull_request === undefined && i.number < context.issue.number
+              );
+              if (priorIssues.length > 0) return;
 
-            A maintainer will take a look soon. To help us respond faster, please make sure your issue includes:
-            - Swift version and platform
-            - A minimal reproduction case
-            - What you expected vs what happened
-
-            For questions and discussion, consider [GitHub Discussions](https://github.com/tevelee/swift-graphs/discussions) instead.
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `👋 Thanks for opening your first issue in swift-graphs, @${sender}!\n\nA maintainer will take a look soon. To help us respond faster, please make sure your issue includes:\n- Swift version and platform\n- A minimal reproduction case\n- What you expected vs what happened\n\nFor questions and discussion, consider [GitHub Discussions](https://github.com/tevelee/swift-graphs/discussions) instead.`,
+              });
+            }
