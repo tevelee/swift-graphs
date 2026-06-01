@@ -75,3 +75,4 @@ public struct OrderedVertexStorage: VertexStorage {
 
 extension OrderedVertexStorage: Sendable {}
 extension OrderedVertexStorage.Vertex: Sendable {}
+extension OrderedVertexStorage.Vertex: Codable {}
