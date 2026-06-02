@@ -21,7 +21,7 @@ jobs:
       - name: Install jemalloc
         run: brew install jemalloc
 
-      - uses: swift-actions/setup-swift@v2
+      - uses: swift-actions/setup-swift@v3
         with:
           swift-version: "6.2"
 

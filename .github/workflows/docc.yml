@@ -27,7 +27,7 @@ jobs:
       GENERATING_DOCS: "1"
     steps:
       - uses: actions/checkout@v6
-      - uses: swift-actions/setup-swift@v2
+      - uses: swift-actions/setup-swift@v3
         with:
           swift-version: "6.2"
 
@@ -60,7 +60,7 @@ jobs:
       GENERATING_DOCS: "1"
     steps:
       - uses: actions/checkout@v6
-      - uses: swift-actions/setup-swift@v2
+      - uses: swift-actions/setup-swift@v3
         with:
           swift-version: "6.2"
 
@@ -79,7 +79,7 @@ jobs:
 
       - uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: docs
 
