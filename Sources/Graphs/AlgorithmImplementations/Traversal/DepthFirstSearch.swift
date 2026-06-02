@@ -283,6 +283,9 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
                 stack.push(DFSFrame(vertex: vertex, isFirstVisit: false, depth: frame.depth))
 
                 var whiteNeighbors: [Vertex] = []
+                // Tracks white destinations already claimed in this batch so that
+                // parallel edges to the same vertex don't fire treeEdge multiple times.
+                var pendingWhite: Set<Vertex> = []
                 for edge in graph.outgoingEdges(of: vertex) {
                     visitor?.examineEdge?(edge)
 
@@ -308,6 +311,10 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
                                 )
                                 if veto((from: vertex, to: destination, via: edge, context: context)) == false { continue }
                             }
+                            // Skip parallel edges to a destination already claimed this batch.
+                            // Checked after the veto so a vetoed first parallel edge doesn't
+                            // block subsequent parallel edges from being presented to shouldTraverse.
+                            guard pendingWhite.insert(destination).inserted else { continue }
                             propertyMap[destination][predecessorEdgeProperty] = edge
                             visitor?.treeEdge?(edge)
                             whiteNeighbors.append(destination)

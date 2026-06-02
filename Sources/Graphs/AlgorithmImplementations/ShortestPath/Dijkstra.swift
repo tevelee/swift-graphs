@@ -19,7 +19,6 @@
         public typealias Edge = Graph.EdgeDescriptor
 
         /// A visitor that can be used to observe Dijkstra's algorithm progress.
-        /// A visitor that can be used to observe Dijkstra's algorithm progress.
         public struct Visitor {
             /// Called when examining a vertex.
             public var examineVertex: ((Vertex) -> Void)?
@@ -181,8 +180,8 @@
                 visitor?.examineVertex?(currentVertex.vertex)
 
                 for edge in graph.outgoingEdges(of: currentVertex.vertex) {
-                    guard let destination = graph.destination(of: edge) else { continue }
                     visitor?.examineEdge?(edge)
+                    guard let destination = graph.destination(of: edge) else { continue }
                     let edgeWeight = self.edgeWeight.costToExplore(edge, graph)
                     let newDistance = currentDistance + edgeWeight
 

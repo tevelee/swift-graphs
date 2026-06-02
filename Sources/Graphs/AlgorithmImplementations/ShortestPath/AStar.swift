@@ -213,7 +213,6 @@
                     visitor?.examineEdge?(edge)
 
                     guard let neighbor = graph.destination(of: edge) else { continue }
-                    if visited.contains(neighbor) { continue }
 
                     let weight = edgeWeight.costToExplore(edge, graph)
                     let tentativeG = currentG + weight

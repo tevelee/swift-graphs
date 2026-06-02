@@ -498,4 +498,65 @@ struct DepthFirstSearchTests {
         #expect(result.vertices.count == 3, "DFS must visit each vertex exactly once despite parallel edges")
         #expect(Set(result.vertices) == Set([a, b, c]))
     }
+
+    /// Parallel edges a → b (two edges) must fire `treeEdge` exactly once for `b`.
+    ///
+    /// The iterative DFS batches all white-neighbor classification in one pass. Without
+    /// deduplication, both parallel edges would see `b` as white and both would fire
+    /// `treeEdge`. Only the first edge to each unique white destination is a tree edge.
+    @Test func parallelEdgesFireTreeEdgeOncePerDestination() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: a, to: b)  // parallel edge to same destination
+
+        var treeEdgeCount = 0
+        var examineEdgeCount = 0
+        DepthFirstSearch(on: graph, from: a)
+            .withVisitor {
+                .init(
+                    examineEdge: { _ in examineEdgeCount += 1 },
+                    treeEdge: { _ in treeEdgeCount += 1 }
+                )
+            }
+            .forEach { _ in }
+
+        #expect(examineEdgeCount == 2, "examineEdge fires for every edge including parallel ones")
+        #expect(treeEdgeCount == 1, "treeEdge fires only once for b despite two parallel edges")
+    }
+
+    /// When `shouldTraverse` vetoes the first parallel edge to a white vertex, the second
+    /// parallel edge must still be presented to `shouldTraverse` and, if accepted, must
+    /// result in the destination being visited.
+    ///
+    /// Regression test for the ordering bug where `pendingWhite.insert` ran before the
+    /// veto check, permanently blocking all parallel edges once any one was rejected.
+    @Test func shouldTraverseVetoOnFirstParallelEdgeAllowsSecondParallelEdge() {
+        var graph = AdjacencyList()
+        let a = graph.addVertex { $0.label = "A" }
+        let b = graph.addVertex { $0.label = "B" }
+        graph.addEdge(from: a, to: b)
+        graph.addEdge(from: a, to: b)  // parallel edge
+
+        // Reject the first shouldTraverse call (first parallel edge), accept the second.
+        var vetoCallCount = 0
+        var bDiscovered = false
+        var treeEdgeCount = 0
+        DepthFirstSearch(on: graph, from: a)
+            .withVisitor {
+                .init(
+                    discoverVertex: { v in if v == b { bDiscovered = true } },
+                    treeEdge: { _ in treeEdgeCount += 1 },
+                    shouldTraverse: { _ in
+                        vetoCallCount += 1
+                        return vetoCallCount > 1
+                    }
+                )
+            }
+            .forEach { _ in }
+
+        #expect(bDiscovered, "b must be visited via the second parallel edge despite e1 being vetoed")
+        #expect(treeEdgeCount == 1, "treeEdge fires once via the accepted second parallel edge")
+    }
 }

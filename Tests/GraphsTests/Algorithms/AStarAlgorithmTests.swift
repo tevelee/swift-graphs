@@ -383,5 +383,31 @@
 
             #expect(notRelaxedCount >= 1, "c→d should not be relaxed because d already has gScore 2 via a→b→d")
         }
+
+        /// `edgeNotRelaxed` must fire for edges to already-settled vertices regardless of
+        /// the order vertices are dequeued from the priority queue.
+        ///
+        /// Graph: a→b (1), a→c (1), b→c (5).
+        /// Both b and c settle at gScore=1 (via a). When b is processed, c already has
+        /// gScore=1, so b→c (would cost 6) is not relaxed. Because `edgeNotRelaxed` must
+        /// fire whether c is settled or merely has a better stored gScore, this test is
+        /// order-independent: regardless of whether b or c is dequeued first, the
+        /// b→c edge always fires `edgeNotRelaxed`.
+        @Test func aStarEdgeNotRelaxedFiredEvenForSettledNeighbor() {
+            var graph = AdjacencyList()
+            let a = graph.addVertex { $0.label = "A" }
+            let b = graph.addVertex { $0.label = "B" }
+            let c = graph.addVertex { $0.label = "C" }
+            graph.addEdge(from: a, to: b) { $0.weight = 1.0 }
+            graph.addEdge(from: a, to: c) { $0.weight = 1.0 }
+            graph.addEdge(from: b, to: c) { $0.weight = 5.0 }  // b→c costs 6 total; c already at 1
+
+            var notRelaxedCount = 0
+            AStar(on: graph, from: a, edgeWeight: .property(\.weight), heuristic: .uniform(0), calculateTotalCost: +)
+                .withVisitor { .init(edgeNotRelaxed: { _ in notRelaxedCount += 1 }) }
+                .forEach { _ in }
+
+            #expect(notRelaxedCount >= 1, "b→c must fire edgeNotRelaxed regardless of whether c was already dequeued")
+        }
     }
 #endif
