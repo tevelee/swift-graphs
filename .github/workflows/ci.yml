@@ -23,34 +23,34 @@ jobs:
           # setup-swift@v3 (swiftly) crashes installing 5.9; pin to v2
           - os: macos-14
             swift: "5.9"
-            setup_swift: "v2"
             extra: ""
             build_only: true
           # Swift 6.0 — validates Package@swift-6.0.swift (strict concurrency, no traits)
           - os: macos-15
             swift: "6.0"
-            setup_swift: "v3"
             extra: ""
           # Swift 6.1 — validates Package@swift-6.0.swift on 6.1 toolchain (catches compiler(>=6.x) guard regressions)
           - os: macos-15
             swift: "6.1"
-            setup_swift: "v3"
             extra: ""
           # Swift 6.2 default traits — validates Package@swift-6.2.swift (Pathfinding + Connectivity)
           - os: macos-15
             swift: "6.2"
-            setup_swift: "v3"
             traits: "default"
             extra: ""
           # Swift 6.2 all traits — full feature coverage across every algorithm family
           - os: macos-15
             swift: "6.2"
-            setup_swift: "v3"
             traits: "full"
             extra: "--enable-all-traits"
     steps:
       - uses: actions/checkout@v6
-      - uses: swift-actions/setup-swift@${{ matrix.setup_swift }}
+      - uses: swift-actions/setup-swift@v2
+        if: matrix.swift == '5.9'
+        with:
+          swift-version: ${{ matrix.swift }}
+      - uses: swift-actions/setup-swift@v3
+        if: matrix.swift != '5.9'
         with:
           swift-version: ${{ matrix.swift }}
       - name: Build
