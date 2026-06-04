@@ -87,7 +87,7 @@ extension RandomGraphConstructible where VertexDescriptor: Hashable {
     extension RandomGraphConstructible where VertexDescriptor: Hashable {
         /// Creates a random graph using Erdos-Renyi model as the default.
         /// This is the most commonly used random graph model with uniform edge probability.
-        static func randomGraph(
+        public static func randomGraph(
             vertexCount: Int,
             edgeProbability: Double = 0.5
         ) -> Self {
@@ -96,7 +96,7 @@ extension RandomGraphConstructible where VertexDescriptor: Hashable {
 
         /// Creates a random graph using Barabasi-Albert model for scale-free networks.
         /// This generates graphs with power-law degree distribution.
-        static func randomScaleFreeGraph(
+        public static func randomScaleFreeGraph(
             vertexCount: Int,
             averageDegree: Double = 2.0
         ) -> Self where Self: BidirectionalGraph {
@@ -105,7 +105,7 @@ extension RandomGraphConstructible where VertexDescriptor: Hashable {
 
         /// Creates a random graph using Watts-Strogatz model for small-world networks.
         /// This generates graphs with high clustering and short path lengths.
-        static func randomSmallWorldGraph(
+        public static func randomSmallWorldGraph(
             vertexCount: Int,
             averageDegree: Double = 4.0,
             rewiringProbability: Double = 0.1

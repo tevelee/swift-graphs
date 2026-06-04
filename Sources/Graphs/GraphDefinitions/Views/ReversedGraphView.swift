@@ -88,7 +88,7 @@ extension ReversedGraphView {
     ///
     /// - Returns: The original graph
     @inlinable
-    func reversed() -> Base {
+    public func reversed() -> Base {
         base
     }
 
@@ -96,7 +96,7 @@ extension ReversedGraphView {
     ///
     /// - Returns: The original graph
     @inlinable
-    func transpose() -> Base {
+    public func transpose() -> Base {
         base
     }
 }

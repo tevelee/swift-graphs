@@ -180,7 +180,7 @@ extension EdgeLookupGraph where Self: VertexListGraph, VertexDescriptor: Hashabl
     /// The complement graph contains all possible edges that are not present in the original graph.
     /// - Returns: A `ComplementGraphView` that represents the complement graph
     @inlinable
-    func complement() -> ComplementGraphView<Self> {
+    public func complement() -> ComplementGraphView<Self> {
         ComplementGraphView(base: self)
     }
 }
@@ -192,7 +192,7 @@ extension ComplementGraphView {
     ///
     /// - Returns: The original graph
     @inlinable
-    func complement() -> Base {
+    public func complement() -> Base {
         base
     }
 }

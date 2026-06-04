@@ -178,7 +178,7 @@ extension UndirectedGraphView {
     ///
     /// - Returns: The original bidirectional graph
     @inlinable
-    func directed() -> Base {
+    public func directed() -> Base {
         base
     }
 }
