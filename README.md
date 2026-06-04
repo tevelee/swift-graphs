@@ -94,6 +94,11 @@ cityNetwork.shortestPaths(from: sanFrancisco, using: .spfa(weight: .property(\.w
 // K Shortest Paths - find multiple alternative routes
 cityNetwork.kShortestPaths(from: sanFrancisco, to: denver, k: 3, using: .yen(weight: .property(\.weight)))
 
+// Contraction Hierarchy - preprocess once for repeated fast queries on large graphs
+let ch = cityNetwork.contractionHierarchy(weight: .property(\.weight))
+ch.shortestPath(from: sanFrancisco, to: denver)
+cityNetwork.shortestPath(from: sanFrancisco, to: denver, using: .contractionHierarchy(weight: .property(\.weight)))
+
 // All-Pairs Shortest Paths - distances between all city pairs
 cityNetwork.shortestPathsForAllPairs(using: .floydWarshall(weight: .property(\.weight)))
 cityNetwork.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)))
@@ -107,6 +112,11 @@ cityNetwork.minimumSpanningTree(using: .boruvka(weight: .property(\.weight)))
 cityNetwork.maximumFlow(from: sanFrancisco, to: denver, using: .fordFulkerson(capacityCost: .property(\.weight)))
 cityNetwork.maximumFlow(from: sanFrancisco, to: denver, using: .edmondsKarp(capacityCost: .property(\.weight)))
 cityNetwork.maximumFlow(from: sanFrancisco, to: denver, using: .dinic(capacityCost: .property(\.weight)))
+
+// Minimum Cost Flow - cheapest way to route a given flow amount
+cityNetwork.minimumCostFlow(from: sanFrancisco, to: denver, capacity: .property(\.weight), unitCost: .uniform(1.0))
+cityNetwork.minimumCostFlow(from: sanFrancisco, to: denver, capacity: .property(\.capacity), unitCost: .property(\.cost), demand: 10.0)
+cityNetwork.minimumCostFlow(from: sanFrancisco, to: denver, demand: nil, using: .successiveShortestPaths(capacity: .property(\.weight), unitCost: .uniform(1.0)))
 
 // Minimum Cut - find the cheapest way to disconnect a graph
 cityNetwork.minimumCut(weight: .property(\.weight))
@@ -186,6 +196,23 @@ cityNetwork.isIsomorphic(to: anotherNetwork, using: .weisfeilerLehman())
 let randomNetwork = AdjacencyList.randomGraph(vertexCount: 50, using: .erdosRenyi(edgeProbability: 0.1))
 let scaleFreeNetwork = AdjacencyList.randomGraph(vertexCount: 50, using: .barabasiAlbert(edgesPerVertex: 3))
 let smallWorldNetwork = AdjacencyList.randomGraph(vertexCount: 50, using: .wattsStrogatz(neighbors: 4, rewiringProbability: 0.1))
+
+// Graph Products - zero-copy lazy views combining two graphs
+let cartesian = cityNetwork.cartesianProduct(with: anotherNetwork)   // G □ H
+let tensor = cityNetwork.tensorProduct(with: anotherNetwork)         // G × H
+let strong = cityNetwork.strongProduct(with: anotherNetwork)         // G ⊠ H
+let lexicographic = cityNetwork.lexicographicProduct(with: anotherNetwork) // G ∘ H
+
+// Graph Families - zero-storage generator graphs
+let complete = CompleteGraph(count: 5)       // K₅: every pair connected
+let path = PathGraph(n: 5)                   // P₅: 0→1→2→3→4
+let cycle = CycleGraph(n: 6)                 // C₆: directed cycle
+let star = StarGraph(n: 4)                   // S₄: hub + 4 leaves
+let wheel = WheelGraph(n: 5)                 // W₅: hub connected to a cycle
+let ladder = LadderGraph(n: 4)               // 2×n grid with rungs
+let hypercube = HypercubeGraph(n: 3)         // Q₃: 8-vertex Boolean lattice
+let completeBipartite = CompleteBipartiteGraph(m: 3, n: 4)  // K₃,₄
+let peterson = PetersonGraph()               // the classic Petersen graph
 ```
 
 ## Installation
@@ -208,9 +235,20 @@ dependencies: [
 - **LazyIncidenceGraph** - Computed on-demand for large graphs
 - **BipartiteAdjacencyList** - Two-colored graphs
 
+**Graph Families** (zero-storage generator graphs):
+- **CompleteGraph** - Complete graph K_n
+- **PathGraph** - Directed path P_n
+- **CycleGraph** - Directed cycle C_n
+- **StarGraph** - Hub + n leaves S_n
+- **WheelGraph** - Hub connected to a cycle W_n
+- **LadderGraph** - 2×n ladder graph
+- **HypercubeGraph** - Boolean hypercube Q_n
+- **CompleteBipartiteGraph** - Complete bipartite K_{m,n}
+- **PetersonGraph** - The classic Petersen graph
+
 ### 🚀 Comprehensive Algorithms
 
-**Shortest Paths** - Dijkstra, Bidirectional Dijkstra, A*, Bellman-Ford, SPFA, Floyd-Warshall, Johnson, Yen (K-shortest)
+**Shortest Paths** - Dijkstra, Bidirectional Dijkstra, A*, Bellman-Ford, SPFA, Floyd-Warshall, Johnson, Yen (K-shortest), Contraction Hierarchy (fast repeated queries)
 
 **Traversal & Search** - DFS (preorder/postorder), BFS, Best-First, Depth-Limited DFS, Iterative Deepening DFS
 
@@ -218,9 +256,11 @@ dependencies: [
 
 **Graph Properties** - Tree Detection, Cycle Detection, Bipartiteness, Connectivity, Eulerian Paths/Cycles, Hamiltonian Paths/Cycles (Backtracking, Heuristic)
 
-**Optimization** - Minimum Spanning Tree (Kruskal, Prim, Borůvka), Maximum Flow (Ford-Fulkerson, Edmonds-Karp, Dinic), Minimum Cut (Stoer-Wagner), Graph Coloring (Greedy, DSatur, Welsh-Powell, Sequential), Matching (Hopcroft-Karp), Topological Sort (DFS, Kahn)
+**Optimization** - Minimum Spanning Tree (Kruskal, Prim, Borůvka), Maximum Flow (Ford-Fulkerson, Edmonds-Karp, Dinic), Minimum Cost Flow (Successive Shortest Paths), Minimum Cut (Stoer-Wagner), Graph Coloring (Greedy, DSatur, Welsh-Powell, Sequential), Matching (Hopcroft-Karp), Topological Sort (DFS, Kahn)
 
 **Advanced** - Graph Isomorphism (VF2, Weisfeiler-Lehman), Clique Detection (Bron-Kerbosch), Community Detection (Louvain), Centrality Measures (PageRank, Betweenness, Closeness, Eigenvector, Degree), Random Graphs (Erdős-Rényi, Barabási-Albert, Watts-Strogatz)
+
+**Graph Views** - Filtered, Reversed, Undirected, Complement, Graph Products (Cartesian, Tensor, Strong, Lexicographic)
 
 ## Design Philosophy
 
@@ -348,6 +388,56 @@ cities.addEdge(from: sanFrancisco, to: sacramento) {
 // Query using custom properties
 let capitals = cities.vertices().filter { cities[$0].isCapital }
 let largeCities = cities.vertices().filter { cities[$0].population > 500000 }
+```
+
+### Graph Products
+
+Graph products combine two graphs into a new one without copying any data. All four classical products are supported as lazy views:
+
+```swift
+let g = PathGraph(n: 3)  // 0→1→2
+let h = PathGraph(n: 3)  // 0→1→2
+
+// Cartesian product (G □ H): move in exactly one factor at a time
+let cartesian = g.cartesianProduct(with: h)
+// Vertices: (0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2)
+// (0,0)→(0,1) and (0,0)→(1,0) but not (0,0)→(1,1)
+
+// Tensor product (G × H): move in both factors simultaneously
+let tensor = g.tensorProduct(with: h)
+
+// Strong product (G ⊠ H): move in one or both factors
+let strong = g.strongProduct(with: h)
+
+// Lexicographic product (G ∘ H): move in G, or stay in G and move in H
+let lexicographic = g.lexicographicProduct(with: h)
+
+// Products work with any graph and support traversal, shortest paths, etc.
+let path = cartesian.shortestPath(from: Pair(0, 0), to: Pair(2, 2), using: .dijkstra())
+```
+
+### Contraction Hierarchy
+
+Contraction Hierarchy preprocesses a graph once for very fast repeated shortest-path queries. It significantly outperforms Dijkstra on large, road-network-style graphs.
+
+```swift
+// One-time preprocessing — build the hierarchy
+let ch = cityNetwork.contractionHierarchy(weight: .property(\.weight))
+
+// Many fast queries on the same hierarchy
+let path1 = ch.shortestPath(from: sanFrancisco, to: denver)
+let path2 = ch.shortestPath(from: losAngeles, to: phoenix)
+
+// Alternatively, use the algorithm adapter for seamless integration
+// (preprocessing happens lazily on the first call and is cached)
+let lazyAlgorithm = ShortestPathAlgorithm.contractionHierarchy(weight: .property(\.weight))
+cityNetwork.shortestPath(from: sanFrancisco, to: denver, using: lazyAlgorithm)
+
+// Custom contraction order (optional)
+let chOrdered = cityNetwork.contractionHierarchy(
+    weight: .property(\.weight),
+    vertexRank: { myRankFor($0) }
+)
 ```
 
 ## Documentation

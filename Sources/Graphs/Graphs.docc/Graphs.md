@@ -52,6 +52,27 @@ Swift Graphs provides multiple graph implementations optimized for different use
 - ``GridGraph`` - 2D spatial graphs for pathfinding
 - ``LazyIncidenceGraph`` - On-demand computation for large graphs
 
+### Graph Families
+
+Zero-storage generator graphs for standard graph-theory structures:
+
+- ``CompleteGraph`` - Complete graph K_n (every pair connected)
+- ``PathGraph`` - Directed path P_n: 0→1→2→…→(n-1)
+- ``CycleGraph`` - Directed cycle C_n
+- ``StarGraph`` - Hub-and-spokes S_n (hub vertex `n`, leaves `0..<n`)
+- ``WheelGraph`` - Hub connected to a cycle W_n
+- ``LadderGraph`` - 2×n ladder with rungs
+- ``HypercubeGraph`` - Boolean hypercube Q_n
+- ``CompleteBipartiteGraph`` - Complete bipartite K_{m,n}
+- ``PetersonGraph`` - The classic Petersen graph
+
+### Graph Views
+
+Lazy, zero-copy views that wrap an existing graph:
+
+- **Product views** - ``CartesianProductGraph``, ``TensorProductGraph``, ``StrongProductGraph``, ``LexicographicProductGraph``
+- **Structural views** - Filtered, Reversed, Undirected, Complement
+
 ### Choosing a Graph Type
 
 See <doc:ChoosingGraphType> for detailed guidance.
@@ -68,6 +89,7 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 - **SPFA** - Faster alternative to Bellman-Ford for negative weights
 - **Floyd-Warshall** - All-pairs shortest paths
 - **Johnson's Algorithm** - All-pairs with sparse graphs
+- **Contraction Hierarchy** - Preprocess once for very fast repeated queries
 
 ### Graph Traversal
 
@@ -83,11 +105,14 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 - **Articulation Points & Bridges** - Find critical vertices and edges
 - **Cycle Detection** - Identify cycles in graphs
 - **Bipartiteness** - Two-coloring detection
+- **Planarity** - Planarity testing, embedding, and straight-line drawing
+- **Vertex Ordering** - Smallest-last and Reverse Cuthill-McKee orderings
 
 ### Optimization Problems
 
 - **Minimum Spanning Tree** - Kruskal, Prim, Borůvka algorithms
 - **Maximum Flow** - Ford-Fulkerson, Edmonds-Karp, Dinic algorithms
+- **Minimum Cost Flow** - Successive Shortest Paths algorithm
 - **Minimum Cut** - Stoer-Wagner global minimum cut
 - **Graph Coloring** - Greedy, DSatur, Welsh-Powell algorithms
 - **Topological Sort** - DAG ordering
@@ -98,6 +123,7 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 - **Eulerian Paths** - Visit every edge exactly once
 - **Hamiltonian Paths** - Visit every vertex exactly once
 - **K-Shortest Paths** - Find multiple paths
+- **All Paths** - Enumerate every simple path between two vertices
 
 ### Centrality Measures
 
@@ -143,6 +169,25 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 - ``GridGraph``
 - ``LazyIncidenceGraph``
 
+### Graph Families
+
+- ``CompleteGraph``
+- ``PathGraph``
+- ``CycleGraph``
+- ``StarGraph``
+- ``WheelGraph``
+- ``LadderGraph``
+- ``HypercubeGraph``
+- ``CompleteBipartiteGraph``
+- ``PetersonGraph``
+
+### Graph Product Views
+
+- ``CartesianProductGraph``
+- ``TensorProductGraph``
+- ``StrongProductGraph``
+- ``LexicographicProductGraph``
+
 ### Graph Protocols
 
 - ``Graph``
@@ -164,3 +209,8 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 - ``TraversalResult``
 - ``GraphColoring``
 - ``ConnectedComponentsResult``
+- ``MinCostFlowResult``
+- ``PlanarEmbedding``
+- ``PlanarEmbeddingResult``
+- ``PlanarDrawing``
+- ``VertexOrdering``

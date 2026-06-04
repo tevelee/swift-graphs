@@ -195,6 +195,45 @@ let paths = graph.kShortestPaths(
 - Route planning with alternatives
 - Network resilience analysis
 
+### Contraction Hierarchy
+
+**Best for:** Very fast repeated shortest-path queries on large static graphs
+
+```swift
+// One-time preprocessing — build the hierarchy
+let ch = graph.contractionHierarchy(weight: .property(\.weight))
+
+// Many fast queries reuse the same preprocessed hierarchy
+let path1 = ch.shortestPath(from: a, to: b)
+let path2 = ch.shortestPath(from: c, to: d)
+
+// Or use the lazy algorithm adapter (preprocesses on the first call)
+let path = graph.shortestPath(
+    from: a,
+    to: b,
+    using: .contractionHierarchy(weight: .property(\.weight))
+)
+
+// Custom contraction order (optional — edge-difference heuristic used by default)
+let ch2 = graph.contractionHierarchy(
+    weight: .property(\.weight),
+    vertexRank: { vertex in myRank(vertex) }
+)
+```
+
+**Characteristics:**
+- **Preprocessing:** O(V log V + E) (amortised)
+- **Query Time:** O(V log V) in the augmented graph (much faster in practice)
+- **Space Complexity:** O(V + E) for shortcuts
+- **Requirements:** Non-negative weights, bidirectional graph
+- **Optimal:** Yes (exact shortest path)
+
+**Use when:**
+- Road-network-style graphs with many repeated queries
+- Preprocessing cost can be amortised over many queries
+- Need exact results significantly faster than Dijkstra
+- Navigation, logistics, large-scale pathfinding
+
 ## Graph Traversal
 
 Systematically visit vertices in a specific order.
@@ -587,6 +626,60 @@ let maxFlow = graph.maximumFlow(
 - Need better performance
 - Bipartite matching
 
+## Minimum Cost Flow
+
+Find the cheapest way to route flow through a network, given per-edge capacities and unit costs.
+
+### Successive Shortest Paths
+
+**Best for:** General minimum cost flow problems
+
+```swift
+// Minimum cost maximum flow (push as much flow as possible at minimum cost)
+let result = graph.minimumCostFlow(
+    from: source,
+    to: sink,
+    capacity: .property(\.capacity),
+    unitCost: .property(\.cost)
+)
+print(result.flowValue)   // total flow achieved
+print(result.totalCost)   // minimum cost for that flow
+
+// Minimum cost flow with a demanded amount
+let result2 = graph.minimumCostFlow(
+    from: source,
+    to: sink,
+    capacity: .property(\.capacity),
+    unitCost: .property(\.cost),
+    demand: 10.0           // push exactly this much flow
+)
+print(result2.isFeasible) // false if demand exceeds max flow capacity
+
+// Using the algorithm explicitly
+let flow = graph.minimumCostFlow(
+    from: source,
+    to: sink,
+    demand: nil,
+    using: .successiveShortestPaths(
+        capacity: .property(\.capacity),
+        unitCost: .property(\.cost)
+    )
+)
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V × E × log V) per augmentation
+- **Space Complexity:** O(V + E)
+- **Strategy:** Finds minimum-cost augmenting paths via SPFA
+- **Handles:** Flow rerouting via backward edges in the residual graph
+- **Demand mode:** Push exactly a specified amount, or `nil` for max flow
+
+**Use when:**
+- Route goods through a supply network at minimum cost
+- Assignment and transportation problems
+- Need minimum cost maximum flow
+- Both capacity and per-unit cost are relevant
+
 ## Minimum Cut
 
 Find the minimum total edge weight whose removal disconnects the graph, without specifying source or sink vertices.
@@ -794,6 +887,36 @@ let hasCycle = graph.hasCycle(using: .unionFind())
 - **Efficient:** For undirected graphs
 - **Online:** Can detect during edge addition
 
+## Structural Properties
+
+Test high-level structural characteristics of a graph. Each predicate has a sensible default and an algorithm-selectable form.
+
+```swift
+// Is there a cycle?
+let cyclic = graph.isCyclic()
+
+// Is the graph a tree (connected and acyclic, V-1 edges)?
+let tree = graph.isTree()
+
+// Is the graph connected (every vertex reachable)?
+let connected = graph.isConnected()
+
+// Is the graph 2-colorable (no odd cycles)?
+let bipartite = graph.isBipartite()
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V + E) for each predicate
+- **Space Complexity:** O(V)
+- **Built on:** Traversal and coloring primitives
+
+**Use when:**
+- Validating input assumptions before running an algorithm
+- Classifying graph structure
+- Guarding algorithms that require a tree, DAG, or bipartite graph
+
+> Note: Eulerian, Hamiltonian, and planarity predicates have their own dedicated sections (see *Eulerian Paths and Cycles*, *Hamiltonian Paths and Cycles*, and *Planarity*).
+
 ## Eulerian Paths and Cycles
 
 Visit every edge exactly once.
@@ -869,6 +992,39 @@ let tour = graph.hamiltonianCycle(using: .heldKarp(weight: .property(\.weight)))
 - Need optimal TSP solution
 - Graph has 15-25 vertices
 - Can afford exponential time
+
+## Path Enumeration
+
+Enumerate every simple path between two vertices, not just the shortest one.
+
+### All Paths (DFS)
+
+**Best for:** Listing all distinct routes between two vertices
+
+```swift
+// Lazily enumerate every simple path from source to destination
+for path in graph.allPaths(from: source, to: destination) {
+    print(path.vertices)
+}
+
+// Bound the search by path length (number of edges)
+let shortRoutes = graph.allPaths(from: source, to: destination, maxLength: 5)
+
+// Or supply an algorithm explicitly
+let paths = graph.allPaths(from: source, to: destination, using: .dfs())
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V!) worst case (exponential — there can be exponentially many paths)
+- **Space Complexity:** O(V) per path, lazy sequence
+- **Returns:** A lazy sequence of simple (loop-free) paths
+- **Bounded:** Optional `maxLength` prunes paths exceeding a given number of edges
+
+**Use when:**
+- Need every alternative route, not just the optimal one
+- Enumerating possibilities in small graphs
+- Reachability analysis with path constraints
+- Combine with `maxLength` to keep the search tractable
 
 ## Graph Isomorphism
 
@@ -1132,6 +1288,141 @@ let centrality = graph.centrality(using: .eigenvector())
 - Collaborative networks
 - Recursive importance needed
 
+## Planarity
+
+Test whether a graph can be drawn in the plane without edge crossings, and compute embeddings and drawings when it can.
+
+### Planarity Testing
+
+**Best for:** Deciding whether a graph is planar
+
+```swift
+// Default planarity test (Left-Right algorithm)
+let planar = graph.isPlanar()
+
+// Choose a specific algorithm
+let planar2 = graph.isPlanar(using: .leftRight())
+let planar3 = graph.isPlanar(using: .boyerMyrvold())
+let planar4 = graph.isPlanar(using: .hopcroftTarjan())
+let planar5 = graph.isPlanar(using: .eulerFormula())
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V) for Left-Right, Boyer-Myrvold, Hopcroft-Tarjan (linear)
+- **Space Complexity:** O(V)
+- **Algorithms:** Left-Right (default), Boyer-Myrvold, Hopcroft-Tarjan, Euler-formula bound
+- **Optimal:** Exact (Euler-formula is a fast necessary-condition pre-check)
+
+**Use when:**
+- Circuit board / VLSI layout feasibility
+- Graph drawing and visualization
+- Detecting K5 / K3,3 minors
+
+### Planar Embedding
+
+**Best for:** Computing a combinatorial embedding (rotation system) or a non-planarity certificate
+
+```swift
+let result = graph.planarEmbedding()              // default: Left-Right
+let result2 = graph.planarEmbedding(using: .leftRight())
+
+switch result {
+case .planar(let embedding):
+    // Clockwise neighbor order around each vertex
+    let order = embedding.neighbors(of: vertex)
+    let faces = embedding.faces                    // boundary cycles, incl. outer face
+case .nonPlanar(let kuratowski):
+    // A K5 or K3,3 subdivision proving non-planarity
+    print(kuratowski)
+}
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V) (Left-Right)
+- **Returns:** `.planar` with a rotation system, or `.nonPlanar` with a Kuratowski subgraph
+- **Provides:** Face enumeration from the embedding
+
+**Use when:**
+- Need the actual planar structure, not just a yes/no
+- Face traversal / dual graph construction
+- Producing a certificate of non-planarity
+
+### Planar Drawing
+
+**Best for:** Assigning crossing-free straight-line coordinates
+
+```swift
+// Straight-line grid drawing (Chrobak-Payne algorithm)
+if let drawing = graph.planarDrawing() {
+    for vertex in graph.vertices() {
+        let point = drawing.position(of: vertex)   // integer grid coordinate
+        print(point)
+    }
+    print(drawing.width, drawing.height)           // bounding box
+}
+
+// Equivalent explicit form
+let drawing2 = graph.planarDrawing(using: .chrobakPayne())
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V)
+- **Space Complexity:** O(V)
+- **Output:** Integer grid coordinates on an O(V) × O(V) grid, no edge crossings
+- **Returns:** `nil` if the graph is not planar
+
+**Use when:**
+- Visualizing planar graphs
+- Generating layouts for rendering
+- Embedding graphs on a coordinate grid
+
+## Vertex Ordering
+
+Compute a linear ordering of vertices to optimize downstream algorithms.
+
+### Smallest-Last Ordering
+
+**Best for:** Improving greedy graph coloring
+
+```swift
+let ordering = graph.orderVertices()                   // default: smallest-last
+let ordering2 = graph.orderVertices(using: .smallestLastVertex())
+
+let position = ordering.position(of: vertex)           // index in the ordering
+let first = ordering.vertex(at: 0)                     // vertex at a position
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V + E)
+- **Space Complexity:** O(V)
+- **Strategy:** Repeatedly remove the minimum-degree vertex; reverse the removal order
+- **Optimizes:** Greedy coloring quality (bounds colors by graph degeneracy + 1)
+
+**Use when:**
+- Pre-ordering vertices before greedy coloring
+- Computing graph degeneracy
+- Register allocation
+
+### Reverse Cuthill-McKee
+
+**Best for:** Reducing matrix bandwidth
+
+```swift
+let ordering = graph.orderVerticesForBandwidthReduction()
+let ordering2 = graph.orderVertices(using: .reverseCuthillMcKee())
+```
+
+**Characteristics:**
+- **Time Complexity:** O(V + E)
+- **Space Complexity:** O(V)
+- **Strategy:** BFS from a low-degree vertex, then reverse the order
+- **Optimizes:** Bandwidth/profile of the adjacency matrix
+
+**Use when:**
+- Sparse matrix reordering for numerical solvers
+- Cache-friendly graph layouts
+- Reducing fill-in for matrix factorization
+
 ## Algorithm Selection Guide
 
 ### By Problem Type
@@ -1140,16 +1431,22 @@ let centrality = graph.centrality(using: .eigenvector())
 |---------|----------------------|
 | Unweighted shortest path | BFS |
 | Weighted shortest path | Dijkstra or A* |
+| Repeated queries on large graph | Contraction Hierarchy |
 | Negative weights | Bellman-Ford or SPFA |
 | All pairs | Johnson (sparse), Floyd-Warshall (dense) |
 | Minimum spanning tree | Kruskal (sparse), Prim (dense) |
 | Maximum flow | Edmonds-Karp (general), Dinic (large) |
+| Minimum cost flow | Successive Shortest Paths |
 | Global minimum cut | Stoer-Wagner |
 | Graph coloring | Greedy (fast), DSatur (quality) |
 | Bipartite matching | Hopcroft-Karp |
 | Topological sort | Kahn or DFS |
 | Connected components | DFS (standard), Union-Find (incremental) |
 | Articulation points | Tarjan |
+| All simple paths | All Paths (DFS) |
+| Planarity testing | Left-Right (default), Boyer-Myrvold |
+| Planar layout | Chrobak-Payne straight-line drawing |
+| Vertex ordering | Smallest-Last (coloring), Reverse Cuthill-McKee (bandwidth) |
 | Vertex importance | Degree (fast), PageRank (link-based), Betweenness (bottlenecks) |
 
 ### By Graph Size
