@@ -3,21 +3,37 @@ name: Code coverage
 on:
   push:
     branches: [main]
+    paths:
+      - "Sources/**"
+      - "Tests/**"
+      - "Package*.swift"
+      - ".github/workflows/coverage.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "Sources/**"
+      - "Tests/**"
+      - "Package*.swift"
+      - ".github/workflows/coverage.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   coverage:
     name: Codecov
-    runs-on: macos-15
+    runs-on: macos-26
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
-      - uses: swift-actions/setup-swift@v3
+      - uses: ./.github/actions/swift-build-env
         with:
-          swift-version: "6.2"
+          xcode-version: "26.4"
 
       - name: Test with coverage
         run: swift test --enable-all-traits --enable-code-coverage

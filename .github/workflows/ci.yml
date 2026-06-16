@@ -3,8 +3,24 @@ name: CI
 on:
   push:
     branches: [main]
+    paths:
+      - "Sources/**"
+      - "Tests/**"
+      - "Package*.swift"
+      - ".swiftlint.yml"
+      - ".swift-format"
+      - ".github/workflows/ci.yml"
+      - ".github/actions/**"
   pull_request:
     branches: [main]
+    paths:
+      - "Sources/**"
+      - "Tests/**"
+      - "Package*.swift"
+      - ".swiftlint.yml"
+      - ".swift-format"
+      - ".github/workflows/ci.yml"
+      - ".github/actions/**"
   workflow_dispatch:
 
 permissions:
@@ -18,96 +34,119 @@ jobs:
   test-macos:
     name: Test · macOS · Swift ${{ matrix.swift }}${{ matrix.traits && format(' · {0} traits', matrix.traits) || '' }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Swift 5.9 — validates Package.swift (no language mode override, build-only: Swift Testing not available)
-          # setup-swift@v3 (swiftly) crashes installing 5.9; pin to v2
+          # Xcode 15.2 / Swift 5.9 — validates Package.swift (build only)
           - os: macos-14
+            xcode: "15.2"
             swift: "5.9"
-            extra: ""
             build_only: true
-          # Swift 6.0 — validates Package@swift-6.0.swift (strict concurrency, no traits)
+          # Xcode 15.4 / Swift 5.10 — validates Package.swift (build only)
+          - os: macos-14
+            xcode: "15.4"
+            swift: "5.10"
+            build_only: true
+          # Xcode 16.2 / Swift 6.0 — validates Package@swift-6.0.swift
           - os: macos-15
+            xcode: "16.2"
             swift: "6.0"
-            extra: ""
-          # Swift 6.1 — validates Package@swift-6.0.swift on 6.1 toolchain (catches compiler(>=6.x) guard regressions)
+          # Xcode 16.4 / Swift 6.1 — validates Package@swift-6.0.swift on 6.1 toolchain
           - os: macos-15
+            xcode: "16.4"
             swift: "6.1"
-            extra: ""
-          # Swift 6.2 default traits — validates Package@swift-6.2.swift (Pathfinding + Connectivity)
+          # Xcode 26.0 / Swift 6.2 — validates Package@swift-6.2.swift
           - os: macos-15
+            xcode: "26.0"
             swift: "6.2"
+          # Xcode 26.4 / Swift 6.3 default traits
+          - os: macos-26
+            xcode: "26.4"
+            swift: "6.3"
             traits: "default"
-            extra: ""
-          # Swift 6.2 all traits — full feature coverage across every algorithm family
-          - os: macos-15
-            swift: "6.2"
+          # Xcode 26.4 / Swift 6.3 all traits
+          - os: macos-26
+            xcode: "26.4"
+            swift: "6.3"
             traits: "full"
-            extra: "--enable-all-traits"
     steps:
       - uses: actions/checkout@v6
-      - uses: swift-actions/setup-swift@v2
-        if: matrix.swift == '5.9'
+      - uses: ./.github/actions/swift-build-env
         with:
-          swift-version: ${{ matrix.swift }}
-      - uses: swift-actions/setup-swift@v3
-        if: matrix.swift != '5.9'
-        with:
-          swift-version: ${{ matrix.swift }}
+          xcode-version: ${{ matrix.xcode }}
       - name: Build
-        run: swift build ${{ matrix.extra }}
+        if: matrix.build_only
+        run: swift build ${{ matrix.traits == 'full' && '--enable-all-traits' || '' }}
       - name: Test
         if: ${{ !matrix.build_only }}
-        run: swift test ${{ matrix.extra }}
+        run: swift test ${{ matrix.traits == 'full' && '--enable-all-traits' || '' }} --xunit-output /tmp/test-results-${{ matrix.swift }}.xml
+      - name: Upload test results
+        if: failure() && !matrix.build_only
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-macos-swift-${{ matrix.swift }}${{ matrix.traits && format('-{0}', matrix.traits) || '' }}
+          path: /tmp/test-results-${{ matrix.swift }}.xml
+          retention-days: 7
 
   test-linux:
     name: Test · Linux · Swift ${{ matrix.swift }}${{ matrix.traits && format(' · {0} traits', matrix.traits) || '' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: swift:${{ matrix.swift }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Swift 5.9 — validates Package.swift on Linux (build-only: Swift Testing not available)
+          # Swift 5.9 — validates Package.swift on Linux (build only)
           - swift: "5.9"
-            extra: ""
+            build_only: true
+          # Swift 5.10 — validates Package.swift on Linux (build only)
+          - swift: "5.10"
             build_only: true
           # Swift 6.0 — validates Package@swift-6.0.swift on Linux
           - swift: "6.0"
-            extra: ""
           # Swift 6.1 — validates Package@swift-6.0.swift on Linux 6.1 toolchain
           - swift: "6.1"
-            extra: ""
-          # Swift 6.2 all traits — full coverage on Linux
+          # Swift 6.2 — validates Package@swift-6.2.swift on Linux
           - swift: "6.2"
+          # Swift 6.3 — newest toolchain on Linux
+          - swift: "6.3"
+            traits: "default"
+          # Swift 6.3 all traits — full feature coverage on Linux
+          - swift: "6.3"
             traits: "full"
-            extra: "--enable-all-traits"
     steps:
       - uses: actions/checkout@v6
+      - name: Cache SPM build
+        uses: actions/cache@v5
+        with:
+          path: |
+            .build
+            Package.resolved
+          key: spm-${{ runner.os }}-${{ runner.arch }}-swift-${{ matrix.swift }}-${{ hashFiles('Package*.swift') }}
+          restore-keys: |
+            spm-${{ runner.os }}-${{ runner.arch }}-swift-${{ matrix.swift }}-
       - name: Build
-        run: swift build ${{ matrix.extra }}
+        if: matrix.build_only
+        run: swift build ${{ matrix.traits == 'full' && '--enable-all-traits' || '' }}
       - name: Test
         if: ${{ !matrix.build_only }}
-        run: swift test ${{ matrix.extra }}
+        run: swift test ${{ matrix.traits == 'full' && '--enable-all-traits' || '' }}
 
   lint:
     name: Lint
     runs-on: macos-15
+    timeout-minutes: 10
     continue-on-error: true  # advisory: codebase has pre-existing style issues
     steps:
       - uses: actions/checkout@v6
-      - uses: swift-actions/setup-swift@v3
-        with:
-          swift-version: "6.2"
-
-      - name: Install linters
-        run: brew install swift-format swiftlint
-
+      - uses: ./.github/actions/brew-bundle
+      - name: actionlint
+        run: actionlint
       - name: swift-format
-        run: swift-format lint --recursive Sources Tests
-
+        run: swift-format lint --strict --recursive Sources Tests
       - name: SwiftLint
-        run: swiftlint lint --reporter github-actions-logging
+        run: swiftlint lint --strict --reporter github-actions-logging
