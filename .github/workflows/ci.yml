@@ -72,7 +72,7 @@ jobs:
             swift: "6.3"
             traits: "full"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/swift-build-env
         with:
           xcode-version: ${{ matrix.xcode }}
@@ -119,7 +119,7 @@ jobs:
           - swift: "6.3"
             traits: "full"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Cache SPM build
         uses: actions/cache@v5
         with:
@@ -142,7 +142,7 @@ jobs:
     timeout-minutes: 10
     continue-on-error: true  # advisory: codebase has pre-existing style issues
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/brew-bundle
       - name: actionlint
         run: actionlint
