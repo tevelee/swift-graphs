@@ -268,14 +268,14 @@
             var newCut1 = 0
             var newCut2 = 0
 
-            var v1 = StoerWagner<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = StoerWagner<AdjacencyList, Double>.Visitor()
             v1.startPhase = { _ in startPhase1 += 1 }
             v1.addVertex = { _, _ in addVtx1 += 1 }
             v1.phaseComplete = { _, _ in phaseEnd1 += 1 }
             v1.mergeVertices = { _, _ in merge1 += 1 }
             v1.newMinimumCut = { _ in newCut1 += 1 }
 
-            var v2 = StoerWagner<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = StoerWagner<AdjacencyList, Double>.Visitor()
             v2.startPhase = { _ in startPhase2 += 1 }
             v2.addVertex = { _, _ in addVtx2 += 1 }
             v2.phaseComplete = { _, _ in phaseEnd2 += 1 }

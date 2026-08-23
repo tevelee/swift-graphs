@@ -24,7 +24,7 @@ extension EdgeProperties {
     }
 }
 
-extension AdjacencyList {
+extension PropertyGraph where Self: IncidenceGraph & VertexListGraph, VertexDescriptor: Hashable {
     func traverse(
         from sourceLabel: String,
         using algorithm: some TraversalAlgorithm<Self>

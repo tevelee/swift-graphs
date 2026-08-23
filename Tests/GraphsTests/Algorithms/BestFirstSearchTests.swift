@@ -75,9 +75,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -133,14 +133,14 @@
             var examined1 = 0
             var examined2 = 0
 
-            var v1 = BestFirstTraversal<DefaultAdjacencyList, Int>.Visitor()
+            var v1 = BestFirstTraversal<AdjacencyList, Int>.Visitor()
             v1.examineVertex = { _ in examined1 += 1 }
 
-            var v2 = BestFirstTraversal<DefaultAdjacencyList, Int>.Visitor()
+            var v2 = BestFirstTraversal<AdjacencyList, Int>.Visitor()
             v2.examineVertex = { _ in examined2 += 1 }
 
             let combined = v1.combined(with: v2)
-            _ = BestFirstTraversal<DefaultAdjacencyList, Int>(heuristic: .uniform(0))
+            _ = BestFirstTraversal<AdjacencyList, Int>(heuristic: .uniform(0))
                 .traverse(from: a, in: graph, visitor: combined)
 
             #expect(examined1 == 3, "all 3 vertices in chain a→b→c must be examined")

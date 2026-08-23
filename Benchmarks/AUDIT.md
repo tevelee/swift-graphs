@@ -58,7 +58,7 @@ The default sparse-graph edge storage implemented `outgoingEdges(of:)` as
 `_edges.filter { source == v }` — a linear scan over the full edge set per
 call. Dijkstra/BFS/DFS therefore ran at O(V·E) instead of O(V+E). The
 `CacheInOutEdges` wrapper hid this because the default `AdjacencyList()`
-auto-wraps; users constructing `AdjacencyList(edgeStore: OrderedEdgeStorage())`
+auto-wraps; users constructing `StorageBackedAdjacencyList(edgeStorage: OrderedEdgeStorage())`
 got the slow path.
 
 Fix: maintain `_outgoingByVertex` / `_incomingByVertex` adjacency dicts inside
@@ -247,12 +247,10 @@ already had the field internal (`@usableFromInline let`), so the change
 is purely a type narrowing.
 
 This still defers the deeper `VertexPropertyValues = [ObjectIdentifier: Any]`
-boxing — that would lose the dynamic-property model — and the
-`Graph.VertexPropertyMap` associated-type approach (PM-1 in the design
-notes) that would let graphs declare their natural property-map type. The
-concrete-specialisation taken here is the lightest touch that removes the
-existential cost; PM-1 remains an option if a future use case wants
-non-dictionary backing.
+boxing, which would lose the dynamic-property model. Graphs now expose
+property values through subscripts while storage-backed implementations select
+their natural property-map types privately. This preserves non-dictionary
+backing without adding storage concerns to the graph capability protocols.
 
 Debug-mode deltas vs. audit-3 (M2, single-thread, 3-6 samples each):
 

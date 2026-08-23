@@ -490,9 +490,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -556,18 +556,18 @@
             var examV1 = 0
             var examV2 = 0
 
-            var v1 = SmallestLastVertexOrderingAlgorithm<DefaultAdjacencyList>.Visitor()
+            var v1 = SmallestLastVertexOrderingAlgorithm<AdjacencyList>.Visitor()
             v1.examineVertex = { _ in examV1 += 1 }
             v1.removeVertex = { _, _ in examV1 += 1 }
             v1.updateDegree = { _, _, _ in examV1 += 1 }
 
-            var v2 = SmallestLastVertexOrderingAlgorithm<DefaultAdjacencyList>.Visitor()
+            var v2 = SmallestLastVertexOrderingAlgorithm<AdjacencyList>.Visitor()
             v2.examineVertex = { _ in examV2 += 1 }
             v2.removeVertex = { _, _ in examV2 += 1 }
             v2.updateDegree = { _, _, _ in examV2 += 1 }
 
             let combined1 = v1.combined(with: v2)
-            _ = SmallestLastVertexOrderingAlgorithm<DefaultAdjacencyList>()
+            _ = SmallestLastVertexOrderingAlgorithm<AdjacencyList>()
                 .orderVertices(in: graph, visitor: combined1)
 
             // "last wins": v2 overrides v1 for all events, so only v2's counters increment
@@ -577,14 +577,14 @@
             // Scenario 2: only v1 sets events, v2 is empty.
             // Combined should fall back to v1's callbacks.
             var fallback = 0
-            var vFallback = SmallestLastVertexOrderingAlgorithm<DefaultAdjacencyList>.Visitor()
+            var vFallback = SmallestLastVertexOrderingAlgorithm<AdjacencyList>.Visitor()
             vFallback.examineVertex = { _ in fallback += 1 }
             vFallback.removeVertex = { _, _ in fallback += 1 }
             vFallback.updateDegree = { _, _, _ in fallback += 1 }
 
-            let emptyV2 = SmallestLastVertexOrderingAlgorithm<DefaultAdjacencyList>.Visitor()
+            let emptyV2 = SmallestLastVertexOrderingAlgorithm<AdjacencyList>.Visitor()
             let combined2 = vFallback.combined(with: emptyV2)
-            _ = SmallestLastVertexOrderingAlgorithm<DefaultAdjacencyList>()
+            _ = SmallestLastVertexOrderingAlgorithm<AdjacencyList>()
                 .orderVertices(in: graph, visitor: combined2)
 
             #expect(fallback >= 1, "v1 (self) callbacks are used when v2 (other) callbacks are nil")
@@ -608,20 +608,20 @@
             var examV1 = 0
             var examV2 = 0
 
-            var v1 = ReverseCuthillMcKeeOrderingAlgorithm<DefaultAdjacencyList>.Visitor()
+            var v1 = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>.Visitor()
             v1.examineVertex = { _ in examV1 += 1 }
             v1.enqueueVertex = { _, _ in examV1 += 1 }
             v1.dequeueVertex = { _ in examV1 += 1 }
             v1.startFromVertex = { _ in examV1 += 1 }
 
-            var v2 = ReverseCuthillMcKeeOrderingAlgorithm<DefaultAdjacencyList>.Visitor()
+            var v2 = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>.Visitor()
             v2.examineVertex = { _ in examV2 += 1 }
             v2.enqueueVertex = { _, _ in examV2 += 1 }
             v2.dequeueVertex = { _ in examV2 += 1 }
             v2.startFromVertex = { _ in examV2 += 1 }
 
             let combined1 = v1.combined(with: v2)
-            _ = ReverseCuthillMcKeeOrderingAlgorithm<DefaultAdjacencyList>()
+            _ = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>()
                 .orderVertices(in: graph, visitor: combined1)
 
             #expect(examV2 >= 1, "all events route to v2 (other) when v2 has non-nil callbacks")
@@ -629,15 +629,15 @@
 
             // Scenario 2: only v1 sets events, v2 is empty.
             var fallback = 0
-            var vFallback = ReverseCuthillMcKeeOrderingAlgorithm<DefaultAdjacencyList>.Visitor()
+            var vFallback = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>.Visitor()
             vFallback.examineVertex = { _ in fallback += 1 }
             vFallback.enqueueVertex = { _, _ in fallback += 1 }
             vFallback.dequeueVertex = { _ in fallback += 1 }
             vFallback.startFromVertex = { _ in fallback += 1 }
 
-            let emptyV2 = ReverseCuthillMcKeeOrderingAlgorithm<DefaultAdjacencyList>.Visitor()
+            let emptyV2 = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>.Visitor()
             let combined2 = vFallback.combined(with: emptyV2)
-            _ = ReverseCuthillMcKeeOrderingAlgorithm<DefaultAdjacencyList>()
+            _ = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>()
                 .orderVertices(in: graph, visitor: combined2)
 
             #expect(fallback >= 1, "v1 (self) callbacks are used when v2 (other) callbacks are nil")

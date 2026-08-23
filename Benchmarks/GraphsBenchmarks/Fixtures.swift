@@ -44,7 +44,7 @@ struct SplitMix64 {
 
 // MARK: - Default graph type
 
-typealias BenchGraph = AdjacencyList<
+typealias BenchGraph = StorageBackedAdjacencyList<
     OrderedVertexStorage,
     CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
     DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,

@@ -4,7 +4,7 @@
 
     struct EulerianPathTests {
 
-        func createEulerianPathGraph() -> some AdjacencyListProtocol {
+        func createEulerianPathGraph() -> AdjacencyList {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -20,7 +20,7 @@
             return graph
         }
 
-        func createEulerianCycleGraph() -> some AdjacencyListProtocol {
+        func createEulerianCycleGraph() -> AdjacencyList {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -35,7 +35,7 @@
             return graph
         }
 
-        func createNoEulerianPathGraph() -> some AdjacencyListProtocol {
+        func createNoEulerianPathGraph() -> AdjacencyList {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -52,7 +52,7 @@
             return graph
         }
 
-        func createSingleVertexGraph() -> some AdjacencyListProtocol {
+        func createSingleVertexGraph() -> AdjacencyList {
             var graph = AdjacencyList()
             graph.addVertex { $0.label = "A" }
             return graph
@@ -168,11 +168,11 @@
             var examined1 = 0
             var examined2 = 0
 
-            var v1 = Hierholzer<DefaultAdjacencyList>.Visitor()
+            var v1 = Hierholzer<AdjacencyList>.Visitor()
             v1.addEdgeToPath = { _ in edgesAdded1 += 1 }
             v1.examineVertex = { _ in examined1 += 1 }
 
-            var v2 = Hierholzer<DefaultAdjacencyList>.Visitor()
+            var v2 = Hierholzer<AdjacencyList>.Visitor()
             v2.addEdgeToPath = { _ in edgesAdded2 += 1 }
             v2.examineVertex = { _ in examined2 += 1 }
 

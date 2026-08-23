@@ -25,7 +25,7 @@ public struct ComputedEdgePropertyGraph<Base: Graph, Property: EdgeProperty> whe
 
     public typealias UnderlyingPropertyMap = DictionaryPropertyMap<Base.EdgeDescriptor, EdgePropertyValues>
     @usableFromInline
-    var _edgePropertyMap = UnderlyingPropertyMap(defaultValue: EdgePropertyValues())
+    var edgePropertyStorage = UnderlyingPropertyMap(defaultValue: EdgePropertyValues())
 
     @inlinable
     public init(base: Base, compute: @escaping (Base.EdgeDescriptor, Base) -> Property.Value) {
@@ -126,25 +126,23 @@ extension ComputedEdgePropertyGraph: VertexMutableGraph where Base: VertexMutabl
 
 extension ComputedEdgePropertyGraph: VertexPropertyGraph where Base: VertexPropertyGraph {
     public typealias VertexProperties = Base.VertexProperties
-    public typealias VertexPropertyMap = Base.VertexPropertyMap
     @inlinable
-    public var vertexPropertyMap: Base.VertexPropertyMap { base.vertexPropertyMap }
+    public subscript(vertex: VertexDescriptor) -> VertexProperties { base[vertex] }
 }
 
-extension ComputedEdgePropertyGraph: VertexMutablePropertyGraph where Base: VertexMutablePropertyGraph {
+extension ComputedEdgePropertyGraph: MutableVertexPropertyGraph where Base: MutableVertexPropertyGraph {
     @inlinable
-    public var vertexPropertyMap: Base.VertexPropertyMap {
-        get { base.vertexPropertyMap }
-        set { base.vertexPropertyMap = newValue }
+    public subscript(vertex: VertexDescriptor) -> VertexProperties {
+        get { base[vertex] }
+        set { base[vertex] = newValue }
     }
 }
 
 extension ComputedEdgePropertyGraph: EdgePropertyGraph {
     public typealias EdgeProperties = ComputedEdgeProperties<EdgePropertyValues, Property>
-    public typealias EdgePropertyMap = ComputedEdgePropertyMap<UnderlyingPropertyMap, Property>
     @inlinable
-    public var edgePropertyMap: ComputedEdgePropertyMap<UnderlyingPropertyMap, Property> {
-        .init(base: _edgePropertyMap) { edge in
+    public subscript(edge: EdgeDescriptor) -> EdgeProperties {
+        .init(base: edgePropertyStorage[edge]) {
             compute(edge, base)
         }
     }

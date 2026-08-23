@@ -67,9 +67,9 @@
                 var g4 = AdjacencyMatrix()
                 check(&g4, "Matrix")
                 #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                    var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                    var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                     check(&g2, "CSR")
-                    var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                    var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                     check(&g3, "COO")
                 #endif
             }
@@ -94,9 +94,9 @@
                 var g4 = AdjacencyMatrix()
                 check(&g4, "Matrix")
                 #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                    var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                    var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                     check(&g2, "CSR")
-                    var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                    var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                     check(&g3, "COO")
                 #endif
             }
@@ -127,9 +127,9 @@
                 var g4 = AdjacencyMatrix()
                 check(&g4, "Matrix")
                 #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                    var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                    var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                     check(&g2, "CSR")
-                    var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                    var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                     check(&g3, "COO")
                 #endif
             }
@@ -165,14 +165,14 @@
                 var finished1 = 0
                 var finished2 = 0
 
-                var v1 = AStar<DefaultAdjacencyList, Double, Double, Double>.Visitor()
+                var v1 = AStar<AdjacencyList, Double, Double, Double>.Visitor()
                 v1.examineVertex = { _ in examined1 += 1 }
                 v1.examineEdge = { _ in examEdge1 += 1 }
                 v1.edgeRelaxed = { _ in relaxed1 += 1 }
                 v1.edgeNotRelaxed = { _ in notRelaxed1 += 1 }
                 v1.finishVertex = { _ in finished1 += 1 }
 
-                var v2 = AStar<DefaultAdjacencyList, Double, Double, Double>.Visitor()
+                var v2 = AStar<AdjacencyList, Double, Double, Double>.Visitor()
                 v2.examineVertex = { _ in examined2 += 1 }
                 v2.examineEdge = { _ in examEdge2 += 1 }
                 v2.edgeRelaxed = { _ in relaxed2 += 1 }
@@ -328,9 +328,9 @@
             let a = graph.addVertex()
             let b = graph.addVertex()
 
-            let item1 = AStar<DefaultAdjacencyList, Double, Double, Double>.PriorityItem(vertex: a, totalCost: 3.0)
-            let item2 = AStar<DefaultAdjacencyList, Double, Double, Double>.PriorityItem(vertex: a, totalCost: 9.0)
-            let item3 = AStar<DefaultAdjacencyList, Double, Double, Double>.PriorityItem(vertex: b, totalCost: 3.0)
+            let item1 = AStar<AdjacencyList, Double, Double, Double>.PriorityItem(vertex: a, totalCost: 3.0)
+            let item2 = AStar<AdjacencyList, Double, Double, Double>.PriorityItem(vertex: a, totalCost: 9.0)
+            let item3 = AStar<AdjacencyList, Double, Double, Double>.PriorityItem(vertex: b, totalCost: 3.0)
 
             #expect(item1 == item2, "same vertex, different totalCost → equal (vertex identity only)")
             #expect(item1 != item3, "different vertices → not equal")

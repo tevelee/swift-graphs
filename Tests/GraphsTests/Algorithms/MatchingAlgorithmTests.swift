@@ -2,7 +2,7 @@
     import Testing
     @testable import Graphs
 
-    private typealias DefaultBipartiteGraph = BipartiteAdjacencyList<
+    private typealias DefaultBipartiteGraph = StorageBackedBipartiteAdjacencyList<
         OrderedVertexStorage,
         OrderedEdgeStorage<OrderedVertexStorage.Vertex>,
         DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,

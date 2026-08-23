@@ -6,8 +6,8 @@ struct BipartitePropertyTests {
 
     // MARK: - Test Graphs
 
-    func createBipartiteGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createBipartiteGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -22,8 +22,8 @@ struct BipartitePropertyTests {
         return graph
     }
 
-    func createNonBipartiteGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createNonBipartiteGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -36,26 +36,26 @@ struct BipartitePropertyTests {
         return graph
     }
 
-    func createEmptyGraph() -> DefaultAdjacencyList {
-        return DefaultAdjacencyList()
+    func createEmptyGraph() -> AdjacencyList {
+        return AdjacencyList()
     }
 
-    func createSingleVertexGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createSingleVertexGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         graph.addVertex { $0.label = "A" }
         return graph
     }
 
-    func createTwoVertexGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createTwoVertexGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         graph.addEdge(from: a, to: b) { $0.label = "AB" }
         return graph
     }
 
-    func createDisconnectedBipartiteGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createDisconnectedBipartiteGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -73,8 +73,8 @@ struct BipartitePropertyTests {
         return graph
     }
 
-    func createDisconnectedNonBipartiteGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createDisconnectedNonBipartiteGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -169,7 +169,7 @@ struct BipartitePropertyTests {
     // MARK: - Algorithm Comparison
 
     @Test func bfsAndDFSConsistency() {
-        let testGraphs: [DefaultAdjacencyList] = [
+        let testGraphs: [AdjacencyList] = [
             createEmptyGraph(),
             createSingleVertexGraph(),
             createTwoVertexGraph(),
@@ -193,7 +193,7 @@ struct BipartitePropertyTests {
         var colorAssignments: [(String, Int)] = []
         var colorConflicts: [(String, String, Int)] = []
 
-        let visitor = BFSBipartiteProperty<DefaultAdjacencyList>.Visitor(
+        let visitor = BFSBipartiteProperty<AdjacencyList>.Visitor(
             assignColor: { vertex, color in
                 // Get vertex label by finding the vertex in the graph
                 for v in graph.vertices() where v == vertex {
@@ -206,7 +206,7 @@ struct BipartitePropertyTests {
             }
         )
 
-        let algorithm = BFSBipartitePropertyAlgorithm<DefaultAdjacencyList>()
+        let algorithm = BFSBipartitePropertyAlgorithm<AdjacencyList>()
         let result = algorithm.isBipartite(in: graph, visitor: visitor)
 
         #expect(result == true)
@@ -219,7 +219,7 @@ struct BipartitePropertyTests {
         var colorAssignments: [(String, Int)] = []
         var colorConflicts: [(String, String, Int)] = []
 
-        let visitor = DFSBipartiteProperty<DefaultAdjacencyList>.Visitor(
+        let visitor = DFSBipartiteProperty<AdjacencyList>.Visitor(
             assignColor: { vertex, color in
                 // Get vertex label by finding the vertex in the graph
                 for v in graph.vertices() where v == vertex {
@@ -232,7 +232,7 @@ struct BipartitePropertyTests {
             }
         )
 
-        let algorithm = DFSBipartitePropertyAlgorithm<DefaultAdjacencyList>()
+        let algorithm = DFSBipartitePropertyAlgorithm<AdjacencyList>()
         let result = algorithm.isBipartite(in: graph, visitor: visitor)
 
         #expect(result == false)
@@ -242,7 +242,7 @@ struct BipartitePropertyTests {
     // MARK: - Edge Cases
 
     @Test func graphWithSelfLoops() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
 
@@ -255,7 +255,7 @@ struct BipartitePropertyTests {
     }
 
     @Test func graphWithMultipleEdges() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
 
@@ -285,20 +285,20 @@ struct BipartitePropertyTests {
         var conflict1 = 0
         var conflict2 = 0
 
-        var v1 = BFSBipartiteProperty<DefaultAdjacencyList>.Visitor()
+        var v1 = BFSBipartiteProperty<AdjacencyList>.Visitor()
         v1.assignColor = { _, _ in assign1 += 1 }
         v1.examineVertex = { _ in examVtx1 += 1 }
         v1.examineEdge = { _ in examEdge1 += 1 }
         v1.colorConflict = { _, _, _ in conflict1 += 1 }
 
-        var v2 = BFSBipartiteProperty<DefaultAdjacencyList>.Visitor()
+        var v2 = BFSBipartiteProperty<AdjacencyList>.Visitor()
         v2.assignColor = { _, _ in assign2 += 1 }
         v2.examineVertex = { _ in examVtx2 += 1 }
         v2.examineEdge = { _ in examEdge2 += 1 }
         v2.colorConflict = { _, _, _ in conflict2 += 1 }
 
         let combined = v1.combined(with: v2)
-        let algorithm = BFSBipartitePropertyAlgorithm<DefaultAdjacencyList>()
+        let algorithm = BFSBipartitePropertyAlgorithm<AdjacencyList>()
         let result = algorithm.isBipartite(in: graph, visitor: combined)
 
         #expect(!result, "triangle is not bipartite")
@@ -329,20 +329,20 @@ struct BipartitePropertyTests {
         var conflict1 = 0
         var conflict2 = 0
 
-        var v1 = DFSBipartiteProperty<DefaultAdjacencyList>.Visitor()
+        var v1 = DFSBipartiteProperty<AdjacencyList>.Visitor()
         v1.assignColor = { _, _ in assign1 += 1 }
         v1.examineVertex = { _ in examVtx1 += 1 }
         v1.examineEdge = { _ in examEdge1 += 1 }
         v1.colorConflict = { _, _, _ in conflict1 += 1 }
 
-        var v2 = DFSBipartiteProperty<DefaultAdjacencyList>.Visitor()
+        var v2 = DFSBipartiteProperty<AdjacencyList>.Visitor()
         v2.assignColor = { _, _ in assign2 += 1 }
         v2.examineVertex = { _ in examVtx2 += 1 }
         v2.examineEdge = { _ in examEdge2 += 1 }
         v2.colorConflict = { _, _, _ in conflict2 += 1 }
 
         let combined = v1.combined(with: v2)
-        let algorithm = DFSBipartitePropertyAlgorithm<DefaultAdjacencyList>()
+        let algorithm = DFSBipartitePropertyAlgorithm<AdjacencyList>()
         let result = algorithm.isBipartite(in: graph, visitor: combined)
 
         #expect(!result, "triangle is not bipartite")

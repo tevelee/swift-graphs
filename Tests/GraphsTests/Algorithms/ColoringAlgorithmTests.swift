@@ -6,7 +6,7 @@
 
         // MARK: - Test Graphs
 
-        func createTestGraph() -> some AdjacencyListProtocol {
+        func createTestGraph() -> AdjacencyList {
             var graph = AdjacencyList()
 
             // Create a simple graph: A-B-C with A-D
@@ -29,7 +29,7 @@
             return graph
         }
 
-        func createCompleteGraph() -> some AdjacencyListProtocol {
+        func createCompleteGraph() -> AdjacencyList {
             var graph = AdjacencyList()
 
             // Create a complete graph K4
@@ -50,7 +50,7 @@
             return graph
         }
 
-        func createBipartiteGraph() -> some AdjacencyListProtocol {
+        func createBipartiteGraph() -> AdjacencyList {
             var graph = AdjacencyList()
 
             // Create a bipartite graph
@@ -542,9 +542,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -588,9 +588,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -615,16 +615,16 @@
             var assigned1 = 0
             var assigned2 = 0
 
-            var v1 = GreedyColoringAlgorithm<DefaultAdjacencyList, Int>.Visitor()
+            var v1 = GreedyColoringAlgorithm<AdjacencyList, Int>.Visitor()
             v1.examineVertex = { _ in examined1 += 1 }
             v1.assignColor = { _, _ in assigned1 += 1 }
 
-            var v2 = GreedyColoringAlgorithm<DefaultAdjacencyList, Int>.Visitor()
+            var v2 = GreedyColoringAlgorithm<AdjacencyList, Int>.Visitor()
             v2.examineVertex = { _ in examined2 += 1 }
             v2.assignColor = { _, _ in assigned2 += 1 }
 
             let combined = v1.combined(with: v2)
-            _ = GreedyColoringAlgorithm<DefaultAdjacencyList, Int>().color(graph: graph, visitor: combined)
+            _ = GreedyColoringAlgorithm<AdjacencyList, Int>().color(graph: graph, visitor: combined)
 
             // Greedy examines each vertex once and assigns a color to each
 
@@ -665,20 +665,20 @@
             var skipped1 = 0
             var skipped2 = 0
 
-            var v1 = DSaturColoringAlgorithm<DefaultAdjacencyList, Int>.Visitor()
+            var v1 = DSaturColoringAlgorithm<AdjacencyList, Int>.Visitor()
             v1.examineVertex = { _ in examined1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.assignColor = { _, _ in assigned1 += 1 }
             v1.skipVertex = { _, _ in skipped1 += 1 }
 
-            var v2 = DSaturColoringAlgorithm<DefaultAdjacencyList, Int>.Visitor()
+            var v2 = DSaturColoringAlgorithm<AdjacencyList, Int>.Visitor()
             v2.examineVertex = { _ in examined2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
             v2.assignColor = { _, _ in assigned2 += 1 }
             v2.skipVertex = { _, _ in skipped2 += 1 }
 
             let combined = v1.combined(with: v2)
-            _ = DSaturColoringAlgorithm<DefaultAdjacencyList, Int>().color(graph: graph, visitor: combined)
+            _ = DSaturColoringAlgorithm<AdjacencyList, Int>().color(graph: graph, visitor: combined)
 
             // DSatur assigns a color to every vertex
             #expect(assigned1 == 3, "DSatur must assign a color to each of the 3 vertices")
@@ -723,20 +723,20 @@
             var skipped1 = 0
             var skipped2 = 0
 
-            var v1 = WelshPowellColoringAlgorithm<DefaultAdjacencyList, Int>.Visitor()
+            var v1 = WelshPowellColoringAlgorithm<AdjacencyList, Int>.Visitor()
             v1.examineVertex = { _ in examined1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.assignColor = { _, _ in assigned1 += 1 }
             v1.skipVertex = { _, _ in skipped1 += 1 }
 
-            var v2 = WelshPowellColoringAlgorithm<DefaultAdjacencyList, Int>.Visitor()
+            var v2 = WelshPowellColoringAlgorithm<AdjacencyList, Int>.Visitor()
             v2.examineVertex = { _ in examined2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
             v2.assignColor = { _, _ in assigned2 += 1 }
             v2.skipVertex = { _, _ in skipped2 += 1 }
 
             let combined = v1.combined(with: v2)
-            _ = WelshPowellColoringAlgorithm<DefaultAdjacencyList, Int>().color(graph: graph, visitor: combined)
+            _ = WelshPowellColoringAlgorithm<AdjacencyList, Int>().color(graph: graph, visitor: combined)
 
             // Welsh-Powell assigns a color to every vertex
             #expect(assigned1 == 3, "Welsh-Powell must assign a color to each of the 3 vertices")
@@ -764,7 +764,7 @@
         /// - `skipVertex` would fire for already-colored vertices (not triggered here; verify parity).
         /// Both composed visitors must see identical event counts.
         @Test func sequentialComposedVisitorsReceiveAllEvents() {
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -784,14 +784,14 @@
             var skipped1 = 0
             var skipped2 = 0
 
-            var v1 = SequentialVertexColoringAlgorithm<DefaultAdjacencyList, Int>.Visitor()
+            var v1 = SequentialVertexColoringAlgorithm<AdjacencyList, Int>.Visitor()
             v1.useOrdering = { _ in useOrdering1 += 1 }
             v1.examineVertex = { _ in examined1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.assignColor = { _, _ in assigned1 += 1 }
             v1.skipVertex = { _, _ in skipped1 += 1 }
 
-            var v2 = SequentialVertexColoringAlgorithm<DefaultAdjacencyList, Int>.Visitor()
+            var v2 = SequentialVertexColoringAlgorithm<AdjacencyList, Int>.Visitor()
             v2.useOrdering = { _ in useOrdering2 += 1 }
             v2.examineVertex = { _ in examined2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
@@ -799,8 +799,8 @@
             v2.skipVertex = { _, _ in skipped2 += 1 }
 
             let combined = v1.combined(with: v2)
-            let algorithm = SequentialVertexColoringAlgorithm<DefaultAdjacencyList, Int>(
-                using: SmallestLastVertexOrderingAlgorithm<DefaultAdjacencyList>()
+            let algorithm = SequentialVertexColoringAlgorithm<AdjacencyList, Int>(
+                using: SmallestLastVertexOrderingAlgorithm<AdjacencyList>()
             )
             _ = algorithm.color(graph: graph, visitor: combined)
 

@@ -6,7 +6,7 @@
 
         // MARK: - Helpers
 
-        typealias G = DefaultAdjacencyList
+        typealias G = AdjacencyList
 
         /// Verifies flow conservation: at every non-source, non-sink vertex the sum of
         /// incoming flows equals the sum of outgoing flows.
@@ -447,7 +447,7 @@
             var updateFlowCount = 0
             var iterationCount = 0
 
-            var visitor = SuccessiveShortestPaths<DefaultAdjacencyList, Double>.Visitor()
+            var visitor = SuccessiveShortestPaths<AdjacencyList, Double>.Visitor()
             visitor.findPath = { _, _ in findPathCount += 1 }
             visitor.augmentPath = { _, _ in augmentPathCount += 1 }
             visitor.updateFlow = { _, _ in updateFlowCount += 1 }
@@ -481,10 +481,10 @@
             var count1 = 0
             var count2 = 0
 
-            var vis1 = SuccessiveShortestPaths<DefaultAdjacencyList, Double>.Visitor()
+            var vis1 = SuccessiveShortestPaths<AdjacencyList, Double>.Visitor()
             vis1.iterationCompleted = { _, _ in count1 += 1 }
 
-            var vis2 = SuccessiveShortestPaths<DefaultAdjacencyList, Double>.Visitor()
+            var vis2 = SuccessiveShortestPaths<AdjacencyList, Double>.Visitor()
             vis2.iterationCompleted = { _, _ in count2 += 1 }
 
             _ = graph.minimumCostFlow(
@@ -529,7 +529,7 @@
             }
 
             var snapshots: [(Double, Double)] = []
-            var visitor = SuccessiveShortestPaths<DefaultAdjacencyList, Double>.Visitor()
+            var visitor = SuccessiveShortestPaths<AdjacencyList, Double>.Visitor()
             visitor.iterationCompleted = { flow, cost in snapshots.append((flow, cost)) }
 
             _ = graph.minimumCostFlow(

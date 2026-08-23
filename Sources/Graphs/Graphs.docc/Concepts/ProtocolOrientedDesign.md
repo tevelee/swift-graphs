@@ -153,8 +153,8 @@ protocol VertexListGraph: Graph {
 protocol PropertyGraph: Graph {
     associatedtype VertexProperties
     associatedtype EdgeProperties
-    associatedtype VertexPropertyMap: PropertyMap
-    associatedtype EdgePropertyMap: PropertyMap
+    subscript(vertex: VertexDescriptor) -> VertexProperties { get }
+    subscript(edge: EdgeDescriptor) -> EdgeProperties { get }
 }
 ```
 
@@ -295,13 +295,15 @@ let path = badGraph.shortestPath(...)  // ERROR: missing requirements
 Associated types ensure consistency:
 
 ```swift
-protocol PropertyGraph: Graph {
-    associatedtype VertexPropertyMap: PropertyMap where
-        VertexPropertyMap.Key == VertexDescriptor  // ✅ Must match
+protocol VertexPropertyGraph: Graph {
+    associatedtype VertexProperties: Graphs.VertexProperties
+    subscript(vertex: VertexDescriptor) -> VertexProperties { get }
 }
 ```
 
-Compiler enforces that property map keys match vertex descriptors.
+Compiler enforces that property access uses the graph's vertex descriptors and
+returns its declared property value type. The graph remains free to choose how
+those values are stored.
 
 ## Real-World Benefits
 
@@ -456,4 +458,3 @@ Now that you understand protocol-oriented design:
 - ``Graph``
 - ``IncidenceGraph``
 - ``BidirectionalGraph``
-

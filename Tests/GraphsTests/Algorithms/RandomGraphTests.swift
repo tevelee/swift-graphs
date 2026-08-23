@@ -338,13 +338,13 @@
             var skipEdge1 = 0
             var skipEdge2 = 0
 
-            var v1 = ErdosRenyi<DefaultAdjacencyList>.Visitor()
+            var v1 = ErdosRenyi<AdjacencyList>.Visitor()
             v1.addVertex = { _ in addVtx1 += 1 }
             v1.examineVertexPair = { _, _ in examPair1 += 1 }
             v1.addEdge = { _, _ in addEdge1 += 1 }
             v1.skipEdge = { _, _, _ in skipEdge1 += 1 }
 
-            var v2 = ErdosRenyi<DefaultAdjacencyList>.Visitor()
+            var v2 = ErdosRenyi<AdjacencyList>.Visitor()
             v2.addVertex = { _ in addVtx2 += 1 }
             v2.examineVertexPair = { _, _ in examPair2 += 1 }
             v2.addEdge = { _, _ in addEdge2 += 1 }
@@ -352,9 +352,9 @@
 
             let combined = v1.combined(with: v2)
             // p=1.0 ensures addEdge fires for every pair; use a second run with p=0.0 for skipEdge
-            _ = DefaultAdjacencyList.randomGraph(
+            _ = AdjacencyList.randomGraph(
                 vertexCount: 4,
-                using: (.erdosRenyi(edgeProbability: 1.0) as ErdosRenyi<DefaultAdjacencyList>)
+                using: (.erdosRenyi(edgeProbability: 1.0) as ErdosRenyi<AdjacencyList>)
                     .withVisitor(combined)
                     .withGenerator(SeededRandomNumberGenerator(seed: 1))
             )
@@ -375,14 +375,14 @@
             // Second run with p=0.0 to trigger skipEdge
             var skipOnly1 = 0
             var skipOnly2 = 0
-            var sv1 = ErdosRenyi<DefaultAdjacencyList>.Visitor()
+            var sv1 = ErdosRenyi<AdjacencyList>.Visitor()
             sv1.skipEdge = { _, _, _ in skipOnly1 += 1 }
-            var sv2 = ErdosRenyi<DefaultAdjacencyList>.Visitor()
+            var sv2 = ErdosRenyi<AdjacencyList>.Visitor()
             sv2.skipEdge = { _, _, _ in skipOnly2 += 1 }
             let skipCombined = sv1.combined(with: sv2)
-            _ = DefaultAdjacencyList.randomGraph(
+            _ = AdjacencyList.randomGraph(
                 vertexCount: 4,
-                using: (.erdosRenyi(edgeProbability: 0.0) as ErdosRenyi<DefaultAdjacencyList>)
+                using: (.erdosRenyi(edgeProbability: 0.0) as ErdosRenyi<AdjacencyList>)
                     .withVisitor(skipCombined)
                     .withGenerator(SeededRandomNumberGenerator(seed: 1))
             )
@@ -409,22 +409,22 @@
             var updDeg1 = 0
             var updDeg2 = 0
 
-            var v1 = BarabasiAlbert<DefaultAdjacencyList>.Visitor()
+            var v1 = BarabasiAlbert<AdjacencyList>.Visitor()
             v1.addVertex = { _ in addVtx1 += 1 }
             v1.selectTarget = { _, _ in select1 += 1 }
             v1.addEdge = { _, _ in addEdge1 += 1 }
             v1.updateDegree = { _, _ in updDeg1 += 1 }
 
-            var v2 = BarabasiAlbert<DefaultAdjacencyList>.Visitor()
+            var v2 = BarabasiAlbert<AdjacencyList>.Visitor()
             v2.addVertex = { _ in addVtx2 += 1 }
             v2.selectTarget = { _, _ in select2 += 1 }
             v2.addEdge = { _, _ in addEdge2 += 1 }
             v2.updateDegree = { _, _ in updDeg2 += 1 }
 
             let combined = v1.combined(with: v2)
-            _ = DefaultAdjacencyList.randomGraph(
+            _ = AdjacencyList.randomGraph(
                 vertexCount: 6,
-                using: (.barabasiAlbert(averageDegree: 2.0) as BarabasiAlbert<DefaultAdjacencyList>)
+                using: (.barabasiAlbert(averageDegree: 2.0) as BarabasiAlbert<AdjacencyList>)
                     .withVisitor(combined)
                     .withGenerator(SeededRandomNumberGenerator(seed: 42))
             )
@@ -464,21 +464,21 @@
             var rewire1 = 0
             var rewire2 = 0
 
-            var v1 = WattsStrogatz<DefaultAdjacencyList>.Visitor()
+            var v1 = WattsStrogatz<AdjacencyList>.Visitor()
             v1.addVertex = { _ in addVtx1 += 1 }
             v1.createRingLattice = { _, _ in lattice1 += 1 }
             v1.rewireEdge = { _, _, _ in rewire1 += 1 }
 
-            var v2 = WattsStrogatz<DefaultAdjacencyList>.Visitor()
+            var v2 = WattsStrogatz<AdjacencyList>.Visitor()
             v2.addVertex = { _ in addVtx2 += 1 }
             v2.createRingLattice = { _, _ in lattice2 += 1 }
             v2.rewireEdge = { _, _, _ in rewire2 += 1 }
 
             let combined = v1.combined(with: v2)
             // rewiringProbability=1.0 ensures rewireEdge fires for every eligible edge
-            _ = DefaultAdjacencyList.randomGraph(
+            _ = AdjacencyList.randomGraph(
                 vertexCount: 8,
-                using: (.wattsStrogatz(averageDegree: 2.0, rewiringProbability: 1.0) as WattsStrogatz<DefaultAdjacencyList>)
+                using: (.wattsStrogatz(averageDegree: 2.0, rewiringProbability: 1.0) as WattsStrogatz<AdjacencyList>)
                     .withVisitor(combined)
                     .withGenerator(SeededRandomNumberGenerator(seed: 7))
             )
@@ -496,14 +496,14 @@
             // Separate run with p=0.0 to trigger skipRewiring
             var skip1 = 0
             var skip2 = 0
-            var sv1 = WattsStrogatz<DefaultAdjacencyList>.Visitor()
+            var sv1 = WattsStrogatz<AdjacencyList>.Visitor()
             sv1.skipRewiring = { _, _, _ in skip1 += 1 }
-            var sv2 = WattsStrogatz<DefaultAdjacencyList>.Visitor()
+            var sv2 = WattsStrogatz<AdjacencyList>.Visitor()
             sv2.skipRewiring = { _, _, _ in skip2 += 1 }
             let skipCombined = sv1.combined(with: sv2)
-            _ = DefaultAdjacencyList.randomGraph(
+            _ = AdjacencyList.randomGraph(
                 vertexCount: 8,
-                using: (.wattsStrogatz(averageDegree: 2.0, rewiringProbability: 0.0) as WattsStrogatz<DefaultAdjacencyList>)
+                using: (.wattsStrogatz(averageDegree: 2.0, rewiringProbability: 0.0) as WattsStrogatz<AdjacencyList>)
                     .withVisitor(skipCombined)
                     .withGenerator(SeededRandomNumberGenerator(seed: 7))
             )
@@ -518,15 +518,15 @@
         /// no-arg convenience wrappers that call the underlying algorithm with defaults.
         @Test func randomGraphConvenienceMethods() {
             // randomGraph() — uses Erdos-Renyi with default probability 0.5
-            let g1 = DefaultAdjacencyList.randomGraph(vertexCount: 5)
+            let g1 = AdjacencyList.randomGraph(vertexCount: 5)
             #expect(g1.vertexCount == 5, "randomGraph() creates the specified vertex count")
 
             // randomScaleFreeGraph() — uses Barabasi-Albert with default averageDegree 2.0
-            let g2 = DefaultAdjacencyList.randomScaleFreeGraph(vertexCount: 5)
+            let g2 = AdjacencyList.randomScaleFreeGraph(vertexCount: 5)
             #expect(g2.vertexCount == 5, "randomScaleFreeGraph() creates the specified vertex count")
 
             // randomSmallWorldGraph() — uses Watts-Strogatz with defaults
-            let g3 = DefaultAdjacencyList.randomSmallWorldGraph(vertexCount: 6)
+            let g3 = AdjacencyList.randomSmallWorldGraph(vertexCount: 6)
             #expect(g3.vertexCount == 6, "randomSmallWorldGraph() creates the specified vertex count")
         }
     }

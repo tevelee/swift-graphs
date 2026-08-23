@@ -92,9 +92,9 @@ struct DepthLimitedSearchTests {
         var g4 = AdjacencyMatrix()
         check(&g4, "Matrix")
         #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-            var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
             check(&g2, "CSR")
-            var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
             check(&g3, "COO")
         #endif
     }
@@ -117,16 +117,16 @@ struct DepthLimitedSearchTests {
         var treeEdges1 = 0
         var treeEdges2 = 0
 
-        var v1 = DepthLimitedDFSTraversal<DefaultAdjacencyList>.Visitor()
+        var v1 = DepthLimitedDFSTraversal<AdjacencyList>.Visitor()
         v1.discoverVertex = { _ in discovered1 += 1 }
         v1.treeEdge = { _ in treeEdges1 += 1 }
 
-        var v2 = DepthLimitedDFSTraversal<DefaultAdjacencyList>.Visitor()
+        var v2 = DepthLimitedDFSTraversal<AdjacencyList>.Visitor()
         v2.discoverVertex = { _ in discovered2 += 1 }
         v2.treeEdge = { _ in treeEdges2 += 1 }
 
         let combined = v1.combined(with: v2)
-        _ = DepthLimitedDFSTraversal<DefaultAdjacencyList>(maxDepth: 10)
+        _ = DepthLimitedDFSTraversal<AdjacencyList>(maxDepth: 10)
             .traverse(from: root, in: graph, visitor: combined)
 
         #expect(discovered1 == 3, "all 3 vertices in chain root→a→b must be discovered")

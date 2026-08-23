@@ -96,6 +96,26 @@ let package = Package(
                 .define("GRAPHS_GRAPH_FAMILIES", .when(traits: ["GraphFamilies"])),
             ]
         ),
+        .testTarget(
+            name: "GraphsPublicInterfaceTests",
+            dependencies: ["Graphs"],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+                .define("GRAPHS_USES_TRAITS"),
+                .define("GRAPHS_PATHFINDING", .when(traits: ["Pathfinding"])),
+                .define("GRAPHS_CONNECTIVITY", .when(traits: ["Connectivity"])),
+                .define("GRAPHS_OPTIMIZATION", .when(traits: ["Optimization"])),
+                .define("GRAPHS_ANALYSIS", .when(traits: ["Analysis"])),
+                .define("GRAPHS_ADVANCED", .when(traits: ["Advanced"])),
+                .define("GRAPHS_GENERATION", .when(traits: ["Generation"])),
+                .define("GRAPHS_SERIALIZATION", .when(traits: ["Serialization"])),
+                .define("GRAPHS_GRID_GRAPH", .when(traits: ["GridGraph"])),
+                .define("GRAPHS_BIPARTITE_GRAPH", .when(traits: ["BipartiteGraph"])),
+                .define("GRAPHS_SPECIALIZED_STORAGE", .when(traits: ["SpecializedStorage"])),
+                .define("GRAPHS_COMPLETE_GRAPH", .when(traits: ["GraphFamilies"])),
+                .define("GRAPHS_GRAPH_FAMILIES", .when(traits: ["GraphFamilies"])),
+            ]
+        ),
     ]
 )
 

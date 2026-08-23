@@ -2,87 +2,51 @@
 ///
 /// Vertex mutable property graphs allow both reading and writing vertex properties,
 /// enabling dynamic modification of vertex data during graph operations.
-public protocol VertexMutablePropertyGraph: VertexPropertyGraph, VertexMutableGraph where VertexPropertyMap: MutablePropertyMap {
-    var vertexPropertyMap: VertexPropertyMap { get set }
+public protocol MutableVertexPropertyGraph: VertexPropertyGraph, VertexMutableGraph {
+    subscript(vertex: VertexDescriptor) -> VertexProperties { get set }
 }
 
-extension VertexMutablePropertyGraph {
+extension MutableVertexPropertyGraph {
     @discardableResult
     @inlinable
-    public mutating func addVertex(configure: (inout VertexPropertyMap.Value) -> Void) -> VertexDescriptor {
+    public mutating func addVertex(configure: (inout VertexProperties) -> Void) -> VertexDescriptor {
         let vertex = addVertex()
-        configure(&vertexPropertyMap[vertex])
+        var properties = self[vertex]
+        configure(&properties)
+        self[vertex] = properties
         return vertex
     }
-
-    // Swift 5.9–6.1 SIL crash: see DictionaryPropertyMap for details.
-    #if compiler(>=6.2)
-        @inlinable
-        public subscript(vertex: VertexPropertyMap.Key) -> VertexPropertyMap.Value {
-            set { vertexPropertyMap[vertex] = newValue }
-            _read { yield vertexPropertyMap[vertex] }
-            _modify {
-                var value = vertexPropertyMap[vertex]
-                defer { vertexPropertyMap[vertex] = value }
-                yield &value
-            }
-        }
-    #else
-        @inlinable
-        public subscript(vertex: VertexPropertyMap.Key) -> VertexPropertyMap.Value {
-            get { vertexPropertyMap[vertex] }
-            set { vertexPropertyMap[vertex] = newValue }
-        }
-    #endif
 }
 
 /// A protocol for graphs that support mutable edge properties.
 ///
 /// Edge mutable property graphs allow both reading and writing edge properties,
 /// enabling dynamic modification of edge data during graph operations.
-public protocol EdgeMutablePropertyGraph: EdgePropertyGraph, EdgeMutableGraph where EdgePropertyMap: MutablePropertyMap {
-    var edgePropertyMap: EdgePropertyMap { get set }
+public protocol MutableEdgePropertyGraph: EdgePropertyGraph, EdgeMutableGraph {
+    subscript(edge: EdgeDescriptor) -> EdgeProperties { get set }
 }
 
-extension EdgeMutablePropertyGraph {
+extension MutableEdgePropertyGraph {
     @discardableResult
     @inlinable
     public mutating func addEdge(
         from source: VertexDescriptor,
         to destination: VertexDescriptor,
-        configure: (inout EdgePropertyMap.Value) -> Void
+        configure: (inout EdgeProperties) -> Void
     ) -> EdgeDescriptor? {
         guard let edge = addEdge(from: source, to: destination) else { return nil }
-        configure(&edgePropertyMap[edge])
+        var properties = self[edge]
+        configure(&properties)
+        self[edge] = properties
         return edge
     }
-
-    // Swift 5.9–6.1 SIL crash: see DictionaryPropertyMap for details.
-    #if compiler(>=6.2)
-        @inlinable
-        public subscript(edge: EdgePropertyMap.Key) -> EdgePropertyMap.Value {
-            set { edgePropertyMap[edge] = newValue }
-            _read { yield edgePropertyMap[edge] }
-            _modify {
-                var value = edgePropertyMap[edge]
-                defer { edgePropertyMap[edge] = value }
-                yield &value
-            }
-        }
-    #else
-        @inlinable
-        public subscript(edge: EdgePropertyMap.Key) -> EdgePropertyMap.Value {
-            get { edgePropertyMap[edge] }
-            set { edgePropertyMap[edge] = newValue }
-        }
-    #endif
 }
 
 /// A protocol for graphs that support mutable properties for both vertices and edges.
 ///
 /// Mutable property graphs combine vertex and edge mutable property capabilities,
 /// providing complete flexibility for modifying graph data during operations.
-public protocol MutablePropertyGraph: VertexMutablePropertyGraph, EdgeMutablePropertyGraph {}
+public protocol MutablePropertyGraph: MutableVertexPropertyGraph, MutableEdgePropertyGraph {}
 
 extension MutablePropertyGraph where Self: VertexPropertyGraph {
     /// Adds multiple edges to the graph by creating vertices from labels.

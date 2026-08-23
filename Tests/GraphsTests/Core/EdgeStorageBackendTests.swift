@@ -4,7 +4,7 @@
 
     struct EdgeStorageBackendTests {
         @Test func cooAdjacencyList_basic() {
-            var g = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            var g = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
 
             let u = g.addVertex()
             let v = g.addVertex()
@@ -20,7 +20,7 @@
         }
 
         @Test func csrAdjacencyList_basic() {
-            var g = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            var g = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
 
             let a = g.addVertex()
             let b = g.addVertex()
@@ -41,7 +41,7 @@
         // MARK: - Edge removal
 
         @Test func cooAdjacencyList_edgeRemoval() {
-            var g = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            var g = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
             let u = g.addVertex()
             let v = g.addVertex()
             let w = g.addVertex()
@@ -56,7 +56,7 @@
         }
 
         @Test func csrAdjacencyList_edgeRemoval() {
-            var g = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            var g = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
             let a = g.addVertex()
             let b = g.addVertex()
             let c = g.addVertex()
@@ -75,7 +75,7 @@
         // MARK: - BFS on COO/CSR backends
 
         @Test func cooAdjacencyList_bfsReachesAllVertices() {
-            var g = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            var g = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
             let a = g.addVertex()
             let b = g.addVertex()
             let c = g.addVertex()
@@ -87,7 +87,7 @@
         }
 
         @Test func csrAdjacencyList_bfsReachesAllVertices() {
-            var g = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            var g = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
             let a = g.addVertex()
             let b = g.addVertex()
             let c = g.addVertex()
@@ -101,7 +101,7 @@
         // MARK: - Dijkstra on COO/CSR backends
 
         @Test func cooAdjacencyList_dijkstraFindsShortestPath() {
-            var g = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            var g = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
             let a = g.addVertex()
             let b = g.addVertex()
             let c = g.addVertex()
@@ -117,7 +117,7 @@
         }
 
         @Test func csrAdjacencyList_dijkstraFindsShortestPath() {
-            var g = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            var g = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
             let a = g.addVertex()
             let b = g.addVertex()
             let c = g.addVertex()
@@ -134,7 +134,7 @@
         // MARK: - Full edge enumeration
 
         @Test func cooAdjacencyList_edgesEnumeration() {
-            var g = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            var g = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
             let a = g.addVertex()
             let b = g.addVertex()
             let c = g.addVertex()
@@ -153,7 +153,7 @@
         }
 
         @Test func csrAdjacencyList_edgesEnumeration() {
-            var g = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            var g = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
             let a = g.addVertex()
             let b = g.addVertex()
             let c = g.addVertex()

@@ -282,7 +282,7 @@ struct CyclicPropertyTests {
         var examineEdgeCount = 0
         var backEdgeCount = 0
 
-        var visitor = DepthFirstSearch<DefaultAdjacencyList>.Visitor()
+        var visitor = DepthFirstSearch<AdjacencyList>.Visitor()
         visitor.discoverVertex = { _ in discoverVertexCount += 1 }
         visitor.examineVertex = { _ in examineVertexCount += 1 }
         visitor.examineEdge = { _ in examineEdgeCount += 1 }
@@ -311,7 +311,7 @@ struct CyclicPropertyTests {
         var unionVerticesCount = 0
         var cycleDetectedCount = 0
 
-        var visitor = UnionFindCyclicProperty<DefaultAdjacencyList>.Visitor()
+        var visitor = UnionFindCyclicProperty<AdjacencyList>.Visitor()
         visitor.examineEdge = { _ in examineEdgeCount += 1 }
         visitor.findRoot = { _, _ in findRootCount += 1 }
         visitor.unionVertices = { _, _ in unionVerticesCount += 1 }
@@ -331,7 +331,7 @@ struct CyclicPropertyTests {
         let vertexCount = 1000
 
         // Create vertices
-        var vertices: [DefaultAdjacencyList.VertexDescriptor] = []
+        var vertices: [AdjacencyList.VertexDescriptor] = []
         for i in 0 ..< vertexCount {
             let vertex = graph.addVertex { $0.label = "\(i)" }
             vertices.append(vertex)
@@ -354,7 +354,7 @@ struct CyclicPropertyTests {
         let vertexCount = 1000
 
         // Create vertices
-        var vertices: [DefaultAdjacencyList.VertexDescriptor] = []
+        var vertices: [AdjacencyList.VertexDescriptor] = []
         for i in 0 ..< vertexCount {
             let vertex = graph.addVertex { $0.label = "\(i)" }
             vertices.append(vertex)

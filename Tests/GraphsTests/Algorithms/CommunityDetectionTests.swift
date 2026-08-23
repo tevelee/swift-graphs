@@ -348,20 +348,20 @@
             var iterEnd1 = 0
             var iterEnd2 = 0
 
-            var v1 = LouvainCommunityDetection<DefaultAdjacencyList>.Visitor()
+            var v1 = LouvainCommunityDetection<AdjacencyList>.Visitor()
             v1.startPhase = { _ in startPhase1 += 1 }
             v1.moveVertex = { _, _ in moveVtx1 += 1 }
             v1.modularityImproved = { _ in modImprove1 += 1 }
             v1.iterationComplete = { _, _ in iterEnd1 += 1 }
 
-            var v2 = LouvainCommunityDetection<DefaultAdjacencyList>.Visitor()
+            var v2 = LouvainCommunityDetection<AdjacencyList>.Visitor()
             v2.startPhase = { _ in startPhase2 += 1 }
             v2.moveVertex = { _, _ in moveVtx2 += 1 }
             v2.modularityImproved = { _ in modImprove2 += 1 }
             v2.iterationComplete = { _, _ in iterEnd2 += 1 }
 
             let combined = v1.combined(with: v2)
-            _ = LouvainCommunityDetection<DefaultAdjacencyList>(on: graph).detectCommunities(visitor: combined)
+            _ = LouvainCommunityDetection<AdjacencyList>(on: graph).detectCommunities(visitor: combined)
 
             #expect(startPhase1 >= 1, "startPhase fires at the beginning of each Louvain phase")
             #expect(startPhase2 >= 1)

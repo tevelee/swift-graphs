@@ -15,7 +15,7 @@ struct PlanarCorrectnessTests {
     // MARK: - Builders
 
     /// The Petersen graph: 10 vertices, 15 edges, 3-regular, non-planar.
-    private func petersen() -> some AdjacencyListProtocol {
+    private func petersen() -> AdjacencyList {
         var graph = AdjacencyList()
         let v = (0 ..< 10).map { i in graph.addVertex { $0.label = "\(i)" } }
         let outer = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 0)]
@@ -29,7 +29,7 @@ struct PlanarCorrectnessTests {
 
     /// K5 with one edge subdivided: 6 vertices, 11 edges, non-planar (K5 subdivision).
     /// Passes the `11 <= 3*6-6 = 12` bound and is not exactly 5 vertices.
-    private func subdividedK5() -> some AdjacencyListProtocol {
+    private func subdividedK5() -> AdjacencyList {
         var graph = AdjacencyList()
         // vertices 0..4 = K5 branch vertices, 5 = subdivision point on edge 0-1
         let v = (0 ..< 6).map { i in graph.addVertex { $0.label = "\(i)" } }
@@ -48,7 +48,7 @@ struct PlanarCorrectnessTests {
     }
 
     /// K3,3 plus a pendant vertex attached to one node: 7 vertices, 10 edges, non-planar.
-    private func k33WithPendant() -> some AdjacencyListProtocol {
+    private func k33WithPendant() -> AdjacencyList {
         var graph = AdjacencyList()
         let v = (0 ..< 7).map { i in graph.addVertex { $0.label = "\(i)" } }
         // partitions {0,1,2} and {3,4,5}
@@ -62,7 +62,7 @@ struct PlanarCorrectnessTests {
     }
 
     /// The octahedron: 6 vertices, 12 edges (= 3V-6, maximal planar), planar.
-    private func octahedron() -> some AdjacencyListProtocol {
+    private func octahedron() -> AdjacencyList {
         var graph = AdjacencyList()
         let v = (0 ..< 6).map { i in graph.addVertex { $0.label = "\(i)" } }
         // octahedron = K_{2,2,2}: each vertex adjacent to all but its "antipode"
@@ -77,7 +77,7 @@ struct PlanarCorrectnessTests {
     }
 
     /// A 4x4 grid graph (16 vertices, 24 edges), planar.
-    private func grid4x4() -> some AdjacencyListProtocol {
+    private func grid4x4() -> AdjacencyList {
         var graph = AdjacencyList()
         let v = (0 ..< 16).map { i in graph.addVertex { $0.label = "\(i)" } }
         func idx(_ r: Int, _ c: Int) -> Int { r * 4 + c }

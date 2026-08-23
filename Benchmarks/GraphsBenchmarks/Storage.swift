@@ -4,14 +4,14 @@ import Graphs
 // Compares edge-storage backends on identical workloads, so a regression in a
 // particular backend shows up as a divergence rather than a uniform slowdown.
 
-typealias CSRGraph = AdjacencyList<
+typealias CSRGraph = StorageBackedAdjacencyList<
     OrderedVertexStorage,
     CacheInOutEdges<CSREdgeStorage<OrderedVertexStorage.Vertex>>,
     DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
     DictionaryPropertyMap<CSREdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
 >
 
-typealias OrderedNoCacheGraph = AdjacencyList<
+typealias OrderedNoCacheGraph = StorageBackedAdjacencyList<
     OrderedVertexStorage,
     CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
     DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
@@ -19,7 +19,7 @@ typealias OrderedNoCacheGraph = AdjacencyList<
 >
 
 private func makeCSRGraph(n: Int, avgDegree: Int, seed: UInt64 = 42) -> (CSRGraph, [CSRGraph.VertexDescriptor]) {
-    var graph = CSRGraph(edgeStore: CSREdgeStorage().cacheInOutEdges())
+    var graph = CSRGraph(edgeStorage: CSREdgeStorage().cacheInOutEdges())
     var rng = SplitMix64(seed: seed)
     let vertices = (0..<n).map { _ in graph.addVertex() }
     let edgeCount = (n * avgDegree) / 2
@@ -34,7 +34,7 @@ private func makeCSRGraph(n: Int, avgDegree: Int, seed: UInt64 = 42) -> (CSRGrap
 }
 
 private func makeOrderedNoCacheGraph(n: Int, avgDegree: Int, seed: UInt64 = 42) -> (OrderedNoCacheGraph, [OrderedNoCacheGraph.VertexDescriptor]) {
-    var graph = OrderedNoCacheGraph(edgeStore: OrderedEdgeStorage().cacheInOutEdges())
+    var graph = OrderedNoCacheGraph(edgeStorage: OrderedEdgeStorage().cacheInOutEdges())
     var rng = SplitMix64(seed: seed)
     let vertices = (0..<n).map { _ in graph.addVertex() }
     let edgeCount = (n * avgDegree) / 2

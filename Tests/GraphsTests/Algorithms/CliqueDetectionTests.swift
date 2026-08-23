@@ -314,20 +314,20 @@
             var back1 = 0
             var back2 = 0
 
-            var v1 = BronKerboschCliqueDetection<DefaultAdjacencyList>.Visitor()
+            var v1 = BronKerboschCliqueDetection<AdjacencyList>.Visitor()
             v1.exploreClique = { _ in explore1 += 1 }
             v1.foundClique = { _ in found1 += 1 }
             v1.choosePivot = { _ in pivot1 += 1 }
             v1.backtrack = { _ in back1 += 1 }
 
-            var v2 = BronKerboschCliqueDetection<DefaultAdjacencyList>.Visitor()
+            var v2 = BronKerboschCliqueDetection<AdjacencyList>.Visitor()
             v2.exploreClique = { _ in explore2 += 1 }
             v2.foundClique = { _ in found2 += 1 }
             v2.choosePivot = { _ in pivot2 += 1 }
             v2.backtrack = { _ in back2 += 1 }
 
             let combined = v1.combined(with: v2)
-            _ = BronKerboschCliqueDetection<DefaultAdjacencyList>(on: graph).findCliques(visitor: combined)
+            _ = BronKerboschCliqueDetection<AdjacencyList>(on: graph).findCliques(visitor: combined)
 
             #expect(found1 == 1, "foundClique fires exactly once for the triangle {A,B,C}")
             #expect(found2 == 1)

@@ -1,6 +1,6 @@
 import OrderedCollections
 
-/// An adjacency list implementation of a graph.
+/// An adjacency-list graph with caller-selected storage adapters.
 ///
 /// This implementation uses separate storage for vertices and edges, providing
 /// efficient access to neighbors and good space complexity for sparse graphs.
@@ -9,159 +9,259 @@ import OrderedCollections
 ///
 /// - Note: This implementation is optimized for sparse graphs where most vertex pairs
 ///   are not connected. For dense graphs, consider using `AdjacencyMatrix` instead.
-public struct AdjacencyList<
+public struct StorageBackedAdjacencyList<
     VertexStore: VertexStorage,
     EdgeStore: EdgeStorage,
-    VertexPropertyMap: MutablePropertyMap,
-    EdgePropertyMap: MutablePropertyMap
+    VertexPropertyStore: MutablePropertyMap,
+    EdgePropertyStore: MutablePropertyMap
 >
 where
     EdgeStore.Vertex == VertexStore.Vertex,
-    VertexPropertyMap.Key == VertexStore.Vertex,
-    VertexPropertyMap.Value == VertexPropertyValues,
-    EdgePropertyMap.Key == EdgeStore.Edge,
-    EdgePropertyMap.Value == EdgePropertyValues
+    VertexPropertyStore.Key == VertexStore.Vertex,
+    VertexPropertyStore.Value == VertexPropertyValues,
+    EdgePropertyStore.Key == EdgeStore.Edge,
+    EdgePropertyStore.Value == EdgePropertyValues
 {
-    public var vertexStore: VertexStore
-    public var edgeStore: EdgeStore
-    public var vertexPropertyMap: VertexPropertyMap
-    public var edgePropertyMap: EdgePropertyMap
+    @usableFromInline
+    var vertexStorage: VertexStore
+    @usableFromInline
+    var edgeStorage: EdgeStore
+    @usableFromInline
+    var vertexPropertyStorage: VertexPropertyStore
+    @usableFromInline
+    var edgePropertyStorage: EdgePropertyStore
 
     /// Creates a new adjacency list with the specified storage components.
     ///
     /// - Parameters:
-    ///   - vertexStore: The storage for vertices
-    ///   - edgeStore: The storage for edges
-    ///   - vertexPropertyMap: The property map for vertex properties
-    ///   - edgePropertyMap: The property map for edge properties
+    ///   - vertexStorage: The storage for vertices.
+    ///   - edgeStorage: The storage for edges.
+    ///   - vertexPropertyStorage: The property storage for vertices.
+    ///   - edgePropertyStorage: The property storage for edges.
     @inlinable
     public init(
-        vertexStore: VertexStore,
-        edgeStore: EdgeStore,
-        vertexPropertyMap: VertexPropertyMap,
-        edgePropertyMap: EdgePropertyMap
+        vertexStorage: VertexStore,
+        edgeStorage: EdgeStore,
+        vertexPropertyStorage: VertexPropertyStore,
+        edgePropertyStorage: EdgePropertyStore
     ) {
-        self.vertexStore = vertexStore
-        self.edgeStore = edgeStore
-        self.vertexPropertyMap = vertexPropertyMap
-        self.edgePropertyMap = edgePropertyMap
+        self.vertexStorage = vertexStorage
+        self.edgeStorage = edgeStorage
+        self.vertexPropertyStorage = vertexPropertyStorage
+        self.edgePropertyStorage = edgePropertyStorage
     }
 }
 
-extension AdjacencyList
+/// The general-purpose adjacency-list graph.
+///
+/// This graph uses insertion-ordered vertex and edge descriptors, caches incoming
+/// edges, and stores vertex and edge properties in dictionaries.
+public typealias AdjacencyList = StorageBackedAdjacencyList<
+    OrderedVertexStorage,
+    CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
+    DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
+    DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
+>
+
+extension StorageBackedAdjacencyList
 where
     VertexStore == OrderedVertexStorage,
     EdgeStore == CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
-    VertexPropertyMap == DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
-    EdgePropertyMap == DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
+    VertexPropertyStore == DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
+    EdgePropertyStore == DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
 {
     /// Creates a new adjacency list with default storage components.
     @inlinable
     public init() {
-        self.init(edgeStore: OrderedEdgeStorage().cacheInOutEdges())
+        self.init(edgeStorage: OrderedEdgeStorage().cacheInOutEdges())
     }
 }
 
-extension AdjacencyList
+extension StorageBackedAdjacencyList
 where
     VertexStore == OrderedVertexStorage,
-    VertexPropertyMap == DictionaryPropertyMap<VertexStore.Vertex, VertexPropertyValues>,
-    EdgePropertyMap == DictionaryPropertyMap<EdgeStore.Edge, EdgePropertyValues>
+    VertexPropertyStore == DictionaryPropertyMap<VertexStore.Vertex, VertexPropertyValues>,
+    EdgePropertyStore == DictionaryPropertyMap<EdgeStore.Edge, EdgePropertyValues>
 {
     /// Creates a new adjacency list with the specified edge store and default other components.
     ///
-    /// - Parameter edgeStore: The edge storage to use
+    /// - Parameter edgeStorage: The edge storage to use.
     @inlinable
-    public init(edgeStore: EdgeStore) {
+    public init(edgeStorage: EdgeStore) {
         self.init(
-            vertexStore: OrderedVertexStorage(),
-            edgeStore: edgeStore,
-            vertexPropertyMap: .init(defaultValue: .init()),
-            edgePropertyMap: .init(defaultValue: .init())
+            vertexStorage: OrderedVertexStorage(),
+            edgeStorage: edgeStorage,
+            vertexPropertyStorage: .init(defaultValue: .init()),
+            edgePropertyStorage: .init(defaultValue: .init())
         )
     }
 }
 
-extension AdjacencyList: Graph {
+extension StorageBackedAdjacencyList: Graph {
     public typealias VertexDescriptor = VertexStore.Vertex
     public typealias EdgeDescriptor = EdgeStore.Edge
 }
-extension AdjacencyList: VertexStorageBackedGraph {}
-extension AdjacencyList: EdgeStorageBackedGraph {}
-extension AdjacencyList: IncidenceGraph {
+extension StorageBackedAdjacencyList: IncidenceGraph {
     public typealias OutgoingEdges = EdgeStore.Edges
+
+    @inlinable
+    public func outgoingEdges(of vertex: VertexDescriptor) -> OutgoingEdges {
+        edgeStorage.outgoingEdges(of: vertex)
+    }
+
+    @inlinable
+    public func source(of edge: EdgeDescriptor) -> VertexDescriptor? {
+        edgeStorage.endpoints(of: edge)?.source
+    }
+
+    @inlinable
+    public func destination(of edge: EdgeDescriptor) -> VertexDescriptor? {
+        edgeStorage.endpoints(of: edge)?.destination
+    }
+
+    @inlinable
+    public func outDegree(of vertex: VertexDescriptor) -> Int {
+        edgeStorage.outDegree(of: vertex)
+    }
 }
-extension AdjacencyList: BidirectionalGraph {
+extension StorageBackedAdjacencyList: BidirectionalGraph {
     public typealias IncomingEdges = EdgeStore.Edges
+
+    @inlinable
+    public func incomingEdges(of vertex: VertexDescriptor) -> IncomingEdges {
+        edgeStorage.incomingEdges(of: vertex)
+    }
+
+    @inlinable
+    public func inDegree(of vertex: VertexDescriptor) -> Int {
+        edgeStorage.inDegree(of: vertex)
+    }
 }
-extension AdjacencyList: VertexListGraph {}
-extension AdjacencyList: EdgeListGraph {}
-extension AdjacencyList: AdjacencyGraph {}
-extension AdjacencyList: MutableGraph {}
-extension AdjacencyList: PropertyGraph {
-    public typealias VertexProperties = VertexPropertyMap.Value
-    public typealias EdgeProperties = EdgePropertyMap.Value
+extension StorageBackedAdjacencyList: VertexListGraph {
+    public typealias Vertices = VertexStore.Vertices
+
+    @inlinable
+    public func vertices() -> Vertices {
+        vertexStorage.vertices()
+    }
+
+    @inlinable
+    public var vertexCount: Int {
+        vertexStorage.vertexCount
+    }
 }
-extension AdjacencyList: MutablePropertyGraph {}
-extension AdjacencyList: BinaryIncidenceGraph where EdgeStore: BinaryEdgeStorage {}
-extension AdjacencyList: MutableBinaryIncidenceGraph where EdgeStore: BinaryEdgeStorage {}
+extension StorageBackedAdjacencyList: EdgeListGraph {
+    public typealias Edges = EdgeStore.Edges
 
-/// A protocol that represents the full set of capabilities provided by an `AdjacencyList` graph.
-///
-/// `AdjacencyListProtocol` aggregates all graph protocols that `AdjacencyList` implements,
-/// providing a convenient type-erased interface for algorithms that require comprehensive
-/// graph operations. This includes support for:
-///
-/// - **Enumeration**: List all vertices or edges
-/// - **Structure Access**: Get outgoing/incoming edges, adjacent vertices
-/// - **Mutation**: Add and remove vertices and edges
-/// - **Properties**: Attach data to vertices and edges
-///
-/// Use this protocol when you need to work with `AdjacencyList` instances without being
-/// tied to specific storage backends or property map implementations.
-///
-/// ## Protocol Requirements
-///
-/// This protocol inherits from:
-///
-/// - `Graph`: Basic graph type with vertex and edge descriptors
-/// - `VertexStorageBackedGraph`: Access to the underlying vertex storage
-/// - `EdgeStorageBackedGraph`: Access to the underlying edge storage
-/// - `IncidenceGraph`: Get outgoing edges from a vertex
-/// - `BidirectionalGraph`: Get incoming edges from a vertex
-/// - `VertexListGraph`: Enumerate all vertices in the graph
-/// - `EdgeListGraph`: Enumerate all edges in the graph
-/// - `AdjacencyGraph`: Get adjacent vertices directly (without edges)
-/// - `MutableGraph`: Add and remove vertices and edges
-/// - `PropertyGraph`: Read vertex and edge properties
-/// - `MutablePropertyGraph`: Modify vertex and edge properties
-/// ```
-public protocol AdjacencyListProtocol<VertexDescriptor, EdgeDescriptor>:
-    Graph,
-    VertexStorageBackedGraph,
-    EdgeStorageBackedGraph,
-    IncidenceGraph,
-    BidirectionalGraph,
-    VertexListGraph,
-    EdgeListGraph,
-    AdjacencyGraph,
-    MutableGraph,
-    PropertyGraph,
-    MutablePropertyGraph
-{}
+    @inlinable
+    public func edges() -> Edges {
+        edgeStorage.edges()
+    }
 
-extension AdjacencyList: AdjacencyListProtocol
-where
-    VertexStore == OrderedVertexStorage,
-    EdgeStore == CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
-    VertexPropertyMap == DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
-    EdgePropertyMap == DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
-{}
+    @inlinable
+    public var edgeCount: Int {
+        edgeStorage.edgeCount
+    }
+}
+extension StorageBackedAdjacencyList: AdjacencyGraph {}
+extension StorageBackedAdjacencyList: MutableGraph {
+    @discardableResult
+    @inlinable
+    public mutating func addVertex() -> VertexDescriptor {
+        vertexStorage.addVertex()
+    }
 
-extension AdjacencyList: Sendable
+    @discardableResult
+    @inlinable
+    public mutating func addEdge(from source: VertexDescriptor, to destination: VertexDescriptor) -> EdgeDescriptor? {
+        guard vertexStorage.contains(source), vertexStorage.contains(destination) else { return nil }
+        return edgeStorage.addEdge(from: source, to: destination)
+    }
+
+    #if swift(>=6.2)
+        @inlinable
+        public mutating func remove(edge: consuming EdgeDescriptor) {
+            edgeStorage.remove(edge: edge)
+        }
+
+        @inlinable
+        public mutating func remove(vertex: consuming VertexDescriptor) {
+            for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
+            for edge in incomingEdges(of: vertex) { remove(edge: edge) }
+            vertexStorage.remove(vertex: vertex)
+        }
+    #else
+        @inlinable
+        public mutating func remove(edge: EdgeDescriptor) {
+            edgeStorage.remove(edge: edge)
+        }
+
+        @inlinable
+        public mutating func remove(vertex: VertexDescriptor) {
+            for edge in outgoingEdges(of: vertex) { remove(edge: edge) }
+            for edge in incomingEdges(of: vertex) { remove(edge: edge) }
+            vertexStorage.remove(vertex: vertex)
+        }
+    #endif
+}
+extension StorageBackedAdjacencyList: PropertyGraph {
+    public typealias VertexProperties = VertexPropertyStore.Value
+    public typealias EdgeProperties = EdgePropertyStore.Value
+
+    #if compiler(>=6.2)
+        @inlinable
+        public subscript(vertex: VertexDescriptor) -> VertexProperties {
+            set { vertexPropertyStorage[vertex] = newValue }
+            _read { yield vertexPropertyStorage[vertex] }
+            _modify {
+                var properties = vertexPropertyStorage[vertex]
+                defer { vertexPropertyStorage[vertex] = properties }
+                yield &properties
+            }
+        }
+
+        @inlinable
+        public subscript(edge: EdgeDescriptor) -> EdgeProperties {
+            set { edgePropertyStorage[edge] = newValue }
+            _read { yield edgePropertyStorage[edge] }
+            _modify {
+                var properties = edgePropertyStorage[edge]
+                defer { edgePropertyStorage[edge] = properties }
+                yield &properties
+            }
+        }
+    #else
+        @inlinable
+        public subscript(vertex: VertexDescriptor) -> VertexProperties {
+            get { vertexPropertyStorage[vertex] }
+            set { vertexPropertyStorage[vertex] = newValue }
+        }
+
+        @inlinable
+        public subscript(edge: EdgeDescriptor) -> EdgeProperties {
+            get { edgePropertyStorage[edge] }
+            set { edgePropertyStorage[edge] = newValue }
+        }
+    #endif
+}
+extension StorageBackedAdjacencyList: MutablePropertyGraph {}
+extension StorageBackedAdjacencyList: BinaryIncidenceGraph where EdgeStore: BinaryEdgeStorage {
+    @inlinable
+    public func leftEdge(of vertex: VertexDescriptor) -> EdgeDescriptor? {
+        edgeStorage.leftEdge(of: vertex)
+    }
+
+    @inlinable
+    public func rightEdge(of vertex: VertexDescriptor) -> EdgeDescriptor? {
+        edgeStorage.rightEdge(of: vertex)
+    }
+}
+extension StorageBackedAdjacencyList: MutableBinaryIncidenceGraph where EdgeStore: BinaryEdgeStorage {}
+
+extension StorageBackedAdjacencyList: Sendable
 where
     VertexStore: Sendable,
     EdgeStore: Sendable,
-    VertexPropertyMap: Sendable,
-    EdgePropertyMap: Sendable
+    VertexPropertyStore: Sendable,
+    EdgePropertyStore: Sendable
 {}

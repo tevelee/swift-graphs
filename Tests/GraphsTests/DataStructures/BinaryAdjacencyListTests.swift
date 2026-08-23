@@ -4,7 +4,7 @@
 
     struct BinaryAdjacencyListTests {
         @Test func setChildrenAndNeighbors() {
-            var g = AdjacencyList(edgeStore: BinaryEdgeStore())
+            var g = StorageBackedAdjacencyList(edgeStorage: BinaryEdgeStore())
 
             let a = g.addVertex()
             let b = g.addVertex()
@@ -31,7 +31,7 @@
         }
 
         @Test func replacingLeftChild() {
-            var g = AdjacencyList(edgeStore: BinaryEdgeStore())
+            var g = StorageBackedAdjacencyList(edgeStorage: BinaryEdgeStore())
 
             let a = g.addVertex()
             let b = g.addVertex()

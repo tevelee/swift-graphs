@@ -256,9 +256,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -337,7 +337,7 @@
             var bridges1 = 0
             var bridges2 = 0
 
-            var v1 = TarjanArticulationPoints<DefaultAdjacencyList>.Visitor()
+            var v1 = TarjanArticulationPoints<AdjacencyList>.Visitor()
             v1.discoverVertex = { _ in discovered1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.treeEdge = { _ in tree1 += 1 }
@@ -346,7 +346,7 @@
             v1.foundArticulationPoint = { _ in artPoints1 += 1 }
             v1.foundBridge = { _ in bridges1 += 1 }
 
-            var v2 = TarjanArticulationPoints<DefaultAdjacencyList>.Visitor()
+            var v2 = TarjanArticulationPoints<AdjacencyList>.Visitor()
             v2.discoverVertex = { _ in discovered2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
             v2.treeEdge = { _ in tree2 += 1 }

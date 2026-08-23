@@ -67,7 +67,7 @@ extension LazyIncidenceGraph {
     public func materialize(
         from source: Vertex,
         using traversalAlgorithm: some TraversalAlgorithm<Self>
-    ) -> some AdjacencyListProtocol where Vertex: Hashable, Edge: EdgeProtocol<Vertex> {
+    ) -> AdjacencyList where Vertex: Hashable, Edge: EdgeProtocol<Vertex> {
         let result = traverse(from: source, using: traversalAlgorithm)
 
         var graph = AdjacencyList()
@@ -99,7 +99,7 @@ extension LazyIncidenceGraph {
     /// - Parameter source: The starting vertex for traversal to discover the graph structure
     /// - Returns: An AdjacencyList containing all discovered vertices and edges
     @inlinable
-    public func materialize(from source: Vertex) -> some AdjacencyListProtocol where Vertex: Hashable, Edge: EdgeProtocol<Vertex> {
+    public func materialize(from source: Vertex) -> AdjacencyList where Vertex: Hashable, Edge: EdgeProtocol<Vertex> {
         return materialize(from: source, using: .bfs())
     }
 }

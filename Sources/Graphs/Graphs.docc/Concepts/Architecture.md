@@ -114,15 +114,13 @@ protocol MutableGraph: VertexMutableGraph, EdgeMutableGraph {}
 /// Associate data with vertices
 protocol VertexPropertyGraph: Graph {
     associatedtype VertexProperties
-    associatedtype VertexPropertyMap: PropertyMap
-    var vertexPropertyMap: VertexPropertyMap { get }
+    subscript(vertex: VertexDescriptor) -> VertexProperties { get }
 }
 
 /// Associate data with edges
 protocol EdgePropertyGraph: Graph {
     associatedtype EdgeProperties
-    associatedtype EdgePropertyMap: PropertyMap
-    var edgePropertyMap: EdgePropertyMap { get }
+    subscript(edge: EdgeDescriptor) -> EdgeProperties { get }
 }
 
 /// Both vertex and edge properties
@@ -142,7 +140,14 @@ Concrete data structures implementing the protocols:
 Most common implementation for sparse graphs:
 
 ```swift
-struct AdjacencyList<VertexStore, EdgeStore, VertexPropertyMap, EdgePropertyMap>:
+typealias AdjacencyList = StorageBackedAdjacencyList<
+    OrderedVertexStorage,
+    CacheInOutEdges<OrderedEdgeStorage<Int>>,
+    DictionaryPropertyMap<Int, VertexPropertyValues>,
+    DictionaryPropertyMap<Int, EdgePropertyValues>
+>
+
+struct StorageBackedAdjacencyList<VertexStore, EdgeStore, VertexPropertyStore, EdgePropertyStore>:
     Graph,
     IncidenceGraph,
     BidirectionalGraph,
@@ -152,10 +157,8 @@ struct AdjacencyList<VertexStore, EdgeStore, VertexPropertyMap, EdgePropertyMap>
     MutableGraph,
     PropertyGraph
 {
-    var vertexStore: VertexStore
-    var edgeStore: EdgeStore
-    var vertexPropertyMap: VertexPropertyMap
-    var edgePropertyMap: EdgePropertyMap
+    // Storage adapters are implementation details. Graph operations and
+    // property subscripts form the public behavior-oriented interface.
 }
 ```
 
@@ -163,12 +166,15 @@ struct AdjacencyList<VertexStore, EdgeStore, VertexPropertyMap, EdgePropertyMap>
 **Best for:** Sparse graphs (social networks, road maps)  
 **Complexity:** Space O(V+E), Edge lookup O(degree)
 
+Use ``AdjacencyList`` for the standard configuration. Reach for
+``StorageBackedAdjacencyList`` only when selecting custom storage adapters.
+
 ### `AdjacencyMatrix`
 
 Dense graph representation:
 
 ```swift
-struct AdjacencyMatrix<VertexStore, EdgeStore, VertexPropertyMap, EdgePropertyMap>:
+struct AdjacencyMatrix:
     Graph,
     IncidenceGraph,
     BidirectionalGraph,
@@ -636,4 +642,3 @@ Now that you understand the architecture:
 - <doc:AlgorithmInterfaces>
 - ``Graph``
 - ``IncidenceGraph``
-

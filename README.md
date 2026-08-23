@@ -301,10 +301,10 @@ Graph
 ```
 Graph
 ├── VertexPropertyGraph (vertex data)
+│   └── MutableVertexPropertyGraph (mutable vertex properties)
 ├── EdgePropertyGraph (edge data)
+│   └── MutableEdgePropertyGraph (mutable edge properties)
 └── PropertyGraph (both)
-    ├── VertexMutablePropertyGraph (mutable vertex properties)
-    ├── EdgeMutablePropertyGraph (mutable edge properties)
     └── MutablePropertyGraph (fully mutable)
 ```
 

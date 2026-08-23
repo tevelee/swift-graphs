@@ -1,27 +1,31 @@
 #if !GRAPHS_USES_TRAITS || GRAPHS_BIPARTITE_GRAPH
     import OrderedCollections
 
-    /// An adjacency list implementation of a bipartite graph.
+    /// A bipartite adjacency-list graph with caller-selected storage adapters.
     ///
     /// This implementation maintains separate storage for left and right partitions,
     /// ensuring that edges only connect vertices from different partitions.
-    public struct BipartiteAdjacencyList<
+    public struct StorageBackedBipartiteAdjacencyList<
         VertexStore: VertexStorage,
         EdgeStore: EdgeStorage,
-        VertexPropertyMap: MutablePropertyMap,
-        EdgePropertyMap: MutablePropertyMap
+        VertexPropertyStore: MutablePropertyMap,
+        EdgePropertyStore: MutablePropertyMap
     >
     where
         EdgeStore.Vertex == VertexStore.Vertex,
-        VertexPropertyMap.Key == VertexStore.Vertex,
-        VertexPropertyMap.Value == VertexPropertyValues,
-        EdgePropertyMap.Key == EdgeStore.Edge,
-        EdgePropertyMap.Value == EdgePropertyValues
+        VertexPropertyStore.Key == VertexStore.Vertex,
+        VertexPropertyStore.Value == VertexPropertyValues,
+        EdgePropertyStore.Key == EdgeStore.Edge,
+        EdgePropertyStore.Value == EdgePropertyValues
     {
-        public var vertexStore: VertexStore
-        public var edgeStore: EdgeStore
-        public var vertexPropertyMap: VertexPropertyMap
-        public var edgePropertyMap: EdgePropertyMap
+        @usableFromInline
+        var vertexStorage: VertexStore
+        @usableFromInline
+        var edgeStorage: EdgeStore
+        @usableFromInline
+        var vertexPropertyStorage: VertexPropertyStore
+        @usableFromInline
+        var edgePropertyStorage: EdgePropertyStore
 
         /// Maps vertices to their partition.
         @usableFromInline
@@ -30,32 +34,40 @@
         /// Creates a new bipartite adjacency list with the specified storage components.
         ///
         /// - Parameters:
-        ///   - vertexStore: The storage for vertices
-        ///   - edgeStore: The storage for edges
-        ///   - vertexPropertyMap: The property map for vertex properties
-        ///   - edgePropertyMap: The property map for edge properties
+        ///   - vertexStorage: The storage for vertices.
+        ///   - edgeStorage: The storage for edges.
+        ///   - vertexPropertyStorage: The property storage for vertices.
+        ///   - edgePropertyStorage: The property storage for edges.
         @inlinable
         public init(
-            vertexStore: VertexStore,
-            edgeStore: EdgeStore,
-            vertexPropertyMap: VertexPropertyMap,
-            edgePropertyMap: EdgePropertyMap
+            vertexStorage: VertexStore,
+            edgeStorage: EdgeStore,
+            vertexPropertyStorage: VertexPropertyStore,
+            edgePropertyStorage: EdgePropertyStore
         ) {
-            self.vertexStore = vertexStore
-            self.edgeStore = edgeStore
-            self.vertexPropertyMap = vertexPropertyMap
-            self.edgePropertyMap = edgePropertyMap
+            self.vertexStorage = vertexStorage
+            self.edgeStorage = edgeStorage
+            self.vertexPropertyStorage = vertexPropertyStorage
+            self.edgePropertyStorage = edgePropertyStorage
         }
     }
 
+    /// The general-purpose bipartite adjacency-list graph.
+    public typealias BipartiteAdjacencyList = StorageBackedBipartiteAdjacencyList<
+        OrderedVertexStorage,
+        OrderedEdgeStorage<OrderedVertexStorage.Vertex>,
+        DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
+        DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
+    >
+
     // MARK: - Convenience Initializers
 
-    extension BipartiteAdjacencyList
+    extension StorageBackedBipartiteAdjacencyList
     where
         VertexStore == OrderedVertexStorage,
         EdgeStore == OrderedEdgeStorage<OrderedVertexStorage.Vertex>,
-        VertexPropertyMap == DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
-        EdgePropertyMap == DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
+        VertexPropertyStore == DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
+        EdgePropertyStore == DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>
     {
         /// Creates a new empty bipartite adjacency list with default storage types.
         ///
@@ -63,7 +75,7 @@
         @inlinable
         public init()
         where
-            Self == BipartiteAdjacencyList<
+            Self == StorageBackedBipartiteAdjacencyList<
                 OrderedVertexStorage,
                 OrderedEdgeStorage<OrderedVertexStorage.Vertex>,
                 DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
@@ -71,49 +83,109 @@
             >
         {
             self.init(
-                vertexStore: OrderedVertexStorage(),
-                edgeStore: OrderedEdgeStorage<OrderedVertexStorage.Vertex>(),
-                vertexPropertyMap: DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>(defaultValue: .init()),
-                edgePropertyMap: DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>(defaultValue: .init())
+                vertexStorage: OrderedVertexStorage(),
+                edgeStorage: OrderedEdgeStorage<OrderedVertexStorage.Vertex>(),
+                vertexPropertyStorage: DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>(defaultValue: .init()),
+                edgePropertyStorage: DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>(defaultValue: .init())
             )
         }
     }
 
     // MARK: - Protocol Conformances
 
-    extension BipartiteAdjacencyList: Graph {
+    extension StorageBackedBipartiteAdjacencyList: Graph {
         public typealias VertexDescriptor = VertexStore.Vertex
         public typealias EdgeDescriptor = EdgeStore.Edge
     }
 
-    extension BipartiteAdjacencyList: VertexStorageBackedGraph, EdgeStorageBackedGraph {}
-
-    extension BipartiteAdjacencyList: IncidenceGraph {
+    extension StorageBackedBipartiteAdjacencyList: IncidenceGraph {
         public typealias OutgoingEdges = EdgeStore.Edges
+
+        @inlinable
+        public func outgoingEdges(of vertex: VertexDescriptor) -> OutgoingEdges {
+            edgeStorage.outgoingEdges(of: vertex)
+        }
+
+        @inlinable
+        public func source(of edge: EdgeDescriptor) -> VertexDescriptor? {
+            edgeStorage.endpoints(of: edge)?.source
+        }
+
+        @inlinable
+        public func destination(of edge: EdgeDescriptor) -> VertexDescriptor? {
+            edgeStorage.endpoints(of: edge)?.destination
+        }
+
+        @inlinable
+        public func outDegree(of vertex: VertexDescriptor) -> Int {
+            edgeStorage.outDegree(of: vertex)
+        }
     }
 
-    extension BipartiteAdjacencyList: BidirectionalGraph {
+    extension StorageBackedBipartiteAdjacencyList: BidirectionalGraph {
         public typealias IncomingEdges = EdgeStore.Edges
+
+        @inlinable
+        public func incomingEdges(of vertex: VertexDescriptor) -> IncomingEdges {
+            edgeStorage.incomingEdges(of: vertex)
+        }
+
+        @inlinable
+        public func inDegree(of vertex: VertexDescriptor) -> Int {
+            edgeStorage.inDegree(of: vertex)
+        }
     }
 
-    extension BipartiteAdjacencyList: VertexListGraph {}
+    extension StorageBackedBipartiteAdjacencyList: VertexListGraph {
+        public typealias Vertices = VertexStore.Vertices
 
-    extension BipartiteAdjacencyList: EdgeListGraph {}
+        @inlinable
+        public func vertices() -> Vertices {
+            vertexStorage.vertices()
+        }
 
-    extension BipartiteAdjacencyList: AdjacencyGraph {}
+        @inlinable
+        public var vertexCount: Int {
+            vertexStorage.vertexCount
+        }
+    }
 
-    extension BipartiteAdjacencyList: MutableGraph {}
+    extension StorageBackedBipartiteAdjacencyList: EdgeListGraph {
+        public typealias Edges = EdgeStore.Edges
 
-    extension BipartiteAdjacencyList: PropertyGraph {
+        @inlinable
+        public func edges() -> Edges {
+            edgeStorage.edges()
+        }
+
+        @inlinable
+        public var edgeCount: Int {
+            edgeStorage.edgeCount
+        }
+    }
+
+    extension StorageBackedBipartiteAdjacencyList: AdjacencyGraph {}
+
+    extension StorageBackedBipartiteAdjacencyList: PropertyGraph {
         public typealias VertexProperties = VertexPropertyValues
         public typealias EdgeProperties = EdgePropertyValues
-        public typealias VertexPropertyMap = VertexPropertyMap
-        public typealias EdgePropertyMap = EdgePropertyMap
+
+        @inlinable
+        public subscript(vertex: VertexDescriptor) -> VertexProperties {
+            get { vertexPropertyStorage[vertex] }
+            set { vertexPropertyStorage[vertex] = newValue }
+        }
+
+        @inlinable
+        public subscript(edge: EdgeDescriptor) -> EdgeProperties {
+            get { edgePropertyStorage[edge] }
+            set { edgePropertyStorage[edge] = newValue }
+        }
     }
 
-    extension BipartiteAdjacencyList: MutablePropertyGraph {}
+    extension StorageBackedBipartiteAdjacencyList: MutablePropertyGraph {}
 
-    extension BipartiteAdjacencyList: BipartiteGraph {
+    extension StorageBackedBipartiteAdjacencyList: BipartiteGraph {
         public typealias PartitionVertices = [VertexDescriptor]
 
         @inlinable
@@ -136,11 +208,11 @@
         }
     }
 
-    extension BipartiteAdjacencyList: MutableBipartiteGraph {
+    extension StorageBackedBipartiteAdjacencyList: MutableBipartiteGraph {
 
         @inlinable
         public mutating func addVertex(to partition: BipartitePartition) -> VertexDescriptor {
-            let vertex = vertexStore.addVertex()
+            let vertex = vertexStorage.addVertex()
             vertexPartitions[vertex] = partition
             return vertex
         }
@@ -168,7 +240,7 @@
                 }
 
                 vertexPartitions.removeValue(forKey: vertex)
-                vertexStore.remove(vertex: vertex)
+                vertexStorage.remove(vertex: vertex)
             }
         #else
             @inlinable
@@ -182,7 +254,7 @@
                 }
 
                 vertexPartitions.removeValue(forKey: vertex)
-                vertexStore.remove(vertex: vertex)
+                vertexStorage.remove(vertex: vertex)
             }
         #endif
 
@@ -190,8 +262,8 @@
         @inlinable
         public mutating func addEdge(from source: VertexDescriptor, to destination: VertexDescriptor) -> EdgeDescriptor? {
             // Ensure vertices exist and are in different partitions
-            guard vertexStore.contains(source),
-                vertexStore.contains(destination),
+            guard vertexStorage.contains(source),
+                vertexStorage.contains(destination),
                 let sourcePartition = vertexPartitions[source],
                 let destPartition = vertexPartitions[destination],
                 sourcePartition != destPartition
@@ -199,7 +271,21 @@
                 return nil
             }
 
-            return edgeStore.addEdge(from: source, to: destination)
+            return edgeStorage.addEdge(from: source, to: destination)
         }
+
+        #if swift(>=6.2)
+            @inlinable
+            public mutating func remove(edge: consuming EdgeDescriptor) {
+                edgeStorage.remove(edge: edge)
+            }
+        #else
+            @inlinable
+            public mutating func remove(edge: EdgeDescriptor) {
+                edgeStorage.remove(edge: edge)
+            }
+        #endif
     }
+
+    extension StorageBackedBipartiteAdjacencyList: MutableGraph {}
 #endif

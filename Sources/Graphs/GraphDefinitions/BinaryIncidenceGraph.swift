@@ -30,15 +30,3 @@ extension BinaryIncidenceGraph {
         rightEdge(of: v).flatMap(destination)
     }
 }
-
-extension BinaryIncidenceGraph where Self: EdgeStorageBackedGraph, EdgeStore: BinaryEdgeStorage {
-    @inlinable
-    public func leftEdge(of v: VertexDescriptor) -> EdgeDescriptor? {
-        edgeStore.leftEdge(of: v)
-    }
-
-    @inlinable
-    public func rightEdge(of v: VertexDescriptor) -> EdgeDescriptor? {
-        edgeStore.rightEdge(of: v)
-    }
-}

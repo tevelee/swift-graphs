@@ -13,7 +13,7 @@
         /// Two paths from A to D both cost 3:
         /// - A -> B -> D (2 + 1 = 3)
         /// - A -> C -> D (1 + 2 = 3)
-        func createMultipleEqualPathsGraph() -> some AdjacencyListProtocol {
+        func createMultipleEqualPathsGraph() -> AdjacencyList {
             var graph = AdjacencyList()
 
             let a = graph.addVertex { $0.label = "A" }
@@ -41,7 +41,7 @@
         /// - A -> B -> C (1 + 1 = 2)
         /// - A -> D -> C (1 + 1 = 2)
         /// - A -> C (2)
-        func createThreeEqualPathsGraph() -> some AdjacencyListProtocol {
+        func createThreeEqualPathsGraph() -> AdjacencyList {
             var graph = AdjacencyList()
 
             let a = graph.addVertex { $0.label = "A" }
@@ -59,7 +59,7 @@
         }
 
         /// Creates a linear graph (single path).
-        func createLinearGraph() -> some AdjacencyListProtocol {
+        func createLinearGraph() -> AdjacencyList {
             var graph = AdjacencyList()
 
             let a = graph.addVertex { $0.label = "A" }
@@ -73,7 +73,7 @@
         }
 
         /// Creates a disconnected graph (no path).
-        func createDisconnectedGraph() -> some AdjacencyListProtocol {
+        func createDisconnectedGraph() -> AdjacencyList {
             var graph = AdjacencyList()
 
             graph.addVertex { $0.label = "A" }
@@ -91,7 +91,7 @@
         /// Two paths from A to D:
         /// - A -> B -> D (1 + 1 = 2) - shortest
         /// - A -> C -> D (3 + 1 = 4) - longer
-        func createDiamondGraphDifferentCosts() -> some AdjacencyListProtocol {
+        func createDiamondGraphDifferentCosts() -> AdjacencyList {
             var graph = AdjacencyList()
 
             let a = graph.addVertex { $0.label = "A" }
@@ -485,9 +485,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -519,9 +519,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -548,11 +548,11 @@
             var examined1 = 0
             var examined2 = 0
 
-            var v1 = BacktrackingDijkstra<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = BacktrackingDijkstra<AdjacencyList, Double>.Visitor()
             v1.pathFound = { _, _ in pathsFound1 += 1 }
             v1.examineVertex = { _ in examined1 += 1 }
 
-            var v2 = BacktrackingDijkstra<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = BacktrackingDijkstra<AdjacencyList, Double>.Visitor()
             v2.pathFound = { _, _ in pathsFound2 += 1 }
             v2.examineVertex = { _ in examined2 += 1 }
 

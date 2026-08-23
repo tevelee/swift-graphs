@@ -6,26 +6,26 @@ struct PlanarPropertyTests {
 
     // MARK: - Test Graphs
 
-    func createEmptyGraph() -> DefaultAdjacencyList {
-        return DefaultAdjacencyList()
+    func createEmptyGraph() -> AdjacencyList {
+        return AdjacencyList()
     }
 
-    func createSingleVertexGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createSingleVertexGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         graph.addVertex { $0.label = "A" }
         return graph
     }
 
-    func createTwoVertexGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createTwoVertexGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         graph.addEdge(from: a, to: b) { $0.label = "AB" }
         return graph
     }
 
-    func createTriangleGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createTriangleGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -37,8 +37,8 @@ struct PlanarPropertyTests {
         return graph
     }
 
-    func createK4Graph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createK4Graph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -55,8 +55,8 @@ struct PlanarPropertyTests {
         return graph
     }
 
-    func createK5Graph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createK5Graph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -78,8 +78,8 @@ struct PlanarPropertyTests {
         return graph
     }
 
-    func createK33Graph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createK33Graph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -102,8 +102,8 @@ struct PlanarPropertyTests {
         return graph
     }
 
-    func createPlanarGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createPlanarGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -121,8 +121,8 @@ struct PlanarPropertyTests {
         return graph
     }
 
-    func createNonPlanarGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createNonPlanarGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -198,7 +198,7 @@ struct PlanarPropertyTests {
     // MARK: - Edge Cases
 
     @Test func graphWithSelfLoops() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
 
@@ -210,7 +210,7 @@ struct PlanarPropertyTests {
     }
 
     @Test func disconnectedGraph() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -233,7 +233,7 @@ struct PlanarPropertyTests {
         var eulerViolations: [(Int, Int, Int)] = []
         var kuratowskiViolations: [String] = []
 
-        let visitor = EulerFormulaPlanarPropertyAlgorithm<DefaultAdjacencyList>.Visitor(
+        let visitor = EulerFormulaPlanarPropertyAlgorithm<AdjacencyList>.Visitor(
             checkEulerFormula: nil,
             examineVertex: nil,
             examineEdge: nil,
@@ -246,7 +246,7 @@ struct PlanarPropertyTests {
             }
         )
 
-        let algorithm = EulerFormulaPlanarPropertyAlgorithm<DefaultAdjacencyList>()
+        let algorithm = EulerFormulaPlanarPropertyAlgorithm<AdjacencyList>()
         let result = algorithm.isPlanar(in: graph, visitor: visitor)
 
         #expect(result == false)
@@ -256,13 +256,13 @@ struct PlanarPropertyTests {
 
     @Test func largePlanarGraph() {
         // Create a moderate-sized planar graph (grid-like structure)
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let size = 5  // Reduced from 10 to avoid exponential explosion
-        var vertices: [[DefaultAdjacencyList.VertexDescriptor]] = []
+        var vertices: [[AdjacencyList.VertexDescriptor]] = []
 
         // Create grid vertices
         for i in 0 ..< size {
-            var row: [DefaultAdjacencyList.VertexDescriptor] = []
+            var row: [AdjacencyList.VertexDescriptor] = []
             for j in 0 ..< size {
                 let vertex = graph.addVertex { $0.label = "\(i),\(j)" }
                 row.append(vertex)

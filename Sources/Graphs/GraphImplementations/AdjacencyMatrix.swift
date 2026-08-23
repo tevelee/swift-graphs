@@ -23,9 +23,10 @@ public struct AdjacencyMatrix {
     internal var nextVertexId: Int = 0
     @usableFromInline
     internal var nextEdgeId: Int = 0
-    // Property maps
-    public var vertexPropertyMap: DictionaryPropertyMap<Vertex, VertexPropertyValues> = .init(defaultValue: .init())
-    public var edgePropertyMap: DictionaryPropertyMap<Edge, EdgePropertyValues> = .init(defaultValue: .init())
+    @usableFromInline
+    var vertexPropertyStorage: DictionaryPropertyMap<Vertex, VertexPropertyValues> = .init(defaultValue: .init())
+    @usableFromInline
+    var edgePropertyStorage: DictionaryPropertyMap<Edge, EdgePropertyValues> = .init(defaultValue: .init())
 
     /// Creates a new empty adjacency matrix.
     @inlinable
@@ -236,8 +237,18 @@ extension AdjacencyMatrix: AdjacencyGraph {
 extension AdjacencyMatrix: PropertyGraph {
     public typealias VertexProperties = VertexPropertyValues
     public typealias EdgeProperties = EdgePropertyValues
-    public typealias VertexPropertyMap = DictionaryPropertyMap<Vertex, VertexPropertyValues>
-    public typealias EdgePropertyMap = DictionaryPropertyMap<Edge, EdgePropertyValues>
+
+    @inlinable
+    public subscript(vertex: Vertex) -> VertexPropertyValues {
+        get { vertexPropertyStorage[vertex] }
+        set { vertexPropertyStorage[vertex] = newValue }
+    }
+
+    @inlinable
+    public subscript(edge: Edge) -> EdgePropertyValues {
+        get { edgePropertyStorage[edge] }
+        set { edgePropertyStorage[edge] = newValue }
+    }
 }
 
 extension AdjacencyMatrix: MutablePropertyGraph {}

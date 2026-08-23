@@ -305,9 +305,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -329,11 +329,11 @@
             var examined1 = 0
             var examined2 = 0
 
-            var v1 = FloydWarshall<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = FloydWarshall<AdjacencyList, Double>.Visitor()
             v1.completeIntermediateVertex = { _ in completed1 += 1 }
             v1.examineVertex = { _ in examined1 += 1 }
 
-            var v2 = FloydWarshall<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = FloydWarshall<AdjacencyList, Double>.Visitor()
             v2.completeIntermediateVertex = { _ in completed2 += 1 }
             v2.examineVertex = { _ in examined2 += 1 }
 
@@ -365,11 +365,11 @@
             var completed1 = 0
             var completed2 = 0
 
-            var v1 = Johnson<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = Johnson<AdjacencyList, Double>.Visitor()
             v1.startDijkstraFromSource = { _ in started1 += 1 }
             v1.completeDijkstraFromSource = { _ in completed1 += 1 }
 
-            var v2 = Johnson<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = Johnson<AdjacencyList, Double>.Visitor()
             v2.startDijkstraFromSource = { _ in started2 += 1 }
             v2.completeDijkstraFromSource = { _ in completed2 += 1 }
 

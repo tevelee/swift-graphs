@@ -5,7 +5,7 @@ import Testing
 struct GraphTransformationTests {
 
     @Test func reversedGraphFlipsEdgeDirection() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
 
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -30,7 +30,7 @@ struct GraphTransformationTests {
     }
 
     @Test func transposeGraphFlipsEdgeDirection() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
 
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -78,7 +78,7 @@ struct GraphTransformationTests {
     }
 
     @Test func filteredGraphExcludesMatchingVertices() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
 
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -102,7 +102,7 @@ struct GraphTransformationTests {
     }
 
     @Test func undirectedGraphMakesEdgesBidirectional() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
 
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -130,7 +130,7 @@ struct GraphTransformationTests {
     }
 
     @Test func chainingTransformationsCompose() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
 
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -160,7 +160,7 @@ struct GraphTransformationTests {
     }
 
     @Test func convenienceFilteringMethods() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
 
         let a = graph.addVertex()
         let b = graph.addVertex()

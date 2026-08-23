@@ -157,7 +157,7 @@ struct ConnectedPropertyTests {
         var examineVertexCount = 0
         var examineEdgeCount = 0
 
-        var visitor = DFSTraversal<DefaultAdjacencyList>.Visitor()
+        var visitor = DFSTraversal<AdjacencyList>.Visitor()
         visitor.discoverVertex = { _ in discoverVertexCount += 1 }
         visitor.examineVertex = { _ in examineVertexCount += 1 }
         visitor.examineEdge = { _ in examineEdgeCount += 1 }
@@ -177,7 +177,7 @@ struct ConnectedPropertyTests {
         let vertexCount = 1000
 
         // Create vertices
-        var vertices: [DefaultAdjacencyList.VertexDescriptor] = []
+        var vertices: [AdjacencyList.VertexDescriptor] = []
         for i in 0 ..< vertexCount {
             let vertex = graph.addVertex { $0.label = "\(i)" }
             vertices.append(vertex)
@@ -202,7 +202,7 @@ struct ConnectedPropertyTests {
         let vertexCount = 1000
 
         // Create vertices
-        var vertices: [DefaultAdjacencyList.VertexDescriptor] = []
+        var vertices: [AdjacencyList.VertexDescriptor] = []
         for i in 0 ..< vertexCount {
             let vertex = graph.addVertex { $0.label = "\(i)" }
             vertices.append(vertex)

@@ -29,15 +29,17 @@ struct Graph<Storage: VertexStorage> {
 Swift Graphs uses generics to allow component substitution:
 
 ```swift
-struct AdjacencyList<
+struct StorageBackedAdjacencyList<
     VertexStore: VertexStorage,              // Pluggable ✅
     EdgeStore: EdgeStorage,                   // Pluggable ✅
-    VertexPropertyMap: MutablePropertyMap,    // Pluggable ✅
-    EdgePropertyMap: MutablePropertyMap       // Pluggable ✅
+    VertexPropertyStore: MutablePropertyMap,  // Pluggable ✅
+    EdgePropertyStore: MutablePropertyMap     // Pluggable ✅
 >
 ```
 
-**Result:** Each component can be swapped independently.
+**Result:** Each component can be swapped independently in the expert
+``StorageBackedAdjacencyList``. Most code should use the concrete
+``AdjacencyList`` configuration and depend on graph capability protocols.
 
 ## Pluggable Storage Backends
 
@@ -156,7 +158,7 @@ let basic = OrderedEdgeStorage<Int>()
 let bidirectional = basic.cacheInOutEdges()
 
 // Use as normal
-var graph = AdjacencyList(edgeStore: bidirectional)
+var graph = StorageBackedAdjacencyList(edgeStorage: bidirectional)
 ```
 
 **Pattern:** Wrap storage to add capabilities (Decorator pattern).
@@ -387,7 +389,7 @@ let path = graph.shortestPath(from: a, to: b, using: BidirectionalDijkstra(weigh
 
 ```swift
 // Custom sparse graph using database storage
-typealias DatabaseGraph = AdjacencyList<
+typealias DatabaseGraph = StorageBackedAdjacencyList<
     DatabaseVertexStorage,           // Custom vertex storage
     OrderedEdgeStorage<UUID>,         // Standard edge storage (but with UUIDs)
     DictionaryPropertyMap<UUID, VertexPropertyValues>,
@@ -395,10 +397,10 @@ typealias DatabaseGraph = AdjacencyList<
 >
 
 let graph = DatabaseGraph(
-    vertexStore: DatabaseVertexStorage(database: myDB),
-    edgeStore: OrderedEdgeStorage<UUID>(),
-    vertexPropertyMap: DictionaryPropertyMap(defaultValue: .init()),
-    edgePropertyMap: DictionaryPropertyMap(defaultValue: .init())
+    vertexStorage: DatabaseVertexStorage(database: myDB),
+    edgeStorage: OrderedEdgeStorage<UUID>(),
+    vertexPropertyStorage: DictionaryPropertyMap(defaultValue: .init()),
+    edgePropertyStorage: DictionaryPropertyMap(defaultValue: .init())
 )
 
 // Works with all algorithms!
@@ -430,7 +432,7 @@ Same interface, different storage:
 
 ```swift
 // Development: Fast in-memory graph
-typealias DevGraph = AdjacencyList<
+typealias DevGraph = StorageBackedAdjacencyList<
     OrderedVertexStorage,
     OrderedEdgeStorage<Int>.CacheInOutEdges,
     DictionaryPropertyMap<Int, VertexPropertyValues>,
@@ -438,7 +440,7 @@ typealias DevGraph = AdjacencyList<
 >
 
 // Production: Persistent database-backed graph
-typealias ProdGraph = AdjacencyList<
+typealias ProdGraph = StorageBackedAdjacencyList<
     DatabaseVertexStorage,
     DatabaseEdgeStorage,
     DatabasePropertyMap<UUID, VertexPropertyValues>,
@@ -462,15 +464,16 @@ Choose components based on requirements:
 let small = AdjacencyList()  // Default storage
 
 // Large graph - database backend
-let large = AdjacencyList(
-    vertexStore: DatabaseVertexStorage(db),
-    edgeStore: DatabaseEdgeStorage(db),
-    // ...
+let large = StorageBackedAdjacencyList(
+    vertexStorage: DatabaseVertexStorage(db),
+    edgeStorage: DatabaseEdgeStorage(db),
+    vertexPropertyStorage: DatabaseVertexPropertyStorage(db),
+    edgePropertyStorage: DatabaseEdgePropertyStorage(db)
 )
 
 // Bidirectional algorithms - cached incoming edges
-let bidirectional = AdjacencyList(
-    edgeStore: OrderedEdgeStorage().cacheInOutEdges()
+let bidirectional = StorageBackedAdjacencyList(
+    edgeStorage: OrderedEdgeStorage().cacheInOutEdges()
 )
 ```
 
@@ -517,7 +520,12 @@ Add new components without modifying library:
 struct MyStorage: VertexStorage { ... }
 
 // Works with existing graph implementations!
-let graph = AdjacencyList(vertexStore: MyStorage(), ...)
+let graph = StorageBackedAdjacencyList(
+    vertexStorage: MyStorage(),
+    edgeStorage: MyEdgeStorage(),
+    vertexPropertyStorage: MyVertexPropertyStorage(),
+    edgePropertyStorage: MyEdgePropertyStorage()
+)
 ```
 
 ## Common Patterns
@@ -527,13 +535,13 @@ let graph = AdjacencyList(vertexStore: MyStorage(), ...)
 Convenient constructors for common configurations:
 
 ```swift
-extension AdjacencyList where
+extension StorageBackedAdjacencyList where
     VertexStore == OrderedVertexStorage,
     EdgeStore == CacheInOutEdges<OrderedEdgeStorage<Int>>
 {
     /// Create bidirectional adjacency list
     static func bidirectional() -> Self {
-        Self(edgeStore: OrderedEdgeStorage().cacheInOutEdges())
+        Self(edgeStorage: OrderedEdgeStorage().cacheInOutEdges())
     }
 }
 
@@ -547,7 +555,7 @@ Simplify common combinations:
 
 ```swift
 /// Standard undirected graph
-typealias UndirectedGraph = AdjacencyList<
+typealias UndirectedGraph = StorageBackedAdjacencyList<
     OrderedVertexStorage,
     CacheInOutEdges<OrderedEdgeStorage<Int>>,
     DictionaryPropertyMap<Int, VertexPropertyValues>,
@@ -596,4 +604,3 @@ Now that you understand pluggability:
 - <doc:PropertiesAndPropertyMaps>
 - ``AdjacencyList``
 - ``PropertyMap``
-

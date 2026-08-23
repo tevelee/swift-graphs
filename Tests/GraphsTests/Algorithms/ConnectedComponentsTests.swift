@@ -303,9 +303,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -326,12 +326,12 @@
             var components1 = 0
             var components2 = 0
 
-            var v1 = DFSConnectedComponents<DefaultAdjacencyList>.Visitor()
+            var v1 = DFSConnectedComponents<AdjacencyList>.Visitor()
             v1.discoverVertex = { _ in discovered1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.finishComponent = { _ in components1 += 1 }
 
-            var v2 = DFSConnectedComponents<DefaultAdjacencyList>.Visitor()
+            var v2 = DFSConnectedComponents<AdjacencyList>.Visitor()
             v2.discoverVertex = { _ in discovered2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
             v2.finishComponent = { _ in components2 += 1 }
@@ -364,12 +364,12 @@
             var components1 = 0
             var components2 = 0
 
-            var v1 = UnionFindConnectedComponents<DefaultAdjacencyList>.Visitor()
+            var v1 = UnionFindConnectedComponents<AdjacencyList>.Visitor()
             v1.discoverVertex = { _ in discovered1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.finishComponent = { _ in components1 += 1 }
 
-            var v2 = UnionFindConnectedComponents<DefaultAdjacencyList>.Visitor()
+            var v2 = UnionFindConnectedComponents<AdjacencyList>.Visitor()
             v2.discoverVertex = { _ in discovered2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
             v2.finishComponent = { _ in components2 += 1 }
@@ -545,7 +545,7 @@
             graph.addEdge(from: b, to: a)
 
             let result = graph.connectedComponents(using: .dfs())
-            var seen: Set<ConnectedComponentsResult<DefaultAdjacencyList.VertexDescriptor>> = []
+            var seen: Set<ConnectedComponentsResult<AdjacencyList.VertexDescriptor>> = []
             seen.insert(result)
             seen.insert(result)
             #expect(seen.count == 1, "Inserting the same result twice must yield a set of size 1")

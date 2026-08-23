@@ -167,9 +167,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -187,15 +187,15 @@
             var pathsFound1 = 0
             var pathsFound2 = 0
 
-            let v1 = Yen<DefaultAdjacencyList, Double>.Visitor(
+            let v1 = Yen<AdjacencyList, Double>.Visitor(
                 onPathFound: { _ in pathsFound1 += 1 }
             )
-            let v2 = Yen<DefaultAdjacencyList, Double>.Visitor(
+            let v2 = Yen<AdjacencyList, Double>.Visitor(
                 onPathFound: { _ in pathsFound2 += 1 }
             )
 
             let combined = v1.combined(with: v2)
-            let paths = Yen<DefaultAdjacencyList, Double>(edgeWeight: .property(\.weight))
+            let paths = Yen<AdjacencyList, Double>(edgeWeight: .property(\.weight))
                 .kShortestPaths(from: a, to: c, k: 3, in: graph, visitor: combined)
 
             #expect(paths.count == 1)  // only one simple path: a→b→c

@@ -220,7 +220,7 @@ struct CityProperties {
 }
 
 // Use with custom graph
-typealias CityGraph = AdjacencyList<
+typealias CityGraph = StorageBackedAdjacencyList<
     OrderedVertexStorage,
     CacheInOutEdges<OrderedEdgeStorage<Int>>,
     DictionaryPropertyMap<Int, CityProperties>,  // Custom!
@@ -228,10 +228,10 @@ typealias CityGraph = AdjacencyList<
 >
 
 var cities = CityGraph(
-    vertexStore: OrderedVertexStorage(),
-    edgeStore: OrderedEdgeStorage<Int>().cacheInOutEdges(),
-    vertexPropertyMap: .init(defaultValue: CityProperties()),
-    edgePropertyMap: .init(defaultValue: EdgePropertyValues())
+    vertexStorage: OrderedVertexStorage(),
+    edgeStorage: OrderedEdgeStorage<Int>().cacheInOutEdges(),
+    vertexPropertyStorage: .init(defaultValue: CityProperties()),
+    edgePropertyStorage: .init(defaultValue: EdgePropertyValues())
 )
 
 // Use with full type safety
@@ -565,4 +565,3 @@ Now that you understand the property system:
 - <doc:ChoosingGraphType>
 - ``PropertyGraph``
 - ``PropertyMap``
-

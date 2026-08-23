@@ -4,18 +4,22 @@ Pick the right vertex and edge storage for the graph's shape and access pattern.
 
 ## Overview
 
-``AdjacencyList`` is generic over its storage:
+``AdjacencyList`` is the concrete, general-purpose configuration. Its expert
+counterpart is generic over storage:
 
 ```swift
-public struct AdjacencyList<
+public struct StorageBackedAdjacencyList<
     VertexStore: VertexStorage,
     EdgeStore: EdgeStorage,
-    VertexPropertyMap: MutablePropertyMap,
-    EdgePropertyMap: MutablePropertyMap
+    VertexPropertyStore: MutablePropertyMap,
+    EdgePropertyStore: MutablePropertyMap
 >
 ```
 
-The default — `AdjacencyList<OrderedVertexStorage, CacheInOutEdges<OrderedEdgeStorage<…>>, …>` — is a safe baseline for general use: insertion-ordered iteration, cached incoming-edge sets so ``BidirectionalGraph`` queries are O(1), and dictionary-backed property maps.
+The ``AdjacencyList`` alias selects `OrderedVertexStorage`, cached
+`OrderedEdgeStorage`, and dictionary-backed property storage. It is a safe
+baseline for general use: insertion-ordered iteration and efficient incoming-
+edge queries.
 
 Use a different backend when the graph's shape or access pattern makes that default a poor fit.
 
@@ -61,8 +65,8 @@ Per-vertex `(left, right)` child slots. Conforms to ``BinaryIncidenceGraph``, un
 ``BidirectionalGraph`` (queries like `incomingEdges(of:)`) is not free for every backend — `OrderedEdgeStorage` and `CSREdgeStorage` only track outgoing edges natively. Wrap any compatible edge store with ``CacheInOutEdges`` to add O(1) reverse lookups, paid for by extra memory and write cost:
 
 ```swift
-let graph = AdjacencyList(
-    edgeStore: OrderedEdgeStorage().cacheInOutEdges()
+let graph = StorageBackedAdjacencyList(
+    edgeStorage: OrderedEdgeStorage().cacheInOutEdges()
 )
 ```
 

@@ -47,9 +47,9 @@ struct AlgorithmInvariantTests {
         var g4 = AdjacencyMatrix()
         check(&g4, "Matrix")
         #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-            var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
             check(&g2, "CSR")
-            var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
             check(&g3, "COO")
         #endif
     }
@@ -85,9 +85,9 @@ struct AlgorithmInvariantTests {
         var g4 = AdjacencyMatrix()
         check(&g4, "Matrix")
         #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-            var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
             check(&g2, "CSR")
-            var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
             check(&g3, "COO")
         #endif
     }
@@ -146,9 +146,9 @@ struct AlgorithmInvariantTests {
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -201,9 +201,9 @@ struct AlgorithmInvariantTests {
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -252,9 +252,9 @@ struct AlgorithmInvariantTests {
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }

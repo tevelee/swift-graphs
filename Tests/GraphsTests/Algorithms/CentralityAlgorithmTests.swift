@@ -6,17 +6,17 @@
 
         // MARK: - Test Graphs
 
-        func createEmptyGraph() -> some AdjacencyListProtocol {
+        func createEmptyGraph() -> AdjacencyList {
             AdjacencyList()
         }
 
-        func createSingleVertexGraph() -> some AdjacencyListProtocol {
+        func createSingleVertexGraph() -> AdjacencyList {
             var graph = AdjacencyList()
             _ = graph.addVertex()
             return graph
         }
 
-        func createCompleteGraph() -> some AdjacencyListProtocol {
+        func createCompleteGraph() -> AdjacencyList {
             var graph = AdjacencyList()
             let vertices = (0 ..< 4).map { _ in graph.addVertex() }
             for i in 0 ..< vertices.count {
@@ -28,7 +28,7 @@
             return graph
         }
 
-        func createCycleGraph() -> some AdjacencyListProtocol {
+        func createCycleGraph() -> AdjacencyList {
             var graph = AdjacencyList()
             let a = graph.addVertex()
             let b = graph.addVertex()
@@ -46,7 +46,7 @@
             return graph
         }
 
-        func createPathGraph() -> some AdjacencyListProtocol {
+        func createPathGraph() -> AdjacencyList {
             var graph = AdjacencyList()
             let a = graph.addVertex()
             let b = graph.addVertex()
@@ -59,7 +59,7 @@
             return graph
         }
 
-        func createDisconnectedGraph() -> some AdjacencyListProtocol {
+        func createDisconnectedGraph() -> AdjacencyList {
             var graph = AdjacencyList()
             let a = graph.addVertex()
             let b = graph.addVertex()
@@ -88,7 +88,7 @@
         @Test func degreeCentralityStarGraph() {
             var graph = AdjacencyList()
             let center = graph.addVertex()
-            var leaves: [DefaultAdjacencyList.VertexDescriptor] = []
+            var leaves: [AdjacencyList.VertexDescriptor] = []
             for _ in 0 ..< 5 {
                 let leaf = graph.addVertex()
                 leaves.append(leaf)
@@ -105,7 +105,7 @@
         @Test func degreeCentralityStarGraphExactValues() {
             var graph = AdjacencyList()
             let center = graph.addVertex()
-            var leaves: [DefaultAdjacencyList.VertexDescriptor] = []
+            var leaves: [AdjacencyList.VertexDescriptor] = []
             for _ in 0 ..< 5 {
                 let leaf = graph.addVertex()
                 leaves.append(leaf)
@@ -156,18 +156,18 @@
         }
 
         @Test func degreeCentralityVisitor() {
-            var examinedVertices: Set<DefaultAdjacencyList.VertexDescriptor> = []
-            var computedDegrees: [DefaultAdjacencyList.VertexDescriptor: Int] = [:]
+            var examinedVertices: Set<AdjacencyList.VertexDescriptor> = []
+            var computedDegrees: [AdjacencyList.VertexDescriptor: Int] = [:]
 
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let center = graph.addVertex()
             for _ in 0 ..< 5 {
                 let leaf = graph.addVertex()
                 graph.addEdge(from: center, to: leaf)
             }
 
-            let algorithm = DegreeCentralityAlgorithm<DefaultAdjacencyList>(normalized: true)
-            let visitor = DegreeCentrality<DefaultAdjacencyList>.Visitor(
+            let algorithm = DegreeCentralityAlgorithm<AdjacencyList>(normalized: true)
+            let visitor = DegreeCentrality<AdjacencyList>.Visitor(
                 examineVertex: { vertex in
                     examinedVertices.insert(vertex)
                 },
@@ -211,7 +211,7 @@
         @Test func pageRankStarGraph() {
             var graph = AdjacencyList()
             let center = graph.addVertex()
-            var leaves: [DefaultAdjacencyList.VertexDescriptor] = []
+            var leaves: [AdjacencyList.VertexDescriptor] = []
             for _ in 0 ..< 5 {
                 let leaf = graph.addVertex()
                 leaves.append(leaf)
@@ -236,8 +236,8 @@
             graph.addEdge(from: d, to: a)
 
             var iterations = 0
-            let algorithm = PageRankCentralityAlgorithm<DefaultAdjacencyList>(dampingFactor: 0.85, maxIterations: 100, tolerance: 1e-6)
-            let visitor = PageRankCentrality<DefaultAdjacencyList>.Visitor(
+            let algorithm = PageRankCentralityAlgorithm<AdjacencyList>(dampingFactor: 0.85, maxIterations: 100, tolerance: 1e-6)
+            let visitor = PageRankCentrality<AdjacencyList>.Visitor(
                 startIteration: { iteration in
                     iterations = iteration
                 }
@@ -260,8 +260,8 @@
             graph.addEdge(from: c, to: d)
             graph.addEdge(from: d, to: a)
 
-            let algorithm = PageRankCentralityAlgorithm<DefaultAdjacencyList>()
-            let visitor = PageRankCentrality<DefaultAdjacencyList>.Visitor(
+            let algorithm = PageRankCentralityAlgorithm<AdjacencyList>()
+            let visitor = PageRankCentrality<AdjacencyList>.Visitor(
                 startIteration: { _ in startCount += 1 },
                 endIteration: { _, _ in endCount += 1 }
             )
@@ -357,18 +357,18 @@
         }
 
         @Test func betweennessVisitor() {
-            var examinedVertices: Set<DefaultAdjacencyList.VertexDescriptor> = []
-            var foundPaths: [(DefaultAdjacencyList.VertexDescriptor, DefaultAdjacencyList.VertexDescriptor, Int)] = []
+            var examinedVertices: Set<AdjacencyList.VertexDescriptor> = []
+            var foundPaths: [(AdjacencyList.VertexDescriptor, AdjacencyList.VertexDescriptor, Int)] = []
 
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex()
             let b = graph.addVertex()
             let c = graph.addVertex()
             graph.addEdge(from: a, to: b)
             graph.addEdge(from: b, to: c)
 
-            let algorithm = BetweennessCentralityAlgorithm<DefaultAdjacencyList>(normalized: false)
-            let visitor = BetweennessCentrality<DefaultAdjacencyList>.Visitor(
+            let algorithm = BetweennessCentralityAlgorithm<AdjacencyList>(normalized: false)
+            let visitor = BetweennessCentrality<AdjacencyList>.Visitor(
                 examineVertex: { vertex in
                     examinedVertices.insert(vertex)
                 },
@@ -469,18 +469,18 @@
         }
 
         @Test func closenessVisitor() {
-            var examinedVertices: Set<DefaultAdjacencyList.VertexDescriptor> = []
-            var computedDistances: [(DefaultAdjacencyList.VertexDescriptor, DefaultAdjacencyList.VertexDescriptor, Int)] = []
+            var examinedVertices: Set<AdjacencyList.VertexDescriptor> = []
+            var computedDistances: [(AdjacencyList.VertexDescriptor, AdjacencyList.VertexDescriptor, Int)] = []
 
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex()
             let b = graph.addVertex()
             let c = graph.addVertex()
             graph.addEdge(from: a, to: b)
             graph.addEdge(from: b, to: c)
 
-            let algorithm = ClosenessCentralityAlgorithm<DefaultAdjacencyList>()
-            let visitor = ClosenessCentrality<DefaultAdjacencyList>.Visitor(
+            let algorithm = ClosenessCentralityAlgorithm<AdjacencyList>()
+            let visitor = ClosenessCentrality<AdjacencyList>.Visitor(
                 examineVertex: { vertex in
                     examinedVertices.insert(vertex)
                 },
@@ -549,8 +549,8 @@
             graph.addEdge(from: a, to: d)
 
             var iterations = 0
-            let algorithm = EigenvectorCentralityAlgorithm<DefaultAdjacencyList>(maxIterations: 100, tolerance: 1e-6)
-            let visitor = EigenvectorCentrality<DefaultAdjacencyList>.Visitor(
+            let algorithm = EigenvectorCentralityAlgorithm<AdjacencyList>(maxIterations: 100, tolerance: 1e-6)
+            let visitor = EigenvectorCentrality<AdjacencyList>.Visitor(
                 startIteration: { iteration in
                     iterations = iteration
                 }
@@ -564,7 +564,7 @@
             var endCount = 0
             var convergedCount = 0
 
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex()
             let b = graph.addVertex()
             let c = graph.addVertex()
@@ -573,8 +573,8 @@
             graph.addEdge(from: b, to: c)
             graph.addEdge(from: c, to: b)
 
-            let algorithm = EigenvectorCentralityAlgorithm<DefaultAdjacencyList>()
-            let visitor = EigenvectorCentrality<DefaultAdjacencyList>.Visitor(
+            let algorithm = EigenvectorCentralityAlgorithm<AdjacencyList>()
+            let visitor = EigenvectorCentrality<AdjacencyList>.Visitor(
                 startIteration: { _ in startCount += 1 },
                 endIteration: { _, _ in endCount += 1 },
                 converge: { _, _ in convergedCount += 1 }
@@ -622,7 +622,7 @@
         @Test func centralityResultVerticesByCentrality() {
             var graph = AdjacencyList()
             let center = graph.addVertex()
-            var leaves: [DefaultAdjacencyList.VertexDescriptor] = []
+            var leaves: [AdjacencyList.VertexDescriptor] = []
             for _ in 0 ..< 5 {
                 let leaf = graph.addVertex()
                 leaves.append(leaf)
@@ -678,14 +678,14 @@
             var callCount1 = 0
             var callCount2 = 0
 
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let center = graph.addVertex()
             for _ in 0 ..< 5 {
                 let leaf = graph.addVertex()
                 graph.addEdge(from: center, to: leaf)
             }
 
-            typealias G = DefaultAdjacencyList
+            typealias G = AdjacencyList
             let algorithm = DegreeCentralityAlgorithm<G>(normalized: true)
             let visitor1 = DegreeCentrality<G>.Visitor(
                 examineVertex: { _ in callCount1 += 1 }
@@ -707,7 +707,7 @@
         /// and `foundShortestPath` for each reachable destination from each source.
         /// Both composed visitors must see identical event counts.
         @Test func betweennessComposedVisitorsReceiveAllEvents() {
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -721,11 +721,11 @@
             var foundPath1 = 0
             var foundPath2 = 0
 
-            var v1 = BetweennessCentrality<DefaultAdjacencyList>.Visitor()
+            var v1 = BetweennessCentrality<AdjacencyList>.Visitor()
             v1.examineVertex = { _ in examVtx1 += 1 }
             v1.foundShortestPath = { _, _, _ in foundPath1 += 1 }
 
-            var v2 = BetweennessCentrality<DefaultAdjacencyList>.Visitor()
+            var v2 = BetweennessCentrality<AdjacencyList>.Visitor()
             v2.examineVertex = { _ in examVtx2 += 1 }
             v2.foundShortestPath = { _, _, _ in foundPath2 += 1 }
 
@@ -749,7 +749,7 @@
         /// `examineVertex` fires once per source vertex (3 times); `computeDistance` fires
         /// for each BFS discovery from each source. Both composed visitors must see identical counts.
         @Test func closenessComposedVisitorsReceiveAllEvents() {
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -765,11 +765,11 @@
             var compDist1 = 0
             var compDist2 = 0
 
-            var v1 = ClosenessCentrality<DefaultAdjacencyList>.Visitor()
+            var v1 = ClosenessCentrality<AdjacencyList>.Visitor()
             v1.examineVertex = { _ in examVtx1 += 1 }
             v1.computeDistance = { _, _, _ in compDist1 += 1 }
 
-            var v2 = ClosenessCentrality<DefaultAdjacencyList>.Visitor()
+            var v2 = ClosenessCentrality<AdjacencyList>.Visitor()
             v2.examineVertex = { _ in examVtx2 += 1 }
             v2.computeDistance = { _, _, _ in compDist2 += 1 }
 
@@ -795,7 +795,7 @@
         /// `converge` fires exactly once when convergence is reached.
         /// Both composed visitors must see identical event counts.
         @Test func eigenvectorComposedVisitorsReceiveAllEvents() {
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -811,12 +811,12 @@
             var converge1 = 0
             var converge2 = 0
 
-            var v1 = EigenvectorCentrality<DefaultAdjacencyList>.Visitor()
+            var v1 = EigenvectorCentrality<AdjacencyList>.Visitor()
             v1.startIteration = { _ in startIter1 += 1 }
             v1.endIteration = { _, _ in endIter1 += 1 }
             v1.converge = { _, _ in converge1 += 1 }
 
-            var v2 = EigenvectorCentrality<DefaultAdjacencyList>.Visitor()
+            var v2 = EigenvectorCentrality<AdjacencyList>.Visitor()
             v2.startIteration = { _ in startIter2 += 1 }
             v2.endIteration = { _, _ in endIter2 += 1 }
             v2.converge = { _, _ in converge2 += 1 }
@@ -845,7 +845,7 @@
         /// `converge` fires exactly once when convergence is reached.
         /// Both composed visitors must see identical event counts.
         @Test func pageRankComposedVisitorsReceiveAllEvents() {
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -860,12 +860,12 @@
             var converge1 = 0
             var converge2 = 0
 
-            var v1 = PageRankCentrality<DefaultAdjacencyList>.Visitor()
+            var v1 = PageRankCentrality<AdjacencyList>.Visitor()
             v1.startIteration = { _ in startIter1 += 1 }
             v1.endIteration = { _, _ in endIter1 += 1 }
             v1.converge = { _, _ in converge1 += 1 }
 
-            var v2 = PageRankCentrality<DefaultAdjacencyList>.Visitor()
+            var v2 = PageRankCentrality<AdjacencyList>.Visitor()
             v2.startIteration = { _ in startIter2 += 1 }
             v2.endIteration = { _, _ in endIter2 += 1 }
             v2.converge = { _, _ in converge2 += 1 }

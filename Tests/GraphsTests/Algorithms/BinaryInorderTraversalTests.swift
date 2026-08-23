@@ -4,7 +4,7 @@
 
     struct BinaryInorderTraversalTests {
         @Test func inorderTraversal() {
-            var g = AdjacencyList(edgeStore: BinaryEdgeStore())
+            var g = StorageBackedAdjacencyList(edgeStorage: BinaryEdgeStore())
 
             let a = g.addVertex()
             let b = g.addVertex()

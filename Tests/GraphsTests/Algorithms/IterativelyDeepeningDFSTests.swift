@@ -5,7 +5,7 @@ import Testing
 struct IterativelyDeepeningDFSTests {
 
     @Test func iterativelyDeepeningDFS_ExploresAllVertices() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let root = graph.addVertex()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -30,7 +30,7 @@ struct IterativelyDeepeningDFSTests {
     }
 
     @Test func iterativelyDeepeningDFS_WithMaxDepth_RespectsLimit() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let root = graph.addVertex()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -55,7 +55,7 @@ struct IterativelyDeepeningDFSTests {
     }
 
     @Test func iterativelyDeepeningDFS_WithCycles_HandlesCorrectly() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let root = graph.addVertex()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -75,7 +75,7 @@ struct IterativelyDeepeningDFSTests {
     }
 
     @Test func iterativelyDeepeningDFS_EmptyGraph_ReturnsOnlySource() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let root = graph.addVertex()
 
         let result = graph.traverse(from: root, using: .iterativelyDeepeningDFS())
@@ -86,7 +86,7 @@ struct IterativelyDeepeningDFSTests {
     }
 
     @Test func iterativelyDeepeningDFS_SingleVertex_WorksCorrectly() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let root = graph.addVertex()
 
         let result = graph.traverse(from: root, using: .iterativelyDeepeningDFS(maxDepth: 0))
@@ -97,7 +97,7 @@ struct IterativelyDeepeningDFSTests {
     }
 
     @Test func iterativelyDeepeningDFS_WithVisitor_CallsCorrectly() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let root = graph.addVertex()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -105,10 +105,10 @@ struct IterativelyDeepeningDFSTests {
         graph.addEdge(from: root, to: a)
         graph.addEdge(from: root, to: b)
 
-        var discoveredVertices: [DefaultAdjacencyList.VertexDescriptor] = []
-        var examinedEdges: [DefaultAdjacencyList.EdgeDescriptor] = []
+        var discoveredVertices: [AdjacencyList.VertexDescriptor] = []
+        var examinedEdges: [AdjacencyList.EdgeDescriptor] = []
 
-        let visitor = DepthFirstSearch<DefaultAdjacencyList>.Visitor(
+        let visitor = DepthFirstSearch<AdjacencyList>.Visitor(
             discoverVertex: { vertex in
                 discoveredVertices.append(vertex)
             },
@@ -124,7 +124,7 @@ struct IterativelyDeepeningDFSTests {
     }
 
     @Test func iterativelyDeepeningDFSSearch_ExploresInDepthOrder() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let root = graph.addVertex()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -135,7 +135,7 @@ struct IterativelyDeepeningDFSTests {
         graph.addEdge(from: root, to: b)
         graph.addEdge(from: a, to: c)
 
-        var searchResults: [DefaultAdjacencyList.VertexDescriptor] = []
+        var searchResults: [AdjacencyList.VertexDescriptor] = []
         for result in graph.search(from: root, using: .iterativelyDeepeningDFS()) {
             searchResults.append(result.currentVertex)
         }
@@ -146,7 +146,7 @@ struct IterativelyDeepeningDFSTests {
     }
 
     @Test func iterativelyDeepeningDFSSearch_WithMaxDepth_RespectsLimit() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let root = graph.addVertex()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -156,7 +156,7 @@ struct IterativelyDeepeningDFSTests {
         graph.addEdge(from: root, to: b)
         graph.addEdge(from: a, to: c)
 
-        var searchResults: [DefaultAdjacencyList.VertexDescriptor] = []
+        var searchResults: [AdjacencyList.VertexDescriptor] = []
         for result in graph.search(from: root, using: .iterativelyDeepeningDFS(maxDepth: 1)) {
             searchResults.append(result.currentVertex)
         }
@@ -170,16 +170,16 @@ struct IterativelyDeepeningDFSTests {
     }
 
     @Test func iterativelyDeepeningDFSSearch_WithVisitor_CallsCorrectly() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let root = graph.addVertex()
         let a = graph.addVertex()
 
         graph.addEdge(from: root, to: a)
 
-        var discoveredVertices: [DefaultAdjacencyList.VertexDescriptor] = []
-        var examinedEdges: [DefaultAdjacencyList.EdgeDescriptor] = []
+        var discoveredVertices: [AdjacencyList.VertexDescriptor] = []
+        var examinedEdges: [AdjacencyList.EdgeDescriptor] = []
 
-        let visitor = DepthFirstSearch<DefaultAdjacencyList>.Visitor(
+        let visitor = DepthFirstSearch<AdjacencyList>.Visitor(
             discoverVertex: { vertex in
                 discoveredVertices.append(vertex)
             },
@@ -199,7 +199,7 @@ struct IterativelyDeepeningDFSTests {
     }
 
     @Test func iterativelyDeepeningDFS_ComparedToBFS_FindsSameVertices() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let root = graph.addVertex()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -221,7 +221,7 @@ struct IterativelyDeepeningDFSTests {
     }
 
     @Test func iterativelyDeepeningDFS_WithDisconnectedComponents_FindsOnlyConnected() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let root = graph.addVertex()
         let a = graph.addVertex()
         let b = graph.addVertex()
@@ -243,7 +243,7 @@ struct IterativelyDeepeningDFSTests {
 
     @Test func iterativelyDeepeningDFS_RecursiveDepthTest() {
         // Test the recursive nature of IDDFS with a reasonable depth
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let root = graph.addVertex()
 
         // Create a chain of 100 vertices
@@ -295,9 +295,9 @@ struct IterativelyDeepeningDFSTests {
         var g4 = AdjacencyMatrix()
         check(&g4, "Matrix")
         #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-            var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
             check(&g2, "CSR")
-            var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
             check(&g3, "COO")
         #endif
     }
@@ -326,9 +326,9 @@ struct IterativelyDeepeningDFSTests {
         var g4 = AdjacencyMatrix()
         check(&g4, "Matrix")
         #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-            var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
             check(&g2, "CSR")
-            var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
             check(&g3, "COO")
         #endif
     }
@@ -361,9 +361,9 @@ struct IterativelyDeepeningDFSTests {
         var g4 = AdjacencyMatrix()
         check(&g4, "Matrix")
         #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-            var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+            var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
             check(&g2, "CSR")
-            var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+            var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
             check(&g3, "COO")
         #endif
     }

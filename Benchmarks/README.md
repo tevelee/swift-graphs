@@ -35,7 +35,7 @@ reported but malloc-count and resident-peak columns are unavailable.
 > across several library types (`Dijkstra.makeIterator`,
 > `BidirectionalDijkstra.makePriorityQueue`, `Kahn`, …). The library
 > itself compiles in release; the bug is triggered by how the
-> benchmark targets specialise on `AdjacencyList<…>`. Remove the
+> benchmark targets specialise on `StorageBackedAdjacencyList<…>`. Remove the
 > `--benchmark-build-configuration debug` flag once a newer toolchain
 > fixes this.
 

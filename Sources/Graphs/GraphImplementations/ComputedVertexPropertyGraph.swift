@@ -25,7 +25,7 @@ public struct ComputedVertexPropertyGraph<Base: Graph, Property: VertexProperty>
 
     public typealias UnderlyingPropertyMap = DictionaryPropertyMap<Base.VertexDescriptor, VertexPropertyValues>
     @usableFromInline
-    var _vertexPropertyMap = UnderlyingPropertyMap(defaultValue: VertexPropertyValues())
+    var vertexPropertyStorage = UnderlyingPropertyMap(defaultValue: VertexPropertyValues())
 
     @inlinable
     public init(base: Base, compute: @escaping (Base.VertexDescriptor, Base) -> Property.Value) {
@@ -126,25 +126,23 @@ extension ComputedVertexPropertyGraph: VertexMutableGraph where Base: VertexMuta
 
 extension ComputedVertexPropertyGraph: EdgePropertyGraph where Base: EdgePropertyGraph {
     public typealias EdgeProperties = Base.EdgeProperties
-    public typealias EdgePropertyMap = Base.EdgePropertyMap
     @inlinable
-    public var edgePropertyMap: Base.EdgePropertyMap { base.edgePropertyMap }
+    public subscript(edge: EdgeDescriptor) -> EdgeProperties { base[edge] }
 }
 
-extension ComputedVertexPropertyGraph: EdgeMutablePropertyGraph where Base: EdgeMutablePropertyGraph {
+extension ComputedVertexPropertyGraph: MutableEdgePropertyGraph where Base: MutableEdgePropertyGraph {
     @inlinable
-    public var edgePropertyMap: Base.EdgePropertyMap {
-        get { base.edgePropertyMap }
-        set { base.edgePropertyMap = newValue }
+    public subscript(edge: EdgeDescriptor) -> EdgeProperties {
+        get { base[edge] }
+        set { base[edge] = newValue }
     }
 }
 
 extension ComputedVertexPropertyGraph: VertexPropertyGraph {
     public typealias VertexProperties = ComputedVertexProperties<VertexPropertyValues, Property>
-    public typealias VertexPropertyMap = ComputedVertexPropertyMap<UnderlyingPropertyMap, Property>
     @inlinable
-    public var vertexPropertyMap: ComputedVertexPropertyMap<UnderlyingPropertyMap, Property> {
-        .init(base: _vertexPropertyMap) { vertex in
+    public subscript(vertex: VertexDescriptor) -> VertexProperties {
+        .init(base: vertexPropertyStorage[vertex]) {
             compute(vertex, base)
         }
     }

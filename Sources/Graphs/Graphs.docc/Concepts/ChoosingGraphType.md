@@ -513,8 +513,8 @@ func convert(from list: AdjacencyList) -> AdjacencyMatrix {
 
 ```swift
 // Use bidirectional storage for reverse traversal
-let graph = AdjacencyList(
-    edgeStore: OrderedEdgeStorage().cacheInOutEdges()
+let graph = StorageBackedAdjacencyList(
+    edgeStorage: OrderedEdgeStorage().cacheInOutEdges()
 )
 
 // Note: Different storage backends offer different performance characteristics
@@ -564,4 +564,3 @@ Now that you've chosen a graph type:
 - ``InlineGraph``
 - ``AdjacencyMatrix``
 - ``GridGraph``
-

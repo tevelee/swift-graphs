@@ -248,10 +248,10 @@
             graph.addEdge(from: c, to: d)
             graph.addEdge(from: d, to: e)
 
-            let kahn = Kahn<DefaultAdjacencyList>()
+            let kahn = Kahn<AdjacencyList>()
             let kahnResult = kahn.topologicalSort(in: graph, visitor: nil)
 
-            let dfs = DFSTopologicalSort<DefaultAdjacencyList>()
+            let dfs = DFSTopologicalSort<AdjacencyList>()
             let dfsResult = dfs.topologicalSort(in: graph, visitor: nil)
 
             // Both should be valid
@@ -315,7 +315,7 @@
             var examinedEdges: Int = 0
             var finishedVertices: [String] = []
 
-            var visitor = Kahn<DefaultAdjacencyList>.Visitor()
+            var visitor = Kahn<AdjacencyList>.Visitor()
             visitor.discoverVertex = { vertex in
                 discoveredVertices.append(graph[vertex].label)
             }
@@ -348,7 +348,7 @@
             var treeEdges: Int = 0
             var finishedVertices: [String] = []
 
-            var visitor = DFSTopologicalSort<DefaultAdjacencyList>.Visitor()
+            var visitor = DFSTopologicalSort<AdjacencyList>.Visitor()
             visitor.discoverVertex = { vertex in
                 discoveredVertices.append(graph[vertex].label)
             }
@@ -385,7 +385,7 @@
             var cycleDetected = false
             var cycleVertices: [String] = []
 
-            var kahnVisitor = Kahn<DefaultAdjacencyList>.Visitor()
+            var kahnVisitor = Kahn<AdjacencyList>.Visitor()
             kahnVisitor.detectCycle = { vertices in
                 cycleDetected = true
                 cycleVertices = vertices.map { graph[$0].label }
@@ -425,12 +425,12 @@
             var finished1 = 0
             var finished2 = 0
 
-            var visitor1 = Kahn<DefaultAdjacencyList>.Visitor()
+            var visitor1 = Kahn<AdjacencyList>.Visitor()
             visitor1.discoverVertex = { _ in discovered1 += 1 }
             visitor1.examineEdge = { _ in examEdge1 += 1 }
             visitor1.finishVertex = { _ in finished1 += 1 }
 
-            var visitor2 = Kahn<DefaultAdjacencyList>.Visitor()
+            var visitor2 = Kahn<AdjacencyList>.Visitor()
             visitor2.discoverVertex = { _ in discovered2 += 1 }
             visitor2.examineEdge = { _ in examEdge2 += 1 }
             visitor2.finishVertex = { _ in finished2 += 1 }
@@ -504,7 +504,7 @@
             var cycle1 = 0
             var cycle2 = 0
 
-            var v1 = DFSTopologicalSort<DefaultAdjacencyList>.Visitor()
+            var v1 = DFSTopologicalSort<AdjacencyList>.Visitor()
             v1.discoverVertex = { _ in discovered1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.treeEdge = { _ in tree1 += 1 }
@@ -514,7 +514,7 @@
             v1.finishVertex = { _ in finished1 += 1 }
             v1.detectCycle = { _ in cycle1 += 1 }
 
-            var v2 = DFSTopologicalSort<DefaultAdjacencyList>.Visitor()
+            var v2 = DFSTopologicalSort<AdjacencyList>.Visitor()
             v2.discoverVertex = { _ in discovered2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
             v2.treeEdge = { _ in tree2 += 1 }
@@ -599,9 +599,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -633,9 +633,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -750,7 +750,7 @@
             graph.addEdge(from: a, to: b)
 
             let result = graph.topologicalSort(using: .kahn())
-            var seen: Set<TopologicalSortResult<DefaultAdjacencyList.VertexDescriptor>> = []
+            var seen: Set<TopologicalSortResult<AdjacencyList.VertexDescriptor>> = []
             seen.insert(result)
             seen.insert(result)
             #expect(seen.count == 1, "Inserting the same result twice must yield a set of size 1")

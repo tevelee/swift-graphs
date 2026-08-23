@@ -36,6 +36,11 @@ let package = Package(
             name: "GraphsTests",
             dependencies: ["Graphs"],
             swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .testTarget(
+            name: "GraphsPublicInterfaceTests",
+            dependencies: ["Graphs"],
+            swiftSettings: [.swiftLanguageMode(.v6)]
         )
     ]
 )

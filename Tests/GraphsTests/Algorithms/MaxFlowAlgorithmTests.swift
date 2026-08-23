@@ -195,12 +195,12 @@
 
         // MARK: - Helpers
 
-        private func verifyFlowConservation<G: AdjacencyListProtocol>(
+        private func verifyFlowConservation<G: IncidenceGraph & BidirectionalGraph & VertexListGraph>(
             graph: G,
             result: MaxFlowResult<G.VertexDescriptor, G.EdgeDescriptor, Double>,
             source: G.VertexDescriptor,
             sink: G.VertexDescriptor
-        ) {
+        ) where G.VertexDescriptor: Equatable {
             // Check flow conservation at each vertex (except source and sink)
             for vertex in graph.vertices() {
                 if vertex == source || vertex == sink { continue }
@@ -222,18 +222,18 @@
             }
         }
 
-        private func createLargeFlowNetwork() -> DefaultAdjacencyList {
-            var graph = DefaultAdjacencyList()
+        private func createLargeFlowNetwork() -> AdjacencyList {
+            var graph = AdjacencyList()
 
             let s = graph.addVertex { $0.label = "s" }
             let t = graph.addVertex { $0.label = "t" }
 
             // Create a grid-like flow network
             let size = 10
-            var vertices: [[DefaultAdjacencyList.VertexDescriptor]] = []
+            var vertices: [[AdjacencyList.VertexDescriptor]] = []
 
             for i in 0 ..< size {
-                var row: [DefaultAdjacencyList.VertexDescriptor] = []
+                var row: [AdjacencyList.VertexDescriptor] = []
                 for j in 0 ..< size {
                     let vertex = graph.addVertex { $0.label = "v\(i)_\(j)" }
                     row.append(vertex)
@@ -335,13 +335,13 @@
             var findPath1 = 0
             var findPath2 = 0
 
-            var vis1 = FordFulkerson<DefaultAdjacencyList, Double>.Visitor()
+            var vis1 = FordFulkerson<AdjacencyList, Double>.Visitor()
             vis1.examineEdge = { _, _ in examEdge1 += 1 }
             vis1.augmentPath = { _, _ in augPath1 += 1 }
             vis1.updateFlow = { _, _ in updFlow1 += 1 }
             vis1.findPath = { _, _ in findPath1 += 1 }
 
-            var vis2 = FordFulkerson<DefaultAdjacencyList, Double>.Visitor()
+            var vis2 = FordFulkerson<AdjacencyList, Double>.Visitor()
             vis2.examineEdge = { _, _ in examEdge2 += 1 }
             vis2.augmentPath = { _, _ in augPath2 += 1 }
             vis2.updateFlow = { _, _ in updFlow2 += 1 }
@@ -396,14 +396,14 @@
             var levelAssign1 = 0
             var levelAssign2 = 0
 
-            var vis1 = EdmondsKarp<DefaultAdjacencyList, Double>.Visitor()
+            var vis1 = EdmondsKarp<AdjacencyList, Double>.Visitor()
             vis1.examineEdge = { _, _ in examEdge1 += 1 }
             vis1.augmentPath = { _, _ in augPath1 += 1 }
             vis1.updateFlow = { _, _ in updFlow1 += 1 }
             vis1.findPath = { _, _ in findPath1 += 1 }
             vis1.levelAssigned = { _, _ in levelAssign1 += 1 }
 
-            var vis2 = EdmondsKarp<DefaultAdjacencyList, Double>.Visitor()
+            var vis2 = EdmondsKarp<AdjacencyList, Double>.Visitor()
             vis2.examineEdge = { _, _ in examEdge2 += 1 }
             vis2.augmentPath = { _, _ in augPath2 += 1 }
             vis2.updateFlow = { _, _ in updFlow2 += 1 }
@@ -462,13 +462,13 @@
             var updFlow1 = 0
             var updFlow2 = 0
 
-            var vis1 = Dinic<DefaultAdjacencyList, Double>.Visitor()
+            var vis1 = Dinic<AdjacencyList, Double>.Visitor()
             vis1.buildLevelGraph = { buildLevel1 += 1 }
             vis1.levelAssigned = { _, _ in levelAssign1 += 1 }
             vis1.findBlockingFlow = { blocking1 += 1 }
             vis1.updateFlow = { _, _ in updFlow1 += 1 }
 
-            var vis2 = Dinic<DefaultAdjacencyList, Double>.Visitor()
+            var vis2 = Dinic<AdjacencyList, Double>.Visitor()
             vis2.buildLevelGraph = { buildLevel2 += 1 }
             vis2.levelAssigned = { _, _ in levelAssign2 += 1 }
             vis2.findBlockingFlow = { blocking2 += 1 }

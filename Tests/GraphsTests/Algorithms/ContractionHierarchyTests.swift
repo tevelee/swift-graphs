@@ -7,7 +7,7 @@
 
         // MARK: - Helpers
 
-        typealias G = DefaultAdjacencyList
+        typealias G = AdjacencyList
 
         /// A↔B↔C, weights A-B=1, B-C=2 (bidirectional).
         func makeLinearGraph() -> (graph: G, a: G.VertexDescriptor, b: G.VertexDescriptor, c: G.VertexDescriptor) {

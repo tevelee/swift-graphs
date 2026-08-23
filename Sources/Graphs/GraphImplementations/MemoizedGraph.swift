@@ -143,18 +143,16 @@ extension MemoizedGraph: EdgeLookupGraph where Base: EdgeLookupGraph {
 
 extension MemoizedGraph: VertexPropertyGraph where Base: VertexPropertyGraph {
     public typealias VertexProperties = Base.VertexProperties
-    public typealias VertexPropertyMap = Base.VertexPropertyMap
 
     @inlinable
-    public var vertexPropertyMap: Base.VertexPropertyMap { base.vertexPropertyMap }
+    public subscript(vertex: VertexDescriptor) -> VertexProperties { base[vertex] }
 }
 
 extension MemoizedGraph: EdgePropertyGraph where Base: EdgePropertyGraph {
     public typealias EdgeProperties = Base.EdgeProperties
-    public typealias EdgePropertyMap = Base.EdgePropertyMap
 
     @inlinable
-    public var edgePropertyMap: Base.EdgePropertyMap { base.edgePropertyMap }
+    public subscript(edge: EdgeDescriptor) -> EdgeProperties { base[edge] }
 }
 
 // MARK: - Factory

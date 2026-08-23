@@ -91,7 +91,7 @@ struct GraphBasicTests {
         #expect(!leafGraph.isLeaf(vertex: isolated2), "isolated vertex has degree 0, not 1")
     }
 
-    /// `remove(vertex:)` removes the vertex and all its incident edges (via `VertexStorageBackedGraph`).
+    /// `remove(vertex:)` removes the vertex and all its incident edges (through the graph interface).
     /// After removal, the vertex count decreases and the removed vertex's edges disappear.
     @Test func vertexRemovalAlsoRemovesEdges() {
         var graph = AdjacencyList()

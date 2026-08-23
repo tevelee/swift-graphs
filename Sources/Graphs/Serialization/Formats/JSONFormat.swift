@@ -212,8 +212,7 @@
             guard !propertyTypes.isEmpty else { return [:] }
 
             var result: [String: Any] = [:]
-            let propertyMap = graph.vertexPropertyMap
-            let props = propertyMap[vertex]
+            let props = graph[vertex]
 
             for propertyType in propertyTypes {
                 let typeName = "\(propertyType)"
@@ -233,8 +232,7 @@
             guard !propertyTypes.isEmpty else { return [:] }
 
             var result: [String: Any] = [:]
-            let propertyMap = graph.edgePropertyMap
-            let props = propertyMap[edge]
+            let props = graph[edge]
 
             for propertyType in propertyTypes {
                 let typeName = "\(propertyType)"

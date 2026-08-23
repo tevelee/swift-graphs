@@ -9,10 +9,10 @@
     ///
     /// Example usage:
     /// ```swift
-    /// var graph = AdjacencyList<String, Double>()
-    /// graph.addVertex("A")
-    /// graph.addVertex("B")
-    /// graph.addEdge(from: "A", to: "B", weight: 1.0)
+    /// var graph = AdjacencyList()
+    /// let source = graph.addVertex()
+    /// let destination = graph.addVertex()
+    /// graph.addEdge(from: source, to: destination)
     ///
     /// let formatter = GraphFormatter()
     ///

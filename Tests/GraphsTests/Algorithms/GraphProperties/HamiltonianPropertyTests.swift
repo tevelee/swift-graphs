@@ -2,7 +2,7 @@ import Testing
 
 @testable import Graphs
 
-private typealias TestGraph = AdjacencyList<
+private typealias TestGraph = StorageBackedAdjacencyList<
     OrderedVertexStorage, CacheInOutEdges<OrderedEdgeStorage<OrderedVertexStorage.Vertex>>,
     DictionaryPropertyMap<OrderedVertexStorage.Vertex, VertexPropertyValues>,
     DictionaryPropertyMap<OrderedEdgeStorage<OrderedVertexStorage.Vertex>.Edge, EdgePropertyValues>

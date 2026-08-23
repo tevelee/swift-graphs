@@ -8,7 +8,7 @@ struct PlanarEmbeddingTests {
 
     // MARK: - Builders
 
-    private func build(_ vertexCount: Int, _ edges: [(Int, Int)]) -> DefaultAdjacencyList {
+    private func build(_ vertexCount: Int, _ edges: [(Int, Int)]) -> AdjacencyList {
         var graph = AdjacencyList()
         let v = (0 ..< vertexCount).map { i in graph.addVertex { $0.label = "\(i)" } }
         for (a, b) in edges {
@@ -17,9 +17,9 @@ struct PlanarEmbeddingTests {
         return graph
     }
 
-    private func triangle() -> DefaultAdjacencyList { build(3, [(0, 1), (1, 2), (2, 0)]) }
+    private func triangle() -> AdjacencyList { build(3, [(0, 1), (1, 2), (2, 0)]) }
 
-    private func octahedron() -> DefaultAdjacencyList {
+    private func octahedron() -> AdjacencyList {
         let antipode = [1, 0, 3, 2, 5, 4]
         var edges: [(Int, Int)] = []
         for a in 0 ..< 6 {
@@ -28,7 +28,7 @@ struct PlanarEmbeddingTests {
         return build(6, edges)
     }
 
-    private func grid4x4() -> DefaultAdjacencyList {
+    private func grid4x4() -> AdjacencyList {
         var edges: [(Int, Int)] = []
         func idx(_ r: Int, _ c: Int) -> Int { r * 4 + c }
         for r in 0 ..< 4 {
@@ -40,7 +40,7 @@ struct PlanarEmbeddingTests {
         return build(16, edges)
     }
 
-    private func petersen() -> DefaultAdjacencyList {
+    private func petersen() -> AdjacencyList {
         let edges =
             [(0, 1), (1, 2), (2, 3), (3, 4), (4, 0)]
             + [(0, 5), (1, 6), (2, 7), (3, 8), (4, 9)]
@@ -48,13 +48,13 @@ struct PlanarEmbeddingTests {
         return build(10, edges)
     }
 
-    private func k33() -> DefaultAdjacencyList {
+    private func k33() -> AdjacencyList {
         var edges: [(Int, Int)] = []
         for a in 0 ..< 3 { for b in 3 ..< 6 { edges.append((a, b)) } }
         return build(6, edges)
     }
 
-    private func subdividedK5() -> DefaultAdjacencyList {
+    private func subdividedK5() -> AdjacencyList {
         var edges: [(Int, Int)] = []
         for a in 0 ..< 5 {
             for b in (a + 1) ..< 5 where !(a == 0 && b == 1) { edges.append((a, b)) }
@@ -123,9 +123,9 @@ struct PlanarEmbeddingTests {
     }
 
     // Rebuilds a graph from a Kuratowski certificate so its planarity can be re-checked.
-    private func certificateGraph(_ certificate: KuratowskiSubgraph<DefaultAdjacencyList.VertexDescriptor>) -> DefaultAdjacencyList {
+    private func certificateGraph(_ certificate: KuratowskiSubgraph<AdjacencyList.VertexDescriptor>) -> AdjacencyList {
         var graph = AdjacencyList()
-        var map: [DefaultAdjacencyList.VertexDescriptor: DefaultAdjacencyList.VertexDescriptor] = [:]
+        var map: [AdjacencyList.VertexDescriptor: AdjacencyList.VertexDescriptor] = [:]
         let endpoints = Set(certificate.edges.flatMap { $0 })
         for original in endpoints {
             map[original] = graph.addVertex { $0.label = "" }

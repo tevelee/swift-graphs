@@ -140,9 +140,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -179,7 +179,7 @@
             graph.addEdge(from: b, to: c) { $0.weight = 3.0 }
 
             // Call the no-arg ShortestPathsForAllPairsAlgorithm conformance method directly
-            let result = Johnson<DefaultAdjacencyList, Double>(edgeWeight: .property(\.weight))
+            let result = Johnson<AdjacencyList, Double>(edgeWeight: .property(\.weight))
                 .shortestPathsForAllPairs(in: graph)
 
             #expect(result.distance(from: a, to: c) == 5.0, "a→b→c costs 2+3=5")
@@ -201,16 +201,16 @@
             var dijkstraCompletes1 = 0
             var dijkstraCompletes2 = 0
 
-            var v1 = Johnson<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = Johnson<AdjacencyList, Double>.Visitor()
             v1.startDijkstraFromSource = { _ in dijkstraStarts1 += 1 }
             v1.completeDijkstraFromSource = { _ in dijkstraCompletes1 += 1 }
 
-            var v2 = Johnson<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = Johnson<AdjacencyList, Double>.Visitor()
             v2.startDijkstraFromSource = { _ in dijkstraStarts2 += 1 }
             v2.completeDijkstraFromSource = { _ in dijkstraCompletes2 += 1 }
 
             let combined = v1.combined(with: v2)
-            _ = Johnson<DefaultAdjacencyList, Double>(edgeWeight: .property(\.weight))
+            _ = Johnson<AdjacencyList, Double>(edgeWeight: .property(\.weight))
                 .shortestPathsForAllPairs(in: graph, visitor: combined)
 
             // Johnson runs one Dijkstra per vertex (3 vertices → 3 starts and 3 completes each)

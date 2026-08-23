@@ -4,7 +4,7 @@
 
     struct ShortestPathAlgorithmTests {
 
-        func createLinearGraph() -> some AdjacencyListProtocol {
+        func createLinearGraph() -> AdjacencyList {
             var graph = AdjacencyList()
 
             let a = graph.addVertex { $0.label = "A" }
@@ -17,7 +17,7 @@
             return graph
         }
 
-        func createNegativeWeightGraph() -> some AdjacencyListProtocol {
+        func createNegativeWeightGraph() -> AdjacencyList {
             var graph = AdjacencyList()
 
             let a = graph.addVertex { $0.label = "A" }
@@ -30,7 +30,7 @@
             return graph
         }
 
-        func createDisconnectedGraph() -> some AdjacencyListProtocol {
+        func createDisconnectedGraph() -> AdjacencyList {
             var graph = AdjacencyList()
 
             graph.addVertex { $0.label = "A" }
@@ -40,7 +40,7 @@
             return graph
         }
 
-        func createSingleVertexGraph() -> some AdjacencyListProtocol {
+        func createSingleVertexGraph() -> AdjacencyList {
             var graph = AdjacencyList()
 
             graph.addVertex { $0.label = "A" }
@@ -183,11 +183,11 @@
             var updated1 = 0
             var updated2 = 0
 
-            var v1 = FloydWarshall<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = FloydWarshall<AdjacencyList, Double>.Visitor()
             v1.examineVertex = { _ in examined1 += 1 }
             v1.updateDistance = { _, _, _ in updated1 += 1 }
 
-            var v2 = FloydWarshall<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = FloydWarshall<AdjacencyList, Double>.Visitor()
             v2.examineVertex = { _ in examined2 += 1 }
             v2.updateDistance = { _, _, _ in updated2 += 1 }
 
@@ -336,14 +336,14 @@
             var iterations1 = 0
             var iterations2 = 0
 
-            var v1 = BellmanFord<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = BellmanFord<AdjacencyList, Double>.Visitor()
             v1.examineVertex = { _ in examined1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.edgeRelaxed = { _ in relaxed1 += 1 }
             v1.edgeNotRelaxed = { _ in notRelaxed1 += 1 }
             v1.completeRelaxationIteration = { _ in iterations1 += 1 }
 
-            var v2 = BellmanFord<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = BellmanFord<AdjacencyList, Double>.Visitor()
             v2.examineVertex = { _ in examined2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
             v2.edgeRelaxed = { _ in relaxed2 += 1 }
@@ -385,10 +385,10 @@
             var detected1 = 0
             var detected2 = 0
 
-            var v1 = BellmanFord<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = BellmanFord<AdjacencyList, Double>.Visitor()
             v1.detectNegativeCycle = { _ in detected1 += 1 }
 
-            var v2 = BellmanFord<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = BellmanFord<AdjacencyList, Double>.Visitor()
             v2.detectNegativeCycle = { _ in detected2 += 1 }
 
             let combined = v1.combined(with: v2)
@@ -430,14 +430,14 @@
             var meetings1 = 0
             var meetings2 = 0
 
-            var v1 = BidirectionalDijkstra<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = BidirectionalDijkstra<AdjacencyList, Double>.Visitor()
             v1.examineVertex = { _, _ in examined1 += 1 }
             v1.examineEdge = { _, _ in examEdge1 += 1 }
             v1.edgeRelaxed = { _, _ in relaxed1 += 1 }
             v1.edgeNotRelaxed = { _, _ in notRelaxed1 += 1 }
             v1.meetingFound = { _, _ in meetings1 += 1 }
 
-            var v2 = BidirectionalDijkstra<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = BidirectionalDijkstra<AdjacencyList, Double>.Visitor()
             v2.examineVertex = { _, _ in examined2 += 1 }
             v2.examineEdge = { _, _ in examEdge2 += 1 }
             v2.edgeRelaxed = { _, _ in relaxed2 += 1 }
@@ -495,14 +495,14 @@
             var pathsFound1 = 0
             var pathsFound2 = 0
 
-            var v1 = BacktrackingDijkstra<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = BacktrackingDijkstra<AdjacencyList, Double>.Visitor()
             v1.examineVertex = { _ in examined1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.edgeOnShortestPath = { _ in onShortest1 += 1 }
             v1.finishVertex = { _ in finished1 += 1 }
             v1.pathFound = { _, _ in pathsFound1 += 1 }
 
-            var v2 = BacktrackingDijkstra<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = BacktrackingDijkstra<AdjacencyList, Double>.Visitor()
             v2.examineVertex = { _ in examined2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
             v2.edgeOnShortestPath = { _ in onShortest2 += 1 }
@@ -556,9 +556,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -581,9 +581,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -612,9 +612,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -645,9 +645,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }

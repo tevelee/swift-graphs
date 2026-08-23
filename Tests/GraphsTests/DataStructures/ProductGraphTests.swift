@@ -34,8 +34,8 @@ struct ProductGraphTests {
     // MARK: - Helpers
 
     /// P₂: directed path 0→1 (two vertices, one edge)
-    func makeP2() -> (graph: DefaultAdjacencyList, v0: DefaultAdjacencyList.VertexDescriptor, v1: DefaultAdjacencyList.VertexDescriptor) {
-        var g = DefaultAdjacencyList()
+    func makeP2() -> (graph: AdjacencyList, v0: AdjacencyList.VertexDescriptor, v1: AdjacencyList.VertexDescriptor) {
+        var g = AdjacencyList()
         let v0 = g.addVertex()
         let v1 = g.addVertex()
         g.addEdge(from: v0, to: v1)
@@ -44,10 +44,10 @@ struct ProductGraphTests {
 
     /// Fan graph: v0 has two outgoing edges to v1 and v2; v1, v2 have no outgoing edges.
     func makeFan() -> (
-        graph: DefaultAdjacencyList, v0: DefaultAdjacencyList.VertexDescriptor, v1: DefaultAdjacencyList.VertexDescriptor,
-        v2: DefaultAdjacencyList.VertexDescriptor
+        graph: AdjacencyList, v0: AdjacencyList.VertexDescriptor, v1: AdjacencyList.VertexDescriptor,
+        v2: AdjacencyList.VertexDescriptor
     ) {
-        var g = DefaultAdjacencyList()
+        var g = AdjacencyList()
         let v0 = g.addVertex()
         let v1 = g.addVertex()
         let v2 = g.addVertex()
@@ -111,8 +111,8 @@ struct ProductGraphTests {
         let expected:
             Set<
                 Pair<
-                    Pair<DefaultAdjacencyList.VertexDescriptor, DefaultAdjacencyList.VertexDescriptor>,
-                    Pair<DefaultAdjacencyList.VertexDescriptor, DefaultAdjacencyList.VertexDescriptor>
+                    Pair<AdjacencyList.VertexDescriptor, AdjacencyList.VertexDescriptor>,
+                    Pair<AdjacencyList.VertexDescriptor, AdjacencyList.VertexDescriptor>
                 >
             > = [
                 Pair(Pair(gv0, hv0), Pair(gv1, hv0)),
@@ -270,8 +270,8 @@ struct ProductGraphTests {
         let expected:
             Set<
                 Pair<
-                    Pair<DefaultAdjacencyList.VertexDescriptor, DefaultAdjacencyList.VertexDescriptor>,
-                    Pair<DefaultAdjacencyList.VertexDescriptor, DefaultAdjacencyList.VertexDescriptor>
+                    Pair<AdjacencyList.VertexDescriptor, AdjacencyList.VertexDescriptor>,
+                    Pair<AdjacencyList.VertexDescriptor, AdjacencyList.VertexDescriptor>
                 >
             > = [
                 Pair(Pair(gv0, hv0), Pair(gv1, hv0)),  // Cartesian-G
@@ -355,8 +355,8 @@ struct ProductGraphTests {
         let expected:
             Set<
                 Pair<
-                    Pair<DefaultAdjacencyList.VertexDescriptor, DefaultAdjacencyList.VertexDescriptor>,
-                    Pair<DefaultAdjacencyList.VertexDescriptor, DefaultAdjacencyList.VertexDescriptor>
+                    Pair<AdjacencyList.VertexDescriptor, AdjacencyList.VertexDescriptor>,
+                    Pair<AdjacencyList.VertexDescriptor, AdjacencyList.VertexDescriptor>
                 >
             > = [
                 Pair(Pair(gv0, hv0), Pair(gv1, hv0)),

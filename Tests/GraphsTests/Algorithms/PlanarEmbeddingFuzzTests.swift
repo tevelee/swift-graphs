@@ -25,7 +25,7 @@ struct PlanarEmbeddingFuzzTests {
         vertexCount n: Int,
         extra: Int,
         using rng: inout LCG
-    ) -> DefaultAdjacencyList {
+    ) -> AdjacencyList {
         var graph = AdjacencyList()
         let v = (0 ..< n).map { i in graph.addVertex { $0.label = "\(i)" } }
         var present = Set<Int>()
@@ -45,9 +45,9 @@ struct PlanarEmbeddingFuzzTests {
         return graph
     }
 
-    private func certificateGraph(_ certificate: KuratowskiSubgraph<DefaultAdjacencyList.VertexDescriptor>) -> DefaultAdjacencyList {
+    private func certificateGraph(_ certificate: KuratowskiSubgraph<AdjacencyList.VertexDescriptor>) -> AdjacencyList {
         var graph = AdjacencyList()
-        var map: [DefaultAdjacencyList.VertexDescriptor: DefaultAdjacencyList.VertexDescriptor] = [:]
+        var map: [AdjacencyList.VertexDescriptor: AdjacencyList.VertexDescriptor] = [:]
         for original in Set(certificate.edges.flatMap { $0 }) {
             map[original] = graph.addVertex { $0.label = "" }
         }
@@ -96,7 +96,7 @@ struct PlanarEmbeddingFuzzTests {
             let n = Int.random(in: 4 ... 8, using: &rng)
             let extra = Int.random(in: 0 ... n, using: &rng)
             let graph = randomConnectedGraph(vertexCount: n, extra: extra, using: &rng)
-            guard let drawing = ChrobakPayneDrawing<DefaultAdjacencyList>().planarDrawing(in: graph, visitor: nil) else {
+            guard let drawing = ChrobakPayneDrawing<AdjacencyList>().planarDrawing(in: graph, visitor: nil) else {
                 let embResult = graph.planarEmbedding(using: .leftRight())
                 #expect(!embResult.isPlanar)
                 continue

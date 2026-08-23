@@ -6,7 +6,7 @@
 
         // MARK: - Test Data
 
-        func createTestGraph() -> some AdjacencyListProtocol {
+        func createTestGraph() -> AdjacencyList {
             var graph = AdjacencyList()
 
             // Create a simple graph: A-B-C with weights 1, 2, 3
@@ -190,9 +190,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -222,9 +222,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -305,11 +305,11 @@
             var added1 = 0
             var added2 = 0
 
-            var v1 = Kruskal<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = Kruskal<AdjacencyList, Double>.Visitor()
             v1.examineEdge = { _ in examined1 += 1 }
             v1.addEdge = { _, _ in added1 += 1 }
 
-            var v2 = Kruskal<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = Kruskal<AdjacencyList, Double>.Visitor()
             v2.examineEdge = { _ in examined2 += 1 }
             v2.addEdge = { _, _ in added2 += 1 }
 
@@ -348,12 +348,12 @@
             var added1 = 0
             var added2 = 0
 
-            var v1 = Prim<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = Prim<AdjacencyList, Double>.Visitor()
             v1.examineVertex = { _ in examined1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.addEdge = { _, _ in added1 += 1 }
 
-            var v2 = Prim<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = Prim<AdjacencyList, Double>.Visitor()
             v2.examineVertex = { _ in examined2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
             v2.addEdge = { _, _ in added2 += 1 }
@@ -404,14 +404,14 @@
             var complete1 = 0
             var complete2 = 0
 
-            var v1 = Boruvka<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = Boruvka<AdjacencyList, Double>.Visitor()
             v1.examineEdge = { _ in examined1 += 1 }
             v1.addEdge = { _, _ in added1 += 1 }
             v1.skipEdge = { _, _ in skipped1 += 1 }
             v1.unionVertices = { _, _ in union1 += 1 }
             v1.completeComponentMerge = { _ in complete1 += 1 }
 
-            var v2 = Boruvka<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = Boruvka<AdjacencyList, Double>.Visitor()
             v2.examineEdge = { _ in examined2 += 1 }
             v2.addEdge = { _, _ in added2 += 1 }
             v2.skipEdge = { _, _ in skipped2 += 1 }

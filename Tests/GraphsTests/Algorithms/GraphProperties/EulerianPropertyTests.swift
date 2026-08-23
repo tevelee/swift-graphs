@@ -6,8 +6,8 @@ struct EulerianPropertyTests {
 
     // MARK: - Test Graphs
 
-    func createEulerianPathGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createEulerianPathGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -23,8 +23,8 @@ struct EulerianPropertyTests {
         return graph
     }
 
-    func createEulerianCycleGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createEulerianCycleGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -39,8 +39,8 @@ struct EulerianPropertyTests {
         return graph
     }
 
-    func createNonEulerianGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createNonEulerianGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -55,8 +55,8 @@ struct EulerianPropertyTests {
         return graph
     }
 
-    func createDisconnectedGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createDisconnectedGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
@@ -69,12 +69,12 @@ struct EulerianPropertyTests {
         return graph
     }
 
-    func createEmptyGraph() -> DefaultAdjacencyList {
-        return DefaultAdjacencyList()
+    func createEmptyGraph() -> AdjacencyList {
+        return AdjacencyList()
     }
 
-    func createSingleVertexGraph() -> DefaultAdjacencyList {
-        var graph = DefaultAdjacencyList()
+    func createSingleVertexGraph() -> AdjacencyList {
+        var graph = AdjacencyList()
         graph.addVertex { $0.label = "A" }
         return graph
     }
@@ -150,7 +150,7 @@ struct EulerianPropertyTests {
     // MARK: - Algorithm Comparison
 
     @Test func dfsAndBFSConsistency() {
-        let testGraphs: [DefaultAdjacencyList] = [
+        let testGraphs: [AdjacencyList] = [
             createEulerianPathGraph(),
             createEulerianCycleGraph(),
             createNonEulerianGraph(),
@@ -173,7 +173,7 @@ struct EulerianPropertyTests {
     // MARK: - Edge Cases
 
     @Test func graphWithSelfLoops() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
 
@@ -189,7 +189,7 @@ struct EulerianPropertyTests {
     }
 
     @Test func graphWithMultipleEdges() {
-        var graph = DefaultAdjacencyList()
+        var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }

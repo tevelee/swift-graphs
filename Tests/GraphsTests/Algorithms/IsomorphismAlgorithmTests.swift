@@ -6,8 +6,8 @@
 
         // MARK: - Test Graphs
 
-        func createSimpleGraph() -> DefaultAdjacencyList {
-            var graph = DefaultAdjacencyList()
+        func createSimpleGraph() -> AdjacencyList {
+            var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -19,8 +19,8 @@
             return graph
         }
 
-        func createIsomorphicGraph() -> DefaultAdjacencyList {
-            var graph = DefaultAdjacencyList()
+        func createIsomorphicGraph() -> AdjacencyList {
+            var graph = AdjacencyList()
             let x = graph.addVertex { $0.label = "X" }
             let y = graph.addVertex { $0.label = "Y" }
             let z = graph.addVertex { $0.label = "Z" }
@@ -32,8 +32,8 @@
             return graph
         }
 
-        func createNonIsomorphicGraph() -> DefaultAdjacencyList {
-            var graph = DefaultAdjacencyList()
+        func createNonIsomorphicGraph() -> AdjacencyList {
+            var graph = AdjacencyList()
             let p = graph.addVertex { $0.label = "P" }
             let q = graph.addVertex { $0.label = "Q" }
             let r = graph.addVertex { $0.label = "R" }
@@ -45,8 +45,8 @@
             return graph
         }
 
-        func createPathGraph(vertices: [String]) -> DefaultAdjacencyList {
-            var graph = DefaultAdjacencyList()
+        func createPathGraph(vertices: [String]) -> AdjacencyList {
+            var graph = AdjacencyList()
             let vertexDescriptors = vertices.map { label in graph.addVertex { $0.label = label } }
 
             for i in 0 ..< (vertexDescriptors.count - 1) {
@@ -56,8 +56,8 @@
             return graph
         }
 
-        func createCycleGraph(vertices: [String]) -> DefaultAdjacencyList {
-            var graph = DefaultAdjacencyList()
+        func createCycleGraph(vertices: [String]) -> AdjacencyList {
+            var graph = AdjacencyList()
             let vertexDescriptors = vertices.map { label in graph.addVertex { $0.label = label } }
 
             for i in 0 ..< vertexDescriptors.count {
@@ -74,7 +74,7 @@
             let graph1 = createSimpleGraph()
             let graph2 = createIsomorphicGraph()
 
-            let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
+            let vf2 = VF2Isomorphism<AdjacencyList>()
 
             #expect(vf2.areIsomorphic(graph1, graph2))
 
@@ -87,7 +87,7 @@
             let graph1 = createSimpleGraph()
             let graph2 = createNonIsomorphicGraph()
 
-            let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
+            let vf2 = VF2Isomorphism<AdjacencyList>()
 
             #expect(!vf2.areIsomorphic(graph1, graph2))
 
@@ -97,7 +97,7 @@
 
         @Test func vf2DetectsSameGraph() {
             let graph = createSimpleGraph()
-            let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
+            let vf2 = VF2Isomorphism<AdjacencyList>()
 
             #expect(vf2.areIsomorphic(graph, graph))
 
@@ -110,7 +110,7 @@
             let graph1 = createSimpleGraph()  // 3 vertices
             let graph2 = createPathGraph(vertices: ["A", "B"])  // 2 vertices
 
-            let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
+            let vf2 = VF2Isomorphism<AdjacencyList>()
 
             #expect(!vf2.areIsomorphic(graph1, graph2))
             #expect(vf2.findIsomorphism(graph1, graph2) == nil)
@@ -120,7 +120,7 @@
             let path1 = createPathGraph(vertices: ["A", "B", "C", "D"])
             let path2 = createPathGraph(vertices: ["W", "X", "Y", "Z"])
 
-            let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
+            let vf2 = VF2Isomorphism<AdjacencyList>()
 
             #expect(vf2.areIsomorphic(path1, path2))
 
@@ -133,7 +133,7 @@
             let cycle1 = createCycleGraph(vertices: ["A", "B", "C", "D"])
             let cycle2 = createCycleGraph(vertices: ["W", "X", "Y", "Z"])
 
-            let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
+            let vf2 = VF2Isomorphism<AdjacencyList>()
 
             #expect(vf2.areIsomorphic(cycle1, cycle2))
 
@@ -148,7 +148,7 @@
             let graph1 = createSimpleGraph()
             let graph2 = createIsomorphicGraph()
 
-            let wl = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+            let wl = WeisfeilerLehmanIsomorphism<AdjacencyList>()
 
             #expect(wl.areIsomorphic(graph1, graph2))
 
@@ -161,7 +161,7 @@
             let graph1 = createSimpleGraph()
             let graph2 = createNonIsomorphicGraph()
 
-            let wl = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+            let wl = WeisfeilerLehmanIsomorphism<AdjacencyList>()
 
             #expect(!wl.areIsomorphic(graph1, graph2))
 
@@ -171,7 +171,7 @@
 
         @Test func weisfeilerLehmanDetectsSameGraph() {
             let graph = createSimpleGraph()
-            let wl = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+            let wl = WeisfeilerLehmanIsomorphism<AdjacencyList>()
 
             #expect(wl.areIsomorphic(graph, graph))
 
@@ -184,7 +184,7 @@
             let graph1 = createSimpleGraph()  // 3 vertices
             let graph2 = createPathGraph(vertices: ["A", "B"])  // 2 vertices
 
-            let wl = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+            let wl = WeisfeilerLehmanIsomorphism<AdjacencyList>()
 
             #expect(!wl.areIsomorphic(graph1, graph2))
             #expect(wl.findIsomorphism(graph1, graph2) == nil)
@@ -194,7 +194,7 @@
             let path1 = createPathGraph(vertices: ["A", "B", "C", "D"])
             let path2 = createPathGraph(vertices: ["W", "X", "Y", "Z"])
 
-            let wl = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+            let wl = WeisfeilerLehmanIsomorphism<AdjacencyList>()
 
             #expect(wl.areIsomorphic(path1, path2))
 
@@ -207,7 +207,7 @@
             let cycle1 = createCycleGraph(vertices: ["A", "B", "C", "D"])
             let cycle2 = createCycleGraph(vertices: ["W", "X", "Y", "Z"])
 
-            let wl = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+            let wl = WeisfeilerLehmanIsomorphism<AdjacencyList>()
 
             #expect(wl.areIsomorphic(cycle1, cycle2))
 
@@ -222,7 +222,7 @@
             let graph1 = createSimpleGraph()
             let graph2 = createIsomorphicGraph()
 
-            let enhancedWL = EnhancedWeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+            let enhancedWL = EnhancedWeisfeilerLehmanIsomorphism<AdjacencyList>()
 
             #expect(enhancedWL.areIsomorphic(graph1, graph2))
 
@@ -235,7 +235,7 @@
             let graph1 = createSimpleGraph()
             let graph2 = createNonIsomorphicGraph()
 
-            let enhancedWL = EnhancedWeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+            let enhancedWL = EnhancedWeisfeilerLehmanIsomorphism<AdjacencyList>()
 
             #expect(!enhancedWL.areIsomorphic(graph1, graph2))
 
@@ -250,7 +250,7 @@
             let graph2 = createIsomorphicGraph()
             let graph3 = createNonIsomorphicGraph()
 
-            let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
+            let vf2 = VF2Isomorphism<AdjacencyList>()
 
             #expect(graph1.isIsomorphic(to: graph2, using: vf2))
             #expect(!graph1.isIsomorphic(to: graph3, using: vf2))
@@ -261,7 +261,7 @@
             let graph2 = createIsomorphicGraph()
             let graph3 = createNonIsomorphicGraph()
 
-            let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
+            let vf2 = VF2Isomorphism<AdjacencyList>()
 
             let mapping1 = graph1.findIsomorphism(to: graph2, using: vf2)
             #expect(mapping1 != nil)
@@ -276,7 +276,7 @@
             let graph2 = createIsomorphicGraph()
             let graph3 = createNonIsomorphicGraph()
 
-            let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
+            let vf2 = VF2Isomorphism<AdjacencyList>()
 
             let result1 = graph1.isomorphismResult(with: graph2, using: vf2)
             #expect(result1.isIsomorphic)
@@ -294,8 +294,8 @@
             let graph1 = createSimpleGraph()
             let graph2 = createIsomorphicGraph()
 
-            let vf2 = VF2Isomorphism<DefaultAdjacencyList>.vf2()
-            let wl = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>.weisfeilerLehman()
+            let vf2 = VF2Isomorphism<AdjacencyList>.vf2()
+            let wl = WeisfeilerLehmanIsomorphism<AdjacencyList>.weisfeilerLehman()
 
             #expect(graph1.isIsomorphic(to: graph2, using: vf2))
             #expect(graph1.isIsomorphic(to: graph2, using: wl))
@@ -304,23 +304,23 @@
         // MARK: - Edge Cases
 
         @Test func emptyGraphs() {
-            let empty1 = DefaultAdjacencyList()
-            let empty2 = DefaultAdjacencyList()
+            let empty1 = AdjacencyList()
+            let empty2 = AdjacencyList()
 
-            let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
+            let vf2 = VF2Isomorphism<AdjacencyList>()
 
             #expect(vf2.areIsomorphic(empty1, empty2))
             #expect(vf2.findIsomorphism(empty1, empty2) != nil)
         }
 
         @Test func singleVertexGraphs() {
-            var graph1 = DefaultAdjacencyList()
+            var graph1 = AdjacencyList()
             graph1.addVertex { $0.label = "A" }
 
-            var graph2 = DefaultAdjacencyList()
+            var graph2 = AdjacencyList()
             graph2.addVertex { $0.label = "B" }
 
-            let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
+            let vf2 = VF2Isomorphism<AdjacencyList>()
 
             #expect(vf2.areIsomorphic(graph1, graph2))
             let mapping = vf2.findIsomorphism(graph1, graph2)
@@ -329,7 +329,7 @@
         }
 
         @Test func disconnectedGraphs() {
-            var graph1 = DefaultAdjacencyList()
+            var graph1 = AdjacencyList()
             let a1 = graph1.addVertex { $0.label = "A1" }
             let b1 = graph1.addVertex { $0.label = "B1" }
             let c1 = graph1.addVertex { $0.label = "C1" }
@@ -338,7 +338,7 @@
             graph1.addEdge(from: a1, to: b1)
             graph1.addEdge(from: c1, to: d1)
 
-            var graph2 = DefaultAdjacencyList()
+            var graph2 = AdjacencyList()
             let a2 = graph2.addVertex { $0.label = "A2" }
             let b2 = graph2.addVertex { $0.label = "B2" }
             let c2 = graph2.addVertex { $0.label = "C2" }
@@ -347,7 +347,7 @@
             graph2.addEdge(from: a2, to: b2)
             graph2.addEdge(from: c2, to: d2)
 
-            let vf2 = VF2Isomorphism<DefaultAdjacencyList>()
+            let vf2 = VF2Isomorphism<AdjacencyList>()
 
             #expect(vf2.areIsomorphic(graph1, graph2))
             let mapping = vf2.findIsomorphism(graph1, graph2)
@@ -361,13 +361,13 @@
             let graph1 = createSimpleGraph()
             let graph2 = createSimpleGraph()
 
-            var examinedVertices: [DefaultAdjacencyList.VertexDescriptor] = []
-            var examinedEdges: [DefaultAdjacencyList.EdgeDescriptor] = []
-            var tryMappings: [(DefaultAdjacencyList.VertexDescriptor, DefaultAdjacencyList.VertexDescriptor)] = []
-            var mappingFound: [DefaultAdjacencyList.VertexDescriptor: DefaultAdjacencyList.VertexDescriptor]?
-            var backtracks: [(DefaultAdjacencyList.VertexDescriptor, DefaultAdjacencyList.VertexDescriptor)] = []
+            var examinedVertices: [AdjacencyList.VertexDescriptor] = []
+            var examinedEdges: [AdjacencyList.EdgeDescriptor] = []
+            var tryMappings: [(AdjacencyList.VertexDescriptor, AdjacencyList.VertexDescriptor)] = []
+            var mappingFound: [AdjacencyList.VertexDescriptor: AdjacencyList.VertexDescriptor]?
+            var backtracks: [(AdjacencyList.VertexDescriptor, AdjacencyList.VertexDescriptor)] = []
 
-            let visitor = VF2Isomorphism<DefaultAdjacencyList>.Visitor(
+            let visitor = VF2Isomorphism<AdjacencyList>.Visitor(
                 examineVertex: { vertex in
                     examinedVertices.append(vertex)
                 },
@@ -385,7 +385,7 @@
                 }
             )
 
-            let algorithm = VF2Isomorphism<DefaultAdjacencyList>()
+            let algorithm = VF2Isomorphism<AdjacencyList>()
             let wrapper = algorithm.withVisitor(visitor)
             let result = wrapper.base.areIsomorphic(graph1, graph2, visitor: wrapper.visitor)
 
@@ -400,13 +400,13 @@
             let graph1 = createSimpleGraph()
             let graph2 = createSimpleGraph()
 
-            var examinedVertices: [DefaultAdjacencyList.VertexDescriptor] = []
-            var examinedEdges: [DefaultAdjacencyList.EdgeDescriptor] = []
-            var labeledVertices: [(DefaultAdjacencyList.VertexDescriptor, Int)] = []
-            var iterations: [(Int, [DefaultAdjacencyList.VertexDescriptor: Int])] = []
-            var stabilized: [DefaultAdjacencyList.VertexDescriptor: Int]?
+            var examinedVertices: [AdjacencyList.VertexDescriptor] = []
+            var examinedEdges: [AdjacencyList.EdgeDescriptor] = []
+            var labeledVertices: [(AdjacencyList.VertexDescriptor, Int)] = []
+            var iterations: [(Int, [AdjacencyList.VertexDescriptor: Int])] = []
+            var stabilized: [AdjacencyList.VertexDescriptor: Int]?
 
-            let visitor = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>.Visitor(
+            let visitor = WeisfeilerLehmanIsomorphism<AdjacencyList>.Visitor(
                 examineVertex: { vertex in
                     examinedVertices.append(vertex)
                 },
@@ -424,7 +424,7 @@
                 }
             )
 
-            let algorithm = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+            let algorithm = WeisfeilerLehmanIsomorphism<AdjacencyList>()
             let result = algorithm.areIsomorphic(graph1, graph2, visitor: visitor)
 
             #expect(result)
@@ -439,13 +439,13 @@
             let graph1 = createSimpleGraph()
             let graph2 = createSimpleGraph()
 
-            var examinedVertices: [DefaultAdjacencyList.VertexDescriptor] = []
-            var examinedEdges: [DefaultAdjacencyList.EdgeDescriptor] = []
-            var labeledVertices: [(DefaultAdjacencyList.VertexDescriptor, Int)] = []
-            var iterations: [(Int, [DefaultAdjacencyList.VertexDescriptor: Int])] = []
-            var stabilized: [DefaultAdjacencyList.VertexDescriptor: Int]?
+            var examinedVertices: [AdjacencyList.VertexDescriptor] = []
+            var examinedEdges: [AdjacencyList.EdgeDescriptor] = []
+            var labeledVertices: [(AdjacencyList.VertexDescriptor, Int)] = []
+            var iterations: [(Int, [AdjacencyList.VertexDescriptor: Int])] = []
+            var stabilized: [AdjacencyList.VertexDescriptor: Int]?
 
-            let visitor = EnhancedWeisfeilerLehmanIsomorphism<DefaultAdjacencyList>.Visitor(
+            let visitor = EnhancedWeisfeilerLehmanIsomorphism<AdjacencyList>.Visitor(
                 examineVertex: { vertex in
                     examinedVertices.append(vertex)
                 },
@@ -463,7 +463,7 @@
                 }
             )
 
-            let algorithm = EnhancedWeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+            let algorithm = EnhancedWeisfeilerLehmanIsomorphism<AdjacencyList>()
             let result = algorithm.areIsomorphic(graph1, graph2, visitor: visitor)
 
             #expect(result)
@@ -493,18 +493,18 @@
             var mapFound1 = 0
             var mapFound2 = 0
 
-            var v1 = VF2Isomorphism<DefaultAdjacencyList>.Visitor()
+            var v1 = VF2Isomorphism<AdjacencyList>.Visitor()
             v1.examineVertex = { _ in examVtx1 += 1 }
             v1.tryMapping = { _, _ in tryMap1 += 1 }
             v1.mappingFound = { _ in mapFound1 += 1 }
 
-            var v2 = VF2Isomorphism<DefaultAdjacencyList>.Visitor()
+            var v2 = VF2Isomorphism<AdjacencyList>.Visitor()
             v2.examineVertex = { _ in examVtx2 += 1 }
             v2.tryMapping = { _, _ in tryMap2 += 1 }
             v2.mappingFound = { _ in mapFound2 += 1 }
 
             let combined = v1.combined(with: v2)
-            let algorithm = VF2Isomorphism<DefaultAdjacencyList>()
+            let algorithm = VF2Isomorphism<AdjacencyList>()
             let result = algorithm.areIsomorphic(graph1, graph2, visitor: combined)
 
             #expect(result, "two identical graphs must be isomorphic")
@@ -540,14 +540,14 @@
             var examEdge1 = 0
             var examEdge2 = 0
 
-            var v1 = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>.Visitor()
+            var v1 = WeisfeilerLehmanIsomorphism<AdjacencyList>.Visitor()
             v1.examineVertex = { _ in examVtx1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.labelVertex = { _, _ in label1 += 1 }
             v1.iterationComplete = { _, _ in iter1 += 1 }
             v1.labelsStabilized = { _ in stable1 += 1 }
 
-            var v2 = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>.Visitor()
+            var v2 = WeisfeilerLehmanIsomorphism<AdjacencyList>.Visitor()
             v2.examineVertex = { _ in examVtx2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
             v2.labelVertex = { _, _ in label2 += 1 }
@@ -555,7 +555,7 @@
             v2.labelsStabilized = { _ in stable2 += 1 }
 
             let combined = v1.combined(with: v2)
-            let algorithm = WeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+            let algorithm = WeisfeilerLehmanIsomorphism<AdjacencyList>()
             let result = algorithm.areIsomorphic(graph1, graph2, visitor: combined)
 
             #expect(result, "two identical graphs must be isomorphic")
@@ -594,14 +594,14 @@
             var stable1 = 0
             var stable2 = 0
 
-            var v1 = EnhancedWeisfeilerLehmanIsomorphism<DefaultAdjacencyList>.Visitor()
+            var v1 = EnhancedWeisfeilerLehmanIsomorphism<AdjacencyList>.Visitor()
             v1.examineVertex = { _ in examVtx1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.labelVertex = { _, _ in label1 += 1 }
             v1.iterationComplete = { _, _ in iter1 += 1 }
             v1.labelsStabilized = { _ in stable1 += 1 }
 
-            var v2 = EnhancedWeisfeilerLehmanIsomorphism<DefaultAdjacencyList>.Visitor()
+            var v2 = EnhancedWeisfeilerLehmanIsomorphism<AdjacencyList>.Visitor()
             v2.examineVertex = { _ in examVtx2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
             v2.labelVertex = { _, _ in label2 += 1 }
@@ -609,7 +609,7 @@
             v2.labelsStabilized = { _ in stable2 += 1 }
 
             let combined = v1.combined(with: v2)
-            let algorithm = EnhancedWeisfeilerLehmanIsomorphism<DefaultAdjacencyList>()
+            let algorithm = EnhancedWeisfeilerLehmanIsomorphism<AdjacencyList>()
             let result = algorithm.areIsomorphic(graph1, graph2, visitor: combined)
 
             #expect(result, "two identical triangle graphs must be isomorphic")

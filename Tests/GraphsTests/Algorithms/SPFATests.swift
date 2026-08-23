@@ -187,9 +187,9 @@
             var g4 = AdjacencyMatrix()
             check(&g4, "Matrix")
             #if !GRAPHS_USES_TRAITS || GRAPHS_SPECIALIZED_STORAGE
-                var g2 = AdjacencyList(edgeStore: CSREdgeStorage().cacheInOutEdges())
+                var g2 = StorageBackedAdjacencyList(edgeStorage: CSREdgeStorage().cacheInOutEdges())
                 check(&g2, "CSR")
-                var g3 = AdjacencyList(edgeStore: COOEdgeStorage().cacheInOutEdges())
+                var g3 = StorageBackedAdjacencyList(edgeStorage: COOEdgeStorage().cacheInOutEdges())
                 check(&g3, "COO")
             #endif
         }
@@ -278,13 +278,13 @@
             var notRelaxed1 = 0
             var notRelaxed2 = 0
 
-            var v1 = SPFA<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = SPFA<AdjacencyList, Double>.Visitor()
             v1.examineVertex = { _ in examined1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.edgeRelaxed = { _ in relaxed1 += 1 }
             v1.edgeNotRelaxed = { _ in notRelaxed1 += 1 }
 
-            var v2 = SPFA<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = SPFA<AdjacencyList, Double>.Visitor()
             v2.examineVertex = { _ in examined2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
             v2.edgeRelaxed = { _ in relaxed2 += 1 }
@@ -324,10 +324,10 @@
             var detected1 = 0
             var detected2 = 0
 
-            var v1 = SPFA<DefaultAdjacencyList, Double>.Visitor()
+            var v1 = SPFA<AdjacencyList, Double>.Visitor()
             v1.detectNegativeCycle = { _ in detected1 += 1 }
 
-            var v2 = SPFA<DefaultAdjacencyList, Double>.Visitor()
+            var v2 = SPFA<AdjacencyList, Double>.Visitor()
             v2.detectNegativeCycle = { _ in detected2 += 1 }
 
             let combined = v1.combined(with: v2)

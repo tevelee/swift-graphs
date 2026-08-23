@@ -4,7 +4,7 @@
 
     struct HamiltonianPathTests {
 
-        func createCompleteGraph() -> some AdjacencyListProtocol {
+        func createCompleteGraph() -> AdjacencyList {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -27,7 +27,7 @@
             return graph
         }
 
-        func createDisconnectedGraph() -> some AdjacencyListProtocol {
+        func createDisconnectedGraph() -> AdjacencyList {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -40,13 +40,13 @@
             return graph
         }
 
-        func createSingleVertexGraph() -> some AdjacencyListProtocol {
+        func createSingleVertexGraph() -> AdjacencyList {
             var graph = AdjacencyList()
             graph.addVertex { $0.label = "A" }
             return graph
         }
 
-        func createTwoVertexGraph() -> some AdjacencyListProtocol {
+        func createTwoVertexGraph() -> AdjacencyList {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -141,7 +141,7 @@
         /// The no-arg `hamiltonianPath()` and `hamiltonianCycle()` methods delegate to `.backtracking()`.
         /// Calling them covers the default-method code in `HamiltonianPath.swift`.
         @Test func defaultConvenienceMethods() throws {
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -192,7 +192,7 @@
         /// The `.random` and `.nearestNeighbor` heuristics take different code paths inside
         /// `HeuristicHamiltonian.findHamiltonianPath`. Both should find a path in K4.
         @Test func heuristicRandomAndNearestNeighborModes() throws {
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -203,20 +203,20 @@
             }
 
             // .nearestNeighbor heuristic
-            let nnPath = HeuristicHamiltonian<DefaultAdjacencyList>(heuristic: .nearestNeighbor)
+            let nnPath = HeuristicHamiltonian<AdjacencyList>(heuristic: .nearestNeighbor)
                 .hamiltonianPath(in: graph)
             #expect(nnPath != nil, "nearestNeighbor heuristic must find a Hamiltonian path in K4")
             #expect(nnPath?.vertices.count == 4)
 
             // .random heuristic (may fail for some random orderings but K4 is dense enough)
-            let randomAlgo = HeuristicHamiltonian<DefaultAdjacencyList>(heuristic: .random)
+            let randomAlgo = HeuristicHamiltonian<AdjacencyList>(heuristic: .random)
             let randomPath = randomAlgo.hamiltonianPath(in: graph)
             // random may or may not find a path on a single try, but on K4 it should succeed
             if let p = randomPath {
                 #expect(p.vertices.count == 4)
             }
             // Cover the hamiltonianCycle path for nearestNeighbor
-            let nnCycle = HeuristicHamiltonian<DefaultAdjacencyList>(heuristic: .nearestNeighbor)
+            let nnCycle = HeuristicHamiltonian<AdjacencyList>(heuristic: .nearestNeighbor)
                 .hamiltonianCycle(in: graph)
             #expect(nnCycle != nil, "nearestNeighbor must find a Hamiltonian cycle in K4")
         }
@@ -269,8 +269,8 @@
         /// Two composed visitors must each receive the same events during backtracking search.
         /// `addToPath` fires once per vertex added; both visitors must see identical counts.
         @Test func composedVisitorsReceiveAllEvents() {
-            // Build a K4 complete graph inline (so graph is a concrete DefaultAdjacencyList)
-            var graph = DefaultAdjacencyList()
+            // Build a K4 complete graph inline (so graph is a concrete AdjacencyList)
+            var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -293,16 +293,16 @@
             var examined1 = 0
             var examined2 = 0
 
-            var v1 = BacktrackingHamiltonian<DefaultAdjacencyList>.Visitor()
+            var v1 = BacktrackingHamiltonian<AdjacencyList>.Visitor()
             v1.addToPath = { _ in added1 += 1 }
             v1.examineVertex = { _ in examined1 += 1 }
 
-            var v2 = BacktrackingHamiltonian<DefaultAdjacencyList>.Visitor()
+            var v2 = BacktrackingHamiltonian<AdjacencyList>.Visitor()
             v2.addToPath = { _ in added2 += 1 }
             v2.examineVertex = { _ in examined2 += 1 }
 
             let combined = v1.combined(with: v2)
-            _ = BacktrackingHamiltonian<DefaultAdjacencyList>().hamiltonianPath(in: graph, visitor: combined)
+            _ = BacktrackingHamiltonian<AdjacencyList>().hamiltonianPath(in: graph, visitor: combined)
 
             // The Hamiltonian path visits all 4 vertices, so addToPath fires at least 4 times
             #expect(added1 >= 4, "addToPath must fire at least once per vertex in the path")
@@ -319,7 +319,7 @@
         /// visitor-aware implementation. These are not exercised by `using:` API calls (which pass
         /// `visitor: nil` to the protocol requirement). Calling them directly covers the bridge code.
         @Test func backtrackingBridgeMethods() throws {
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -330,7 +330,7 @@
             graph.addEdge(from: a, to: c)
             graph.addEdge(from: c, to: a)
 
-            let algo = BacktrackingHamiltonian<DefaultAdjacencyList>()
+            let algo = BacktrackingHamiltonian<AdjacencyList>()
 
             // hamiltonianPath(in:) bridge — no visitor argument
             let path = try #require(algo.hamiltonianPath(in: graph), "K3 has a Hamiltonian path")
@@ -349,7 +349,7 @@
         /// `HeuristicHamiltonian` provides the same no-visitor bridges. Calling `.heuristic()` factory
         /// covers the static factory method; calling bridges directly covers the delegate methods.
         @Test func heuristicFactoryAndBridgeMethods() throws {
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -364,7 +364,7 @@
             let pathViaFactory = try #require(graph.hamiltonianPath(using: .heuristic()))
             #expect(pathViaFactory.vertices.count == 3)
 
-            let algo = HeuristicHamiltonian<DefaultAdjacencyList>(heuristic: .degreeBased)
+            let algo = HeuristicHamiltonian<AdjacencyList>(heuristic: .degreeBased)
 
             // hamiltonianPath(in:) bridge
             let path = try #require(algo.hamiltonianPath(in: graph))
@@ -383,7 +383,7 @@
         /// `HeuristicHamiltonian` also conforms to `HamiltonianCycleAlgorithm`.
         /// `hamiltonianCycle(in:)` is a no-visitor bridge that delegates to the visitor-aware method.
         @Test func heuristicHamiltonianCycleBridge() throws {
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -395,7 +395,7 @@
             graph.addEdge(from: a, to: c)
             graph.addEdge(from: c, to: a)
 
-            let algo = HeuristicHamiltonian<DefaultAdjacencyList>(heuristic: .degreeBased)
+            let algo = HeuristicHamiltonian<AdjacencyList>(heuristic: .degreeBased)
 
             // hamiltonianCycle(in:) bridge — no visitor
             let cycle = try #require(algo.hamiltonianCycle(in: graph), "K3 has a Hamiltonian cycle")
@@ -416,7 +416,7 @@
         /// - `removeFromPath` / `backtrack` may fire if the heuristic backtracks.
         /// Both composed visitors must see identical event counts.
         @Test func heuristicComposedVisitorsReceiveAllEvents() {
-            var graph = DefaultAdjacencyList()
+            var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
             let c = graph.addVertex { $0.label = "C" }
@@ -445,14 +445,14 @@
             var backtrack1 = 0
             var backtrack2 = 0
 
-            var v1 = HeuristicHamiltonian<DefaultAdjacencyList>.Visitor()
+            var v1 = HeuristicHamiltonian<AdjacencyList>.Visitor()
             v1.examineVertex = { _ in examined1 += 1 }
             v1.examineEdge = { _ in examEdge1 += 1 }
             v1.addToPath = { _ in added1 += 1 }
             v1.removeFromPath = { _ in removed1 += 1 }
             v1.backtrack = { _ in backtrack1 += 1 }
 
-            var v2 = HeuristicHamiltonian<DefaultAdjacencyList>.Visitor()
+            var v2 = HeuristicHamiltonian<AdjacencyList>.Visitor()
             v2.examineVertex = { _ in examined2 += 1 }
             v2.examineEdge = { _ in examEdge2 += 1 }
             v2.addToPath = { _ in added2 += 1 }
@@ -460,7 +460,7 @@
             v2.backtrack = { _ in backtrack2 += 1 }
 
             let combined = v1.combined(with: v2)
-            _ = HeuristicHamiltonian<DefaultAdjacencyList>(heuristic: .degreeBased)
+            _ = HeuristicHamiltonian<AdjacencyList>(heuristic: .degreeBased)
                 .hamiltonianPath(in: graph, visitor: combined)
 
             // The heuristic examines start vertices and explores the graph

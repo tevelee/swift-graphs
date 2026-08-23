@@ -32,7 +32,7 @@ struct PlanarDrawingTests {
 
     // MARK: - Builders
 
-    private func build(_ vertexCount: Int, _ edges: [(Int, Int)]) -> DefaultAdjacencyList {
+    private func build(_ vertexCount: Int, _ edges: [(Int, Int)]) -> AdjacencyList {
         var graph = AdjacencyList()
         let v = (0 ..< vertexCount).map { i in graph.addVertex { $0.label = "\(i)" } }
         for (a, b) in edges {
@@ -41,9 +41,9 @@ struct PlanarDrawingTests {
         return graph
     }
 
-    private func triangle() -> DefaultAdjacencyList { build(3, [(0, 1), (1, 2), (2, 0)]) }
+    private func triangle() -> AdjacencyList { build(3, [(0, 1), (1, 2), (2, 0)]) }
 
-    private func octahedron() -> DefaultAdjacencyList {
+    private func octahedron() -> AdjacencyList {
         let antipode = [1, 0, 3, 2, 5, 4]
         var edges: [(Int, Int)] = []
         for a in 0 ..< 6 {
@@ -52,7 +52,7 @@ struct PlanarDrawingTests {
         return build(6, edges)
     }
 
-    private func grid4x4() -> DefaultAdjacencyList {
+    private func grid4x4() -> AdjacencyList {
         var edges: [(Int, Int)] = []
         func idx(_ r: Int, _ c: Int) -> Int { r * 4 + c }
         for r in 0 ..< 4 {
@@ -64,11 +64,11 @@ struct PlanarDrawingTests {
         return build(16, edges)
     }
 
-    private func k4() -> DefaultAdjacencyList {
+    private func k4() -> AdjacencyList {
         build(4, [(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)])
     }
 
-    private func petersen() -> DefaultAdjacencyList {
+    private func petersen() -> AdjacencyList {
         let edges =
             [(0, 1), (1, 2), (2, 3), (3, 4), (4, 0)]
             + [(0, 5), (1, 6), (2, 7), (3, 8), (4, 9)]
@@ -78,10 +78,10 @@ struct PlanarDrawingTests {
 
     // MARK: - Validity helper
 
-    private func countCrossings(_ graph: DefaultAdjacencyList, _ drawing: PlanarDrawing<DefaultAdjacencyList.VertexDescriptor>) -> Int {
+    private func countCrossings(_ graph: AdjacencyList, _ drawing: PlanarDrawing<AdjacencyList.VertexDescriptor>) -> Int {
         let vertices = Array(graph.vertices())
         var edges: [(Int, Int)] = []
-        var index: [DefaultAdjacencyList.VertexDescriptor: Int] = [:]
+        var index: [AdjacencyList.VertexDescriptor: Int] = [:]
         for (i, vertex) in vertices.enumerated() { index[vertex] = i }
 
         var seen = Set<Int>()
@@ -112,8 +112,8 @@ struct PlanarDrawingTests {
     }
 
     private func distinctPointCount(
-        _ graph: DefaultAdjacencyList,
-        _ drawing: PlanarDrawing<DefaultAdjacencyList.VertexDescriptor>
+        _ graph: AdjacencyList,
+        _ drawing: PlanarDrawing<AdjacencyList.VertexDescriptor>
     ) -> (distinct: Int, total: Int) {
         let points = graph.vertices().map { drawing.position(of: $0)! }
         return (Set(points).count, points.count)

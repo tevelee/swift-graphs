@@ -6,7 +6,7 @@ struct PlanarPropertyAlgorithmTests {
 
     // MARK: - Test Graphs
 
-    func createPlanarGraph() -> some AdjacencyListProtocol {
+    func createPlanarGraph() -> AdjacencyList {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -23,7 +23,7 @@ struct PlanarPropertyAlgorithmTests {
         return graph
     }
 
-    func createNonPlanarGraph() -> some AdjacencyListProtocol {
+    func createNonPlanarGraph() -> AdjacencyList {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -46,7 +46,7 @@ struct PlanarPropertyAlgorithmTests {
         return graph
     }
 
-    func createK33Graph() -> some AdjacencyListProtocol {
+    func createK33Graph() -> AdjacencyList {
         var graph = AdjacencyList()
         let a1 = graph.addVertex { $0.label = "A1" }
         let a2 = graph.addVertex { $0.label = "A2" }
@@ -69,17 +69,17 @@ struct PlanarPropertyAlgorithmTests {
         return graph
     }
 
-    func createEmptyGraph() -> some AdjacencyListProtocol {
+    func createEmptyGraph() -> AdjacencyList {
         AdjacencyList()
     }
 
-    func createSingleVertexGraph() -> some AdjacencyListProtocol {
+    func createSingleVertexGraph() -> AdjacencyList {
         var graph = AdjacencyList()
         graph.addVertex { $0.label = "A" }
         return graph
     }
 
-    func createTwoVertexGraph() -> some AdjacencyListProtocol {
+    func createTwoVertexGraph() -> AdjacencyList {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -237,16 +237,16 @@ struct PlanarPropertyAlgorithmTests {
         var success1 = 0
         var success2 = 0
 
-        var v1 = BoyerMyrvoldPlanarPropertyAlgorithm<DefaultAdjacencyList>.Visitor()
+        var v1 = BoyerMyrvoldPlanarPropertyAlgorithm<AdjacencyList>.Visitor()
         v1.startEmbedding = { started1 += 1 }
         v1.embeddingSuccess = { success1 += 1 }
 
-        var v2 = BoyerMyrvoldPlanarPropertyAlgorithm<DefaultAdjacencyList>.Visitor()
+        var v2 = BoyerMyrvoldPlanarPropertyAlgorithm<AdjacencyList>.Visitor()
         v2.startEmbedding = { started2 += 1 }
         v2.embeddingSuccess = { success2 += 1 }
 
         let combined = v1.combined(with: v2)
-        _ = BoyerMyrvoldPlanarPropertyAlgorithm<DefaultAdjacencyList>()
+        _ = BoyerMyrvoldPlanarPropertyAlgorithm<AdjacencyList>()
             .isPlanar(in: graph, visitor: combined)
 
         #expect(started1 == 1)  // embedding started once
@@ -276,16 +276,16 @@ struct PlanarPropertyAlgorithmTests {
         var success1 = 0
         var success2 = 0
 
-        var v1 = HopcroftTarjanPlanarPropertyAlgorithm<DefaultAdjacencyList>.Visitor()
+        var v1 = HopcroftTarjanPlanarPropertyAlgorithm<AdjacencyList>.Visitor()
         v1.startDFS = { started1 += 1 }
         v1.planaritySuccess = { success1 += 1 }
 
-        var v2 = HopcroftTarjanPlanarPropertyAlgorithm<DefaultAdjacencyList>.Visitor()
+        var v2 = HopcroftTarjanPlanarPropertyAlgorithm<AdjacencyList>.Visitor()
         v2.startDFS = { started2 += 1 }
         v2.planaritySuccess = { success2 += 1 }
 
         let combined = v1.combined(with: v2)
-        _ = HopcroftTarjanPlanarPropertyAlgorithm<DefaultAdjacencyList>()
+        _ = HopcroftTarjanPlanarPropertyAlgorithm<AdjacencyList>()
             .isPlanar(in: graph, visitor: combined)
 
         #expect(started1 == 1)
@@ -315,16 +315,16 @@ struct PlanarPropertyAlgorithmTests {
         var success1 = 0
         var success2 = 0
 
-        var v1 = LeftRightPlanarPropertyAlgorithm<DefaultAdjacencyList>.Visitor()
+        var v1 = LeftRightPlanarPropertyAlgorithm<AdjacencyList>.Visitor()
         v1.startEmbedding = { started1 += 1 }
         v1.embeddingSuccess = { success1 += 1 }
 
-        var v2 = LeftRightPlanarPropertyAlgorithm<DefaultAdjacencyList>.Visitor()
+        var v2 = LeftRightPlanarPropertyAlgorithm<AdjacencyList>.Visitor()
         v2.startEmbedding = { started2 += 1 }
         v2.embeddingSuccess = { success2 += 1 }
 
         let combined = v1.combined(with: v2)
-        _ = LeftRightPlanarPropertyAlgorithm<DefaultAdjacencyList>()
+        _ = LeftRightPlanarPropertyAlgorithm<AdjacencyList>()
             .isPlanar(in: graph, visitor: combined)
 
         #expect(started1 == 1)
