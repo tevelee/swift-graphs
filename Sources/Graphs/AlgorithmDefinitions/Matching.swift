@@ -1,17 +1,17 @@
 /// A protocol for maximum matching algorithms on bipartite graphs.
-public protocol MatchingAlgorithm<Graph> {
+public protocol MatchingAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: BipartiteGraph & IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Finds the maximum matching in the bipartite graph.
     ///
     /// - Parameters:
     ///   - graph: The bipartite graph to find matching in
-    ///   - visitor: Optional visitor for algorithm events
+    ///   - observation: An optional algorithm observation
     /// - Returns: The maximum matching result
-    func maximumMatching(in graph: Graph, visitor: Visitor?) -> MatchingResult<Graph.VertexDescriptor, Graph.EdgeDescriptor>
+    func maximumMatching(in graph: Graph, observation: AlgorithmObservation<Event>?) -> MatchingResult<Graph.VertexDescriptor, Graph.EdgeDescriptor>
 }
 
 /// Result of a maximum matching computation.
@@ -114,12 +114,15 @@ public struct MatchingResult<Vertex: Hashable, Edge> {
 
 extension MatchingResult: Sendable where Vertex: Sendable, Edge: Sendable {}
 
-extension VisitorWrapper: MatchingAlgorithm where Base: MatchingAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: MatchingAlgorithm where Base: MatchingAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
-    public func maximumMatching(in graph: Base.Graph, visitor: Base.Visitor?) -> MatchingResult<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor> {
-        base.maximumMatching(in: graph, visitor: self.visitor.combined(with: visitor))
+    public func maximumMatching(
+        in graph: Base.Graph,
+        observation: AlgorithmObservation<Base.Event>?
+    ) -> MatchingResult<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor> {
+        base.maximumMatching(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 
@@ -131,7 +134,7 @@ extension BipartiteGraph where Self: IncidenceGraph & VertexListGraph {
     /// - Returns: The maximum matching result
     @inlinable
     public func maximumMatching(using algorithm: some MatchingAlgorithm<Self>) -> MatchingResult<VertexDescriptor, EdgeDescriptor> {
-        algorithm.maximumMatching(in: self, visitor: nil)
+        algorithm.maximumMatching(in: self, observation: nil)
     }
 }
 

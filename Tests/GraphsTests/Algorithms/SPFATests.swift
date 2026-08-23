@@ -194,9 +194,9 @@
             #endif
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        @Test func visitorCallbacks() {
+        @Test func observationReceivesProgressEvents() {
             var graph = AdjacencyList()
 
             let a = graph.addVertex { $0.label = "A" }
@@ -205,27 +205,30 @@
             graph.addEdge(from: a, to: b) { $0.weight = 2 }
 
             var examinedVertices: [String] = []
-            var relaxedEdgeCount = 0
+            var relaxedEdges: [AdjacencyList.EdgeDescriptor] = []
+            var relaxedCosts: [Double] = []
 
             let spfa = SPFA(on: graph, edgeWeight: .property(\.weight))
-            _ = spfa.shortestPathsFromSource(
-                a,
-                visitor: .init(
-                    examineVertex: { vertex in
+            let observation = AlgorithmObservation<SPFA<AdjacencyList, Double>.Event> { event in
+                switch event {
+                    case .vertexExamined(let vertex):
                         examinedVertices.append(graph[vertex].label)
-                    },
-                    edgeRelaxed: { _ in
-                        relaxedEdgeCount += 1
-                    }
-                )
-            )
+                    case .edgeRelaxed(let relaxation):
+                        relaxedEdges.append(relaxation.edge)
+                        relaxedCosts.append(relaxation.newCost)
+                    default:
+                        break
+                }
+            }
+            _ = spfa.shortestPathsFromSource(a, observation: observation)
 
             #expect(examinedVertices.contains("A"))
             #expect(examinedVertices.contains("B"))
-            #expect(relaxedEdgeCount == 1)
+            #expect(relaxedEdges.count == 1)
+            #expect(relaxedCosts == [2])
         }
 
-        @Test func negativeCycleVisitorCallback() {
+        @Test func negativeCycleObservation() {
             var graph = AdjacencyList()
 
             let a = graph.addVertex { $0.label = "A" }
@@ -239,27 +242,24 @@
             var negativeCycleDetected = false
 
             let spfa = SPFA(on: graph, edgeWeight: .property(\.weight))
-            let result = spfa.shortestPathsFromSource(
-                a,
-                visitor: .init(
-                    detectNegativeCycle: { _ in
-                        negativeCycleDetected = true
-                    }
-                )
-            )
+            let observation = AlgorithmObservation<SPFA<AdjacencyList, Double>.Event> { event in
+                guard case .negativeCycleDetected = event else { return }
+                negativeCycleDetected = true
+            }
+            let result = spfa.shortestPathsFromSource(a, observation: observation)
 
             #expect(result.hasNegativeCycle == true)
             #expect(negativeCycleDetected == true)
         }
 
-        /// Exercises all five SPFA visitor events through a composed visitor pair.
+        /// Exercises all five SPFA events through a composed observation pair.
         ///
         /// Graph: a→b(1), a→c(1), b→c(5) — c settles via a→c (cost 1), not b→c (cost 6).
         /// - `examineVertex` fires for a, b, c as they are dequeued.
         /// - `examineEdge` fires for each of the 3 edges.
         /// - `edgeRelaxed` fires for a→b and a→c.
         /// - `edgeNotRelaxed` fires for b→c (c already at cost 1; b→c would be 6).
-        @Test func composedVisitorsReceiveAllEvents() {
+        @Test func composedObservationsReceiveAllEventsInOrder() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -277,21 +277,30 @@
             var relaxed2 = 0
             var notRelaxed1 = 0
             var notRelaxed2 = 0
+            var observationOrder: [Int] = []
 
-            var v1 = SPFA<AdjacencyList, Double>.Visitor()
-            v1.examineVertex = { _ in examined1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.edgeRelaxed = { _ in relaxed1 += 1 }
-            v1.edgeNotRelaxed = { _ in notRelaxed1 += 1 }
-
-            var v2 = SPFA<AdjacencyList, Double>.Visitor()
-            v2.examineVertex = { _ in examined2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.edgeRelaxed = { _ in relaxed2 += 1 }
-            v2.edgeNotRelaxed = { _ in notRelaxed2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = SPFA(on: graph, edgeWeight: .property(\.weight)).shortestPathsFromSource(a, visitor: combined)
+            let algorithm = SPFAShortestPath<AdjacencyList, Double>(weight: .property(\.weight))
+                .observing { event in
+                    observationOrder.append(1)
+                    switch event {
+                        case .vertexExamined: examined1 += 1
+                        case .edgeExamined: examEdge1 += 1
+                        case .edgeRelaxed: relaxed1 += 1
+                        case .edgeNotRelaxed: notRelaxed1 += 1
+                        case .negativeCycleDetected: break
+                    }
+                }
+                .observing { event in
+                    observationOrder.append(2)
+                    switch event {
+                        case .vertexExamined: examined2 += 1
+                        case .edgeExamined: examEdge2 += 1
+                        case .edgeRelaxed: relaxed2 += 1
+                        case .edgeNotRelaxed: notRelaxed2 += 1
+                        case .negativeCycleDetected: break
+                    }
+                }
+            _ = graph.shortestPaths(from: a, using: algorithm)
 
             #expect(examined1 >= 1, "examineVertex fires as vertices are dequeued")
             #expect(examined2 >= 1)
@@ -301,18 +310,19 @@
             #expect(relaxed2 == 2)
             #expect(notRelaxed1 >= 1, "b→c does not improve c (already at cost 1)")
             #expect(notRelaxed2 >= 1)
-            // Both composed visitors must see identical event counts
+            // Both composed observations must see identical event counts and attachment order.
             #expect(examined1 == examined2)
             #expect(examEdge1 == examEdge2)
             #expect(relaxed1 == relaxed2)
             #expect(notRelaxed1 == notRelaxed2)
+            #expect(observationOrder.enumerated().allSatisfy { index, value in value == (index % 2) + 1 })
         }
 
-        /// Ensures the `detectNegativeCycle` event propagates through composed visitors.
+        /// Ensures `negativeCycleDetected` propagates through composed observations.
         ///
         /// Graph: a→b(1), b→c(-3), c→a(1) forms a negative cycle (total weight: -1).
-        /// The composed visitor's `detectNegativeCycle` closure must fire for both observers.
-        @Test func composedVisitors_detectNegativeCycleEvent() {
+        /// Both composed observations must receive the detection event.
+        @Test func composedObservationsReceiveNegativeCycleEvent() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -324,17 +334,17 @@
             var detected1 = 0
             var detected2 = 0
 
-            var v1 = SPFA<AdjacencyList, Double>.Visitor()
-            v1.detectNegativeCycle = { _ in detected1 += 1 }
+            let algorithm = SPFAShortestPath<AdjacencyList, Double>(weight: .property(\.weight))
+                .observing(SPFA<AdjacencyList, Double>.EventCases.negativeCycleDetected) { _ in
+                    detected1 += 1
+                }
+                .observing(SPFA<AdjacencyList, Double>.EventCases.negativeCycleDetected) { _ in
+                    detected2 += 1
+                }
+            _ = graph.shortestPaths(from: a, using: algorithm)
 
-            var v2 = SPFA<AdjacencyList, Double>.Visitor()
-            v2.detectNegativeCycle = { _ in detected2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = SPFA(on: graph, edgeWeight: .property(\.weight)).shortestPathsFromSource(a, visitor: combined)
-
-            #expect(detected1 >= 1, "detectNegativeCycle must fire through composed visitor v1")
-            #expect(detected2 >= 1, "detectNegativeCycle must fire through composed visitor v2")
+            #expect(detected1 >= 1, "negativeCycleDetected must reach the first observation")
+            #expect(detected2 >= 1, "negativeCycleDetected must reach the second observation")
             #expect(detected1 == detected2, "both composed observers see the same detection events")
         }
     }

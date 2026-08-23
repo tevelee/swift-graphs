@@ -8,9 +8,4 @@ extension PlanarPropertyAlgorithm {
     }
 }
 
-extension EulerFormulaPlanarPropertyAlgorithm: PlanarPropertyAlgorithm {
-    @inlinable
-    public func isPlanar(in graph: Graph) -> Bool {
-        isPlanar(in: graph, visitor: nil)
-    }
-}
+extension EulerFormulaPlanarPropertyAlgorithm: PlanarPropertyAlgorithm {}

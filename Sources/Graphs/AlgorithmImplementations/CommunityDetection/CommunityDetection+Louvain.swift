@@ -2,7 +2,7 @@
     /// Louvain community detection algorithm implementation.
     public struct LouvainCommunityDetectionAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph>: CommunityDetectionAlgorithm
     where Graph.VertexDescriptor: Hashable {
-        public typealias Visitor = LouvainCommunityDetection<Graph>.Visitor
+        public typealias Event = LouvainCommunityDetection<Graph>.Event
 
         /// The resolution parameter for modularity optimization.
         public let resolution: Double
@@ -18,10 +18,10 @@
         @inlinable
         public func detectCommunities(
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> CommunityDetectionResult<Graph.VertexDescriptor> {
             let louvain = LouvainCommunityDetection(on: graph, resolution: resolution)
-            return louvain.detectCommunities(visitor: visitor)
+            return louvain.detectCommunities(observation: observation)
         }
     }
 

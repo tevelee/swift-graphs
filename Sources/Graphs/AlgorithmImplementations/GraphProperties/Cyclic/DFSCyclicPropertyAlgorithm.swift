@@ -1,6 +1,6 @@
 /// DFS-based algorithm for checking if a graph is cyclic.
 public struct DFSCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    public typealias Visitor = DepthFirstSearch<Graph>.Visitor
+    public typealias Event = DepthFirstSearch<Graph>.Event
 
     /// Creates a new DFS-based cyclic property algorithm.
     @inlinable
@@ -10,12 +10,12 @@ public struct DFSCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph
     ///
     /// - Parameters:
     ///   - graph: The graph to check
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional observation of the algorithm progress
     /// - Returns: `true` if the graph is cyclic, `false` otherwise
     @inlinable
     public func isCyclic(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Bool {
         // Handle empty graphs and single vertex graphs
         guard graph.vertexCount > 1 else {
@@ -23,33 +23,28 @@ public struct DFSCyclicPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph
         }
 
         var hasCycle = false
-        let cycleDetectionVisitor = DepthFirstSearch<Graph>.Visitor(
-            backEdge: { _ in
-                hasCycle = true
-            }
-        )
-
         // Run DFS from each unvisited vertex using the existing DFS implementation
         // We need to track visited vertices to handle disconnected graphs
         var visitedVertices = Set<Graph.VertexDescriptor>()
 
         for vertex in graph.vertices() where !hasCycle && !visitedVertices.contains(vertex) {
-            // Create a visitor that tracks visited vertices
-            let trackingVisitor = DepthFirstSearch<Graph>.Visitor(
-                discoverVertex: { v in
-                    visitedVertices.insert(v)
+            let trackingObservation = AlgorithmObservation<Event> { event in
+                switch event {
+                    case .vertexDiscovered(let v):
+                        visitedVertices.insert(v)
+                    case .backEdgeTraversed:
+                        hasCycle = true
+                    default:
+                        break
                 }
-            )
+                observation?.receive(event)
+            }
 
-            DepthFirstSearch(on: graph, from: vertex)
-                .withVisitor { trackingVisitor }
-                .withVisitor { cycleDetectionVisitor }
-                .withVisitor { visitor }
-                .forEach { _ in }
+            var iterator = DepthFirstSearch(on: graph, from: vertex)
+                .makeIterator(observation: trackingObservation)
+            while iterator.next() != nil {}
         }
 
         return hasCycle
     }
 }
-
-extension DFSCyclicPropertyAlgorithm: VisitorSupporting {}

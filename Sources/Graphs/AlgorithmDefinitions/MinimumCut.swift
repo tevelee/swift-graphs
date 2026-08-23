@@ -4,21 +4,21 @@
 /// such that the total weight of edges crossing the partition is minimized — without specifying source or sink vertices.
 ///
 /// - Note: For directed graphs, apply the `.undirected()` view first.
-public protocol MinimumCutAlgorithm<Graph, Weight> {
+public protocol MinimumCutAlgorithm<Graph, Weight>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable
     /// The weight type for edge costs.
     associatedtype Weight: Numeric & Comparable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Computes the global minimum cut of the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to find the minimum cut for
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The minimum cut result, or `nil` if the graph has fewer than 2 vertices
-    func minimumCut(in graph: Graph, visitor: Visitor?) -> MinimumCutResult<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>?
+    func minimumCut(in graph: Graph, observation: AlgorithmObservation<Event>?) -> MinimumCutResult<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>?
 }
 
 /// Represents the result of a global minimum cut computation.
@@ -73,16 +73,16 @@ extension MinimumCutResult: Equatable where Vertex: Equatable, Edge: Equatable, 
     }
 }
 
-extension VisitorWrapper: MinimumCutAlgorithm where Base: MinimumCutAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: MinimumCutAlgorithm where Base: MinimumCutAlgorithm {
     public typealias Graph = Base.Graph
     public typealias Weight = Base.Weight
 
     @inlinable
     public func minimumCut(
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> MinimumCutResult<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Weight>? {
-        base.minimumCut(in: graph, visitor: self.visitor.combined(with: visitor))
+        base.minimumCut(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 
@@ -95,7 +95,7 @@ extension IncidenceGraph {
     public func minimumCut<Weight: Numeric & Comparable>(
         using algorithm: some MinimumCutAlgorithm<Self, Weight>
     ) -> MinimumCutResult<VertexDescriptor, EdgeDescriptor, Weight>? {
-        algorithm.minimumCut(in: self, visitor: nil)
+        algorithm.minimumCut(in: self, observation: nil)
     }
 }
 

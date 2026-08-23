@@ -16,32 +16,8 @@
         public typealias Vertex = Graph.VertexDescriptor
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
-
-        /// A visitor that can be used to observe Kruskal's algorithm progress.
-        public struct Visitor {
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when adding an edge to the MST.
-            public var addEdge: ((Edge, Weight) -> Void)?
-            /// Called when skipping an edge.
-            public var skipEdge: ((Edge, String) -> Void)?
-            /// Called when unioning two vertices.
-            public var unionVertices: ((Vertex, Vertex) -> Void)?
-
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                examineEdge: ((Edge) -> Void)? = nil,
-                addEdge: ((Edge, Weight) -> Void)? = nil,
-                skipEdge: ((Edge, String) -> Void)? = nil,
-                unionVertices: ((Vertex, Vertex) -> Void)? = nil
-            ) {
-                self.examineEdge = examineEdge
-                self.addEdge = addEdge
-                self.skipEdge = skipEdge
-                self.unionVertices = unionVertices
-            }
-        }
+        /// The event type published by Kruskal's algorithm.
+        public typealias Event = MinimumSpanningTreeEvent<Vertex, Edge, Weight>
 
         /// The result of Kruskal's algorithm.
         @usableFromInline
@@ -79,10 +55,13 @@
         ///
         /// - Parameters:
         ///   - graph: The graph to find the MST for
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation of algorithm progress.
         /// - Returns: The minimum spanning tree result
         @inlinable
-        public func minimumSpanningTree(on graph: Graph, visitor: Visitor? = nil) -> MinimumSpanningTree<Vertex, Edge, Weight> {
+        public func minimumSpanningTree(
+            on graph: Graph,
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> MinimumSpanningTree<Vertex, Edge, Weight> {
             var parent: [Vertex: Vertex] = [:]
             var rank: [Vertex: Int] = [:]
 
@@ -134,7 +113,7 @@
             var mstVertices: Set<Vertex> = []
 
             for edge in sortedEdges {
-                visitor?.examineEdge?(edge)
+                observation?.receive(.edgeExamined(edge))
                 guard let source = graph.source(of: edge),
                     let destination = graph.destination(of: edge)
                 else { continue }
@@ -149,10 +128,10 @@
                     mstVertices.insert(source)
                     mstVertices.insert(destination)
                     union(source, destination)
-                    visitor?.addEdge?(edge, currentEdgeWeight)
-                    visitor?.unionVertices?(source, destination)
+                    observation?.receive(.edgeAdded(edge, weight: currentEdgeWeight))
+                    observation?.receive(.verticesJoined(source, destination))
                 } else {
-                    visitor?.skipEdge?(edge, "Would create cycle")
+                    observation?.receive(.edgeSkipped(edge, reason: "Would create cycle"))
                 }
             }
 
@@ -168,5 +147,4 @@
         }
     }
 
-    extension Kruskal: VisitorSupporting {}
 #endif

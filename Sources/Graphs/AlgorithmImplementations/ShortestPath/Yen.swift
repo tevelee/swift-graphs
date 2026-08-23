@@ -38,25 +38,53 @@
             }
         }
 
-        /// A visitor that can be used to observe Yen's algorithm progress.
-        public struct Visitor {
-            /// Called when a path is found.
-            public var onPathFound: (Path<Vertex, Edge>) -> Void = { _ in }
-            /// Called when a candidate path is added.
-            public var onCandidateAdded: (Path<Vertex, Edge>, Cost<Weight>) -> Void = { _, _ in }
-            /// Called when a path is selected.
-            public var onPathSelected: (Path<Vertex, Edge>, Cost<Weight>) -> Void = { _, _ in }
+        /// A candidate path and its cost.
+        public struct Candidate {
+            /// The candidate path.
+            public let path: Path<Vertex, Edge>
+            /// The candidate path's cost.
+            public let cost: Cost<Weight>
 
-            /// Creates a new visitor.
+            /// Creates a candidate payload.
             @inlinable
-            public init(
-                onPathFound: @escaping (Path<Vertex, Edge>) -> Void = { _ in },
-                onCandidateAdded: @escaping (Path<Vertex, Edge>, Cost<Weight>) -> Void = { _, _ in },
-                onPathSelected: @escaping (Path<Vertex, Edge>, Cost<Weight>) -> Void = { _, _ in }
-            ) {
-                self.onPathFound = onPathFound
-                self.onCandidateAdded = onCandidateAdded
-                self.onPathSelected = onPathSelected
+            public init(path: Path<Vertex, Edge>, cost: Cost<Weight>) {
+                self.path = path
+                self.cost = cost
+            }
+        }
+
+        /// An event emitted while Yen's algorithm runs.
+        public enum Event {
+            /// The initial shortest path was found.
+            case pathFound(Path<Vertex, Edge>)
+            /// A candidate path was added to the priority queue.
+            case candidateAdded(Candidate)
+            /// A candidate path was selected for the result.
+            case pathSelected(Candidate)
+        }
+
+        /// Selectors for Yen events.
+        public enum EventCases {
+            /// Selects the initially found path.
+            public static var pathFound: AlgorithmEventCase<Event, Path<Vertex, Edge>> {
+                .init {
+                    guard case .pathFound(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects added candidates.
+            public static var candidateAdded: AlgorithmEventCase<Event, Candidate> {
+                .init {
+                    guard case .candidateAdded(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects selected paths.
+            public static var pathSelected: AlgorithmEventCase<Event, Candidate> {
+                .init {
+                    guard case .pathSelected(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -77,7 +105,7 @@
         ///   - destination: The destination vertex.
         ///   - k: The number of shortest paths to find.
         ///   - graph: The graph to search in.
-        ///   - visitor: An optional visitor to observe the algorithm's progress.
+        ///   - observation: An optional observation of the algorithm's progress.
         /// - Returns: An array of the K shortest paths.
         @inlinable
         public func kShortestPaths(
@@ -85,7 +113,7 @@
             to destination: Vertex,
             k: Int,
             in graph: Graph,
-            visitor: Visitor? = nil
+            observation: AlgorithmObservation<Event>? = nil
         ) -> [Path<Vertex, Edge>] {
             // Handle edge cases
             if source == destination {
@@ -101,7 +129,7 @@
             }
 
             result.append(shortestPath)
-            visitor?.onPathFound(shortestPath)
+            observation?.receive(.pathFound(shortestPath))
 
             // Step 2: Find k-1 additional paths using Yen's algorithm
             for i in 1 ..< k {
@@ -134,7 +162,7 @@
                         if !isPathAlreadyFound(totalPath, in: result, candidates: candidates) {
                             let cost = calculatePathCost(totalPath, in: graph)
                             candidates.append(PriorityItem(path: totalPath, cost: cost))
-                            visitor?.onCandidateAdded(totalPath, cost)
+                            observation?.receive(.candidateAdded(.init(path: totalPath, cost: cost)))
                         }
                     }
                 }
@@ -146,7 +174,7 @@
 
                 result.append(nextPath)
                 let cost = calculatePathCost(nextPath, in: graph)
-                visitor?.onPathSelected(nextPath, cost)
+                observation?.receive(.pathSelected(.init(path: nextPath, cost: cost)))
             }
 
             return result
@@ -415,7 +443,7 @@
 
     }
 
-    extension Yen: KShortestPathsAlgorithm, VisitorSupporting {}
+    extension Yen: KShortestPathsAlgorithm, AlgorithmObserving {}
 
     extension Yen.PriorityItem: Equatable {
         @inlinable

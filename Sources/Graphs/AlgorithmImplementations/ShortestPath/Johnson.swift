@@ -20,37 +20,62 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe Johnson's algorithm progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when reweighting an edge.
-            public var reweightEdge: ((Edge, Weight) -> Void)?
-            /// Called when starting Dijkstra from a source vertex.
-            public var startDijkstraFromSource: ((Vertex) -> Void)?
-            /// Called when completing Dijkstra from a source vertex.
-            public var completeDijkstraFromSource: ((Vertex) -> Void)?
-            /// Called when a negative cycle is detected.
-            public var detectNegativeCycle: (() -> Void)?
+        public struct EdgeReweighting {
+            public let edge: Edge
+            public let weight: Weight
 
-            /// Creates a new visitor.
             @inlinable
-            public init(
-                examineVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                reweightEdge: ((Edge, Weight) -> Void)? = nil,
-                startDijkstraFromSource: ((Vertex) -> Void)? = nil,
-                completeDijkstraFromSource: ((Vertex) -> Void)? = nil,
-                detectNegativeCycle: (() -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.reweightEdge = reweightEdge
-                self.startDijkstraFromSource = startDijkstraFromSource
-                self.completeDijkstraFromSource = completeDijkstraFromSource
-                self.detectNegativeCycle = detectNegativeCycle
+            public init(edge: Edge, weight: Weight) {
+                self.edge = edge
+                self.weight = weight
+            }
+        }
+
+        public enum Event {
+            case vertexExamined(Vertex)
+            case edgeExamined(Edge)
+            case edgeReweighted(EdgeReweighting)
+            case dijkstraStarted(Vertex)
+            case dijkstraCompleted(Vertex)
+            case negativeCycleDetected
+        }
+
+        public enum EventCases {
+            public static var vertexExamined: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeReweighted: AlgorithmEventCase<Event, EdgeReweighting> {
+                .init {
+                    guard case .edgeReweighted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var dijkstraStarted: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .dijkstraStarted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var dijkstraCompleted: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .dijkstraCompleted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var negativeCycleDetected: AlgorithmEventCase<Event, Void> {
+                .init {
+                    guard case .negativeCycleDetected = $0 else { return nil }
+                    return ()
+                }
             }
         }
 
@@ -71,14 +96,14 @@
         ///
         /// - Parameters:
         ///   - graph: The graph to compute shortest paths for.
-        ///   - visitor: An optional visitor to observe the algorithm's progress.
+        ///   - observation: An optional observation of the algorithm's progress.
         /// - Returns: The shortest paths between all pairs of vertices.
         @inlinable
-        public func shortestPathsForAllPairs(in graph: Graph, visitor: Visitor? = nil) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
+        public func shortestPathsForAllPairs(in graph: Graph, observation: AlgorithmObservation<Event>? = nil) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
             let reweightingValues = computeReweightingValues(in: graph)
 
             guard !reweightingValues.isEmpty else {
-                visitor?.detectNegativeCycle?()
+                observation?.receive(.negativeCycleDetected)
                 return AllPairsShortestPaths(distances: [:], predecessors: [:])
             }
 
@@ -95,7 +120,7 @@
                 }
             }
             for source in vertices {
-                visitor?.startDijkstraFromSource?(source)
+                observation?.receive(.dijkstraStarted(source))
 
                 let dijkstra = Dijkstra(
                     on: graph,
@@ -110,7 +135,7 @@
                 }
 
                 guard let result = lastResult else {
-                    visitor?.completeDijkstraFromSource?(source)
+                    observation?.receive(.dijkstraCompleted(source))
                     continue
                 }
 
@@ -131,7 +156,7 @@
                     allPredecessors[source]?[destination] = predecessor
                 }
 
-                visitor?.completeDijkstraFromSource?(source)
+                observation?.receive(.dijkstraCompleted(source))
             }
 
             return AllPairsShortestPaths(
@@ -232,9 +257,25 @@
     extension Johnson: ShortestPathsForAllPairsAlgorithm {
         @inlinable
         public func shortestPathsForAllPairs(in graph: Graph) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
-            shortestPathsForAllPairs(in: graph, visitor: nil)
+            shortestPathsForAllPairs(in: graph, observation: nil)
         }
     }
 
-    extension Johnson: VisitorSupporting {}
+    extension Johnson: AlgorithmObserving {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
+    extension Johnson.Event: VertexExaminedEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+    }
 #endif

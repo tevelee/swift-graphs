@@ -27,8 +27,8 @@
         Graph.EdgeDescriptor: Hashable,
         Weight.Magnitude == Weight
     {
-        /// The visitor type for observing algorithm progress.
-        public typealias Visitor = Yen<Graph, Weight>.Visitor
+        /// The event type for observing algorithm progress.
+        public typealias Event = Yen<Graph, Weight>.Event
 
         /// The cost definition for edge weights.
         public let weight: CostDefinition<Graph, Weight>
@@ -48,7 +48,7 @@
         ///   - destination: The destination vertex
         ///   - k: The number of shortest paths to find
         ///   - graph: The graph to search in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation to observe the algorithm progress
         /// - Returns: An array of the k shortest paths, ordered by cost
         @inlinable
         public func kShortestPaths(
@@ -56,12 +56,12 @@
             to destination: Graph.VertexDescriptor,
             k: Int,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>] {
             let yen = Yen(edgeWeight: weight)
-            return yen.kShortestPaths(from: source, to: destination, k: k, in: graph, visitor: visitor)
+            return yen.kShortestPaths(from: source, to: destination, k: k, in: graph, observation: observation)
         }
     }
 
-    extension YenKShortestPath: VisitorSupporting {}
+    extension YenKShortestPath: AlgorithmObserving {}
 #endif

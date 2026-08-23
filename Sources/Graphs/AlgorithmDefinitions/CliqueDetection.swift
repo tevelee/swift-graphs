@@ -7,7 +7,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     public func findCliques(
         using algorithm: some CliqueDetectionAlgorithm<Self>
     ) -> CliqueDetectionResult<VertexDescriptor> {
-        algorithm.findCliques(in: self, visitor: nil)
+        algorithm.findCliques(in: self, observation: nil)
     }
 }
 
@@ -27,39 +27,33 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 #endif
 
 /// A protocol for clique detection algorithms.
-public protocol CliqueDetectionAlgorithm<Graph> {
+public protocol CliqueDetectionAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Finds maximal cliques in the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to find cliques in
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The clique detection result
     func findCliques(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> CliqueDetectionResult<Graph.VertexDescriptor>
 }
 
-extension VisitorWrapper: CliqueDetectionAlgorithm
-where
-    Base: CliqueDetectionAlgorithm,
-    Base.Visitor == Visitor,
-    Visitor: Composable,
-    Visitor.Other == Visitor
-{
+extension ObservedAlgorithm: CliqueDetectionAlgorithm where Base: CliqueDetectionAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
     public func findCliques(
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> CliqueDetectionResult<Base.Graph.VertexDescriptor> {
-        base.findCliques(in: graph, visitor: self.visitor.combined(with: visitor))
+        base.findCliques(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 

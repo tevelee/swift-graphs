@@ -2,7 +2,7 @@
     /// Tarjan's algorithm implementation for articulation points and bridges.
     public struct TarjanArticulationPointsAlgorithm<Graph: IncidenceGraph & VertexListGraph>: ArticulationPointsAlgorithm
     where Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable {
-        public typealias Visitor = TarjanArticulationPoints<Graph>.Visitor
+        public typealias Event = TarjanArticulationPoints<Graph>.Event
 
         /// Creates a new Tarjan articulation points algorithm.
         @inlinable
@@ -11,10 +11,10 @@
         @inlinable
         public func articulationPoints(
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> ArticulationPointsResult<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
             let tarjan = TarjanArticulationPoints(on: graph)
-            return tarjan.articulationPoints(visitor: visitor)
+            return tarjan.articulationPoints(observation: observation)
         }
     }
 

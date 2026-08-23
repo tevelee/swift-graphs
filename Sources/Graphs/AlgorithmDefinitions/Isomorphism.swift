@@ -1,46 +1,46 @@
 /// A protocol for graph isomorphism algorithms
-public protocol IsomorphismAlgorithm<Graph> {
+public protocol IsomorphismAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & VertexListGraph & EdgeListGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Determines if two graphs are isomorphic.
     ///
     /// - Parameters:
     ///   - graph1: The first graph
     ///   - graph2: The second graph
-    ///   - visitor: Optional visitor for algorithm events
+    ///   - observation: An optional algorithm observation
     /// - Returns: `true` if the graphs are isomorphic, `false` otherwise
     @inlinable
-    func areIsomorphic(_ graph1: Graph, _ graph2: Graph, visitor: Visitor?) -> Bool
+    func areIsomorphic(_ graph1: Graph, _ graph2: Graph, observation: AlgorithmObservation<Event>?) -> Bool
 
     /// Finds an isomorphism mapping between two graphs.
     ///
     /// - Parameters:
     ///   - graph1: The first graph
     ///   - graph2: The second graph
-    ///   - visitor: Optional visitor for algorithm events
+    ///   - observation: An optional algorithm observation
     /// - Returns: A mapping from vertices of graph1 to vertices of graph2, or `nil` if not isomorphic
     @inlinable
-    func findIsomorphism(_ graph1: Graph, _ graph2: Graph, visitor: Visitor?) -> [Graph.VertexDescriptor: Graph.VertexDescriptor]?
+    func findIsomorphism(_ graph1: Graph, _ graph2: Graph, observation: AlgorithmObservation<Event>?) -> [Graph.VertexDescriptor: Graph.VertexDescriptor]?
 }
 
-extension VisitorWrapper: IsomorphismAlgorithm where Base: IsomorphismAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: IsomorphismAlgorithm where Base: IsomorphismAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
-    public func areIsomorphic(_ graph1: Base.Graph, _ graph2: Base.Graph, visitor: Base.Visitor?) -> Bool {
-        base.areIsomorphic(graph1, graph2, visitor: self.visitor.combined(with: visitor))
+    public func areIsomorphic(_ graph1: Base.Graph, _ graph2: Base.Graph, observation: AlgorithmObservation<Base.Event>?) -> Bool {
+        base.areIsomorphic(graph1, graph2, observation: self.observation.followed(by: observation))
     }
 
     @inlinable
     public func findIsomorphism(
         _ graph1: Base.Graph,
         _ graph2: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> [Base.Graph.VertexDescriptor: Base.Graph.VertexDescriptor]? {
-        base.findIsomorphism(graph1, graph2, visitor: self.visitor.combined(with: visitor))
+        base.findIsomorphism(graph1, graph2, observation: self.observation.followed(by: observation))
     }
 }
 
@@ -78,7 +78,7 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
         to other: Self,
         using algorithm: Algorithm
     ) -> Bool {
-        algorithm.areIsomorphic(self, other, visitor: nil)
+        algorithm.areIsomorphic(self, other, observation: nil)
     }
 
     /// Finds an isomorphism mapping to another graph.
@@ -92,7 +92,7 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
         to other: Self,
         using algorithm: Algorithm
     ) -> [VertexDescriptor: VertexDescriptor]? {
-        algorithm.findIsomorphism(self, other, visitor: nil)
+        algorithm.findIsomorphism(self, other, observation: nil)
     }
 
     /// Checks isomorphism and returns detailed result.
@@ -106,7 +106,7 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
         with other: Self,
         using algorithm: Algorithm
     ) -> IsomorphismResult<VertexDescriptor> {
-        let mapping = algorithm.findIsomorphism(self, other, visitor: nil)
+        let mapping = algorithm.findIsomorphism(self, other, observation: nil)
         return IsomorphismResult(isIsomorphic: mapping != nil, mapping: mapping)
     }
 }

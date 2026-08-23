@@ -1,45 +1,59 @@
-/// Ore property visitor for Hamiltonian cycle algorithms.
+/// Event vocabulary for Ore's Hamiltonicity condition.
 public struct OreProperty<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph> where Graph.VertexDescriptor: Hashable {
-    /// A visitor that can be used to observe Ore property algorithm progress.
-    public struct Visitor {
-        /// Called when there are insufficient vertices for Ore's theorem.
-        public var insufficientVertices: ((Int) -> Void)?
-        /// Called when checking the vertex count.
-        public var checkVertexCount: ((Int) -> Void)?
-        /// Called when checking a vertex pair for adjacency.
-        public var checkVertexPair: ((Graph.VertexDescriptor, Graph.VertexDescriptor, Bool) -> Void)?
-        /// Called when checking the degree sum of two vertices.
-        public var checkDegreeSum: ((Graph.VertexDescriptor, Graph.VertexDescriptor, Int, Int) -> Void)?
-        /// Called when the degree sum is too low.
-        public var degreeSumTooLow: ((Graph.VertexDescriptor, Graph.VertexDescriptor, Int, Int) -> Void)?
-
-        /// Creates a new visitor.
-        @inlinable
-        public init(
-            insufficientVertices: ((Int) -> Void)? = nil,
-            checkVertexCount: ((Int) -> Void)? = nil,
-            checkVertexPair: ((Graph.VertexDescriptor, Graph.VertexDescriptor, Bool) -> Void)? = nil,
-            checkDegreeSum: ((Graph.VertexDescriptor, Graph.VertexDescriptor, Int, Int) -> Void)? = nil,
-            degreeSumTooLow: ((Graph.VertexDescriptor, Graph.VertexDescriptor, Int, Int) -> Void)? = nil
-        ) {
-            self.insufficientVertices = insufficientVertices
-            self.checkVertexCount = checkVertexCount
-            self.checkVertexPair = checkVertexPair
-            self.checkDegreeSum = checkDegreeSum
-            self.degreeSumTooLow = degreeSumTooLow
-        }
+    /// An event emitted while checking Ore's condition.
+    public enum Event {
+        /// The graph has too few vertices for the theorem.
+        case insufficientVertexCount(Int)
+        /// The graph's vertex count is about to be used.
+        case vertexCountChecked(Int)
+        /// A vertex pair was checked for adjacency.
+        case vertexPairChecked(Graph.VertexDescriptor, Graph.VertexDescriptor, adjacent: Bool)
+        /// A non-adjacent pair's degree sum was checked.
+        case degreeSumChecked(Graph.VertexDescriptor, Graph.VertexDescriptor, sum: Int, required: Int)
+        /// A non-adjacent pair failed the degree-sum condition.
+        case degreeSumTooLow(Graph.VertexDescriptor, Graph.VertexDescriptor, sum: Int, required: Int)
     }
-}
 
-extension OreProperty.Visitor: Composable {
-    @inlinable
-    public func combined(with other: OreProperty<Graph>.Visitor) -> OreProperty<Graph>.Visitor {
-        OreProperty.Visitor(
-            insufficientVertices: self.insufficientVertices ?? other.insufficientVertices,
-            checkVertexCount: self.checkVertexCount ?? other.checkVertexCount,
-            checkVertexPair: self.checkVertexPair ?? other.checkVertexPair,
-            checkDegreeSum: self.checkDegreeSum ?? other.checkDegreeSum,
-            degreeSumTooLow: self.degreeSumTooLow ?? other.degreeSumTooLow
-        )
+    /// Typed selectors for Ore-condition events.
+    public enum EventCases {
+        /// Selects insufficient vertex counts.
+        public static var insufficientVertexCount: AlgorithmEventCase<Event, Int> {
+            .init {
+                guard case .insufficientVertexCount(let count) = $0 else { return nil }
+                return count
+            }
+        }
+
+        /// Selects vertex-count checks.
+        public static var vertexCountChecked: AlgorithmEventCase<Event, Int> {
+            .init {
+                guard case .vertexCountChecked(let count) = $0 else { return nil }
+                return count
+            }
+        }
+
+        /// Selects adjacency checks.
+        public static var vertexPairChecked: AlgorithmEventCase<Event, (Graph.VertexDescriptor, Graph.VertexDescriptor, adjacent: Bool)> {
+            .init {
+                guard case .vertexPairChecked(let first, let second, let adjacent) = $0 else { return nil }
+                return (first, second, adjacent)
+            }
+        }
+
+        /// Selects degree-sum checks.
+        public static var degreeSumChecked: AlgorithmEventCase<Event, (Graph.VertexDescriptor, Graph.VertexDescriptor, sum: Int, required: Int)> {
+            .init {
+                guard case .degreeSumChecked(let first, let second, let sum, let required) = $0 else { return nil }
+                return (first, second, sum, required)
+            }
+        }
+
+        /// Selects failed degree-sum checks.
+        public static var degreeSumTooLow: AlgorithmEventCase<Event, (Graph.VertexDescriptor, Graph.VertexDescriptor, sum: Int, required: Int)> {
+            .init {
+                guard case .degreeSumTooLow(let first, let second, let sum, let required) = $0 else { return nil }
+                return (first, second, sum, required)
+            }
+        }
     }
 }

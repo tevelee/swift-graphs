@@ -14,29 +14,50 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe the Bron-Kerbosch algorithm progress.
-        public struct Visitor {
-            /// Called when exploring a clique candidate.
-            public var exploreClique: (([Vertex]) -> Void)?
-            /// Called when a maximal clique is found.
-            public var foundClique: (([Vertex]) -> Void)?
-            /// Called when choosing a pivot vertex.
-            public var choosePivot: ((Vertex) -> Void)?
-            /// Called when backtracking.
-            public var backtrack: (([Vertex]) -> Void)?
+        /// An event emitted while Bron-Kerbosch clique detection advances.
+        public enum Event {
+            /// Exploration of a clique candidate started.
+            case cliqueExplorationStarted([Vertex])
+            /// A maximal clique was found.
+            case cliqueFound([Vertex])
+            /// A pivot vertex was chosen.
+            case pivotChosen(Vertex)
+            /// The search backtracked to a clique candidate.
+            case cliqueBacktracked([Vertex])
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                exploreClique: (([Vertex]) -> Void)? = nil,
-                foundClique: (([Vertex]) -> Void)? = nil,
-                choosePivot: ((Vertex) -> Void)? = nil,
-                backtrack: (([Vertex]) -> Void)? = nil
-            ) {
-                self.exploreClique = exploreClique
-                self.foundClique = foundClique
-                self.choosePivot = choosePivot
-                self.backtrack = backtrack
+        /// Typed selectors for Bron-Kerbosch events.
+        public enum EventCases {
+            /// Selects clique-exploration starts.
+            public static var cliqueExplorationStarted: AlgorithmEventCase<Event, [Vertex]> {
+                .init {
+                    guard case .cliqueExplorationStarted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+
+            /// Selects discovered maximal cliques.
+            public static var cliqueFound: AlgorithmEventCase<Event, [Vertex]> {
+                .init {
+                    guard case .cliqueFound(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+
+            /// Selects chosen pivots.
+            public static var pivotChosen: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .pivotChosen(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+
+            /// Selects backtracked clique candidates.
+            public static var cliqueBacktracked: AlgorithmEventCase<Event, [Vertex]> {
+                .init {
+                    guard case .cliqueBacktracked(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -54,10 +75,12 @@
 
         /// Finds all maximal cliques using Bron-Kerbosch with pivoting.
         ///
-        /// - Parameter visitor: An optional visitor to observe the algorithm progress
+        /// - Parameter observation: An optional algorithm observation.
         /// - Returns: The clique detection result
         @inlinable
-        public func findCliques(visitor: Visitor?) -> CliqueDetectionResult<Vertex> {
+        public func findCliques(
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> CliqueDetectionResult<Vertex> {
             var cliques: [[Vertex]] = []
 
             // Build adjacency map for quick neighbor lookup
@@ -74,7 +97,7 @@
                 x: [],
                 neighbors: neighbors,
                 cliques: &cliques,
-                visitor: visitor
+                observation: observation
             )
 
             return CliqueDetectionResult(cliques: cliques)
@@ -87,23 +110,23 @@
             x: Set<Vertex>,
             neighbors: [Vertex: Set<Vertex>],
             cliques: inout [[Vertex]],
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) {
             if p.isEmpty && x.isEmpty {
                 // Found a maximal clique (but only if it's not empty)
                 if !r.isEmpty {
                     let clique = Array(r)
-                    visitor?.foundClique?(clique)
+                    observation?.receive(.cliqueFound(clique))
                     cliques.append(clique)
                 }
                 return
             }
 
-            visitor?.exploreClique?(Array(r))
+            observation?.receive(.cliqueExplorationStarted(Array(r)))
 
             // Choose pivot from P ∪ X with maximum neighbors in P
             let pivot = choosePivot(from: p.union(x), in: p, neighbors: neighbors)
-            visitor?.choosePivot?(pivot)
+            observation?.receive(.pivotChosen(pivot))
 
             let pivotNeighbors = neighbors[pivot] ?? []
             let candidates = p.subtracting(pivotNeighbors)
@@ -120,12 +143,12 @@
                     x: currentX.intersection(vertexNeighbors),
                     neighbors: neighbors,
                     cliques: &cliques,
-                    visitor: visitor
+                    observation: observation
                 )
 
                 currentP.remove(vertex)
                 currentX.insert(vertex)
-                visitor?.backtrack?(Array(r))
+                observation?.receive(.cliqueBacktracked(Array(r)))
             }
         }
 
@@ -155,11 +178,9 @@
         @inlinable
         public func findCliques(
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> CliqueDetectionResult<Graph.VertexDescriptor> {
-            findCliques(visitor: visitor)
+            findCliques(observation: observation)
         }
     }
-
-    extension BronKerboschCliqueDetection: VisitorSupporting {}
 #endif

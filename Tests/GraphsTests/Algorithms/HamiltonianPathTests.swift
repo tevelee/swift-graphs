@@ -264,11 +264,11 @@
             #expect(cycle == nil)
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        /// Two composed visitors must each receive the same events during backtracking search.
-        /// `addToPath` fires once per vertex added; both visitors must see identical counts.
-        @Test func composedVisitorsReceiveAllEvents() {
+        /// Two composed observations must receive the same events during backtracking search.
+        /// `vertexAddedToPath` is emitted once per vertex added, in attachment order.
+        @Test func composedObservationsReceiveAllEventsInOrder() {
             // Build a K4 complete graph inline (so graph is a concrete AdjacencyList)
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
@@ -292,32 +292,42 @@
             var added2 = 0
             var examined1 = 0
             var examined2 = 0
+            var observationOrder: [Int] = []
 
-            var v1 = BacktrackingHamiltonian<AdjacencyList>.Visitor()
-            v1.addToPath = { _ in added1 += 1 }
-            v1.examineVertex = { _ in examined1 += 1 }
-
-            var v2 = BacktrackingHamiltonian<AdjacencyList>.Visitor()
-            v2.addToPath = { _ in added2 += 1 }
-            v2.examineVertex = { _ in examined2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = BacktrackingHamiltonian<AdjacencyList>().hamiltonianPath(in: graph, visitor: combined)
+            let algorithm = BacktrackingHamiltonian<AdjacencyList>()
+                .observing { event in
+                    observationOrder.append(1)
+                    switch event {
+                        case .vertexExamined: examined1 += 1
+                        case .vertexAddedToPath: added1 += 1
+                        default: break
+                    }
+                }
+                .observing { event in
+                    observationOrder.append(2)
+                    switch event {
+                        case .vertexExamined: examined2 += 1
+                        case .vertexAddedToPath: added2 += 1
+                        default: break
+                    }
+                }
+            _ = graph.hamiltonianPath(using: algorithm)
 
             // The Hamiltonian path visits all 4 vertices, so addToPath fires at least 4 times
             #expect(added1 >= 4, "addToPath must fire at least once per vertex in the path")
             #expect(added2 >= 4)
             #expect(examined1 >= 1, "examineVertex must fire at least once")
             #expect(examined2 >= 1)
-            #expect(added1 == added2, "both composed visitors must see identical addToPath events")
-            #expect(examined1 == examined2, "both composed visitors must see identical examineVertex events")
+            #expect(added1 == added2, "both composed observations must see identical path-addition events")
+            #expect(examined1 == examined2, "both composed observations must see identical vertex events")
+            #expect(observationOrder.enumerated().allSatisfy { index, value in value == (index % 2) + 1 })
         }
 
         // MARK: - Protocol factory bridges
 
-        /// `BacktrackingHamiltonian` provides no-visitor convenience bridges that delegate to the
-        /// visitor-aware implementation. These are not exercised by `using:` API calls (which pass
-        /// `visitor: nil` to the protocol requirement). Calling them directly covers the bridge code.
+        /// `BacktrackingHamiltonian` provides unobserved convenience bridges that delegate to the
+        /// observation-aware implementation. These are not exercised by `using:` API calls (which pass
+        /// `observation: nil` to the protocol requirement). Calling them directly covers the bridge code.
         @Test func backtrackingBridgeMethods() throws {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
@@ -332,7 +342,7 @@
 
             let algo = BacktrackingHamiltonian<AdjacencyList>()
 
-            // hamiltonianPath(in:) bridge — no visitor argument
+            // hamiltonianPath(in:) bridge — no observation argument
             let path = try #require(algo.hamiltonianPath(in: graph), "K3 has a Hamiltonian path")
             #expect(path.vertices.count == 3)
 
@@ -346,7 +356,7 @@
             #expect(pathTo.vertices.last == c)
         }
 
-        /// `HeuristicHamiltonian` provides the same no-visitor bridges. Calling `.heuristic()` factory
+        /// `HeuristicHamiltonian` provides the same unobserved bridges. Calling `.heuristic()` factory
         /// covers the static factory method; calling bridges directly covers the delegate methods.
         @Test func heuristicFactoryAndBridgeMethods() throws {
             var graph = AdjacencyList()
@@ -381,7 +391,7 @@
         }
 
         /// `HeuristicHamiltonian` also conforms to `HamiltonianCycleAlgorithm`.
-        /// `hamiltonianCycle(in:)` is a no-visitor bridge that delegates to the visitor-aware method.
+        /// `hamiltonianCycle(in:)` is an unobserved bridge that delegates to the observation-aware method.
         @Test func heuristicHamiltonianCycleBridge() throws {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
@@ -397,7 +407,7 @@
 
             let algo = HeuristicHamiltonian<AdjacencyList>(heuristic: .degreeBased)
 
-            // hamiltonianCycle(in:) bridge — no visitor
+            // hamiltonianCycle(in:) bridge — no observation
             let cycle = try #require(algo.hamiltonianCycle(in: graph), "K3 has a Hamiltonian cycle")
             #expect(cycle.vertices.count >= 3)
 
@@ -406,7 +416,7 @@
             #expect(cycleViaGraph.vertices.count >= 3)
         }
 
-        /// Exercises all five `HeuristicHamiltonian.Visitor` events through a composed visitor pair.
+        /// Exercises all five `HeuristicHamiltonian.Event` cases through a composed observation pair.
         ///
         /// Graph: K4 complete graph (4 vertices, all pairs connected bidirectionally).
         /// The degree-based heuristic finds a Hamiltonian path quickly.
@@ -414,8 +424,8 @@
         /// - `examineEdge` fires for each edge examined during the path extension.
         /// - `addToPath` fires for each vertex added to the current path.
         /// - `removeFromPath` / `backtrack` may fire if the heuristic backtracks.
-        /// Both composed visitors must see identical event counts.
-        @Test func heuristicComposedVisitorsReceiveAllEvents() {
+        /// Both composed observations must see identical event counts.
+        @Test func heuristicComposedObservationsReceiveAllEventsInOrder() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -444,24 +454,30 @@
             var removed2 = 0
             var backtrack1 = 0
             var backtrack2 = 0
+            var observationOrder: [Int] = []
 
-            var v1 = HeuristicHamiltonian<AdjacencyList>.Visitor()
-            v1.examineVertex = { _ in examined1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.addToPath = { _ in added1 += 1 }
-            v1.removeFromPath = { _ in removed1 += 1 }
-            v1.backtrack = { _ in backtrack1 += 1 }
-
-            var v2 = HeuristicHamiltonian<AdjacencyList>.Visitor()
-            v2.examineVertex = { _ in examined2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.addToPath = { _ in added2 += 1 }
-            v2.removeFromPath = { _ in removed2 += 1 }
-            v2.backtrack = { _ in backtrack2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = HeuristicHamiltonian<AdjacencyList>(heuristic: .degreeBased)
-                .hamiltonianPath(in: graph, visitor: combined)
+            let algorithm = HeuristicHamiltonian<AdjacencyList>(heuristic: .degreeBased)
+                .observing { event in
+                    observationOrder.append(1)
+                    switch event {
+                        case .vertexExamined: examined1 += 1
+                        case .edgeExamined: examEdge1 += 1
+                        case .vertexAddedToPath: added1 += 1
+                        case .vertexRemovedFromPath: removed1 += 1
+                        case .vertexBacktracked: backtrack1 += 1
+                    }
+                }
+                .observing { event in
+                    observationOrder.append(2)
+                    switch event {
+                        case .vertexExamined: examined2 += 1
+                        case .edgeExamined: examEdge2 += 1
+                        case .vertexAddedToPath: added2 += 1
+                        case .vertexRemovedFromPath: removed2 += 1
+                        case .vertexBacktracked: backtrack2 += 1
+                    }
+                }
+            _ = graph.hamiltonianPath(using: algorithm)
 
             // The heuristic examines start vertices and explores the graph
             #expect(examined1 >= 1, "examineVertex fires for each start candidate and explored vertex")
@@ -472,12 +488,13 @@
             // examineEdge fires for each edge considered during path extension
             #expect(examEdge1 >= 1, "examineEdge fires for each edge examined")
             #expect(examEdge2 >= 1)
-            // Both composed visitors must see identical event counts
+            // Both composed observations must see identical event counts and attachment order.
             #expect(examined1 == examined2)
             #expect(examEdge1 == examEdge2)
             #expect(added1 == added2)
             #expect(removed1 == removed2)
             #expect(backtrack1 == backtrack2)
+            #expect(observationOrder.enumerated().allSatisfy { index, value in value == (index % 2) + 1 })
         }
     }
 #endif

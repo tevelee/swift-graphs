@@ -4,41 +4,50 @@ public struct HopcroftTarjanPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vert
     public typealias Vertex = Graph.VertexDescriptor
     public typealias Edge = Graph.EdgeDescriptor
 
-    /// A visitor that can be used to observe the Hopcroft-Tarjan algorithm progress.
-    public struct Visitor {
-        /// Called when starting DFS.
-        public var startDFS: (() -> Void)?
-        /// Called when discovering a vertex.
-        public var discoverVertex: ((Vertex, Int) -> Void)?
-        /// Called when examining an edge.
-        public var examineEdge: ((Edge, EdgeType) -> Void)?
-        /// Called when calculating lowpoint values.
-        public var calculateLowpoint: ((Vertex, Int) -> Void)?
-        /// Called when checking planarity.
-        public var checkPlanarity: (() -> Void)?
-        /// Called when a planarity violation is detected.
-        public var planarityViolation: ((String) -> Void)?
-        /// Called when planarity check succeeds.
-        public var planaritySuccess: (() -> Void)?
+    /// An event emitted by the Hopcroft-Tarjan planarity check.
+    public enum Event {
+        /// The DFS phase started.
+        case depthFirstSearchStarted
+        /// The planarity decision phase started.
+        case planarityCheckStarted
+        /// The planarity check succeeded.
+        case planaritySucceeded
+        /// A planarity obstruction was found.
+        case planarityObstructionFound(String)
+    }
 
-        /// Creates a new visitor.
-        @inlinable
-        public init(
-            startDFS: (() -> Void)? = nil,
-            discoverVertex: ((Vertex, Int) -> Void)? = nil,
-            examineEdge: ((Edge, EdgeType) -> Void)? = nil,
-            calculateLowpoint: ((Vertex, Int) -> Void)? = nil,
-            checkPlanarity: (() -> Void)? = nil,
-            planarityViolation: ((String) -> Void)? = nil,
-            planaritySuccess: (() -> Void)? = nil
-        ) {
-            self.startDFS = startDFS
-            self.discoverVertex = discoverVertex
-            self.examineEdge = examineEdge
-            self.calculateLowpoint = calculateLowpoint
-            self.checkPlanarity = checkPlanarity
-            self.planarityViolation = planarityViolation
-            self.planaritySuccess = planaritySuccess
+    /// Typed selectors for Hopcroft-Tarjan events.
+    public enum EventCases {
+        /// Selects DFS starts.
+        public static var depthFirstSearchStarted: AlgorithmEventCase<Event, Void> {
+            .init {
+                guard case .depthFirstSearchStarted = $0 else { return nil }
+                return ()
+            }
+        }
+
+        /// Selects planarity-check starts.
+        public static var planarityCheckStarted: AlgorithmEventCase<Event, Void> {
+            .init {
+                guard case .planarityCheckStarted = $0 else { return nil }
+                return ()
+            }
+        }
+
+        /// Selects successful checks.
+        public static var planaritySucceeded: AlgorithmEventCase<Event, Void> {
+            .init {
+                guard case .planaritySucceeded = $0 else { return nil }
+                return ()
+            }
+        }
+
+        /// Selects planarity obstructions.
+        public static var planarityObstructionFound: AlgorithmEventCase<Event, String> {
+            .init {
+                guard case .planarityObstructionFound(let reason) = $0 else { return nil }
+                return reason
+            }
         }
     }
 
@@ -61,28 +70,28 @@ public struct HopcroftTarjanPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vert
     /// Checks if the graph is planar.
     ///
     /// The decision is delegated to the shared, correct `PlanarityCore` (Left–Right) engine;
-    /// the visitor's DFS/planarity events are emitted around the decision.
+    /// observation events are emitted around the decision.
     ///
     /// - Parameters:
     ///   - graph: The graph to check
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional observation of algorithm progress.
     /// - Returns: `true` if the graph is planar, `false` otherwise
     public func isPlanar(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Bool {
-        // Graphs on four or fewer vertices are always planar; the visitor's events only
+        // Graphs on four or fewer vertices are always planar; events only
         // fire once the real test runs (matching prior observable behavior).
         guard graph.vertexCount > 4 else {
             return PlanarityCore.isPlanar(graph)
         }
-        visitor?.startDFS?()
-        visitor?.checkPlanarity?()
+        observation?.receive(.depthFirstSearchStarted)
+        observation?.receive(.planarityCheckStarted)
         let planar = PlanarityCore.isPlanar(graph)
         if planar {
-            visitor?.planaritySuccess?()
+            observation?.receive(.planaritySucceeded)
         } else {
-            visitor?.planarityViolation?("Contains a Kuratowski subdivision")
+            observation?.receive(.planarityObstructionFound("Contains a Kuratowski subdivision"))
         }
         return planar
     }

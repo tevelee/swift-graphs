@@ -2,7 +2,7 @@ import Testing
 
 @testable import Graphs
 
-/// Visitor, withVisitor, edge-case, and API completeness tests for the planarity suite.
+/// Observation, edge-case, and API completeness tests for the planarity suite.
 struct PlanarAPITests {
 
     // MARK: - Builders
@@ -76,103 +76,105 @@ struct PlanarAPITests {
         #expect(emb.outerFace.count == 3)
     }
 
-    // MARK: - Visitor tests: LeftRightPlanarEmbedding
+    // MARK: - Observation tests: LeftRightPlanarEmbedding
 
-    @Test func embeddingVisitorFiresOnPlanarGraph() {
+    @Test func embeddingObservationFiresOnPlanarGraph() {
         var started = 0
         var planarFired = 0
         var nonPlanarFired = 0
-        var v = LeftRightPlanarEmbedding<AdjacencyList>.Visitor()
-        v.start = { started += 1 }
-        v.foundPlanar = { _ in planarFired += 1 }
-        v.foundNonPlanar = { _ in nonPlanarFired += 1 }
-        _ = LeftRightPlanarEmbedding<AdjacencyList>().planarEmbedding(in: triangle(), visitor: v)
+        let observation = AlgorithmObservation<LeftRightPlanarEmbedding<AdjacencyList>.Event> { event in
+            switch event {
+                case .started: started += 1
+                case .planarFound: planarFired += 1
+                case .nonPlanarFound: nonPlanarFired += 1
+            }
+        }
+        _ = LeftRightPlanarEmbedding<AdjacencyList>().planarEmbedding(in: triangle(), observation: observation)
         #expect(started == 1)
         #expect(planarFired == 1)
         #expect(nonPlanarFired == 0)
     }
 
-    @Test func embeddingVisitorFiresOnNonPlanarGraph() {
+    @Test func embeddingObservationFiresOnNonPlanarGraph() {
         var started = 0
         var planarFired = 0
         var nonPlanarFired = 0
-        var v = LeftRightPlanarEmbedding<AdjacencyList>.Visitor()
-        v.start = { started += 1 }
-        v.foundPlanar = { _ in planarFired += 1 }
-        v.foundNonPlanar = { _ in nonPlanarFired += 1 }
-        _ = LeftRightPlanarEmbedding<AdjacencyList>().planarEmbedding(in: petersen(), visitor: v)
+        let observation = AlgorithmObservation<LeftRightPlanarEmbedding<AdjacencyList>.Event> { event in
+            switch event {
+                case .started: started += 1
+                case .planarFound: planarFired += 1
+                case .nonPlanarFound: nonPlanarFired += 1
+            }
+        }
+        _ = LeftRightPlanarEmbedding<AdjacencyList>().planarEmbedding(in: petersen(), observation: observation)
         #expect(started == 1)
         #expect(planarFired == 0)
         #expect(nonPlanarFired == 1)
     }
 
-    @Test func embeddingComposedVisitorsReceiveAllEvents() {
+    @Test func embeddingComposedObservationsReceiveAllEvents() {
         var count1 = 0
         var count2 = 0
-        var v1 = LeftRightPlanarEmbedding<AdjacencyList>.Visitor()
-        var v2 = LeftRightPlanarEmbedding<AdjacencyList>.Visitor()
-        v1.start = { count1 += 1 }
-        v2.start = { count2 += 1 }
-        let combined = v1.combined(with: v2)
-        _ = LeftRightPlanarEmbedding<AdjacencyList>().planarEmbedding(in: triangle(), visitor: combined)
+        let algorithm = LeftRightPlanarEmbedding<AdjacencyList>()
+            .observing(LeftRightPlanarEmbedding<AdjacencyList>.EventCases.started) { count1 += 1 }
+            .observing(LeftRightPlanarEmbedding<AdjacencyList>.EventCases.started) { count2 += 1 }
+        _ = triangle().planarEmbedding(using: algorithm)
         #expect(count1 == 1)
         #expect(count2 == 1)
     }
 
-    @Test func embeddingWithVisitorChaining() {
+    @Test func embeddingObservationChaining() {
         var fired = 0
-        var v = LeftRightPlanarEmbedding<AdjacencyList>.Visitor()
-        v.start = { fired += 1 }
-        _ = LeftRightPlanarEmbedding<AdjacencyList>()
-            .withVisitor(v)
-            .planarEmbedding(in: triangle(), visitor: nil)
+        let algorithm = LeftRightPlanarEmbedding<AdjacencyList>()
+            .observing(LeftRightPlanarEmbedding<AdjacencyList>.EventCases.started) { fired += 1 }
+        _ = triangle().planarEmbedding(using: algorithm)
         #expect(fired == 1)
     }
 
-    // MARK: - Visitor tests: ChrobakPayneDrawing
+    // MARK: - Observation tests: ChrobakPayneDrawing
 
-    @Test func drawingVisitorFiresOnPlanarGraph() {
+    @Test func drawingObservationFiresOnPlanarGraph() {
         var started = 0
         var drawingFired = 0
         var nonPlanarFired = 0
-        var v = ChrobakPayneDrawing<AdjacencyList>.Visitor()
-        v.start = { started += 1 }
-        v.foundDrawing = { _ in drawingFired += 1 }
-        v.foundNonPlanar = { nonPlanarFired += 1 }
-        _ = ChrobakPayneDrawing<AdjacencyList>().planarDrawing(in: triangle(), visitor: v)
+        let observation = AlgorithmObservation<ChrobakPayneDrawing<AdjacencyList>.Event> { event in
+            switch event {
+                case .started: started += 1
+                case .drawingFound: drawingFired += 1
+                case .nonPlanarFound: nonPlanarFired += 1
+            }
+        }
+        _ = ChrobakPayneDrawing<AdjacencyList>().planarDrawing(in: triangle(), observation: observation)
         #expect(started == 1)
         #expect(drawingFired == 1)
         #expect(nonPlanarFired == 0)
     }
 
-    @Test func drawingVisitorFiresOnNonPlanarGraph() {
+    @Test func drawingObservationFiresOnNonPlanarGraph() {
         var nonPlanarFired = 0
-        var v = ChrobakPayneDrawing<AdjacencyList>.Visitor()
-        v.foundNonPlanar = { nonPlanarFired += 1 }
-        _ = ChrobakPayneDrawing<AdjacencyList>().planarDrawing(in: petersen(), visitor: v)
+        let observation = AlgorithmObservation<ChrobakPayneDrawing<AdjacencyList>.Event> { event in
+            if case .nonPlanarFound = event { nonPlanarFired += 1 }
+        }
+        _ = ChrobakPayneDrawing<AdjacencyList>().planarDrawing(in: petersen(), observation: observation)
         #expect(nonPlanarFired == 1)
     }
 
-    @Test func drawingComposedVisitorsReceiveAllEvents() {
+    @Test func drawingComposedObservationsReceiveAllEvents() {
         var count1 = 0
         var count2 = 0
-        var v1 = ChrobakPayneDrawing<AdjacencyList>.Visitor()
-        var v2 = ChrobakPayneDrawing<AdjacencyList>.Visitor()
-        v1.start = { count1 += 1 }
-        v2.start = { count2 += 1 }
-        let combined = v1.combined(with: v2)
-        _ = ChrobakPayneDrawing<AdjacencyList>().planarDrawing(in: triangle(), visitor: combined)
+        let algorithm = ChrobakPayneDrawing<AdjacencyList>()
+            .observing(ChrobakPayneDrawing<AdjacencyList>.EventCases.started) { count1 += 1 }
+            .observing(ChrobakPayneDrawing<AdjacencyList>.EventCases.started) { count2 += 1 }
+        _ = triangle().planarDrawing(using: algorithm)
         #expect(count1 == 1)
         #expect(count2 == 1)
     }
 
-    @Test func drawingWithVisitorChaining() {
+    @Test func drawingObservationChaining() {
         var fired = 0
-        var v = ChrobakPayneDrawing<AdjacencyList>.Visitor()
-        v.start = { fired += 1 }
-        _ = ChrobakPayneDrawing<AdjacencyList>()
-            .withVisitor(v)
-            .planarDrawing(in: triangle(), visitor: nil)
+        let algorithm = ChrobakPayneDrawing<AdjacencyList>()
+            .observing(ChrobakPayneDrawing<AdjacencyList>.EventCases.started) { fired += 1 }
+        _ = triangle().planarDrawing(using: algorithm)
         #expect(fired == 1)
     }
 

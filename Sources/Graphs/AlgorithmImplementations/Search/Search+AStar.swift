@@ -41,7 +41,7 @@
         HScore: AdditiveArithmetic,
         FScore: Comparable
     >: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
-        public typealias Visitor = AStar<Graph, Weight, HScore, FScore>.Visitor
+        public typealias Event = AStar<Graph, Weight, HScore, FScore>.Event
 
         public let edgeWeight: CostDefinition<Graph, Weight>
         public let heuristic: Heuristic<Graph, HScore>
@@ -62,17 +62,17 @@
         public func search(
             from source: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
-        ) -> AStar<Graph, Weight, HScore, FScore> {
+            observation: AlgorithmObservation<Event>?
+        ) -> ObservedAlgorithm<AStar<Graph, Weight, HScore, FScore>> {
             AStar(
                 on: graph,
                 from: source,
                 edgeWeight: edgeWeight,
                 heuristic: heuristic,
                 calculateTotalCost: calculateTotalCost
-            )
+            ).observing { event in observation?.receive(event) }
         }
     }
 
-    extension AStarSearch: VisitorSupporting {}
+    extension AStarSearch: AlgorithmObserving {}
 #endif

@@ -16,36 +16,8 @@
         public typealias Vertex = Graph.VertexDescriptor
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
-
-        /// A visitor that can be used to observe Borůvka's algorithm progress.
-        public struct Visitor {
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when adding an edge to the MST.
-            public var addEdge: ((Edge, Weight) -> Void)?
-            /// Called when skipping an edge.
-            public var skipEdge: ((Edge, String) -> Void)?
-            /// Called when unioning two vertices.
-            public var unionVertices: ((Vertex, Vertex) -> Void)?
-            /// Called when completing a component merge.
-            public var completeComponentMerge: ((Int) -> Void)?
-
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                examineEdge: ((Edge) -> Void)? = nil,
-                addEdge: ((Edge, Weight) -> Void)? = nil,
-                skipEdge: ((Edge, String) -> Void)? = nil,
-                unionVertices: ((Vertex, Vertex) -> Void)? = nil,
-                completeComponentMerge: ((Int) -> Void)? = nil
-            ) {
-                self.examineEdge = examineEdge
-                self.addEdge = addEdge
-                self.skipEdge = skipEdge
-                self.unionVertices = unionVertices
-                self.completeComponentMerge = completeComponentMerge
-            }
-        }
+        /// The event type published by Boruvka's algorithm.
+        public typealias Event = MinimumSpanningTreeEvent<Vertex, Edge, Weight>
 
         /// The result of Borůvka's algorithm.
         @usableFromInline
@@ -83,10 +55,13 @@
         ///
         /// - Parameters:
         ///   - graph: The graph to find the MST for
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation of algorithm progress.
         /// - Returns: The minimum spanning tree result
         @inlinable
-        public func minimumSpanningTree(on graph: Graph, visitor: Visitor? = nil) -> MinimumSpanningTree<Vertex, Edge, Weight> {
+        public func minimumSpanningTree(
+            on graph: Graph,
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> MinimumSpanningTree<Vertex, Edge, Weight> {
             // Union-Find data structure
             var parent: [Vertex: Vertex] = [:]
             var rank: [Vertex: Int] = [:]
@@ -138,9 +113,9 @@
             // Get all edges
             let allEdges = Array(graph.edges())
 
-            // Notify visitor about all edges being examined
+            // Report every edge before the merge phases begin.
             for edge in allEdges {
-                visitor?.examineEdge?(edge)
+                observation?.receive(.edgeExamined(edge))
             }
 
             var iteration = 0
@@ -193,7 +168,7 @@
 
                     // Skip if both vertices are now in the same component
                     if sourceRoot == destRoot {
-                        visitor?.skipEdge?(edge, "Vertices already in same component")
+                        observation?.receive(.edgeSkipped(edge, reason: "Vertices already in same component"))
                         continue
                     }
 
@@ -203,12 +178,12 @@
                     mstVertices.insert(source)
                     mstVertices.insert(destination)
                     union(source, destination)
-                    visitor?.addEdge?(edge, edgeWeight)
-                    visitor?.unionVertices?(source, destination)
+                    observation?.receive(.edgeAdded(edge, weight: edgeWeight))
+                    observation?.receive(.verticesJoined(source, destination))
                     addedAnyEdge = true
                 }
 
-                visitor?.completeComponentMerge?(iteration)
+                observation?.receive(.componentMergeFinished(iteration))
                 iteration += 1
 
                 // If no edges were added, break to avoid infinite loop
@@ -225,5 +200,4 @@
         }
     }
 
-    extension Boruvka: VisitorSupporting {}
 #endif

@@ -13,45 +13,65 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe DFS topological sort progress.
-        public struct Visitor {
-            /// Called when discovering a vertex.
-            public var discoverVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when traversing a tree edge.
-            public var treeEdge: ((Edge) -> Void)?
-            /// Called when detecting a back edge (indicates a cycle).
-            public var backEdge: ((Edge) -> Void)?
-            /// Called when traversing a forward edge.
-            public var forwardEdge: ((Edge) -> Void)?
-            /// Called when traversing a cross edge.
-            public var crossEdge: ((Edge) -> Void)?
-            /// Called when finishing a vertex.
-            public var finishVertex: ((Vertex) -> Void)?
-            /// Called when detecting a cycle.
-            public var detectCycle: (([Vertex]) -> Void)?
+        public enum Event {
+            case vertexDiscovered(Vertex)
+            case edgeExamined(Edge)
+            case treeEdgeTraversed(Edge)
+            case backEdgeDetected(Edge)
+            case forwardEdgeTraversed(Edge)
+            case crossEdgeTraversed(Edge)
+            case vertexFinished(Vertex)
+            case cycleDetected([Vertex])
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                discoverVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                treeEdge: ((Edge) -> Void)? = nil,
-                backEdge: ((Edge) -> Void)? = nil,
-                forwardEdge: ((Edge) -> Void)? = nil,
-                crossEdge: ((Edge) -> Void)? = nil,
-                finishVertex: ((Vertex) -> Void)? = nil,
-                detectCycle: (([Vertex]) -> Void)? = nil
-            ) {
-                self.discoverVertex = discoverVertex
-                self.examineEdge = examineEdge
-                self.treeEdge = treeEdge
-                self.backEdge = backEdge
-                self.forwardEdge = forwardEdge
-                self.crossEdge = crossEdge
-                self.finishVertex = finishVertex
-                self.detectCycle = detectCycle
+        public enum EventCases {
+            public static var vertexDiscovered: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexDiscovered(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var treeEdgeTraversed: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .treeEdgeTraversed(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var backEdgeDetected: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .backEdgeDetected(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var forwardEdgeTraversed: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .forwardEdgeTraversed(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var crossEdgeTraversed: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .crossEdgeTraversed(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var vertexFinished: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexFinished(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var cycleDetected: AlgorithmEventCase<Event, [Vertex]> {
+                .init {
+                    guard case .cycleDetected(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -80,12 +100,12 @@
         ///
         /// - Parameters:
         ///   - graph: The graph to sort topologically.
-        ///   - visitor: An optional visitor to observe the algorithm progress.
+        ///   - observation: An optional observation of the algorithm progress.
         /// - Returns: The topological sort result.
         @inlinable
         public func topologicalSort(
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> TopologicalSortResult<Graph.VertexDescriptor> {
             var sortedVertices: [Vertex] = []
             var hasCycle = false
@@ -103,7 +123,7 @@
                         propertyMap: &propertyMap,
                         colorProperty: colorProperty,
                         sortedVertices: &sortedVertices,
-                        visitor: visitor
+                        observation: observation
                     )
                     if cycle {
                         hasCycle = true
@@ -113,7 +133,7 @@
             }
 
             if hasCycle {
-                visitor?.detectCycle?(cycleVertices)
+                observation?.receive(.cycleDetected(cycleVertices))
             }
 
             // Vertices were appended in finish order; reverse to get topological order
@@ -133,7 +153,7 @@
             propertyMap: inout DictionaryPropertyMap<Vertex, VertexPropertyValues>,
             colorProperty: any VertexProperty<Color>.Type,
             sortedVertices: inout [Vertex],
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> (hasCycle: Bool, cycleVertices: [Vertex]) {
             var hasCycle = false
             var cycleVertices: [Vertex] = []
@@ -149,35 +169,35 @@
                     case .white:
                         // Mark as discovered
                         propertyMap[current][colorProperty] = .gray
-                        visitor?.discoverVertex?(current)
+                        observation?.receive(.vertexDiscovered(current))
 
                         // Push back for processing after neighbors
                         stack.push(current)
 
                         // Process all outgoing edges
                         for edge in graph.outgoingEdges(of: current) {
-                            visitor?.examineEdge?(edge)
+                            observation?.receive(.edgeExamined(edge))
                             guard let destination = graph.destination(of: edge) else { continue }
 
                             let destColor = propertyMap[destination][colorProperty]
                             switch destColor {
                                 case .white:
-                                    visitor?.treeEdge?(edge)
+                                    observation?.receive(.treeEdgeTraversed(edge))
                                     stack.push(destination)
                                 case .gray:
                                     // Back edge detected - cycle found
-                                    visitor?.backEdge?(edge)
+                                    observation?.receive(.backEdgeDetected(edge))
                                     hasCycle = true
                                     cycleVertices.append(destination)
                                 case .black:
-                                    visitor?.crossEdge?(edge)
+                                    observation?.receive(.crossEdgeTraversed(edge))
                             }
                         }
 
                     case .gray:
                         // Mark as finished and add to sorted list
                         propertyMap[current][colorProperty] = .black
-                        visitor?.finishVertex?(current)
+                        observation?.receive(.vertexFinished(current))
                         sortedVertices.append(current)  // Appended in finish order; reversed after all DFS visits
 
                     case .black:
@@ -190,5 +210,20 @@
         }
     }
 
-    extension DFSTopologicalSort: VisitorSupporting {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
+    extension DFSTopologicalSort.Event: VertexDiscoveredEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func discoveredVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexDiscovered(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+    }
 #endif

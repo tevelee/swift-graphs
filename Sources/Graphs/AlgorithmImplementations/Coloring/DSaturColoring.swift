@@ -10,29 +10,50 @@
         Color: IntegerBasedColor
     > where Graph.VertexDescriptor: Hashable {
 
-        /// A visitor that can be used to observe DSatur coloring progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
-            /// Called when assigning a color to a vertex.
-            public var assignColor: ((Graph.VertexDescriptor, Color) -> Void)?
-            /// Called when skipping a vertex.
-            public var skipVertex: ((Graph.VertexDescriptor, String) -> Void)?
+        /// An event emitted while DSatur coloring advances.
+        public enum Event {
+            /// A vertex was examined.
+            case vertexExamined(Graph.VertexDescriptor)
+            /// An edge was examined.
+            case edgeExamined(Graph.EdgeDescriptor)
+            /// A color was assigned to a vertex.
+            case colorAssigned(vertex: Graph.VertexDescriptor, color: Color)
+            /// A vertex was skipped for the given reason.
+            case vertexSkipped(vertex: Graph.VertexDescriptor, reason: String)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
-                examineEdge: ((Graph.EdgeDescriptor) -> Void)? = nil,
-                assignColor: ((Graph.VertexDescriptor, Color) -> Void)? = nil,
-                skipVertex: ((Graph.VertexDescriptor, String) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.assignColor = assignColor
-                self.skipVertex = skipVertex
+        /// Typed selectors for DSatur-coloring events.
+        public enum EventCases {
+            /// Selects examined vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Graph.VertexDescriptor> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+
+            /// Selects examined edges.
+            public static var edgeExamined: AlgorithmEventCase<Event, Graph.EdgeDescriptor> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+
+            /// Selects assigned colors.
+            public static var colorAssigned: AlgorithmEventCase<Event, (vertex: Graph.VertexDescriptor, color: Color)> {
+                .init {
+                    guard case .colorAssigned(let vertex, let color) = $0 else { return nil }
+                    return (vertex, color)
+                }
+            }
+
+            /// Selects skipped vertices and their reasons.
+            public static var vertexSkipped: AlgorithmEventCase<Event, (vertex: Graph.VertexDescriptor, reason: String)> {
+                .init {
+                    guard case .vertexSkipped(let vertex, let reason) = $0 else { return nil }
+                    return (vertex, reason)
+                }
             }
         }
 
@@ -44,10 +65,13 @@
         ///
         /// - Parameters:
         ///   - graph: The graph to color.
-        ///   - visitor: An optional visitor to observe the algorithm progress.
+        ///   - observation: An optional algorithm observation.
         /// - Returns: The graph coloring result.
         @inlinable
-        public func color(graph: Graph, visitor: Visitor? = nil) -> GraphColoring<Graph.VertexDescriptor, Color> {
+        public func color(
+            graph: Graph,
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> GraphColoring<Graph.VertexDescriptor, Color> {
             var vertexColors: [Graph.VertexDescriptor: Color] = [:]
             var usedColors: Set<Color> = []
 
@@ -62,7 +86,7 @@
             // Calculate degrees for all vertices
             let degrees = Dictionary(
                 uniqueKeysWithValues: vertices.map { vertex in
-                    visitor?.examineVertex?(vertex)
+                    observation?.receive(.vertexExamined(vertex))
                     return (vertex, graph.outDegree(of: vertex))
                 }
             )
@@ -81,7 +105,7 @@
             let firstColor = Color(integerValue: 0)
             vertexColors[startVertex] = firstColor
             usedColors.insert(firstColor)
-            visitor?.assignColor?(startVertex, firstColor)
+            observation?.receive(.colorAssigned(vertex: startVertex, color: firstColor))
 
             // Create priority queue for uncolored vertices
             var uncoloredVertices = Set(vertices)
@@ -94,18 +118,17 @@
                     in: uncoloredVertices,
                     graph: graph,
                     vertexColors: vertexColors,
-                    vertices: vertices,
-                    visitor: visitor
+                    vertices: vertices
                 )
 
-                visitor?.examineVertex?(nextVertex)
+                observation?.receive(.vertexExamined(nextVertex))
 
                 // Find the smallest available color for this vertex
                 let neighbors = Set(graph.successors(of: nextVertex))
 
                 // Examine edges to neighbors
                 for edge in graph.outgoingEdges(of: nextVertex) {
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
                 }
 
                 var colorIndex = 0
@@ -131,7 +154,7 @@
 
                 vertexColors[nextVertex] = assignedColor!
                 usedColors.insert(assignedColor!)
-                visitor?.assignColor?(nextVertex, assignedColor!)
+                observation?.receive(.colorAssigned(vertex: nextVertex, color: assignedColor!))
                 uncoloredVertices.remove(nextVertex)
             }
 
@@ -146,8 +169,7 @@
             in uncoloredVertices: Set<Graph.VertexDescriptor>,
             graph: Graph,
             vertexColors: [Graph.VertexDescriptor: Color],
-            vertices: [Graph.VertexDescriptor],
-            visitor: Visitor?
+            vertices: [Graph.VertexDescriptor]
         ) -> Graph.VertexDescriptor {
             var maxSaturation = -1
             var maxDegree = -1
@@ -218,5 +240,20 @@
         }
     }
 
-    extension DSaturColoringAlgorithm: VisitorSupporting {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
+    extension DSaturColoringAlgorithm.Event: VertexExaminedEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+    }
 #endif

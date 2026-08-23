@@ -174,9 +174,9 @@
             #endif
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        @Test func composedVisitorsReceiveAllEvents() {
+        @Test func composedObservationsReceiveAllEventsInOrder() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -186,22 +186,24 @@
 
             var pathsFound1 = 0
             var pathsFound2 = 0
+            var observationOrder: [Int] = []
 
-            let v1 = Yen<AdjacencyList, Double>.Visitor(
-                onPathFound: { _ in pathsFound1 += 1 }
-            )
-            let v2 = Yen<AdjacencyList, Double>.Visitor(
-                onPathFound: { _ in pathsFound2 += 1 }
-            )
-
-            let combined = v1.combined(with: v2)
-            let paths = Yen<AdjacencyList, Double>(edgeWeight: .property(\.weight))
-                .kShortestPaths(from: a, to: c, k: 3, in: graph, visitor: combined)
+            let algorithm = Yen<AdjacencyList, Double>(edgeWeight: .property(\.weight))
+                .observing(Yen<AdjacencyList, Double>.EventCases.pathFound) { _ in
+                    pathsFound1 += 1
+                    observationOrder.append(1)
+                }
+                .observing(Yen<AdjacencyList, Double>.EventCases.pathFound) { _ in
+                    pathsFound2 += 1
+                    observationOrder.append(2)
+                }
+            let paths = graph.kShortestPaths(from: a, to: c, k: 3, using: algorithm)
 
             #expect(paths.count == 1)  // only one simple path: a→b→c
             #expect(pathsFound1 == 1)
             #expect(pathsFound2 == 1)
             #expect(pathsFound1 == pathsFound2)
+            #expect(observationOrder == [1, 2])
         }
 
         private func calculatePathCost<Graph: IncidenceGraph & EdgePropertyGraph>(

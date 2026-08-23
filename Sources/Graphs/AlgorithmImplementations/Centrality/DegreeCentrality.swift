@@ -10,7 +10,7 @@
     ///
     /// - Complexity: O(V + E)
     public struct DegreeCentralityAlgorithm<Graph: IncidenceGraph & VertexListGraph>: CentralityAlgorithm where Graph.VertexDescriptor: Hashable {
-        public typealias Visitor = DegreeCentrality<Graph>.Visitor
+        public typealias Event = DegreeCentrality<Graph>.Event
 
         /// Whether to normalize by maximum possible degree.
         ///
@@ -27,29 +27,41 @@
         }
 
         @inlinable
-        public func centrality(in graph: Graph, visitor: Visitor?) -> CentralityResult<Graph.VertexDescriptor> {
+        public func centrality(
+            in graph: Graph,
+            observation: AlgorithmObservation<Event>?
+        ) -> CentralityResult<Graph.VertexDescriptor> {
             let degree = DegreeCentrality(on: graph, normalized: normalized)
-            return degree.compute(visitor: visitor)
+            return degree.compute(observation: observation)
         }
     }
 
     /// Degree centrality computation implementation.
     public struct DegreeCentrality<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-        /// A visitor that can be used to observe degree centrality computation progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-            /// Called when computing the degree of a vertex.
-            public var computeDegree: ((Graph.VertexDescriptor, Int) -> Void)?
+        /// An event emitted while degree centrality is computed.
+        public enum Event {
+            /// A vertex is about to be examined.
+            case vertexExamined(Graph.VertexDescriptor)
+            /// The degree of a vertex was computed.
+            case degreeComputed(vertex: Graph.VertexDescriptor, degree: Int)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
-                computeDegree: ((Graph.VertexDescriptor, Int) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.computeDegree = computeDegree
+        /// Typed selectors for degree-centrality events.
+        public enum EventCases {
+            /// Selects examined vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Graph.VertexDescriptor> {
+                .init {
+                    guard case .vertexExamined(let vertex) = $0 else { return nil }
+                    return vertex
+                }
+            }
+
+            /// Selects computed vertex degrees.
+            public static var degreeComputed: AlgorithmEventCase<Event, (vertex: Graph.VertexDescriptor, degree: Int)> {
+                .init {
+                    guard case .degreeComputed(let vertex, let degree) = $0 else { return nil }
+                    return (vertex, degree)
+                }
             }
         }
 
@@ -65,7 +77,9 @@
         }
 
         @inlinable
-        public func compute(visitor: Visitor?) -> CentralityResult<Graph.VertexDescriptor> {
+        public func compute(
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> CentralityResult<Graph.VertexDescriptor> {
             let vertices = Array(graph.vertices())
 
             // Handle empty graph
@@ -77,11 +91,11 @@
             var maxDegree = 0
 
             for vertex in vertices {
-                visitor?.examineVertex?(vertex)
+                observation?.receive(.vertexExamined(vertex))
                 let deg = graph.outDegree(of: vertex)
                 degree[vertex] = Double(deg)
                 maxDegree = max(maxDegree, deg)
-                visitor?.computeDegree?(vertex, deg)
+                observation?.receive(.degreeComputed(vertex: vertex, degree: deg))
             }
 
             // Normalize if requested
@@ -96,5 +110,14 @@
         }
     }
 
-    extension DegreeCentralityAlgorithm: VisitorSupporting {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
+    extension DegreeCentrality.Event: VertexExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+    }
 #endif

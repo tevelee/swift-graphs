@@ -526,10 +526,10 @@
             let algo = ContractionHierarchyAlgorithm<G, Double>(weight: .property(\.weight))
             // Before first call: cache is empty
             #expect(algo.cache.hierarchy == nil)
-            let path1 = algo.shortestPath(from: a, to: c, in: g, visitor: nil)
+            let path1 = algo.shortestPath(from: a, to: c, in: g, observation: nil)
             // After first call: cache is populated
             #expect(algo.cache.hierarchy != nil)
-            let path2 = algo.shortestPath(from: a, to: c, in: g, visitor: nil)
+            let path2 = algo.shortestPath(from: a, to: c, in: g, observation: nil)
             let cost1 = path1?.edges.reduce(0.0) { $0 + g[$1].weight }
             let cost2 = path2?.edges.reduce(0.0) { $0 + g[$1].weight }
             #expect(cost1 == 3.0)
@@ -540,11 +540,11 @@
             // Copying the algorithm struct shares the cache (reference semantics on Cache)
             let (g, a, _, c) = makeLinearGraph()
             let algo1 = ContractionHierarchyAlgorithm<G, Double>(weight: .property(\.weight))
-            _ = algo1.shortestPath(from: a, to: c, in: g, visitor: nil)  // triggers preprocessing
+            _ = algo1.shortestPath(from: a, to: c, in: g, observation: nil)  // triggers preprocessing
             let algo2 = algo1  // copy shares same Cache object
             // Both struct values hold the identical Cache reference
             #expect(algo1.cache === algo2.cache)
-            let path = algo2.shortestPath(from: a, to: c, in: g, visitor: nil)
+            let path = algo2.shortestPath(from: a, to: c, in: g, observation: nil)
             let cost = path?.edges.reduce(0.0) { $0 + g[$1].weight }
             #expect(cost == 3.0)
         }

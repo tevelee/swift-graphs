@@ -12,34 +12,68 @@
     {
         public typealias Vertex = Graph.VertexDescriptor
         public typealias Edge = Graph.EdgeDescriptor
+        /// Details about a successful edge relaxation.
+        public typealias Relaxation = EdgeRelaxation<Edge, Weight>
 
-        /// A visitor for Bellman-Ford algorithm events.
-        ///
-        /// Visitors can observe the algorithm's progress including edge relaxations,
-        /// negative cycle detection, and iteration completion.
-        public struct Visitor {
-            public var examineVertex: ((Vertex) -> Void)?
-            public var examineEdge: ((Edge) -> Void)?
-            public var edgeRelaxed: ((Edge) -> Void)?
-            public var edgeNotRelaxed: ((Edge) -> Void)?
-            public var detectNegativeCycle: ((Edge) -> Void)?
-            public var completeRelaxationIteration: ((Int) -> Void)?
+        /// An event emitted while Bellman-Ford runs.
+        public enum Event {
+            /// A vertex was examined during initialization.
+            case vertexExamined(Vertex)
+            /// An edge was examined for relaxation.
+            case edgeExamined(Edge)
+            /// An edge improved its destination's distance.
+            case edgeRelaxed(Relaxation)
+            /// An edge did not improve its destination's distance.
+            case edgeNotRelaxed(Edge)
+            /// An edge demonstrated a reachable negative cycle.
+            case negativeCycleDetected(Edge)
+            /// A relaxation iteration was completed.
+            case relaxationIterationCompleted(Int)
+        }
 
-            @inlinable
-            public init(
-                examineVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                edgeRelaxed: ((Edge) -> Void)? = nil,
-                edgeNotRelaxed: ((Edge) -> Void)? = nil,
-                detectNegativeCycle: ((Edge) -> Void)? = nil,
-                completeRelaxationIteration: ((Int) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.edgeRelaxed = edgeRelaxed
-                self.edgeNotRelaxed = edgeNotRelaxed
-                self.detectNegativeCycle = detectNegativeCycle
-                self.completeRelaxationIteration = completeRelaxationIteration
+        /// Selectors for Bellman-Ford events.
+        public enum EventCases {
+            /// Selects examined vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects examined edges.
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects successful edge relaxations.
+            public static var edgeRelaxed: AlgorithmEventCase<Event, Relaxation> {
+                .init {
+                    guard case .edgeRelaxed(let relaxation) = $0 else { return nil }
+                    return relaxation
+                }
+            }
+            /// Selects edges that were not relaxed.
+            public static var edgeNotRelaxed: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeNotRelaxed(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects detected negative-cycle edges.
+            public static var negativeCycleDetected: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .negativeCycleDetected(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects completed relaxation iteration indices.
+            public static var relaxationIterationCompleted: AlgorithmEventCase<Event, Int> {
+                .init {
+                    guard case .relaxationIterationCompleted(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -74,13 +108,13 @@
         }
 
         @inlinable
-        public func shortestPathsFromSource(_ source: Vertex, visitor: Visitor? = nil) -> Result {
+        public func shortestPathsFromSource(_ source: Vertex, observation: AlgorithmObservation<Event>? = nil) -> Result {
             var distances: [Vertex: Cost<Weight>] = [:]
             var predecessors: [Vertex: Edge?] = [:]
 
             // Initialize distances
             for vertex in graph.vertices() {
-                visitor?.examineVertex?(vertex)
+                observation?.receive(.vertexExamined(vertex))
                 distances[vertex] = .infinite
                 predecessors[vertex] = nil
             }
@@ -97,7 +131,7 @@
                         continue
                     }
 
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
 
                     guard let sourceCost = distances[sourceVertex] else { continue }
                     let weight = edgeWeight.costToExplore(edge, graph)
@@ -105,16 +139,19 @@
 
                     guard let destinationCost = distances[destinationVertex] else { continue }
                     if newCost < destinationCost {
+                        guard case .finite(let relaxedCost) = newCost else {
+                            preconditionFailure("An improved Bellman-Ford cost must be finite")
+                        }
                         distances[destinationVertex] = newCost
                         predecessors[destinationVertex] = edge
                         wasRelaxed = true
-                        visitor?.edgeRelaxed?(edge)
+                        observation?.receive(.edgeRelaxed(.init(edge: edge, newCost: relaxedCost)))
                     } else {
-                        visitor?.edgeNotRelaxed?(edge)
+                        observation?.receive(.edgeNotRelaxed(edge))
                     }
                 }
 
-                visitor?.completeRelaxationIteration?(iteration)
+                observation?.receive(.relaxationIterationCompleted(iteration))
                 if !wasRelaxed { break }
             }
 
@@ -126,7 +163,7 @@
                     continue
                 }
 
-                visitor?.examineEdge?(edge)
+                observation?.receive(.edgeExamined(edge))
 
                 guard let sourceCost = distances[sourceVertex] else { continue }
                 let weight = edgeWeight.costToExplore(edge, graph)
@@ -135,7 +172,7 @@
                 guard let destinationCost = distances[destinationVertex] else { continue }
                 if newCost < destinationCost {
                     hasNegativeCycle = true
-                    visitor?.detectNegativeCycle?(edge)
+                    observation?.receive(.negativeCycleDetected(edge))
                     break
                 }
             }
@@ -148,8 +185,8 @@
         }
 
         @inlinable
-        public func shortestPath(from source: Vertex, to destination: Vertex, visitor: Visitor? = nil) -> Path<Vertex, Edge>? {
-            let result = shortestPathsFromSource(source, visitor: visitor)
+        public func shortestPath(from source: Vertex, to destination: Vertex, observation: AlgorithmObservation<Event>? = nil) -> Path<Vertex, Edge>? {
+            let result = shortestPathsFromSource(source, observation: observation)
 
             guard !result.hasNegativeCycle else {
                 return nil
@@ -192,11 +229,34 @@
             from source: Vertex,
             to destination: Vertex,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Path<Vertex, Edge>? {
-            shortestPath(from: source, to: destination, visitor: visitor)
+            shortestPath(from: source, to: destination, observation: observation)
         }
     }
 
-    extension BellmanFord: VisitorSupporting {}
+    extension BellmanFord: AlgorithmObserving {}
+
+    extension BellmanFord.Event: VertexExaminedEvent, EdgeExaminedEvent, EdgeRelaxedEvent {
+        /// Returns the examined vertex carried by the event.
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        /// Returns the examined edge carried by the event.
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+
+        /// Returns successful edge-relaxation details carried by the event.
+        @inlinable
+        public static func relaxation(from event: Self) -> BellmanFord.Relaxation? {
+            guard case .edgeRelaxed(let relaxation) = event else { return nil }
+            return relaxation
+        }
+    }
 #endif

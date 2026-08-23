@@ -22,7 +22,10 @@ public struct MyShortestPath<
     Graph.VertexDescriptor: Hashable,
     Weight.Magnitude == Weight
 {
-    public typealias Visitor = Self.Visitor
+    public enum Event {
+        case vertexExamined(Graph.VertexDescriptor)
+        case edgeRelaxed(EdgeRelaxation<Graph.EdgeDescriptor, Weight>)
+    }
 
     @usableFromInline let weight: CostDefinition<Graph, Weight>
 
@@ -37,29 +40,18 @@ Use ``CostDefinition`` for edge weights instead of taking a raw `KeyPath` or clo
 
 ## Step 2 — Implement the algorithm's logic
 
-Provide the protocol's required method(s), calling visitor hooks at the points an observer would care about:
+Provide the protocol's required method(s), publishing typed events at the state transitions an observer would care about:
 
 ```swift
 extension MyShortestPath {
-    public struct Visitor {
-        public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-        public var edgeRelaxed: ((Graph.EdgeDescriptor) -> Void)?
-        @inlinable public init(
-            examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
-            edgeRelaxed: ((Graph.EdgeDescriptor) -> Void)? = nil
-        ) {
-            self.examineVertex = examineVertex
-            self.edgeRelaxed = edgeRelaxed
-        }
-    }
-
     public func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
         // …relaxation loop here…
+        observation?.receive(.vertexExamined(source))
     }
 }
 ```
@@ -106,6 +98,6 @@ Add tests under `Tests/GraphsTests/Algorithms/` using Swift Testing (`@Test` / `
 ### Related
 
 - <doc:AlgorithmInterfaces>
-- <doc:VisitorPattern>
+- <doc:ObservingAlgorithms>
 - <doc:PluggableArchitecture>
 - <doc:PropertiesAndPropertyMaps>

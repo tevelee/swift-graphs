@@ -595,11 +595,11 @@
             #endif
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        /// `GreedyColoringAlgorithm` fires `examineVertex` for each vertex processed and `assignColor`
-        /// when a color is assigned. Two composed visitors must each receive identical event sequences.
-        @Test func greedyComposedVisitorsReceiveAllEvents() {
+        /// `GreedyColoringAlgorithm` emits `vertexExamined` for each vertex processed and `colorAssigned`
+        /// when a color is assigned. Two ordered observations must each receive identical event sequences.
+        @Test func greedyComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -615,16 +615,13 @@
             var assigned1 = 0
             var assigned2 = 0
 
-            var v1 = GreedyColoringAlgorithm<AdjacencyList, Int>.Visitor()
-            v1.examineVertex = { _ in examined1 += 1 }
-            v1.assignColor = { _, _ in assigned1 += 1 }
-
-            var v2 = GreedyColoringAlgorithm<AdjacencyList, Int>.Visitor()
-            v2.examineVertex = { _ in examined2 += 1 }
-            v2.assignColor = { _, _ in assigned2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = GreedyColoringAlgorithm<AdjacencyList, Int>().color(graph: graph, visitor: combined)
+            typealias Cases = GreedyColoringAlgorithm<AdjacencyList, Int>.EventCases
+            let algorithm = GreedyColoringAlgorithm<AdjacencyList, Int>()
+                .observing(Cases.vertexExamined) { _ in examined1 += 1 }
+                .observing(Cases.colorAssigned) { _ in assigned1 += 1 }
+                .observing(Cases.vertexExamined) { _ in examined2 += 1 }
+                .observing(Cases.colorAssigned) { _ in assigned2 += 1 }
+            _ = algorithm.color(graph: graph, observation: nil)
 
             // Greedy examines each vertex once and assigns a color to each
 
@@ -632,19 +629,19 @@
             #expect(examined2 == 3)
             #expect(assigned1 == 3, "greedy must assign a color to each vertex")
             #expect(assigned2 == 3)
-            #expect(examined1 == examined2, "both composed visitors must receive identical examineVertex events")
-            #expect(assigned1 == assigned2, "both composed visitors must receive identical assignColor events")
+            #expect(examined1 == examined2, "both observations must receive identical vertexExamined events")
+            #expect(assigned1 == assigned2, "both observations must receive identical colorAssigned events")
         }
 
-        /// Exercises all four `DSaturColoringAlgorithm.Visitor` events through a composed visitor pair.
+        /// Exercises all four DSatur events through an ordered observation chain.
         ///
         /// Graph: undirected triangle A−B−C (3 colors needed = 2 for triangle).
         /// - `examineVertex` fires when DSatur selects the next vertex to color.
         /// - `examineEdge` fires for each edge checked when finding available colors.
         /// - `assignColor` fires once per vertex when its color is decided.
         /// - `skipVertex` fires when a vertex is skipped (not triggered for triangle; just verify both see same count).
-        /// Both composed visitors must see identical event counts.
-        @Test func dsaturComposedVisitorsReceiveAllEvents() {
+        /// Both observation groups must see identical event counts.
+        @Test func dsaturComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -665,20 +662,17 @@
             var skipped1 = 0
             var skipped2 = 0
 
-            var v1 = DSaturColoringAlgorithm<AdjacencyList, Int>.Visitor()
-            v1.examineVertex = { _ in examined1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.assignColor = { _, _ in assigned1 += 1 }
-            v1.skipVertex = { _, _ in skipped1 += 1 }
-
-            var v2 = DSaturColoringAlgorithm<AdjacencyList, Int>.Visitor()
-            v2.examineVertex = { _ in examined2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.assignColor = { _, _ in assigned2 += 1 }
-            v2.skipVertex = { _, _ in skipped2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = DSaturColoringAlgorithm<AdjacencyList, Int>().color(graph: graph, visitor: combined)
+            typealias Cases = DSaturColoringAlgorithm<AdjacencyList, Int>.EventCases
+            let algorithm = DSaturColoringAlgorithm<AdjacencyList, Int>()
+                .observing(Cases.vertexExamined) { _ in examined1 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+                .observing(Cases.colorAssigned) { _ in assigned1 += 1 }
+                .observing(Cases.vertexSkipped) { _ in skipped1 += 1 }
+                .observing(Cases.vertexExamined) { _ in examined2 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+                .observing(Cases.colorAssigned) { _ in assigned2 += 1 }
+                .observing(Cases.vertexSkipped) { _ in skipped2 += 1 }
+            _ = algorithm.color(graph: graph, observation: nil)
 
             // DSatur assigns a color to every vertex
             #expect(assigned1 == 3, "DSatur must assign a color to each of the 3 vertices")
@@ -689,22 +683,22 @@
             // examineEdge fires when checking neighbors for color conflicts
             #expect(examEdge1 >= 1, "examineEdge fires for each edge checked during coloring")
             #expect(examEdge2 >= 1)
-            // Both composed visitors must see identical event counts
+            // Both ordered observation groups must see identical event counts.
             #expect(examined1 == examined2)
             #expect(examEdge1 == examEdge2)
             #expect(assigned1 == assigned2)
             #expect(skipped1 == skipped2)
         }
 
-        /// Exercises all four `WelshPowellColoringAlgorithm.Visitor` events through a composed visitor pair.
+        /// Exercises all four Welsh-Powell events through an ordered observation chain.
         ///
         /// Graph: undirected path A−B−C (A and C can share a color; B needs its own).
         /// - `examineVertex` fires during degree sorting and during coloring passes.
         /// - `examineEdge` fires when checking neighbor colors.
         /// - `assignColor` fires once per vertex when its color is decided (3 total).
         /// - `skipVertex` fires for already-colored vertices during the pass.
-        /// Both composed visitors must see identical event counts.
-        @Test func welshPowellComposedVisitorsReceiveAllEvents() {
+        /// Both observation groups must see identical event counts.
+        @Test func welshPowellComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -723,20 +717,17 @@
             var skipped1 = 0
             var skipped2 = 0
 
-            var v1 = WelshPowellColoringAlgorithm<AdjacencyList, Int>.Visitor()
-            v1.examineVertex = { _ in examined1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.assignColor = { _, _ in assigned1 += 1 }
-            v1.skipVertex = { _, _ in skipped1 += 1 }
-
-            var v2 = WelshPowellColoringAlgorithm<AdjacencyList, Int>.Visitor()
-            v2.examineVertex = { _ in examined2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.assignColor = { _, _ in assigned2 += 1 }
-            v2.skipVertex = { _, _ in skipped2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = WelshPowellColoringAlgorithm<AdjacencyList, Int>().color(graph: graph, visitor: combined)
+            typealias Cases = WelshPowellColoringAlgorithm<AdjacencyList, Int>.EventCases
+            let algorithm = WelshPowellColoringAlgorithm<AdjacencyList, Int>()
+                .observing(Cases.vertexExamined) { _ in examined1 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+                .observing(Cases.colorAssigned) { _ in assigned1 += 1 }
+                .observing(Cases.vertexSkipped) { _ in skipped1 += 1 }
+                .observing(Cases.vertexExamined) { _ in examined2 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+                .observing(Cases.colorAssigned) { _ in assigned2 += 1 }
+                .observing(Cases.vertexSkipped) { _ in skipped2 += 1 }
+            _ = algorithm.color(graph: graph, observation: nil)
 
             // Welsh-Powell assigns a color to every vertex
             #expect(assigned1 == 3, "Welsh-Powell must assign a color to each of the 3 vertices")
@@ -747,14 +738,14 @@
             // skipVertex fires for already-colored vertices encountered in a pass
             #expect(skipped1 >= 1, "skipVertex fires for already-colored vertices")
             #expect(skipped2 >= 1)
-            // Both composed visitors must see identical event counts
+            // Both ordered observation groups must see identical event counts.
             #expect(examined1 == examined2)
             #expect(examEdge1 == examEdge2)
             #expect(assigned1 == assigned2)
             #expect(skipped1 == skipped2)
         }
 
-        /// Exercises all five `SequentialVertexColoringAlgorithm.Visitor` events through a composed visitor pair.
+        /// Exercises all five sequential-coloring events through an ordered observation chain.
         ///
         /// Graph: undirected path A−B−C (bidirectional edges) using SmallestLast ordering.
         /// - `useOrdering` fires once when the ordering algorithm is selected.
@@ -762,8 +753,8 @@
         /// - `examineEdge` fires for each edge checked when finding available colors.
         /// - `assignColor` fires once per vertex when its color is decided.
         /// - `skipVertex` would fire for already-colored vertices (not triggered here; verify parity).
-        /// Both composed visitors must see identical event counts.
-        @Test func sequentialComposedVisitorsReceiveAllEvents() {
+        /// Both observation groups must see identical event counts.
+        @Test func sequentialComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -784,25 +775,21 @@
             var skipped1 = 0
             var skipped2 = 0
 
-            var v1 = SequentialVertexColoringAlgorithm<AdjacencyList, Int>.Visitor()
-            v1.useOrdering = { _ in useOrdering1 += 1 }
-            v1.examineVertex = { _ in examined1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.assignColor = { _, _ in assigned1 += 1 }
-            v1.skipVertex = { _, _ in skipped1 += 1 }
-
-            var v2 = SequentialVertexColoringAlgorithm<AdjacencyList, Int>.Visitor()
-            v2.useOrdering = { _ in useOrdering2 += 1 }
-            v2.examineVertex = { _ in examined2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.assignColor = { _, _ in assigned2 += 1 }
-            v2.skipVertex = { _, _ in skipped2 += 1 }
-
-            let combined = v1.combined(with: v2)
+            typealias Cases = SequentialVertexColoringAlgorithm<AdjacencyList, Int>.EventCases
             let algorithm = SequentialVertexColoringAlgorithm<AdjacencyList, Int>(
                 using: SmallestLastVertexOrderingAlgorithm<AdjacencyList>()
             )
-            _ = algorithm.color(graph: graph, visitor: combined)
+            .observing(Cases.orderingSelected) { useOrdering1 += 1 }
+            .observing(Cases.vertexExamined) { _ in examined1 += 1 }
+            .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+            .observing(Cases.colorAssigned) { _ in assigned1 += 1 }
+            .observing(Cases.vertexSkipped) { _ in skipped1 += 1 }
+            .observing(Cases.orderingSelected) { useOrdering2 += 1 }
+            .observing(Cases.vertexExamined) { _ in examined2 += 1 }
+            .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+            .observing(Cases.colorAssigned) { _ in assigned2 += 1 }
+            .observing(Cases.vertexSkipped) { _ in skipped2 += 1 }
+            _ = algorithm.color(graph: graph, observation: nil)
 
             // useOrdering fires once when the ordering algorithm is selected
             #expect(useOrdering1 == 1, "useOrdering fires exactly once")
@@ -816,7 +803,7 @@
             // examineEdge fires when checking neighbor colors
             #expect(examEdge1 >= 1, "examineEdge fires for each edge checked")
             #expect(examEdge2 >= 1)
-            // Both composed visitors must see identical event counts
+            // Both ordered observation groups must see identical event counts.
             #expect(useOrdering1 == useOrdering2)
             #expect(examined1 == examined2)
             #expect(examEdge1 == examEdge2)

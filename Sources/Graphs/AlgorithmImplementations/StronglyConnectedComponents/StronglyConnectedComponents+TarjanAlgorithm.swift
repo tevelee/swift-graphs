@@ -2,7 +2,7 @@
     /// Tarjan's algorithm implementation for strongly connected components.
     public struct TarjanStronglyConnectedComponentsAlgorithm<Graph: IncidenceGraph & VertexListGraph>: StronglyConnectedComponentsAlgorithm
     where Graph.VertexDescriptor: Hashable {
-        public typealias Visitor = Tarjan<Graph>.Visitor
+        public typealias Event = Tarjan<Graph>.Event
 
         /// Creates a new Tarjan SCC algorithm.
         @inlinable
@@ -11,10 +11,10 @@
         @inlinable
         public func stronglyConnectedComponents(
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> StronglyConnectedComponentsResult<Graph.VertexDescriptor> {
             let tarjan = Tarjan(on: graph)
-            return tarjan.stronglyConnectedComponents(visitor: visitor)
+            return tarjan.stronglyConnectedComponents(observation: observation)
         }
     }
 

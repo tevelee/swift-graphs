@@ -226,28 +226,23 @@ struct PlanarPropertyTests {
         #expect(graph.isPlanar(using: .eulerFormula()))
     }
 
-    // MARK: - Visitor Support
+    // MARK: - Observation Support
 
-    @Test func visitorPattern() {
+    @Test func observationPattern() {
         let graph = createK5Graph()
         var eulerViolations: [(Int, Int, Int)] = []
         var kuratowskiViolations: [String] = []
 
-        let visitor = EulerFormulaPlanarPropertyAlgorithm<AdjacencyList>.Visitor(
-            checkEulerFormula: nil,
-            examineVertex: nil,
-            examineEdge: nil,
-            checkKuratowski: nil,
-            kuratowskiViolation: { reason in
+        typealias Cases = EulerFormulaPlanarPropertyAlgorithm<AdjacencyList>.EventCases
+        let observed = EulerFormulaPlanarPropertyAlgorithm<AdjacencyList>()
+            .observing(Cases.kuratowskiObstructionFound) { reason in
                 kuratowskiViolations.append(reason)
-            },
-            eulerFormulaViolation: { vertices, edges, maxEdges in
-                eulerViolations.append((vertices, edges, maxEdges))
             }
-        )
+            .observing(Cases.eulerBoundViolated) { violation in
+                eulerViolations.append((violation.vertices, violation.edges, violation.maximumEdges))
+            }
 
-        let algorithm = EulerFormulaPlanarPropertyAlgorithm<AdjacencyList>()
-        let result = algorithm.isPlanar(in: graph, visitor: visitor)
+        let result = graph.isPlanar(using: observed)
 
         #expect(result == false)
     }

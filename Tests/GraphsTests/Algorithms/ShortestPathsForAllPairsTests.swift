@@ -312,11 +312,11 @@
             #endif
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        /// Floyd-Warshall's `completeIntermediateVertex` fires once per intermediate vertex (one per
-        /// vertex in the graph). Two composed visitors must each receive the same events.
-        @Test func floydWarshallComposedVisitorsReceiveAllEvents() {
+        /// Floyd-Warshall's `intermediateVertexCompleted` fires once per intermediate vertex (one per
+        /// vertex in the graph). Two composed observations must receive events in attachment order.
+        @Test func floydWarshallComposedObservationsReceiveAllEventsInOrder() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -328,31 +328,39 @@
             var completed2 = 0
             var examined1 = 0
             var examined2 = 0
+            var completionOrder: [Int] = []
 
-            var v1 = FloydWarshall<AdjacencyList, Double>.Visitor()
-            v1.completeIntermediateVertex = { _ in completed1 += 1 }
-            v1.examineVertex = { _ in examined1 += 1 }
-
-            var v2 = FloydWarshall<AdjacencyList, Double>.Visitor()
-            v2.completeIntermediateVertex = { _ in completed2 += 1 }
-            v2.examineVertex = { _ in examined2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = graph.shortestPathsForAllPairs(using: .floydWarshall(weight: .property(\.weight)).withVisitor(combined))
+            let algorithm = FloydWarshallAllPairs<AdjacencyList, Double>(weight: .property(\.weight))
+                .observing(FloydWarshall<AdjacencyList, Double>.EventCases.vertexExamined) { _ in
+                    examined1 += 1
+                }
+                .observing(FloydWarshall<AdjacencyList, Double>.EventCases.intermediateVertexCompleted) { _ in
+                    completed1 += 1
+                    completionOrder.append(1)
+                }
+                .observing(FloydWarshall<AdjacencyList, Double>.EventCases.vertexExamined) { _ in
+                    examined2 += 1
+                }
+                .observing(FloydWarshall<AdjacencyList, Double>.EventCases.intermediateVertexCompleted) { _ in
+                    completed2 += 1
+                    completionOrder.append(2)
+                }
+            _ = graph.shortestPathsForAllPairs(using: algorithm)
 
             // Floyd-Warshall iterates over each vertex as an intermediate: 3 vertices → 3 completions
-            #expect(completed1 == 3, "completeIntermediateVertex must fire once per vertex (3 vertices)")
+            #expect(completed1 == 3, "intermediateVertexCompleted must fire once per vertex (3 vertices)")
             #expect(completed2 == 3)
-            #expect(examined1 >= 1, "examineVertex must fire at least once")
+            #expect(examined1 >= 1, "vertexExamined must be emitted at least once")
             #expect(examined2 >= 1)
-            #expect(completed1 == completed2, "both composed visitors must see identical completeIntermediateVertex events")
-            #expect(examined1 == examined2, "both composed visitors must see identical examineVertex events")
+            #expect(completed1 == completed2, "both composed observations must see identical completion events")
+            #expect(examined1 == examined2, "both composed observations must see identical vertex events")
+            #expect(completionOrder == [1, 2, 1, 2, 1, 2])
         }
 
-        /// Johnson's `startDijkstraFromSource` fires once per source vertex —
+        /// Johnson's `dijkstraStarted` fires once per source vertex —
         /// it's the unique high-level event that marks each Dijkstra invocation.
-        /// Two composed visitors must each receive the same events.
-        @Test func johnsonComposedVisitorsReceiveAllEvents() {
+        /// Two composed observations must each receive the same events.
+        @Test func johnsonComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -365,24 +373,28 @@
             var completed1 = 0
             var completed2 = 0
 
-            var v1 = Johnson<AdjacencyList, Double>.Visitor()
-            v1.startDijkstraFromSource = { _ in started1 += 1 }
-            v1.completeDijkstraFromSource = { _ in completed1 += 1 }
-
-            var v2 = Johnson<AdjacencyList, Double>.Visitor()
-            v2.startDijkstraFromSource = { _ in started2 += 1 }
-            v2.completeDijkstraFromSource = { _ in completed2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = graph.shortestPathsForAllPairs(using: .johnson(edgeWeight: .property(\.weight)).withVisitor(combined))
+            let algorithm = Johnson<AdjacencyList, Double>(edgeWeight: .property(\.weight))
+                .observing(Johnson<AdjacencyList, Double>.EventCases.dijkstraStarted) { _ in
+                    started1 += 1
+                }
+                .observing(Johnson<AdjacencyList, Double>.EventCases.dijkstraCompleted) { _ in
+                    completed1 += 1
+                }
+                .observing(Johnson<AdjacencyList, Double>.EventCases.dijkstraStarted) { _ in
+                    started2 += 1
+                }
+                .observing(Johnson<AdjacencyList, Double>.EventCases.dijkstraCompleted) { _ in
+                    completed2 += 1
+                }
+            _ = graph.shortestPathsForAllPairs(using: algorithm)
 
             // Johnson runs Dijkstra from each of the 3 vertices → start/complete each fire 3 times
-            #expect(started1 == 3, "startDijkstraFromSource must fire once per vertex (3 vertices)")
+            #expect(started1 == 3, "dijkstraStarted must fire once per vertex (3 vertices)")
             #expect(started2 == 3)
-            #expect(completed1 == 3, "completeDijkstraFromSource must fire once per vertex (3 vertices)")
+            #expect(completed1 == 3, "dijkstraCompleted must fire once per vertex (3 vertices)")
             #expect(completed2 == 3)
-            #expect(started1 == started2, "both composed visitors must see identical start events")
-            #expect(completed1 == completed2, "both composed visitors must see identical complete events")
+            #expect(started1 == started2, "both composed observations must see identical start events")
+            #expect(completed1 == completed2, "both composed observations must see identical completion events")
         }
     }
 #endif

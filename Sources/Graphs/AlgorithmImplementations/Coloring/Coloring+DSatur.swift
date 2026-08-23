@@ -10,10 +10,5 @@
         }
     }
 
-    extension DSaturColoringAlgorithm: ColoringAlgorithm {
-        @inlinable
-        public func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
-            color(graph: graph, visitor: nil)
-        }
-    }
+    extension DSaturColoringAlgorithm: ColoringAlgorithm {}
 #endif

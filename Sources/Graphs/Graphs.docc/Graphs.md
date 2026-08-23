@@ -33,7 +33,7 @@ Learn the foundational ideas behind Swift Graphs:
 - <doc:PluggableArchitecture>
 - <doc:PropertiesAndPropertyMaps>
 - <doc:AlgorithmInterfaces>
-- <doc:VisitorPattern>
+- <doc:ObservingAlgorithms>
 
 ## Guides
 
@@ -153,7 +153,7 @@ Swift Graphs includes comprehensive algorithm implementations. See <doc:Algorith
 - <doc:Architecture>
 - <doc:PluggableArchitecture>
 - <doc:AlgorithmInterfaces>
-- <doc:VisitorPattern>
+- <doc:ObservingAlgorithms>
 - <doc:PropertiesAndPropertyMaps>
 
 ### Guides

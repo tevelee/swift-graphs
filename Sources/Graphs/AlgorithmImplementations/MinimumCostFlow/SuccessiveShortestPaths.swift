@@ -31,32 +31,107 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that observes Successive Shortest Paths algorithm progress.
-        public struct Visitor {
-            /// Called at the start of each minimum-cost augmenting path search.
-            public var findPath: ((Vertex, Vertex) -> Void)?
-            /// Called when a path is found and flow is about to be augmented.
-            ///
-            /// The first argument lists the original edges along the path; entries are `nil`
-            /// for backward (residual) edges that have no counterpart in the original graph.
-            public var augmentPath: (([Edge?], Value) -> Void)?
-            /// Called each time the flow on an original edge changes.
-            public var updateFlow: ((Edge, Value) -> Void)?
-            /// Called after each augmentation with the cumulative totals.
-            public var iterationCompleted: ((Value, Value) -> Void)?
+        /// Details about a minimum-cost augmenting-path search.
+        public struct PathSearch {
+            /// The search source.
+            public let source: Vertex
+            /// The search sink.
+            public let sink: Vertex
 
-            /// Creates a new visitor with optional event handlers.
+            /// Creates path-search details.
             @inlinable
-            public init(
-                findPath: ((Vertex, Vertex) -> Void)? = nil,
-                augmentPath: (([Edge?], Value) -> Void)? = nil,
-                updateFlow: ((Edge, Value) -> Void)? = nil,
-                iterationCompleted: ((Value, Value) -> Void)? = nil
-            ) {
-                self.findPath = findPath
-                self.augmentPath = augmentPath
-                self.updateFlow = updateFlow
-                self.iterationCompleted = iterationCompleted
+            public init(source: Vertex, sink: Vertex) {
+                self.source = source
+                self.sink = sink
+            }
+        }
+
+        /// Details about an augmenting path before flow is pushed through it.
+        public struct PathAugmentation {
+            /// The path's original edges, with `nil` for backward residual edges.
+            public let edges: [Edge?]
+            /// The flow to push through the path.
+            public let flow: Value
+
+            /// Creates path-augmentation details.
+            @inlinable
+            public init(edges: [Edge?], flow: Value) {
+                self.edges = edges
+                self.flow = flow
+            }
+        }
+
+        /// Details about an original edge flow update.
+        public struct FlowUpdate {
+            /// The updated original edge.
+            public let edge: Edge
+            /// The edge's new flow.
+            public let flow: Value
+
+            /// Creates flow-update details.
+            @inlinable
+            public init(edge: Edge, flow: Value) {
+                self.edge = edge
+                self.flow = flow
+            }
+        }
+
+        /// Cumulative totals after one augmentation iteration.
+        public struct IterationCompletion {
+            /// The cumulative flow.
+            public let totalFlow: Value
+            /// The cumulative cost.
+            public let totalCost: Value
+
+            /// Creates iteration-completion details.
+            @inlinable
+            public init(totalFlow: Value, totalCost: Value) {
+                self.totalFlow = totalFlow
+                self.totalCost = totalCost
+            }
+        }
+
+        /// An event emitted synchronously while Successive Shortest Paths advances.
+        public enum Event {
+            /// A minimum-cost augmenting-path search started.
+            case pathSearchStarted(PathSearch)
+            /// Flow augmentation along a path started.
+            case pathAugmentationStarted(PathAugmentation)
+            /// Flow was updated on an original edge.
+            case flowUpdated(FlowUpdate)
+            /// An augmentation iteration completed.
+            case iterationCompleted(IterationCompletion)
+        }
+
+        /// Typed selectors for Successive Shortest Paths events.
+        public enum EventCases {
+            /// Selects minimum-cost path searches as they start.
+            public static var pathSearchStarted: AlgorithmEventCase<Event, PathSearch> {
+                .init {
+                    guard case .pathSearchStarted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects path augmentations as they start.
+            public static var pathAugmentationStarted: AlgorithmEventCase<Event, PathAugmentation> {
+                .init {
+                    guard case .pathAugmentationStarted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects original edge flow updates.
+            public static var flowUpdated: AlgorithmEventCase<Event, FlowUpdate> {
+                .init {
+                    guard case .flowUpdated(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects completed augmentation iterations.
+            public static var iterationCompleted: AlgorithmEventCase<Event, IterationCompletion> {
+                .init {
+                    guard case .iterationCompleted(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -110,7 +185,7 @@
         ///   - sink: The sink vertex.
         ///   - demand: The required flow amount, or `nil` for minimum cost maximum flow.
         ///   - graph: The flow network graph.
-        ///   - visitor: An optional visitor to observe algorithm progress.
+        ///   - observation: An optional observation to observe algorithm progress.
         /// - Returns: The minimum cost flow result.
         @inlinable
         public func minimumCostFlow(
@@ -118,7 +193,7 @@
             to sink: Vertex,
             demand: Value?,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> MinCostFlowResult<Vertex, Edge, Value> {
             guard source != sink else {
                 let feasible = demand.map { $0 <= .zero } ?? true
@@ -161,7 +236,7 @@
             while true {
                 if let demand, totalFlow >= demand { break }
 
-                visitor?.findPath?(source, sink)
+                observation?.receive(.pathSearchStarted(.init(source: source, sink: sink)))
 
                 guard
                     let (parentEdge, pathCost) = spfa(
@@ -201,7 +276,7 @@
                     flowToSend = bottleneck
                 }
 
-                visitor?.augmentPath?(pathIndices.map { residualEdges[$0].originalEdge }, flowToSend)
+                observation?.receive(.pathAugmentationStarted(.init(edges: pathIndices.map { residualEdges[$0].originalEdge }, flow: flowToSend)))
 
                 // Augment: update residual capacities and track original-edge flows.
                 for edgeIdx in pathIndices {
@@ -210,13 +285,13 @@
 
                     if let original = residualEdges[edgeIdx].originalEdge {
                         edgeFlows[original] = (edgeFlows[original] ?? .zero) + flowToSend
-                        visitor?.updateFlow?(original, edgeFlows[original]!)
+                        observation?.receive(.flowUpdated(.init(edge: original, flow: edgeFlows[original]!)))
                     } else {
                         // Backward edge: the paired forward edge's original edge loses flow.
                         let fwdIdx = residualEdges[edgeIdx].reverseIndex
                         if let original = residualEdges[fwdIdx].originalEdge {
                             edgeFlows[original] = (edgeFlows[original] ?? .zero) - flowToSend
-                            visitor?.updateFlow?(original, edgeFlows[original]!)
+                            observation?.receive(.flowUpdated(.init(edge: original, flow: edgeFlows[original]!)))
                         }
                     }
                 }
@@ -224,7 +299,7 @@
                 totalFlow += flowToSend
                 // pathCost is the per-unit cost of this augmenting path.
                 totalCost += flowToSend * pathCost
-                visitor?.iterationCompleted?(totalFlow, totalCost)
+                observation?.receive(.iterationCompleted(.init(totalFlow: totalFlow, totalCost: totalCost)))
             }
 
             let isFeasible = demand.map { totalFlow >= $0 } ?? true
@@ -283,5 +358,4 @@
         }
     }
 
-    extension SuccessiveShortestPaths: VisitorSupporting {}
 #endif

@@ -96,7 +96,7 @@ struct PlanarEmbeddingFuzzTests {
             let n = Int.random(in: 4 ... 8, using: &rng)
             let extra = Int.random(in: 0 ... n, using: &rng)
             let graph = randomConnectedGraph(vertexCount: n, extra: extra, using: &rng)
-            guard let drawing = ChrobakPayneDrawing<AdjacencyList>().planarDrawing(in: graph, visitor: nil) else {
+            guard let drawing = ChrobakPayneDrawing<AdjacencyList>().planarDrawing(in: graph, observation: nil) else {
                 let embResult = graph.planarEmbedding(using: .leftRight())
                 #expect(!embResult.isPlanar)
                 continue

@@ -1,25 +1,25 @@
 /// A protocol for algorithms that perform graph coloring.
-public protocol ColoringAlgorithm<Graph, Color> {
+public protocol ColoringAlgorithm<Graph, Color>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
     /// The color type used for coloring.
     associatedtype Color: Hashable & Equatable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Colors the graph using this algorithm.
     ///
     /// - Parameters:
     ///   - graph: The graph to color.
-    ///   - visitor: An optional visitor to observe the algorithm progress.
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The graph coloring result.
-    func color(graph: Graph, visitor: Visitor?) -> GraphColoring<Graph.VertexDescriptor, Color>
+    func color(graph: Graph, observation: AlgorithmObservation<Event>?) -> GraphColoring<Graph.VertexDescriptor, Color>
 }
 
-extension VisitorWrapper: ColoringAlgorithm where Base: ColoringAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: ColoringAlgorithm where Base: ColoringAlgorithm {
     @inlinable
-    public func color(graph: Base.Graph, visitor: Base.Visitor?) -> GraphColoring<Base.Graph.VertexDescriptor, Base.Color> {
-        base.color(graph: graph, visitor: self.visitor.combined(with: visitor))
+    public func color(graph: Base.Graph, observation: AlgorithmObservation<Base.Event>?) -> GraphColoring<Base.Graph.VertexDescriptor, Base.Color> {
+        base.color(graph: graph, observation: self.observation.followed(by: observation))
     }
 }
 
@@ -82,7 +82,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     public func colorGraph<Color: Hashable & Equatable>(
         using algorithm: some ColoringAlgorithm<Self, Color>
     ) -> GraphColoring<VertexDescriptor, Color> {
-        algorithm.color(graph: self, visitor: nil)
+        algorithm.color(graph: self, observation: nil)
     }
 }
 

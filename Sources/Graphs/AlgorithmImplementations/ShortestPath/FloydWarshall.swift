@@ -18,29 +18,65 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe the Floyd-Warshall algorithm's progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when updating a distance between two vertices.
-            public var updateDistance: ((Vertex, Vertex, Cost<Weight>) -> Void)?
-            /// Called when completing an intermediate vertex.
-            public var completeIntermediateVertex: ((Int) -> Void)?
+        /// A distance-table update reported by Floyd-Warshall.
+        public struct DistanceUpdate {
+            /// The path source.
+            public let source: Vertex
+            /// The path destination.
+            public let destination: Vertex
+            /// The improved distance.
+            public let distance: Cost<Weight>
 
-            /// Creates a new visitor.
+            /// Creates a distance-update payload.
             @inlinable
-            public init(
-                examineVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                updateDistance: ((Vertex, Vertex, Cost<Weight>) -> Void)? = nil,
-                completeIntermediateVertex: ((Int) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.updateDistance = updateDistance
-                self.completeIntermediateVertex = completeIntermediateVertex
+            public init(source: Vertex, destination: Vertex, distance: Cost<Weight>) {
+                self.source = source
+                self.destination = destination
+                self.distance = distance
+            }
+        }
+
+        /// An event emitted while Floyd-Warshall runs.
+        public enum Event {
+            /// A vertex was examined.
+            case vertexExamined(Vertex)
+            /// An edge was examined.
+            case edgeExamined(Edge)
+            /// A distance-table entry was updated.
+            case distanceUpdated(DistanceUpdate)
+            /// An intermediate-vertex iteration was completed.
+            case intermediateVertexCompleted(Int)
+        }
+
+        /// Selectors for Floyd-Warshall events.
+        public enum EventCases {
+            /// Selects examined vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects examined edges.
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects distance updates.
+            public static var distanceUpdated: AlgorithmEventCase<Event, DistanceUpdate> {
+                .init {
+                    guard case .distanceUpdated(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects completed intermediate-vertex indices.
+            public static var intermediateVertexCompleted: AlgorithmEventCase<Event, Int> {
+                .init {
+                    guard case .intermediateVertexCompleted(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -65,10 +101,10 @@
 
         /// Computes shortest paths between all pairs of vertices.
         ///
-        /// - Parameter visitor: An optional visitor to observe the algorithm's progress.
+        /// - Parameter observation: An optional observation of the algorithm's progress.
         /// - Returns: The shortest paths between all pairs of vertices.
         @inlinable
-        public func shortestPathsForAllPairs(visitor: Visitor? = nil) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
+        public func shortestPathsForAllPairs(observation: AlgorithmObservation<Event>? = nil) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
             let vertices = Array(graph.vertices())
             let vertexCount = vertices.count
 
@@ -85,20 +121,20 @@
             }
 
             for source in vertices {
-                visitor?.examineVertex?(source)
+                observation?.receive(.vertexExamined(source))
                 for edge in graph.outgoingEdges(of: source) {
                     guard let destination = graph.destination(of: edge) else { continue }
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
                     let weight = edgeWeight.costToExplore(edge, graph)
                     distances[source]?[destination] = .finite(weight)
                     predecessors[source]?[destination] = edge
-                    visitor?.updateDistance?(source, destination, .finite(weight))
+                    observation?.receive(.distanceUpdated(.init(source: source, destination: destination, distance: .finite(weight))))
                 }
             }
 
             for intermediateIndex in 0 ..< vertexCount {
                 let intermediateVertex = vertices[intermediateIndex]
-                visitor?.examineVertex?(intermediateVertex)
+                observation?.receive(.vertexExamined(intermediateVertex))
 
                 for sourceIndex in 0 ..< vertexCount {
                     let sourceVertex = vertices[sourceIndex]
@@ -114,12 +150,12 @@
                             distances[sourceVertex]?[destinationVertex] = newDistance
                             let intermediatePredecessor = predecessors[intermediateVertex]?[destinationVertex]
                             predecessors[sourceVertex]?[destinationVertex] = intermediatePredecessor
-                            visitor?.updateDistance?(sourceVertex, destinationVertex, newDistance)
+                            observation?.receive(.distanceUpdated(.init(source: sourceVertex, destination: destinationVertex, distance: newDistance)))
                         }
                     }
                 }
 
-                visitor?.completeIntermediateVertex?(intermediateIndex)
+                observation?.receive(.intermediateVertexCompleted(intermediateIndex))
             }
 
             return AllPairsShortestPaths(
@@ -131,12 +167,12 @@
 
     extension FloydWarshall: ShortestPathsForAllPairsAlgorithm {
         @inlinable
-        public func shortestPathsForAllPairs(in graph: Graph, visitor: Visitor?) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
-            shortestPathsForAllPairs(visitor: visitor)
+        public func shortestPathsForAllPairs(in graph: Graph, observation: AlgorithmObservation<Event>?) -> AllPairsShortestPaths<Vertex, Edge, Weight> {
+            shortestPathsForAllPairs(observation: observation)
         }
     }
 
-    extension FloydWarshall: VisitorSupporting {}
+    extension FloydWarshall: AlgorithmObserving {}
 
     extension FloydWarshall {
         /// Creates a new Floyd-Warshall algorithm instance.
@@ -151,6 +187,22 @@
             edgeWeight: CostDefinition<G, W>
         ) -> FloydWarshall<G, W> where G.VertexDescriptor: Hashable {
             FloydWarshall<G, W>(on: graph, edgeWeight: edgeWeight)
+        }
+    }
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
+    extension FloydWarshall.Event: VertexExaminedEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
         }
     }
 #endif

@@ -2,7 +2,7 @@
     /// Kosaraju's algorithm implementation for strongly connected components.
     public struct KosarajuStronglyConnectedComponentsAlgorithm<Graph: BidirectionalGraph & VertexListGraph>: StronglyConnectedComponentsAlgorithm
     where Graph.VertexDescriptor: Hashable {
-        public typealias Visitor = Kosaraju<Graph>.Visitor
+        public typealias Event = Kosaraju<Graph>.Event
 
         /// Creates a new Kosaraju SCC algorithm.
         @inlinable
@@ -11,10 +11,10 @@
         @inlinable
         public func stronglyConnectedComponents(
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> StronglyConnectedComponentsResult<Graph.VertexDescriptor> {
             let kosaraju = Kosaraju(on: graph)
-            return kosaraju.stronglyConnectedComponents(visitor: visitor)
+            return kosaraju.stronglyConnectedComponents(observation: observation)
         }
     }
 

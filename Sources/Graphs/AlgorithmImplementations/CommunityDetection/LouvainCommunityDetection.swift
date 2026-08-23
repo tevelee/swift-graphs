@@ -14,29 +14,50 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe the Louvain algorithm progress.
-        public struct Visitor {
-            /// Called at the start of each phase.
-            public var startPhase: ((Int) -> Void)?
-            /// Called when moving a vertex to a new community.
-            public var moveVertex: ((Vertex, Int) -> Void)?
-            /// Called when modularity improves.
-            public var modularityImproved: ((Double) -> Void)?
-            /// Called when an iteration completes.
-            public var iterationComplete: ((Int, Double) -> Void)?
+        /// An event emitted while Louvain community detection advances.
+        public enum Event {
+            /// A phase started.
+            case phaseStarted(Int)
+            /// A vertex moved to another community.
+            case vertexMoved(vertex: Vertex, community: Int)
+            /// Modularity improved to the supplied value.
+            case modularityImproved(Double)
+            /// An iteration completed with the supplied modularity.
+            case iterationCompleted(phase: Int, modularity: Double)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                startPhase: ((Int) -> Void)? = nil,
-                moveVertex: ((Vertex, Int) -> Void)? = nil,
-                modularityImproved: ((Double) -> Void)? = nil,
-                iterationComplete: ((Int, Double) -> Void)? = nil
-            ) {
-                self.startPhase = startPhase
-                self.moveVertex = moveVertex
-                self.modularityImproved = modularityImproved
-                self.iterationComplete = iterationComplete
+        /// Typed selectors for Louvain events.
+        public enum EventCases {
+            /// Selects phase starts.
+            public static var phaseStarted: AlgorithmEventCase<Event, Int> {
+                .init {
+                    guard case .phaseStarted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+
+            /// Selects vertex moves.
+            public static var vertexMoved: AlgorithmEventCase<Event, (vertex: Vertex, community: Int)> {
+                .init {
+                    guard case .vertexMoved(let vertex, let community) = $0 else { return nil }
+                    return (vertex, community)
+                }
+            }
+
+            /// Selects modularity improvements.
+            public static var modularityImproved: AlgorithmEventCase<Event, Double> {
+                .init {
+                    guard case .modularityImproved(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+
+            /// Selects completed iterations.
+            public static var iterationCompleted: AlgorithmEventCase<Event, (phase: Int, modularity: Double)> {
+                .init {
+                    guard case .iterationCompleted(let phase, let modularity) = $0 else { return nil }
+                    return (phase, modularity)
+                }
             }
         }
 
@@ -61,10 +82,12 @@
 
         /// Detects communities using the Louvain method.
         ///
-        /// - Parameter visitor: An optional visitor to observe the algorithm progress
+        /// - Parameter observation: An optional algorithm observation.
         /// - Returns: The community detection result
         @inlinable
-        public func detectCommunities(visitor: Visitor?) -> CommunityDetectionResult<Vertex> {
+        public func detectCommunities(
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> CommunityDetectionResult<Vertex> {
             // Initialize each vertex in its own community
             var communities: [Vertex: Int] = [:]
             for (index, vertex) in graph.vertices().enumerated() {
@@ -76,7 +99,7 @@
             var currentModularity = 0.0
 
             while improved {
-                visitor?.startPhase?(phase)
+                observation?.receive(.phaseStarted(phase))
                 improved = false
 
                 // First phase: local optimization
@@ -106,14 +129,14 @@
 
                     if bestCommunity != currentCommunity {
                         communities[vertex] = bestCommunity
-                        visitor?.moveVertex?(vertex, bestCommunity)
+                        observation?.receive(.vertexMoved(vertex: vertex, community: bestCommunity))
                         currentModularity += bestModularityGain
                         improved = true
                     }
                 }
 
-                visitor?.iterationComplete?(phase, currentModularity)
-                visitor?.modularityImproved?(currentModularity)
+                observation?.receive(.iterationCompleted(phase: phase, modularity: currentModularity))
+                observation?.receive(.modularityImproved(currentModularity))
                 phase += 1
             }
 
@@ -147,11 +170,9 @@
         @inlinable
         public func detectCommunities(
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> CommunityDetectionResult<Graph.VertexDescriptor> {
-            detectCommunities(visitor: visitor)
+            detectCommunities(observation: observation)
         }
     }
-
-    extension LouvainCommunityDetection: VisitorSupporting {}
 #endif

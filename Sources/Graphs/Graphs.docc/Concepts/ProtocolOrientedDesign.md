@@ -190,7 +190,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         to destination: VertexDescriptor,
         using algorithm: some ShortestPathAlgorithm<Self, Weight>
     ) -> Path<VertexDescriptor, EdgeDescriptor>? {
-        algorithm.shortestPath(from: source, to: destination, in: self, visitor: nil)
+        algorithm.shortestPath(from: source, to: destination, in: self, observation: nil)
     }
 }
 ```

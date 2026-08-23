@@ -1,19 +1,22 @@
 /// A protocol for minimum spanning tree algorithms.
-public protocol MinimumSpanningTreeAlgorithm<Graph, Weight> {
+public protocol MinimumSpanningTreeAlgorithm<Graph, Weight>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
     /// The weight type for edge costs.
     associatedtype Weight: AdditiveArithmetic & Comparable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Computes the minimum spanning tree of the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to find the MST for
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The minimum spanning tree result
-    func minimumSpanningTree(in graph: Graph, visitor: Visitor?) -> MinimumSpanningTree<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>
+    func minimumSpanningTree(
+        in graph: Graph,
+        observation: AlgorithmObservation<Event>?
+    ) -> MinimumSpanningTree<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>
 }
 
 /// Represents the result of a minimum spanning tree computation.
@@ -65,17 +68,17 @@ extension MinimumSpanningTree {
     }
 }
 
-extension VisitorWrapper: MinimumSpanningTreeAlgorithm
-where Base: MinimumSpanningTreeAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: MinimumSpanningTreeAlgorithm
+where Base: MinimumSpanningTreeAlgorithm {
     public typealias Graph = Base.Graph
     public typealias Weight = Base.Weight
 
     @inlinable
     public func minimumSpanningTree(
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> MinimumSpanningTree<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Weight> {
-        base.minimumSpanningTree(in: graph, visitor: self.visitor.combined(with: visitor))
+        base.minimumSpanningTree(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 
@@ -88,7 +91,7 @@ extension IncidenceGraph {
     public func minimumSpanningTree<Weight: AdditiveArithmetic & Comparable>(
         using algorithm: some MinimumSpanningTreeAlgorithm<Self, Weight>
     ) -> MinimumSpanningTree<VertexDescriptor, EdgeDescriptor, Weight> {
-        algorithm.minimumSpanningTree(in: self, visitor: nil)
+        algorithm.minimumSpanningTree(in: self, observation: nil)
     }
 }
 

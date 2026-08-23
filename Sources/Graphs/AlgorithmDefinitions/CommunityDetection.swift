@@ -7,7 +7,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     public func detectCommunities(
         using algorithm: some CommunityDetectionAlgorithm<Self>
     ) -> CommunityDetectionResult<VertexDescriptor> {
-        algorithm.detectCommunities(in: self, visitor: nil)
+        algorithm.detectCommunities(in: self, observation: nil)
     }
 }
 
@@ -27,39 +27,33 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 #endif
 
 /// A protocol for community detection algorithms.
-public protocol CommunityDetectionAlgorithm<Graph> {
+public protocol CommunityDetectionAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Detects communities in the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to detect communities in
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The community detection result
     func detectCommunities(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> CommunityDetectionResult<Graph.VertexDescriptor>
 }
 
-extension VisitorWrapper: CommunityDetectionAlgorithm
-where
-    Base: CommunityDetectionAlgorithm,
-    Base.Visitor == Visitor,
-    Visitor: Composable,
-    Visitor.Other == Visitor
-{
+extension ObservedAlgorithm: CommunityDetectionAlgorithm where Base: CommunityDetectionAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
     public func detectCommunities(
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> CommunityDetectionResult<Base.Graph.VertexDescriptor> {
-        base.detectCommunities(in: graph, visitor: self.visitor.combined(with: visitor))
+        base.detectCommunities(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 

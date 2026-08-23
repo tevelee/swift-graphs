@@ -155,7 +155,7 @@
             #expect(result.centrality(for: isolated) == 0.0)
         }
 
-        @Test func degreeCentralityVisitor() {
+        @Test func degreeCentralityObservation() {
             var examinedVertices: Set<AdjacencyList.VertexDescriptor> = []
             var computedDegrees: [AdjacencyList.VertexDescriptor: Int] = [:]
 
@@ -166,16 +166,15 @@
                 graph.addEdge(from: center, to: leaf)
             }
 
+            typealias Cases = DegreeCentrality<AdjacencyList>.EventCases
             let algorithm = DegreeCentralityAlgorithm<AdjacencyList>(normalized: true)
-            let visitor = DegreeCentrality<AdjacencyList>.Visitor(
-                examineVertex: { vertex in
+                .observing(Cases.vertexExamined) { vertex in
                     examinedVertices.insert(vertex)
-                },
-                computeDegree: { vertex, degree in
-                    computedDegrees[vertex] = degree
                 }
-            )
-            _ = algorithm.centrality(in: graph, visitor: visitor)
+                .observing(Cases.degreeComputed) { computation in
+                    computedDegrees[computation.vertex] = computation.degree
+                }
+            _ = algorithm.centrality(in: graph, observation: nil)
 
             #expect(examinedVertices.count == graph.vertexCount)
             #expect(computedDegrees.count == graph.vertexCount)
@@ -236,17 +235,16 @@
             graph.addEdge(from: d, to: a)
 
             var iterations = 0
+            typealias Cases = PageRankCentrality<AdjacencyList>.EventCases
             let algorithm = PageRankCentralityAlgorithm<AdjacencyList>(dampingFactor: 0.85, maxIterations: 100, tolerance: 1e-6)
-            let visitor = PageRankCentrality<AdjacencyList>.Visitor(
-                startIteration: { iteration in
+                .observing(Cases.iterationStarted) { iteration in
                     iterations = iteration
                 }
-            )
-            _ = algorithm.centrality(in: graph, visitor: visitor)
+            _ = algorithm.centrality(in: graph, observation: nil)
             #expect(iterations < 100)  // Should converge before max iterations
         }
 
-        @Test func pageRankVisitor() {
+        @Test func pageRankObservation() {
             var startCount = 0
             var endCount = 0
 
@@ -260,12 +258,11 @@
             graph.addEdge(from: c, to: d)
             graph.addEdge(from: d, to: a)
 
+            typealias Cases = PageRankCentrality<AdjacencyList>.EventCases
             let algorithm = PageRankCentralityAlgorithm<AdjacencyList>()
-            let visitor = PageRankCentrality<AdjacencyList>.Visitor(
-                startIteration: { _ in startCount += 1 },
-                endIteration: { _, _ in endCount += 1 }
-            )
-            _ = algorithm.centrality(in: graph, visitor: visitor)
+                .observing(Cases.iterationStarted) { _ in startCount += 1 }
+                .observing(Cases.iterationFinished) { _ in endCount += 1 }
+            _ = algorithm.centrality(in: graph, observation: nil)
 
             #expect(startCount > 0)
             #expect(endCount > 0)
@@ -356,7 +353,7 @@
             #expect(result.centrality(for: c) == 0.0)
         }
 
-        @Test func betweennessVisitor() {
+        @Test func betweennessObservation() {
             var examinedVertices: Set<AdjacencyList.VertexDescriptor> = []
             var foundPaths: [(AdjacencyList.VertexDescriptor, AdjacencyList.VertexDescriptor, Int)] = []
 
@@ -367,16 +364,15 @@
             graph.addEdge(from: a, to: b)
             graph.addEdge(from: b, to: c)
 
+            typealias Cases = BetweennessCentrality<AdjacencyList>.EventCases
             let algorithm = BetweennessCentralityAlgorithm<AdjacencyList>(normalized: false)
-            let visitor = BetweennessCentrality<AdjacencyList>.Visitor(
-                examineVertex: { vertex in
+                .observing(Cases.vertexExamined) { vertex in
                     examinedVertices.insert(vertex)
-                },
-                foundShortestPath: { source, destination, distance in
-                    foundPaths.append((source, destination, distance))
                 }
-            )
-            _ = algorithm.centrality(in: graph, visitor: visitor)
+                .observing(Cases.shortestPathFound) { path in
+                    foundPaths.append((path.source, path.destination, path.distance))
+                }
+            _ = algorithm.centrality(in: graph, observation: nil)
 
             #expect(examinedVertices.count == graph.vertexCount)
             #expect(foundPaths.count > 0)
@@ -468,7 +464,7 @@
             #expect(result.centrality(for: isolated) == 0.0)
         }
 
-        @Test func closenessVisitor() {
+        @Test func closenessObservation() {
             var examinedVertices: Set<AdjacencyList.VertexDescriptor> = []
             var computedDistances: [(AdjacencyList.VertexDescriptor, AdjacencyList.VertexDescriptor, Int)] = []
 
@@ -479,16 +475,15 @@
             graph.addEdge(from: a, to: b)
             graph.addEdge(from: b, to: c)
 
+            typealias Cases = ClosenessCentrality<AdjacencyList>.EventCases
             let algorithm = ClosenessCentralityAlgorithm<AdjacencyList>()
-            let visitor = ClosenessCentrality<AdjacencyList>.Visitor(
-                examineVertex: { vertex in
+                .observing(Cases.vertexExamined) { vertex in
                     examinedVertices.insert(vertex)
-                },
-                computeDistance: { source, destination, distance in
-                    computedDistances.append((source, destination, distance))
                 }
-            )
-            _ = algorithm.centrality(in: graph, visitor: visitor)
+                .observing(Cases.distanceComputed) { distance in
+                    computedDistances.append((distance.source, distance.destination, distance.distance))
+                }
+            _ = algorithm.centrality(in: graph, observation: nil)
 
             #expect(examinedVertices.count == graph.vertexCount)
             #expect(computedDistances.count > 0)
@@ -549,17 +544,16 @@
             graph.addEdge(from: a, to: d)
 
             var iterations = 0
+            typealias Cases = EigenvectorCentrality<AdjacencyList>.EventCases
             let algorithm = EigenvectorCentralityAlgorithm<AdjacencyList>(maxIterations: 100, tolerance: 1e-6)
-            let visitor = EigenvectorCentrality<AdjacencyList>.Visitor(
-                startIteration: { iteration in
+                .observing(Cases.iterationStarted) { iteration in
                     iterations = iteration
                 }
-            )
-            _ = algorithm.centrality(in: graph, visitor: visitor)
+            _ = algorithm.centrality(in: graph, observation: nil)
             #expect(iterations < 100)
         }
 
-        @Test func eigenvectorVisitor() {
+        @Test func eigenvectorObservation() {
             var startCount = 0
             var endCount = 0
             var convergedCount = 0
@@ -573,13 +567,12 @@
             graph.addEdge(from: b, to: c)
             graph.addEdge(from: c, to: b)
 
+            typealias Cases = EigenvectorCentrality<AdjacencyList>.EventCases
             let algorithm = EigenvectorCentralityAlgorithm<AdjacencyList>()
-            let visitor = EigenvectorCentrality<AdjacencyList>.Visitor(
-                startIteration: { _ in startCount += 1 },
-                endIteration: { _, _ in endCount += 1 },
-                converge: { _, _ in convergedCount += 1 }
-            )
-            _ = algorithm.centrality(in: graph, visitor: visitor)
+                .observing(Cases.iterationStarted) { _ in startCount += 1 }
+                .observing(Cases.iterationFinished) { _ in endCount += 1 }
+                .observing(Cases.converged) { _ in convergedCount += 1 }
+            _ = algorithm.centrality(in: graph, observation: nil)
 
             #expect(startCount > 0)
             #expect(endCount > 0)
@@ -672,9 +665,9 @@
             #expect(result.values.count == graph.vertexCount)
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        @Test func composedVisitorsReceiveAllEvents() {
+        @Test func composedObservationsReceiveAllEvents() {
             var callCount1 = 0
             var callCount2 = 0
 
@@ -686,27 +679,23 @@
             }
 
             typealias G = AdjacencyList
+            typealias Cases = DegreeCentrality<G>.EventCases
             let algorithm = DegreeCentralityAlgorithm<G>(normalized: true)
-            let visitor1 = DegreeCentrality<G>.Visitor(
-                examineVertex: { _ in callCount1 += 1 }
-            )
-            let visitor2 = DegreeCentrality<G>.Visitor(
-                examineVertex: { _ in callCount2 += 1 }
-            )
-            let combined = visitor1.combined(with: visitor2)
-            _ = algorithm.centrality(in: graph, visitor: combined)
+                .observing(Cases.vertexExamined) { _ in callCount1 += 1 }
+                .observing(Cases.vertexExamined) { _ in callCount2 += 1 }
+            _ = algorithm.centrality(in: graph, observation: nil)
 
             #expect(callCount1 == graph.vertexCount)
             #expect(callCount2 == graph.vertexCount)
         }
 
-        /// Exercises both `BetweennessCentrality.Visitor` events through a composed visitor pair.
+        /// Exercises both betweenness-centrality events through an ordered observation chain.
         ///
         /// Graph: directed chain A→B→C→D (3 edges).
         /// Brandes' algorithm calls `examineVertex` for each source vertex (4 times total)
         /// and `foundShortestPath` for each reachable destination from each source.
-        /// Both composed visitors must see identical event counts.
-        @Test func betweennessComposedVisitorsReceiveAllEvents() {
+        /// Both observation groups must see identical event counts.
+        @Test func betweennessComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -721,16 +710,13 @@
             var foundPath1 = 0
             var foundPath2 = 0
 
-            var v1 = BetweennessCentrality<AdjacencyList>.Visitor()
-            v1.examineVertex = { _ in examVtx1 += 1 }
-            v1.foundShortestPath = { _, _, _ in foundPath1 += 1 }
-
-            var v2 = BetweennessCentrality<AdjacencyList>.Visitor()
-            v2.examineVertex = { _ in examVtx2 += 1 }
-            v2.foundShortestPath = { _, _, _ in foundPath2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = graph.centrality(using: .betweenness(normalized: false).withVisitor(combined))
+            typealias Cases = BetweennessCentrality<AdjacencyList>.EventCases
+            let algorithm = BetweennessCentralityAlgorithm<AdjacencyList>(normalized: false)
+                .observing(Cases.vertexExamined) { _ in examVtx1 += 1 }
+                .observing(Cases.shortestPathFound) { _ in foundPath1 += 1 }
+                .observing(Cases.vertexExamined) { _ in examVtx2 += 1 }
+                .observing(Cases.shortestPathFound) { _ in foundPath2 += 1 }
+            _ = graph.centrality(using: algorithm)
 
             // Brandes fires examineVertex once per source vertex (4 sources in a 4-vertex graph)
             #expect(examVtx1 == 4, "examineVertex must fire once per source vertex")
@@ -738,17 +724,17 @@
             // foundShortestPath fires for each BFS discovery — at least 3 (chain has 3 reachable pairs)
             #expect(foundPath1 >= 3, "foundShortestPath fires for each BFS-discovered vertex")
             #expect(foundPath2 >= 3)
-            // Both composed visitors must see identical event counts
+            // Both ordered observation groups must see identical event counts.
             #expect(examVtx1 == examVtx2)
             #expect(foundPath1 == foundPath2)
         }
 
-        /// Exercises both `ClosenessCentrality.Visitor` events through a composed visitor pair.
+        /// Exercises both closeness-centrality events through an ordered observation chain.
         ///
         /// Graph: undirected triangle A−B−C (bidirectional edges).
         /// `examineVertex` fires once per source vertex (3 times); `computeDistance` fires
-        /// for each BFS discovery from each source. Both composed visitors must see identical counts.
-        @Test func closenessComposedVisitorsReceiveAllEvents() {
+        /// for each BFS discovery from each source. Both observation groups must see identical counts.
+        @Test func closenessComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -765,16 +751,13 @@
             var compDist1 = 0
             var compDist2 = 0
 
-            var v1 = ClosenessCentrality<AdjacencyList>.Visitor()
-            v1.examineVertex = { _ in examVtx1 += 1 }
-            v1.computeDistance = { _, _, _ in compDist1 += 1 }
-
-            var v2 = ClosenessCentrality<AdjacencyList>.Visitor()
-            v2.examineVertex = { _ in examVtx2 += 1 }
-            v2.computeDistance = { _, _, _ in compDist2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = graph.centrality(using: .closeness().withVisitor(combined))
+            typealias Cases = ClosenessCentrality<AdjacencyList>.EventCases
+            let algorithm = ClosenessCentralityAlgorithm<AdjacencyList>()
+                .observing(Cases.vertexExamined) { _ in examVtx1 += 1 }
+                .observing(Cases.distanceComputed) { _ in compDist1 += 1 }
+                .observing(Cases.vertexExamined) { _ in examVtx2 += 1 }
+                .observing(Cases.distanceComputed) { _ in compDist2 += 1 }
+            _ = graph.centrality(using: algorithm)
 
             // examineVertex fires once per vertex used as BFS source (3 vertices)
             #expect(examVtx1 == 3, "examineVertex fires once per source vertex")
@@ -782,19 +765,19 @@
             // computeDistance fires for each BFS-discovered vertex — at least 6 (2 per source in K3)
             #expect(compDist1 >= 6, "computeDistance fires for each vertex discovered from each source")
             #expect(compDist2 >= 6)
-            // Both composed visitors must see identical event counts
+            // Both ordered observation groups must see identical event counts.
             #expect(examVtx1 == examVtx2)
             #expect(compDist1 == compDist2)
         }
 
-        /// Exercises all three `EigenvectorCentrality.Visitor` events through a composed visitor pair.
+        /// Exercises all three eigenvector-centrality events through an ordered observation chain.
         ///
         /// Graph: directed 3-cycle A→B→C→A. All vertices have identical incoming-edge weights,
         /// so the power iteration converges after a single step (all centralities stay at 1.0).
         /// `startIteration` fires once per power-iteration step; `endIteration` fires once per step;
         /// `converge` fires exactly once when convergence is reached.
-        /// Both composed visitors must see identical event counts.
-        @Test func eigenvectorComposedVisitorsReceiveAllEvents() {
+        /// Both observation groups must see identical event counts.
+        @Test func eigenvectorComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -811,18 +794,15 @@
             var converge1 = 0
             var converge2 = 0
 
-            var v1 = EigenvectorCentrality<AdjacencyList>.Visitor()
-            v1.startIteration = { _ in startIter1 += 1 }
-            v1.endIteration = { _, _ in endIter1 += 1 }
-            v1.converge = { _, _ in converge1 += 1 }
-
-            var v2 = EigenvectorCentrality<AdjacencyList>.Visitor()
-            v2.startIteration = { _ in startIter2 += 1 }
-            v2.endIteration = { _, _ in endIter2 += 1 }
-            v2.converge = { _, _ in converge2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = graph.centrality(using: .eigenvector().withVisitor(combined))
+            typealias Cases = EigenvectorCentrality<AdjacencyList>.EventCases
+            let algorithm = EigenvectorCentralityAlgorithm<AdjacencyList>()
+                .observing(Cases.iterationStarted) { _ in startIter1 += 1 }
+                .observing(Cases.iterationFinished) { _ in endIter1 += 1 }
+                .observing(Cases.converged) { _ in converge1 += 1 }
+                .observing(Cases.iterationStarted) { _ in startIter2 += 1 }
+                .observing(Cases.iterationFinished) { _ in endIter2 += 1 }
+                .observing(Cases.converged) { _ in converge2 += 1 }
+            _ = graph.centrality(using: algorithm)
 
             #expect(startIter1 >= 1, "startIteration fires once per power-iteration step")
             #expect(startIter2 >= 1)
@@ -832,19 +812,19 @@
             #expect(converge2 == 1)
             // startIteration and endIteration must fire the same number of times as each other
             #expect(startIter1 == endIter1)
-            // Both composed visitors must see identical event counts
+            // Both ordered observation groups must see identical event counts.
             #expect(startIter1 == startIter2)
             #expect(endIter1 == endIter2)
             #expect(converge1 == converge2)
         }
 
-        /// Exercises all three `PageRankCentrality.Visitor` events through a composed visitor pair.
+        /// Exercises all three PageRank events through an ordered observation chain.
         ///
         /// Graph: directed triangle A→B→C→A — converges quickly.
         /// `startIteration` fires once per iteration step; `endIteration` fires once per step;
         /// `converge` fires exactly once when convergence is reached.
-        /// Both composed visitors must see identical event counts.
-        @Test func pageRankComposedVisitorsReceiveAllEvents() {
+        /// Both observation groups must see identical event counts.
+        @Test func pageRankComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -860,18 +840,15 @@
             var converge1 = 0
             var converge2 = 0
 
-            var v1 = PageRankCentrality<AdjacencyList>.Visitor()
-            v1.startIteration = { _ in startIter1 += 1 }
-            v1.endIteration = { _, _ in endIter1 += 1 }
-            v1.converge = { _, _ in converge1 += 1 }
-
-            var v2 = PageRankCentrality<AdjacencyList>.Visitor()
-            v2.startIteration = { _ in startIter2 += 1 }
-            v2.endIteration = { _, _ in endIter2 += 1 }
-            v2.converge = { _, _ in converge2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = graph.centrality(using: .pageRank().withVisitor(combined))
+            typealias Cases = PageRankCentrality<AdjacencyList>.EventCases
+            let algorithm = PageRankCentralityAlgorithm<AdjacencyList>()
+                .observing(Cases.iterationStarted) { _ in startIter1 += 1 }
+                .observing(Cases.iterationFinished) { _ in endIter1 += 1 }
+                .observing(Cases.converged) { _ in converge1 += 1 }
+                .observing(Cases.iterationStarted) { _ in startIter2 += 1 }
+                .observing(Cases.iterationFinished) { _ in endIter2 += 1 }
+                .observing(Cases.converged) { _ in converge2 += 1 }
+            _ = graph.centrality(using: algorithm)
 
             #expect(startIter1 >= 1, "startIteration fires once per PageRank iteration")
             #expect(startIter2 >= 1)
@@ -881,7 +858,7 @@
             #expect(converge2 == 1)
             // startIteration and endIteration must fire the same number of times
             #expect(startIter1 == endIter1)
-            // Both composed visitors must see identical event counts
+            // Both ordered observation groups must see identical event counts.
             #expect(startIter1 == startIter2)
             #expect(endIter1 == endIter2)
             #expect(converge1 == converge2)

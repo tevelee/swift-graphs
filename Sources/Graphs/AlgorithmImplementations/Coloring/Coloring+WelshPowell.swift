@@ -10,10 +10,5 @@
         }
     }
 
-    extension WelshPowellColoringAlgorithm: ColoringAlgorithm {
-        @inlinable
-        public func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
-            color(graph: graph, visitor: nil)
-        }
-    }
+    extension WelshPowellColoringAlgorithm: ColoringAlgorithm {}
 #endif

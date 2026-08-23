@@ -16,31 +16,59 @@
         public typealias Vertex = Graph.VertexDescriptor
         public typealias Edge = Graph.EdgeDescriptor
         public typealias GScore = Cost<Weight>
+        /// Details about a successful edge relaxation.
+        public typealias Relaxation = EdgeRelaxation<Edge, Weight>
 
-        /// A visitor for A* algorithm events.
-        ///
-        /// Visitors can be used to observe and react to different events during
-        /// the A* search process, such as vertex examination and edge relaxation.
-        public struct Visitor {
-            public var examineVertex: ((Vertex) -> Void)?
-            public var examineEdge: ((Edge) -> Void)?
-            public var edgeRelaxed: ((Edge) -> Void)?
-            public var edgeNotRelaxed: ((Edge) -> Void)?
-            public var finishVertex: ((Vertex) -> Void)?
+        /// An event emitted while A* runs.
+        public enum Event {
+            /// A vertex was removed from the priority queue for examination.
+            case vertexExamined(Vertex)
+            /// An outgoing edge was examined.
+            case edgeExamined(Edge)
+            /// An edge improved its destination's score.
+            case edgeRelaxed(Relaxation)
+            /// An edge did not improve its destination's score.
+            case edgeNotRelaxed(Edge)
+            /// A vertex and all of its outgoing edges were finished.
+            case vertexFinished(Vertex)
+        }
 
-            @inlinable
-            public init(
-                examineVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                edgeRelaxed: ((Edge) -> Void)? = nil,
-                edgeNotRelaxed: ((Edge) -> Void)? = nil,
-                finishVertex: ((Vertex) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.edgeRelaxed = edgeRelaxed
-                self.edgeNotRelaxed = edgeNotRelaxed
-                self.finishVertex = finishVertex
+        /// Selectors for A* events.
+        public enum EventCases {
+            /// Selects examined vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexExamined(let vertex) = $0 else { return nil }
+                    return vertex
+                }
+            }
+            /// Selects examined edges.
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let edge) = $0 else { return nil }
+                    return edge
+                }
+            }
+            /// Selects successful edge relaxations.
+            public static var edgeRelaxed: AlgorithmEventCase<Event, Relaxation> {
+                .init {
+                    guard case .edgeRelaxed(let relaxation) = $0 else { return nil }
+                    return relaxation
+                }
+            }
+            /// Selects edges that were not relaxed.
+            public static var edgeNotRelaxed: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeNotRelaxed(let edge) = $0 else { return nil }
+                    return edge
+                }
+            }
+            /// Selects finished vertices.
+            public static var vertexFinished: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexFinished(let vertex) = $0 else { return nil }
+                    return vertex
+                }
             }
         }
 
@@ -126,14 +154,14 @@
         }
 
         @inlinable
-        public func makeIterator(visitor: Visitor?) -> Iterator {
+        public func makeIterator(observation: AlgorithmObservation<Event>?) -> Iterator {
             Iterator(
                 graph: graph,
                 source: source,
                 edgeWeight: edgeWeight,
                 heuristic: heuristic,
                 calculateTotalCost: calculateTotalCost,
-                visitor: visitor
+                observation: observation
             )
         }
 
@@ -153,7 +181,7 @@
             @usableFromInline
             let calculateTotalCost: (GScore, HScore) -> FScore
             @usableFromInline
-            let visitor: Visitor?
+            let observation: AlgorithmObservation<Event>?
             @usableFromInline
             var queue = PriorityQueue<PriorityItem>()
             @usableFromInline
@@ -173,14 +201,14 @@
                 edgeWeight: CostDefinition<Graph, Weight>,
                 heuristic: Heuristic<Graph, HScore>,
                 calculateTotalCost: @escaping (GScore, HScore) -> FScore,
-                visitor: Visitor?
+                observation: AlgorithmObservation<Event>? = nil
             ) {
                 self.graph = graph
                 self.source = source
                 self.edgeWeight = edgeWeight
                 self.heuristic = heuristic
                 self.calculateTotalCost = calculateTotalCost
-                self.visitor = visitor
+                self.observation = observation
                 self.propertyMap = graph.makeVertexPropertyMap()
 
                 let gScore: GScore = .finite(.zero)
@@ -206,11 +234,11 @@
 
                 guard let current else { return nil }
 
-                visitor?.examineVertex?(current)
+                observation?.receive(.vertexExamined(current))
 
                 let currentG = propertyMap[current][gScoreProperty]
                 for edge in graph.outgoingEdges(of: current) {
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
 
                     guard let neighbor = graph.destination(of: edge) else { continue }
 
@@ -219,18 +247,21 @@
 
                     let neighborG = propertyMap[neighbor][gScoreProperty]
                     if tentativeG < neighborG {
+                        guard case .finite(let newCost) = tentativeG else {
+                            preconditionFailure("An improved A* score must be finite")
+                        }
                         propertyMap[neighbor][gScoreProperty] = tentativeG
                         propertyMap[neighbor][predecessorEdgeProperty] = edge
                         let fScore = calculateTotalCost(tentativeG, heuristic.estimatedCost(neighbor, graph))
                         queue.enqueue(.init(vertex: neighbor, totalCost: fScore))
-                        visitor?.edgeRelaxed?(edge)
+                        observation?.receive(.edgeRelaxed(.init(edge: edge, newCost: newCost)))
                     } else {
-                        visitor?.edgeNotRelaxed?(edge)
+                        observation?.receive(.edgeNotRelaxed(edge))
                     }
                 }
 
                 visited.insert(current)
-                visitor?.finishVertex?(current)
+                observation?.receive(.vertexFinished(current))
 
                 return Result(
                     source: source,
@@ -248,11 +279,9 @@
     extension AStar: Sequence {
         @inlinable
         public func makeIterator() -> Iterator {
-            makeIterator(visitor: nil)
+            makeIterator(observation: nil)
         }
     }
-
-    extension AStar: VisitorSupporting {}
 
     extension AStar.PriorityItem: Sendable where Vertex: Sendable, FScore: Sendable {}
 
@@ -443,5 +472,28 @@
         }
     #endif
 
-    extension AStar: VisitorSupportingSequence {}
+    extension AStar: AlgorithmObservationSequence {}
+
+    extension AStar.Event: VertexExaminedEvent, EdgeExaminedEvent, EdgeRelaxedEvent {
+        /// Returns the examined vertex carried by the event.
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        /// Returns the examined edge carried by the event.
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+
+        /// Returns successful edge-relaxation details carried by the event.
+        @inlinable
+        public static func relaxation(from event: Self) -> AStar.Relaxation? {
+            guard case .edgeRelaxed(let relaxation) = event else { return nil }
+            return relaxation
+        }
+    }
 #endif

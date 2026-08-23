@@ -14,8 +14,8 @@
 
     extension StoerWagner: MinimumCutAlgorithm {
         @inlinable
-        public func minimumCut(in graph: Graph, visitor: Visitor?) -> MinimumCutResult<Vertex, Edge, Weight>? {
-            minimumCut(on: graph, visitor: visitor)
+        public func minimumCut(in graph: Graph, observation: AlgorithmObservation<Event>?) -> MinimumCutResult<Vertex, Edge, Weight>? {
+            minimumCut(on: graph, observation: observation)
         }
     }
 #endif

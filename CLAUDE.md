@@ -52,7 +52,7 @@ Storage backends in `Storage/` (CSR, COO, ordered, binary, cached bidirectional 
 
 ### 3. Algorithm Definitions (`Sources/Graphs/AlgorithmDefinitions/`)
 
-Each algorithm category defines a protocol (e.g., `ShortestPathAlgorithm`, `TraversalAlgorithm`) with associated types for the graph, result, and visitor. Algorithms constrain on specific graph protocols (e.g., shortest path requires `IncidenceGraph`). The library is inspired by the Boost Graph Library (BGL) and translates BGL's C++ concepts into Swift protocols.
+Each algorithm category defines a protocol (e.g., `ShortestPathAlgorithm`, `TraversalAlgorithm`) with associated types for the graph, result, and event stream. Algorithms constrain on specific graph protocols (e.g., shortest path requires `IncidenceGraph`). The library is inspired by the Boost Graph Library (BGL) and translates BGL's C++ concepts into Swift protocols.
 
 Algorithm protocol families: `ShortestPathAlgorithm`, `TraversalAlgorithm`, `SearchAlgorithm`, `ColoringAlgorithm`, `ConnectedComponentsAlgorithm`, `MinimumSpanningTreeAlgorithm`, `MaxFlowAlgorithm`, `CentralityAlgorithm`, `HamiltonianPathAlgorithm`, `EulerianPathAlgorithm`, `StronglyConnectedComponentsAlgorithm`, `MatchingAlgorithm`, `TopologicalSortAlgorithm`, `CliqueDetectionAlgorithm`, `CommunityDetectionAlgorithm`, `IsomorphismAlgorithm`, `RandomGraphAlgorithm`.
 
@@ -67,12 +67,12 @@ Each subdirectory contains one or more implementations of an algorithm protocol.
    struct MyAlgorithm<G: IncidenceGraph, W: Numeric & Comparable>: ShortestPathAlgorithm {
        typealias Graph = G
        typealias Weight = W
-       typealias Visitor = DijkstraVisitor<G>
+       typealias Event = Dijkstra<G, W>.Event
        let weight: CostDefinition<G, W>
    }
    ```
 
-2. **Implement required methods** — the algorithm's core logic, calling `visitor` hooks at appropriate points.
+2. **Implement required methods** — the algorithm's core logic, publishing typed events through an optional `AlgorithmObservation<Event>` at meaningful state transitions.
 
 3. **Add a static factory method** on the protocol using a constrained extension:
    ```swift
@@ -91,13 +91,14 @@ Each subdirectory contains one or more implementations of an algorithm protocol.
 - **`CostDefinition<Graph, Cost>`** — extracts edge weights. Built-in factories: `.property(\.weight)`, `.uniform(1.0)`, or a custom closure.
 - **`Heuristic<Graph, Cost>`** — estimates distance for A*/best-first. Built-ins: `.euclidean`, `.manhattanDistance`, `.chebyshevDistance`.
 
-#### Visitor pattern:
+#### Algorithm observation:
 
-Every algorithm protocol includes an optional `Visitor` associated type. Visitors observe execution without modifying the algorithm — hooks include events like `discoverVertex`, `examineEdge`, `edgeRelaxed`, `treeEdge`, `backEdge`, `finishVertex`, etc. Visitors are:
+Observable algorithms publish an algorithm-specific `Event` enum. Observation is passive and synchronous; behavior-changing policies such as traversal vetoes use separate APIs. Observations are:
 
-- **Struct-based** with optional closure properties (e.g., `DFSVisitor<Graph>`, `DijkstraVisitor<Graph>`).
-- **Composable** — chain multiple visitors via `.withVisitor()` on an algorithm; all receive events.
-- **Zero-cost when absent** — passing `nil` (the default) incurs no overhead.
+- **Typed** — select one payload with `.observing(.vertexExamined) { vertex in ... }`, or switch over the complete event stream.
+- **Composable** — chain `.observing(...)` calls; handlers run in attachment order.
+- **Opt-in** — public operations have an observation-free overload, and core algorithms keep a `nil` observation on the unobserved path.
+- **Lazy for sequences** — `AlgorithmObservationSequence` attaches observations when an iterator is created; each iterator owns independent algorithm state.
 
 Key difference between `TraversalAlgorithm` and `SearchAlgorithm`: traversal returns a complete `TraversalResult`, while search returns a lazy `Sequence` that supports early termination via `break`.
 

@@ -13,41 +13,58 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe Tarjan's algorithm progress.
-        public struct Visitor {
-            /// Called when discovering a vertex.
-            public var discoverVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when encountering a back edge.
-            public var backEdge: ((Edge) -> Void)?
-            /// Called when encountering a cross edge.
-            public var crossEdge: ((Edge) -> Void)?
-            /// Called when finishing a vertex.
-            public var finishVertex: ((Vertex) -> Void)?
-            /// Called when starting a new component.
-            public var startComponent: ((Vertex) -> Void)?
-            /// Called when finishing a component.
-            public var finishComponent: (([Vertex]) -> Void)?
+        public enum Event {
+            case vertexDiscovered(Vertex)
+            case edgeExamined(Edge)
+            case backEdgeEncountered(Edge)
+            case crossEdgeEncountered(Edge)
+            case vertexFinished(Vertex)
+            case componentStarted(Vertex)
+            case componentFinished([Vertex])
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                discoverVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                backEdge: ((Edge) -> Void)? = nil,
-                crossEdge: ((Edge) -> Void)? = nil,
-                finishVertex: ((Vertex) -> Void)? = nil,
-                startComponent: ((Vertex) -> Void)? = nil,
-                finishComponent: (([Vertex]) -> Void)? = nil
-            ) {
-                self.discoverVertex = discoverVertex
-                self.examineEdge = examineEdge
-                self.backEdge = backEdge
-                self.crossEdge = crossEdge
-                self.finishVertex = finishVertex
-                self.startComponent = startComponent
-                self.finishComponent = finishComponent
+        public enum EventCases {
+            public static var vertexDiscovered: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexDiscovered(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var backEdgeEncountered: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .backEdgeEncountered(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var crossEdgeEncountered: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .crossEdgeEncountered(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var vertexFinished: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexFinished(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var componentStarted: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .componentStarted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var componentFinished: AlgorithmEventCase<Event, [Vertex]> {
+                .init {
+                    guard case .componentFinished(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -122,10 +139,12 @@
 
         /// Finds strongly connected components using Tarjan's algorithm.
         ///
-        /// - Parameter visitor: An optional visitor to observe the algorithm progress
+        /// - Parameter observation: An optional observation of the algorithm progress
         /// - Returns: The strongly connected components result
         @inlinable
-        public func stronglyConnectedComponents(visitor: Visitor?) -> StronglyConnectedComponentsResult<Vertex> {
+        public func stronglyConnectedComponents(
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> StronglyConnectedComponentsResult<Vertex> {
             var propertyMap = graph.makeVertexPropertyMap()
             let colorProperty = ColorProperty.self
             let indexProperty = IndexProperty.self
@@ -146,7 +165,7 @@
                 propertyMap[startVertex][colorProperty] = .gray
                 propertyMap[startVertex][onStackProperty] = true
                 sccStack.append(startVertex)
-                visitor?.discoverVertex?(startVertex)
+                observation?.receive(.vertexDiscovered(startVertex))
                 frameStack.append(Frame(vertex: startVertex, edges: Array(graph.outgoingEdges(of: startVertex))))
 
                 while !frameStack.isEmpty {
@@ -156,7 +175,7 @@
                         let edge = frameStack[frameIndex].edges[frameStack[frameIndex].edgeIndex]
                         frameStack[frameIndex].edgeIndex += 1
 
-                        visitor?.examineEdge?(edge)
+                        observation?.receive(.edgeExamined(edge))
 
                         guard let destination = graph.destination(of: edge) else { continue }
 
@@ -172,12 +191,12 @@
                                 propertyMap[destination][colorProperty] = .gray
                                 propertyMap[destination][onStackProperty] = true
                                 sccStack.append(destination)
-                                visitor?.discoverVertex?(destination)
+                                observation?.receive(.vertexDiscovered(destination))
                                 frameStack.append(Frame(vertex: destination, edges: Array(graph.outgoingEdges(of: destination))))
 
                             case .gray:
                                 // Back edge
-                                visitor?.backEdge?(edge)
+                                observation?.receive(.backEdgeEncountered(edge))
                                 if propertyMap[destination][onStackProperty] == true {
                                     let vertexLowLink = propertyMap[currentVertex][lowLinkProperty] ?? 0
                                     let destinationIndex = propertyMap[destination][indexProperty] ?? 0
@@ -186,7 +205,7 @@
 
                             case .black:
                                 // Cross edge
-                                visitor?.crossEdge?(edge)
+                                observation?.receive(.crossEdgeEncountered(edge))
                         }
                     } else {
                         // Frame done — finalize and pop
@@ -194,7 +213,7 @@
                         let vertex = frame.vertex
 
                         propertyMap[vertex][colorProperty] = .black
-                        visitor?.finishVertex?(vertex)
+                        observation?.receive(.vertexFinished(vertex))
 
                         // If vertex is a root node, pop the SCC stack and create a component
                         let vertexIndex = propertyMap[vertex][indexProperty] ?? 0
@@ -209,8 +228,8 @@
                                 component.append(w)
                             } while w != vertex
 
-                            visitor?.startComponent?(vertex)
-                            visitor?.finishComponent?(component)
+                            observation?.receive(.componentStarted(vertex))
+                            observation?.receive(.componentFinished(component))
                             components.append(component)
                         }
 
@@ -227,6 +246,22 @@
             }
 
             return StronglyConnectedComponentsResult(components: components)
+        }
+    }
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
+    extension Tarjan.Event: VertexDiscoveredEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func discoveredVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexDiscovered(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
         }
     }
 #endif

@@ -15,44 +15,59 @@ extension TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
 ///
 /// - Complexity: O(V + E) where V is the number of vertices and E is the number of edges
 public struct BFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
-    /// The visitor type for observing traversal progress.
-    public typealias Visitor = BreadthFirstSearch<Graph>.Visitor
+    public typealias Event = BreadthFirstSearch<Graph>.Event
+
+    @usableFromInline
+    let shouldTraverse: ((BreadthFirstSearch<Graph>.TraversalCandidate) -> Bool)?
 
     /// Creates a new BFS traversal algorithm.
     @inlinable
-    public init() {}
+    public init() {
+        self.shouldTraverse = nil
+    }
+
+    @inlinable
+    init(shouldTraverse: ((BreadthFirstSearch<Graph>.TraversalCandidate) -> Bool)?) {
+        self.shouldTraverse = shouldTraverse
+    }
+
+    /// Adds a policy that decides whether candidate tree edges may be traversed.
+    @inlinable
+    public func allowingTraversal(
+        _ predicate: @escaping (BreadthFirstSearch<Graph>.TraversalCandidate) -> Bool
+    ) -> Self {
+        let earlier = shouldTraverse
+        return .init { candidate in
+            (earlier?(candidate) ?? true) && predicate(candidate)
+        }
+    }
 
     /// Performs a breadth-first traversal from the source vertex.
     ///
     /// - Parameters:
     ///   - source: The vertex to start traversal from.
     ///   - graph: The graph to traverse.
-    ///   - visitor: An optional visitor to observe the traversal progress.
+    ///   - observation: An optional observation of the traversal progress.
     /// - Returns: The traversal result containing vertices and edges.
     @inlinable
     public func traverse(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
         var vertices: [Graph.VertexDescriptor] = []
         var edges: [Graph.EdgeDescriptor] = []
 
-        BreadthFirstSearch(on: graph, from: source)
-            .withVisitor {
-                .init(
-                    examineVertex: { vertex in
-                        vertices.append(vertex)
-                    },
-                    examineEdge: { edge in
-                        edges.append(edge)
-                    }
-                )
+        let collector = AlgorithmObservation<Event> { event in
+            switch event {
+                case .vertexExamined(let vertex): vertices.append(vertex)
+                case .edgeExamined(let edge): edges.append(edge)
+                default: break
             }
-            .withVisitor {
-                visitor
-            }
-            .forEach { _ in }
+        }
+        var iterator = BreadthFirstSearch(on: graph, from: source, shouldTraverse: shouldTraverse)
+            .makeIterator(observation: collector.followed(by: observation))
+        while iterator.next() != nil {}
 
         return TraversalResult(
             vertices: vertices,
@@ -61,4 +76,4 @@ public struct BFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Grap
     }
 }
 
-extension BFSTraversal: VisitorSupporting {}
+extension BFSTraversal: AlgorithmObserving {}

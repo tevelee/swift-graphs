@@ -1,19 +1,22 @@
 /// A protocol for algorithms that compute shortest paths between all pairs of vertices.
-public protocol ShortestPathsForAllPairsAlgorithm<Graph, Weight> {
+public protocol ShortestPathsForAllPairsAlgorithm<Graph, Weight>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
     /// The weight type used for edge weights.
     associatedtype Weight: AdditiveArithmetic & Comparable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Computes shortest paths between all pairs of vertices.
     ///
     /// - Parameters:
     ///   - graph: The graph to compute shortest paths for.
-    ///   - visitor: An optional visitor to observe the algorithm's progress.
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The shortest paths between all pairs of vertices.
-    func shortestPathsForAllPairs(in graph: Graph, visitor: Visitor?) -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>
+    func shortestPathsForAllPairs(
+        in graph: Graph,
+        observation: AlgorithmObservation<Event>?
+    ) -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>
 }
 
 /// A result containing shortest paths between all pairs of vertices.
@@ -113,7 +116,7 @@ extension IncidenceGraph where Self: VertexListGraph {
     public func shortestPathsForAllPairs<Weight: AdditiveArithmetic & Comparable>(
         using algorithm: some ShortestPathsForAllPairsAlgorithm<Self, Weight>
     ) -> AllPairsShortestPaths<VertexDescriptor, EdgeDescriptor, Weight> {
-        algorithm.shortestPathsForAllPairs(in: self, visitor: nil)
+        algorithm.shortestPathsForAllPairs(in: self, observation: nil)
     }
 }
 
@@ -135,16 +138,16 @@ extension IncidenceGraph where Self: VertexListGraph {
     }
 #endif
 
-extension VisitorWrapper: ShortestPathsForAllPairsAlgorithm
-where Base: ShortestPathsForAllPairsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: ShortestPathsForAllPairsAlgorithm
+where Base: ShortestPathsForAllPairsAlgorithm {
     public typealias Graph = Base.Graph
     public typealias Weight = Base.Weight
 
     @inlinable
     public func shortestPathsForAllPairs(
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> AllPairsShortestPaths<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Weight> {
-        base.shortestPathsForAllPairs(in: graph, visitor: self.visitor.combined(with: visitor))
+        base.shortestPathsForAllPairs(in: graph, observation: self.observation.followed(by: observation))
     }
 }

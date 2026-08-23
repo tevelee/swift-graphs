@@ -7,27 +7,27 @@
 /// - **Closeness centrality**: Average distance to all other vertices
 /// - **Eigenvector centrality**: Importance based on neighbors' importance
 /// - **PageRank**: Importance based on link structure
-public protocol CentralityAlgorithm<Graph> {
+public protocol CentralityAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Computes centrality values for all vertices in the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to compute centrality for.
-    ///   - visitor: An optional visitor to observe the algorithm's progress.
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The centrality values for all vertices.
-    func centrality(in graph: Graph, visitor: Visitor?) -> CentralityResult<Graph.VertexDescriptor>
+    func centrality(in graph: Graph, observation: AlgorithmObservation<Event>?) -> CentralityResult<Graph.VertexDescriptor>
 }
 
-extension VisitorWrapper: CentralityAlgorithm where Base: CentralityAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: CentralityAlgorithm where Base: CentralityAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
-    public func centrality(in graph: Base.Graph, visitor: Base.Visitor?) -> CentralityResult<Base.Graph.VertexDescriptor> {
-        base.centrality(in: graph, visitor: self.visitor.combined(with: visitor))
+    public func centrality(in graph: Base.Graph, observation: AlgorithmObservation<Base.Event>?) -> CentralityResult<Base.Graph.VertexDescriptor> {
+        base.centrality(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 
@@ -117,7 +117,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     public func centrality(
         using algorithm: some CentralityAlgorithm<Self>
     ) -> CentralityResult<VertexDescriptor> {
-        algorithm.centrality(in: self, visitor: nil)
+        algorithm.centrality(in: self, observation: nil)
     }
 }
 

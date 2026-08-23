@@ -7,25 +7,40 @@ public struct LeftRightPlanarEmbedding<Graph: IncidenceGraph & VertexListGraph &
 where Graph.VertexDescriptor: Hashable {
     public typealias Vertex = Graph.VertexDescriptor
 
-    /// A visitor that can observe the embedding algorithm's progress.
-    public struct Visitor {
-        /// Called when the embedding computation starts.
-        public var start: (() -> Void)?
-        /// Called when the graph is found to be planar (with the resulting embedding).
-        public var foundPlanar: ((PlanarEmbedding<Vertex>) -> Void)?
-        /// Called when the graph is found to be non-planar (with the certificate).
-        public var foundNonPlanar: ((KuratowskiSubgraph<Vertex>) -> Void)?
+    /// An event emitted while computing a planar embedding.
+    public enum Event {
+        /// Embedding computation started.
+        case started
+        /// A planar embedding was produced.
+        case planarFound(PlanarEmbedding<Vertex>)
+        /// A non-planarity certificate was produced.
+        case nonPlanarFound(KuratowskiSubgraph<Vertex>)
+    }
 
-        /// Creates a new visitor.
-        @inlinable
-        public init(
-            start: (() -> Void)? = nil,
-            foundPlanar: ((PlanarEmbedding<Vertex>) -> Void)? = nil,
-            foundNonPlanar: ((KuratowskiSubgraph<Vertex>) -> Void)? = nil
-        ) {
-            self.start = start
-            self.foundPlanar = foundPlanar
-            self.foundNonPlanar = foundNonPlanar
+    /// Typed selectors for planar-embedding events.
+    public enum EventCases {
+        /// Selects computation start.
+        public static var started: AlgorithmEventCase<Event, Void> {
+            .init {
+                guard case .started = $0 else { return nil }
+                return ()
+            }
+        }
+
+        /// Selects planar embeddings.
+        public static var planarFound: AlgorithmEventCase<Event, PlanarEmbedding<Vertex>> {
+            .init {
+                guard case .planarFound(let embedding) = $0 else { return nil }
+                return embedding
+            }
+        }
+
+        /// Selects non-planarity certificates.
+        public static var nonPlanarFound: AlgorithmEventCase<Event, KuratowskiSubgraph<Vertex>> {
+            .init {
+                guard case .nonPlanarFound(let certificate) = $0 else { return nil }
+                return certificate
+            }
         }
     }
 
@@ -37,25 +52,23 @@ where Graph.VertexDescriptor: Hashable {
     ///
     /// - Parameters:
     ///   - graph: The graph to embed.
-    ///   - visitor: An optional visitor to observe the algorithm progress.
+    ///   - observation: An optional observation of algorithm progress.
     /// - Returns: The planar embedding result.
     public func planarEmbedding(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> PlanarEmbeddingResult<Vertex> {
-        visitor?.start?()
+        observation?.receive(.started)
         let result = PlanarityCore.embeddingResult(graph)
         switch result {
             case .planar(let embedding):
-                visitor?.foundPlanar?(embedding)
+                observation?.receive(.planarFound(embedding))
             case .nonPlanar(let certificate):
-                visitor?.foundNonPlanar?(certificate)
+                observation?.receive(.nonPlanarFound(certificate))
         }
         return result
     }
 }
-
-extension LeftRightPlanarEmbedding: VisitorSupporting {}
 
 extension PlanarEmbeddingAlgorithm {
     /// Creates a Left-Right planar embedding algorithm.

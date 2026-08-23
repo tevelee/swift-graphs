@@ -8,7 +8,7 @@
         public func stronglyConnectedComponents(
             using algorithm: TarjanStronglyConnectedComponentsAlgorithm<Self>
         ) -> StronglyConnectedComponentsResult<VertexDescriptor> {
-            algorithm.stronglyConnectedComponents(in: self, visitor: nil as Tarjan<Self>.Visitor?)
+            algorithm.stronglyConnectedComponents(in: self, observation: nil)
         }
     }
 #endif

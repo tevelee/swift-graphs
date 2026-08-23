@@ -229,9 +229,9 @@
             #expect(result.modularity > 0.0)
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        @Test func visitorCallbacks() {
+        @Test func observationBaseline() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -242,7 +242,7 @@
             graph.addEdge(from: b, to: c)
             graph.addEdge(from: c, to: b)
 
-            // Test basic functionality without visitor for now
+            // Test basic functionality without an observation.
             let result = graph.detectCommunities()
 
             #expect(result.communityCount > 0)
@@ -303,9 +303,9 @@
             #expect(result2.modularity >= 0.0)
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        /// Exercises all four Louvain visitor events through a composed visitor pair.
+        /// Exercises all four Louvain events through an ordered observation chain.
         ///
         /// Graph: two triangles connected by a weak bridge (clear community structure).
         /// Louvain will discover communities by moving vertices and improving modularity.
@@ -313,7 +313,7 @@
         /// - `moveVertex` fires when a vertex is reassigned to a different community.
         /// - `modularityImproved` fires when moving a vertex increases modularity.
         /// - `iterationComplete` fires at the end of each phase with the current modularity.
-        @Test func composedVisitorsReceiveAllEvents() {
+        @Test func composedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -348,20 +348,17 @@
             var iterEnd1 = 0
             var iterEnd2 = 0
 
-            var v1 = LouvainCommunityDetection<AdjacencyList>.Visitor()
-            v1.startPhase = { _ in startPhase1 += 1 }
-            v1.moveVertex = { _, _ in moveVtx1 += 1 }
-            v1.modularityImproved = { _ in modImprove1 += 1 }
-            v1.iterationComplete = { _, _ in iterEnd1 += 1 }
-
-            var v2 = LouvainCommunityDetection<AdjacencyList>.Visitor()
-            v2.startPhase = { _ in startPhase2 += 1 }
-            v2.moveVertex = { _, _ in moveVtx2 += 1 }
-            v2.modularityImproved = { _ in modImprove2 += 1 }
-            v2.iterationComplete = { _, _ in iterEnd2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = LouvainCommunityDetection<AdjacencyList>(on: graph).detectCommunities(visitor: combined)
+            typealias Cases = LouvainCommunityDetection<AdjacencyList>.EventCases
+            let algorithm = LouvainCommunityDetection<AdjacencyList>(on: graph)
+                .observing(Cases.phaseStarted) { _ in startPhase1 += 1 }
+                .observing(Cases.vertexMoved) { _ in moveVtx1 += 1 }
+                .observing(Cases.modularityImproved) { _ in modImprove1 += 1 }
+                .observing(Cases.iterationCompleted) { _ in iterEnd1 += 1 }
+                .observing(Cases.phaseStarted) { _ in startPhase2 += 1 }
+                .observing(Cases.vertexMoved) { _ in moveVtx2 += 1 }
+                .observing(Cases.modularityImproved) { _ in modImprove2 += 1 }
+                .observing(Cases.iterationCompleted) { _ in iterEnd2 += 1 }
+            _ = algorithm.detectCommunities(in: graph, observation: nil)
 
             #expect(startPhase1 >= 1, "startPhase fires at the beginning of each Louvain phase")
             #expect(startPhase2 >= 1)
@@ -371,7 +368,7 @@
             #expect(modImprove2 >= 1)
             #expect(iterEnd1 >= 1, "iterationComplete fires after each phase")
             #expect(iterEnd2 >= 1)
-            // Both composed visitors must see identical event counts
+            // Both ordered observation groups must see identical event counts.
             #expect(startPhase1 == startPhase2)
             #expect(moveVtx1 == moveVtx2)
             #expect(modImprove1 == modImprove2)

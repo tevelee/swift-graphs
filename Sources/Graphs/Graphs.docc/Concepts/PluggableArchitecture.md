@@ -329,16 +329,16 @@ let path = graph.shortestPath(from: a, to: b, using: .bellmanFord(weight: .prope
 All implementations conform to the same protocol:
 
 ```swift
-protocol ShortestPathAlgorithm<Graph, Weight> {
+protocol ShortestPathAlgorithm<Graph, Weight>: AlgorithmObserving {
     associatedtype Graph: IncidenceGraph
     associatedtype Weight: AdditiveArithmetic & Comparable
-    associatedtype Visitor
+    associatedtype Event
     
     func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 }
 
@@ -359,7 +359,9 @@ Implement your own:
 struct BidirectionalDijkstra<G: BidirectionalGraph, W: Numeric & Comparable>: ShortestPathAlgorithm {
     typealias Graph = G
     typealias Weight = W
-    typealias Visitor = DijkstraVisitor<G>
+    enum Event {
+        case vertexExamined(G.VertexDescriptor)
+    }
     
     let weight: CostDefinition<G, W>
     
@@ -367,7 +369,7 @@ struct BidirectionalDijkstra<G: BidirectionalGraph, W: Numeric & Comparable>: Sh
         from source: G.VertexDescriptor,
         to destination: G.VertexDescriptor,
         in graph: G,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Path<G.VertexDescriptor, G.EdgeDescriptor>? {
         // Search from both ends simultaneously
         var forwardFrontier = PriorityQueue<(G.VertexDescriptor, W)>()

@@ -15,28 +15,53 @@ extension SearchAlgorithm {
 ///
 /// - Complexity: O(V + E) where V is the number of vertices and E is the number of edges
 public struct BFSSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
-    /// The visitor type for observing search progress.
-    public typealias Visitor = BreadthFirstSearch<Graph>.Visitor
+    public typealias Event = BreadthFirstSearch<Graph>.Event
+
+    @usableFromInline
+    let shouldTraverse: ((BreadthFirstSearch<Graph>.TraversalCandidate) -> Bool)?
 
     /// Creates a new BFS search algorithm.
     @inlinable
-    public init() {}
+    public init() {
+        self.shouldTraverse = nil
+    }
+
+    @inlinable
+    init(shouldTraverse: ((BreadthFirstSearch<Graph>.TraversalCandidate) -> Bool)?) {
+        self.shouldTraverse = shouldTraverse
+    }
+
+    /// Adds a policy that decides whether candidate tree edges may be traversed.
+    @inlinable
+    public func allowingTraversal(
+        _ predicate: @escaping (BreadthFirstSearch<Graph>.TraversalCandidate) -> Bool
+    ) -> Self {
+        let earlier = shouldTraverse
+        return .init { candidate in
+            (earlier?(candidate) ?? true) && predicate(candidate)
+        }
+    }
 
     /// Performs a breadth-first search from the source vertex.
     ///
     /// - Parameters:
     ///   - source: The vertex to start search from.
     ///   - graph: The graph to search in.
-    ///   - visitor: An optional visitor to observe the search progress.
+    ///   - observation: An optional observation of the search progress.
     /// - Returns: A BFS algorithm instance.
     @inlinable
     public func search(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> BreadthFirstSearch<Graph> {
-        BreadthFirstSearch(on: graph, from: source)
+        BreadthFirstSearch(
+            on: graph,
+            from: source,
+            observation: observation,
+            shouldTraverse: shouldTraverse
+        )
     }
 }
 
-extension BFSSearch: VisitorSupporting {}
+extension BFSSearch: AlgorithmObserving {}

@@ -258,74 +258,69 @@ struct HamiltonianPropertyTests {
 
     #endif
 
-    // MARK: - Visitor Support
+    // MARK: - Observation Support
 
-    @Test func diracVisitor() {
+    @Test func diracObservation() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         graph.addEdge(from: a, to: b)
 
-        var visitorCalls: [String] = []
-
-        let visitor = DiracProperty<TestGraph>.Visitor(
-            insufficientVertices: { n in
-                visitorCalls.append("insufficientVertices(\(n))")
-            },
-            checkMinimumDegree: { minDegree in
-                visitorCalls.append("checkMinimumDegree(\(minDegree))")
-            },
-            checkVertexDegree: { vertex, degree, minDegree in
-                visitorCalls.append("checkVertexDegree(\(vertex), \(degree), \(minDegree))")
-            },
-            degreeTooLow: { vertex, degree, minDegree in
-                visitorCalls.append("degreeTooLow(\(vertex), \(degree), \(minDegree))")
+        var observationCalls: [String] = []
+        typealias Cases = DiracProperty<TestGraph>.EventCases
+        let observed = StandardDiracPropertyAlgorithm<TestGraph>()
+            .observing(Cases.insufficientVertexCount) { count in
+                observationCalls.append("insufficientVertexCount(\(count))")
             }
-        )
+            .observing(Cases.minimumDegreeComputed) { degree in
+                observationCalls.append("minimumDegreeComputed(\(degree))")
+            }
+            .observing(Cases.vertexDegreeChecked) { value in
+                observationCalls.append("vertexDegreeChecked(\(value.vertex), \(value.degree), \(value.minimum))")
+            }
+            .observing(Cases.vertexDegreeTooLow) { value in
+                observationCalls.append("vertexDegreeTooLow(\(value.vertex), \(value.degree), \(value.minimum))")
+            }
 
-        let algorithm = StandardDiracPropertyAlgorithm<TestGraph>()
-        _ = algorithm.satisfiesDirac(in: graph, visitor: visitor)
+        _ = graph.satisfiesDirac(using: observed)
 
-        #expect(visitorCalls.contains("insufficientVertices(2)"))
+        #expect(observationCalls.contains("insufficientVertexCount(2)"))
     }
 
-    @Test func oreVisitor() {
+    @Test func oreObservation() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         graph.addEdge(from: a, to: b)
 
-        var visitorCalls: [String] = []
-
-        let visitor = OreProperty<TestGraph>.Visitor(
-            insufficientVertices: { n in
-                visitorCalls.append("insufficientVertices(\(n))")
-            },
-            checkVertexCount: { n in
-                visitorCalls.append("checkVertexCount(\(n))")
-            },
-            checkVertexPair: { u, v, areAdjacent in
-                visitorCalls.append("checkVertexPair(\(u), \(v), \(areAdjacent))")
-            },
-            checkDegreeSum: { u, v, degreeSum, n in
-                visitorCalls.append("checkDegreeSum(\(u), \(v), \(degreeSum), \(n))")
-            },
-            degreeSumTooLow: { u, v, degreeSum, n in
-                visitorCalls.append("degreeSumTooLow(\(u), \(v), \(degreeSum), \(n))")
+        var observationCalls: [String] = []
+        typealias Cases = OreProperty<TestGraph>.EventCases
+        let observed = StandardOrePropertyAlgorithm<TestGraph>()
+            .observing(Cases.insufficientVertexCount) { count in
+                observationCalls.append("insufficientVertexCount(\(count))")
             }
-        )
+            .observing(Cases.vertexCountChecked) { count in
+                observationCalls.append("vertexCountChecked(\(count))")
+            }
+            .observing(Cases.vertexPairChecked) { value in
+                observationCalls.append("vertexPairChecked(\(value.0), \(value.1), \(value.adjacent))")
+            }
+            .observing(Cases.degreeSumChecked) { value in
+                observationCalls.append("degreeSumChecked(\(value.0), \(value.1), \(value.sum), \(value.required))")
+            }
+            .observing(Cases.degreeSumTooLow) { value in
+                observationCalls.append("degreeSumTooLow(\(value.0), \(value.1), \(value.sum), \(value.required))")
+            }
 
-        let algorithm = StandardOrePropertyAlgorithm<TestGraph>()
-        _ = algorithm.satisfiesOre(in: graph, visitor: visitor)
+        _ = graph.satisfiesOre(using: observed)
 
-        #expect(visitorCalls.contains("insufficientVertices(2)"))
+        #expect(observationCalls.contains("insufficientVertexCount(2)"))
     }
 
     // MARK: - Composition
 
-    /// `DiracProperty.Visitor` uses `??` composition: the first non-nil callback wins.
-    /// Calling `combined(with:)` and running the algorithm exercises the composition code.
-    @Test func diracComposedVisitor() {
+    /// Repeated observations compose synchronously and each receive the selected events.
+    @Test func diracComposedObservations() {
         // Build a graph with 4 vertices where Dirac's condition is checked per-vertex
         var graph = AdjacencyList()
         let a = graph.addVertex()
@@ -340,30 +335,32 @@ struct HamiltonianPropertyTests {
 
         var checkMinDegree = 0
         var checkVtxDegree = 0
+        var checkMinDegree2 = 0
+        var checkVtxDegree2 = 0
 
-        let v1 = DiracProperty<TestGraph>.Visitor(
-            checkMinimumDegree: { _ in checkMinDegree += 1 },
-            checkVertexDegree: { _, _, _ in checkVtxDegree += 1 }
-        )
-        // v2 has no callbacks; combined uses v1's via ??
-        let v2 = DiracProperty<TestGraph>.Visitor()
-        let combined = v1.combined(with: v2)
+        typealias Cases = DiracProperty<TestGraph>.EventCases
+        let observed = StandardDiracPropertyAlgorithm<TestGraph>()
+            .observing(Cases.minimumDegreeComputed) { _ in checkMinDegree += 1 }
+            .observing(Cases.vertexDegreeChecked) { _ in checkVtxDegree += 1 }
+            .observing(Cases.minimumDegreeComputed) { _ in checkMinDegree2 += 1 }
+            .observing(Cases.vertexDegreeChecked) { _ in checkVtxDegree2 += 1 }
 
-        let result = StandardDiracPropertyAlgorithm<TestGraph>().satisfiesDirac(in: graph, visitor: combined)
+        let result = graph.satisfiesDirac(using: observed)
         #expect(result, "K4 satisfies Dirac's condition")
-        #expect(checkMinDegree == 1, "checkMinimumDegree fires once per algorithm run")
-        #expect(checkVtxDegree == 4, "checkVertexDegree fires once per vertex")
+        #expect(checkMinDegree == 1, "minimumDegreeComputed fires once per algorithm run")
+        #expect(checkVtxDegree == 4, "vertexDegreeChecked fires once per vertex")
+        #expect(checkMinDegree == checkMinDegree2)
+        #expect(checkVtxDegree == checkVtxDegree2)
     }
 
-    /// `OreProperty.Visitor` also uses `??` composition. Exercise `combined(with:)` and
-    /// verify the per-pair events fire correctly.
-    @Test func oreComposedVisitor() {
+    /// Repeated Ore observations compose and receive the same per-pair events.
+    @Test func oreComposedObservations() {
         var graph = AdjacencyList()
         let a = graph.addVertex()
         let b = graph.addVertex()
         let c = graph.addVertex()
         let d = graph.addVertex()
-        // K4 again — every pair is adjacent, so checkVertexPair fires for each pair
+        // K4 again — every pair is adjacent, so vertexPairChecked fires for each pair.
         for (u, v) in [(a, b), (a, c), (a, d), (b, c), (b, d), (c, d)] {
             graph.addEdge(from: u, to: v)
             graph.addEdge(from: v, to: u)
@@ -371,18 +368,22 @@ struct HamiltonianPropertyTests {
 
         var checkCount = 0
         var checkDegSum = 0
+        var checkCount2 = 0
+        var checkDegSum2 = 0
 
-        let v1 = OreProperty<TestGraph>.Visitor(
-            checkVertexPair: { _, _, _ in checkCount += 1 },
-            checkDegreeSum: { _, _, _, _ in checkDegSum += 1 }
-        )
-        let v2 = OreProperty<TestGraph>.Visitor()
-        let combined = v1.combined(with: v2)
+        typealias Cases = OreProperty<TestGraph>.EventCases
+        let observed = StandardOrePropertyAlgorithm<TestGraph>()
+            .observing(Cases.vertexPairChecked) { _ in checkCount += 1 }
+            .observing(Cases.degreeSumChecked) { _ in checkDegSum += 1 }
+            .observing(Cases.vertexPairChecked) { _ in checkCount2 += 1 }
+            .observing(Cases.degreeSumChecked) { _ in checkDegSum2 += 1 }
 
-        let result = StandardOrePropertyAlgorithm<TestGraph>().satisfiesOre(in: graph, visitor: combined)
+        let result = graph.satisfiesOre(using: observed)
         #expect(result, "K4 satisfies Ore's condition")
-        // C(4,2) = 6 pairs checked; all adjacent → checkDegreeSum never fires
-        #expect(checkCount == 6, "checkVertexPair fires once per unique pair")
-        #expect(checkDegSum == 0, "checkDegreeSum only fires for non-adjacent pairs")
+        // C(4,2) = 6 pairs checked; all adjacent, so degreeSumChecked never fires.
+        #expect(checkCount == 6, "vertexPairChecked fires once per unique pair")
+        #expect(checkDegSum == 0, "degreeSumChecked only fires for non-adjacent pairs")
+        #expect(checkCount == checkCount2)
+        #expect(checkDegSum == checkDegSum2)
     }
 }

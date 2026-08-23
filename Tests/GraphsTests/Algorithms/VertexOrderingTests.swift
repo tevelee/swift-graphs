@@ -530,18 +530,10 @@
             #expect(smallestLastOrdering.orderedVertices != rcmOrdering.orderedVertices)
         }
 
-        // MARK: - Visitor Composition
+        // MARK: - Observation Composition
 
-        /// Verifies the SmallestLastVertexOrderingAlgorithm visitor composition semantics.
-        ///
-        /// **Important:** SmallestLastVertex uses "last-wins" composition (`other.cb ?? self.cb`),
-        /// not the standard "both-fire" pattern used by most algorithm visitors. This means:
-        /// - When `other` (v2) has a non-nil callback, `combined` uses v2's callback exclusively.
-        /// - When `other` (v2) has a nil callback, `combined` falls back to v1's callback.
-        ///
-        /// This test exercises all three events (`examineVertex`, `removeVertex`, `updateDegree`)
-        /// and verifies both branches of the `??` fall-through.
-        @Test func smallestLastVertexComposedVisitorLastWins() {
+        /// Verifies that Smallest Last observations both fire in lexical attachment order.
+        @Test func smallestLastVertexComposedObservationsBothFireInOrder() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -551,50 +543,50 @@
             graph.addEdge(from: b, to: c)
             graph.addEdge(from: c, to: b)
 
-            // Scenario 1: both v1 and v2 set all events.
-            // Combined should use v2's callbacks exclusively (other wins).
-            var examV1 = 0
-            var examV2 = 0
+            var firstCount = 0
+            var secondCount = 0
+            var deliveryOrder: [Int] = []
+            typealias Cases = SmallestLastVertexOrderingAlgorithm<AdjacencyList>.EventCases
 
-            var v1 = SmallestLastVertexOrderingAlgorithm<AdjacencyList>.Visitor()
-            v1.examineVertex = { _ in examV1 += 1 }
-            v1.removeVertex = { _, _ in examV1 += 1 }
-            v1.updateDegree = { _, _, _ in examV1 += 1 }
+            let algorithm = SmallestLastVertexOrderingAlgorithm<AdjacencyList>()
+                .observing(Cases.vertexExamined) { _ in
+                    firstCount += 1
+                    deliveryOrder.append(1)
+                }
+                .observing(Cases.vertexRemoved) { _ in
+                    firstCount += 1
+                    deliveryOrder.append(1)
+                }
+                .observing(Cases.degreeUpdated) { _ in
+                    firstCount += 1
+                    deliveryOrder.append(1)
+                }
+                .observing(Cases.vertexExamined) { _ in
+                    secondCount += 1
+                    deliveryOrder.append(2)
+                }
+                .observing(Cases.vertexRemoved) { _ in
+                    secondCount += 1
+                    deliveryOrder.append(2)
+                }
+                .observing(Cases.degreeUpdated) { _ in
+                    secondCount += 1
+                    deliveryOrder.append(2)
+                }
 
-            var v2 = SmallestLastVertexOrderingAlgorithm<AdjacencyList>.Visitor()
-            v2.examineVertex = { _ in examV2 += 1 }
-            v2.removeVertex = { _, _ in examV2 += 1 }
-            v2.updateDegree = { _, _, _ in examV2 += 1 }
+            _ = algorithm.orderVertices(in: graph, observation: nil)
 
-            let combined1 = v1.combined(with: v2)
-            _ = SmallestLastVertexOrderingAlgorithm<AdjacencyList>()
-                .orderVertices(in: graph, visitor: combined1)
-
-            // "last wins": v2 overrides v1 for all events, so only v2's counters increment
-            #expect(examV2 >= 1, "all events route to v2 (other) when v2 has non-nil callbacks")
-            #expect(examV1 == 0, "v1 (self) callbacks are not called when v2 overrides them")
-
-            // Scenario 2: only v1 sets events, v2 is empty.
-            // Combined should fall back to v1's callbacks.
-            var fallback = 0
-            var vFallback = SmallestLastVertexOrderingAlgorithm<AdjacencyList>.Visitor()
-            vFallback.examineVertex = { _ in fallback += 1 }
-            vFallback.removeVertex = { _, _ in fallback += 1 }
-            vFallback.updateDegree = { _, _, _ in fallback += 1 }
-
-            let emptyV2 = SmallestLastVertexOrderingAlgorithm<AdjacencyList>.Visitor()
-            let combined2 = vFallback.combined(with: emptyV2)
-            _ = SmallestLastVertexOrderingAlgorithm<AdjacencyList>()
-                .orderVertices(in: graph, visitor: combined2)
-
-            #expect(fallback >= 1, "v1 (self) callbacks are used when v2 (other) callbacks are nil")
+            #expect(firstCount >= 1)
+            #expect(firstCount == secondCount, "both observations must receive every selected event")
+            #expect(deliveryOrder.count.isMultiple(of: 2))
+            for index in stride(from: 0, to: deliveryOrder.count, by: 2) {
+                #expect(deliveryOrder[index] == 1)
+                #expect(deliveryOrder[index + 1] == 2)
+            }
         }
 
-        /// Verifies the ReverseCuthillMcKeeOrderingAlgorithm visitor composition semantics.
-        ///
-        /// Uses the same "last-wins" composition as SmallestLastVertex:
-        /// `other.cb ?? self.cb`. When `other` (v2) has callbacks, they win; when nil, v1 is used.
-        @Test func reverseCuthillMcKeeComposedVisitorLastWins() {
+        /// Verifies that Reverse Cuthill-McKee observations both fire in lexical attachment order.
+        @Test func reverseCuthillMcKeeComposedObservationsBothFireInOrder() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -604,43 +596,54 @@
             graph.addEdge(from: b, to: c)
             graph.addEdge(from: c, to: b)
 
-            // Scenario 1: both visitors set all callbacks — v2 (other) wins.
-            var examV1 = 0
-            var examV2 = 0
+            var firstCount = 0
+            var secondCount = 0
+            var deliveryOrder: [Int] = []
+            typealias Cases = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>.EventCases
 
-            var v1 = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>.Visitor()
-            v1.examineVertex = { _ in examV1 += 1 }
-            v1.enqueueVertex = { _, _ in examV1 += 1 }
-            v1.dequeueVertex = { _ in examV1 += 1 }
-            v1.startFromVertex = { _ in examV1 += 1 }
+            let algorithm = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>()
+                .observing(Cases.componentStarted) { _ in
+                    firstCount += 1
+                    deliveryOrder.append(1)
+                }
+                .observing(Cases.vertexExamined) { _ in
+                    firstCount += 1
+                    deliveryOrder.append(1)
+                }
+                .observing(Cases.vertexEnqueued) { _ in
+                    firstCount += 1
+                    deliveryOrder.append(1)
+                }
+                .observing(Cases.vertexDequeued) { _ in
+                    firstCount += 1
+                    deliveryOrder.append(1)
+                }
+                .observing(Cases.componentStarted) { _ in
+                    secondCount += 1
+                    deliveryOrder.append(2)
+                }
+                .observing(Cases.vertexExamined) { _ in
+                    secondCount += 1
+                    deliveryOrder.append(2)
+                }
+                .observing(Cases.vertexEnqueued) { _ in
+                    secondCount += 1
+                    deliveryOrder.append(2)
+                }
+                .observing(Cases.vertexDequeued) { _ in
+                    secondCount += 1
+                    deliveryOrder.append(2)
+                }
 
-            var v2 = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>.Visitor()
-            v2.examineVertex = { _ in examV2 += 1 }
-            v2.enqueueVertex = { _, _ in examV2 += 1 }
-            v2.dequeueVertex = { _ in examV2 += 1 }
-            v2.startFromVertex = { _ in examV2 += 1 }
+            _ = algorithm.orderVertices(in: graph, observation: nil)
 
-            let combined1 = v1.combined(with: v2)
-            _ = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>()
-                .orderVertices(in: graph, visitor: combined1)
-
-            #expect(examV2 >= 1, "all events route to v2 (other) when v2 has non-nil callbacks")
-            #expect(examV1 == 0, "v1 (self) callbacks are not called when v2 overrides them")
-
-            // Scenario 2: only v1 sets events, v2 is empty.
-            var fallback = 0
-            var vFallback = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>.Visitor()
-            vFallback.examineVertex = { _ in fallback += 1 }
-            vFallback.enqueueVertex = { _, _ in fallback += 1 }
-            vFallback.dequeueVertex = { _ in fallback += 1 }
-            vFallback.startFromVertex = { _ in fallback += 1 }
-
-            let emptyV2 = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>.Visitor()
-            let combined2 = vFallback.combined(with: emptyV2)
-            _ = ReverseCuthillMcKeeOrderingAlgorithm<AdjacencyList>()
-                .orderVertices(in: graph, visitor: combined2)
-
-            #expect(fallback >= 1, "v1 (self) callbacks are used when v2 (other) callbacks are nil")
+            #expect(firstCount >= 1)
+            #expect(firstCount == secondCount, "both observations must receive every selected event")
+            #expect(deliveryOrder.count.isMultiple(of: 2))
+            for index in stride(from: 0, to: deliveryOrder.count, by: 2) {
+                #expect(deliveryOrder[index] == 1)
+                #expect(deliveryOrder[index + 1] == 2)
+            }
         }
     }
 #endif

@@ -14,7 +14,7 @@
     extension HeuristicHamiltonian: HamiltonianCycleAlgorithm {
         @inlinable
         public func hamiltonianCycle(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-            hamiltonianCycle(in: graph, visitor: nil)
+            hamiltonianCycle(in: graph, observation: nil)
         }
     }
 #endif

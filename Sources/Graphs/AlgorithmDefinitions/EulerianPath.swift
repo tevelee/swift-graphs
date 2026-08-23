@@ -7,7 +7,7 @@ extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hash
     public func eulerianPath(
         using algorithm: some EulerianPathAlgorithm<Self>
     ) -> Path<VertexDescriptor, EdgeDescriptor>? {
-        algorithm.eulerianPath(in: self, visitor: nil)
+        algorithm.eulerianPath(in: self, observation: nil)
     }
 
     /// Finds an Eulerian cycle using the specified algorithm.
@@ -18,7 +18,7 @@ extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hash
     public func eulerianCycle(
         using algorithm: some EulerianCycleAlgorithm<Self>
     ) -> Path<VertexDescriptor, EdgeDescriptor>? {
-        algorithm.eulerianCycle(in: self, visitor: nil)
+        algorithm.eulerianCycle(in: self, observation: nil)
     }
 
     /// Checks if the graph has an Eulerian path.
@@ -96,51 +96,57 @@ extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hash
 #endif
 
 /// A protocol for algorithms that find Eulerian paths.
-public protocol EulerianPathAlgorithm<Graph> {
+public protocol EulerianPathAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: BidirectionalGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Finds an Eulerian path in the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to find the path in.
-    ///   - visitor: An optional visitor to observe the algorithm's progress.
+    ///   - observation: An optional algorithm observation.
     /// - Returns: An Eulerian path, if one exists.
-    func eulerianPath(in graph: Graph, visitor: Visitor?) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
+    func eulerianPath(in graph: Graph, observation: AlgorithmObservation<Event>?) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 }
 
 /// A protocol for algorithms that find Eulerian cycles.
-public protocol EulerianCycleAlgorithm<Graph> {
+public protocol EulerianCycleAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: BidirectionalGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Finds an Eulerian cycle in the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to find the cycle in.
-    ///   - visitor: An optional visitor to observe the algorithm's progress.
+    ///   - observation: An optional algorithm observation.
     /// - Returns: An Eulerian cycle, if one exists.
-    func eulerianCycle(in graph: Graph, visitor: Visitor?) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
+    func eulerianCycle(in graph: Graph, observation: AlgorithmObservation<Event>?) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 }
 
-extension VisitorWrapper: EulerianPathAlgorithm where Base: EulerianPathAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: EulerianPathAlgorithm where Base: EulerianPathAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
-    public func eulerianPath(in graph: Base.Graph, visitor: Base.Visitor?) -> Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>? {
-        base.eulerianPath(in: graph, visitor: self.visitor.combined(with: visitor))
+    public func eulerianPath(
+        in graph: Base.Graph,
+        observation: AlgorithmObservation<Base.Event>?
+    ) -> Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>? {
+        base.eulerianPath(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 
-extension VisitorWrapper: EulerianCycleAlgorithm where Base: EulerianCycleAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: EulerianCycleAlgorithm where Base: EulerianCycleAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
-    public func eulerianCycle(in graph: Base.Graph, visitor: Base.Visitor?) -> Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>? {
-        base.eulerianCycle(in: graph, visitor: self.visitor.combined(with: visitor))
+    public func eulerianCycle(
+        in graph: Base.Graph,
+        observation: AlgorithmObservation<Base.Event>?
+    ) -> Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>? {
+        base.eulerianCycle(in: graph, observation: self.observation.followed(by: observation))
     }
 }

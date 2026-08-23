@@ -8,7 +8,7 @@
         public func connectedComponents(
             using algorithm: UnionFindConnectedComponentsAlgorithm<Self>
         ) -> ConnectedComponentsResult<VertexDescriptor> {
-            algorithm.connectedComponents(in: self, visitor: nil)
+            algorithm.connectedComponents(in: self, observation: nil)
         }
     }
 #endif

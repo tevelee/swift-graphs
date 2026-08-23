@@ -18,7 +18,7 @@
             graph.addEdge(from: b, to: c)
 
             let unionFind = UnionFindConnectedComponents(on: graph)
-            let result = unionFind.connectedComponents(visitor: nil)
+            let result = unionFind.connectedComponents(observation: nil)
 
             // Should have one connected component containing all three vertices
             #expect(result.componentCount == 1)
@@ -37,7 +37,7 @@
             graph.addEdge(from: b, to: c)
 
             let dfs = DFSConnectedComponents(on: graph)
-            let result = dfs.connectedComponents(visitor: nil)
+            let result = dfs.connectedComponents(observation: nil)
 
             // Should have one connected component containing all three vertices
             #expect(result.componentCount == 1)
@@ -57,7 +57,7 @@
             graph.addEdge(from: c, to: d)
 
             let unionFind = UnionFindConnectedComponents(on: graph)
-            let result = unionFind.connectedComponents(visitor: nil)
+            let result = unionFind.connectedComponents(observation: nil)
 
             // Should have two connected components
             #expect(result.componentCount == 2)
@@ -81,7 +81,7 @@
             graph.addEdge(from: c, to: d)
 
             let dfs = DFSConnectedComponents(on: graph)
-            let result = dfs.connectedComponents(visitor: nil)
+            let result = dfs.connectedComponents(observation: nil)
 
             // Should have two connected components
             #expect(result.componentCount == 2)
@@ -113,7 +113,7 @@
             // No edges for F
 
             let unionFind = UnionFindConnectedComponents(on: graph)
-            let result = unionFind.connectedComponents(visitor: nil)
+            let result = unionFind.connectedComponents(observation: nil)
 
             // Should have three connected components
             #expect(result.componentCount == 3)
@@ -150,7 +150,7 @@
             // No edges for F
 
             let dfs = DFSConnectedComponents(on: graph)
-            let result = dfs.connectedComponents(visitor: nil)
+            let result = dfs.connectedComponents(observation: nil)
 
             // Should have three connected components
             #expect(result.componentCount == 3)
@@ -172,7 +172,7 @@
             graph.addVertex { $0.label = "A" }
 
             let unionFind = UnionFindConnectedComponents(on: graph)
-            let result = unionFind.connectedComponents(visitor: nil)
+            let result = unionFind.connectedComponents(observation: nil)
 
             // Should have one connected component with one vertex
             #expect(result.componentCount == 1)
@@ -185,14 +185,14 @@
             graph.addVertex { $0.label = "A" }
 
             let dfs = DFSConnectedComponents(on: graph)
-            let result = dfs.connectedComponents(visitor: nil)
+            let result = dfs.connectedComponents(observation: nil)
 
             // Should have one connected component with one vertex
             #expect(result.componentCount == 1)
             #expect(result.components[0].count == 1)
         }
 
-        @Test func unionFindVisitorObservesEvents() {
+        @Test func unionFindUnobservedDirectCall() {
             var graph = AdjacencyList()
 
             let a = graph.addVertex { $0.label = "A" }
@@ -201,14 +201,14 @@
             graph.addEdge(from: a, to: b)
 
             let unionFind = UnionFindConnectedComponents(on: graph)
-            let result = unionFind.connectedComponents(visitor: nil)
+            let result = unionFind.connectedComponents(observation: nil)
 
             // Basic functionality test
             #expect(result.componentCount == 1)
             #expect(result.components[0].count == 2)
         }
 
-        @Test func dfsVisitorObservesEvents() {
+        @Test func dfsUnobservedDirectCall() {
             var graph = AdjacencyList()
 
             let a = graph.addVertex { $0.label = "A" }
@@ -217,7 +217,7 @@
             graph.addEdge(from: a, to: b)
 
             let dfs = DFSConnectedComponents(on: graph)
-            let result = dfs.connectedComponents(visitor: nil)
+            let result = dfs.connectedComponents(observation: nil)
 
             // Basic functionality test
             #expect(result.componentCount == 1)
@@ -236,8 +236,8 @@
             graph.addEdge(from: c, to: d)
 
             let unionFind = UnionFindConnectedComponents(on: graph)
-            let result1 = unionFind.connectedComponents(visitor: nil)
-            let result2 = unionFind.connectedComponents(visitor: nil)
+            let result1 = unionFind.connectedComponents(observation: nil)
+            let result2 = unionFind.connectedComponents(observation: nil)
 
             // Results should be consistent across multiple runs
             #expect(result1.componentCount == result2.componentCount)
@@ -260,8 +260,8 @@
             graph.addEdge(from: c, to: d)
 
             let dfs = DFSConnectedComponents(on: graph)
-            let result1 = dfs.connectedComponents(visitor: nil)
-            let result2 = dfs.connectedComponents(visitor: nil)
+            let result1 = dfs.connectedComponents(observation: nil)
+            let result2 = dfs.connectedComponents(observation: nil)
 
             // Results should be consistent across multiple runs
             #expect(result1.componentCount == result2.componentCount)
@@ -310,9 +310,9 @@
             #endif
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        @Test func dfsComposedVisitorsReceiveAllEvents() {
+        @Test func dfsComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             graph.addEdge(
                 from: graph.addVertex { $0.label = "A" },
@@ -326,22 +326,19 @@
             var components1 = 0
             var components2 = 0
 
-            var v1 = DFSConnectedComponents<AdjacencyList>.Visitor()
-            v1.discoverVertex = { _ in discovered1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.finishComponent = { _ in components1 += 1 }
+            typealias Cases = DFSConnectedComponents<AdjacencyList>.EventCases
+            let observed = DFSConnectedComponents(on: graph)
+                .observing(Cases.vertexDiscovered) { _ in discovered1 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+                .observing(Cases.componentFinished) { _ in components1 += 1 }
+                .observing(Cases.vertexDiscovered) { _ in discovered2 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+                .observing(Cases.componentFinished) { _ in components2 += 1 }
+            _ = graph.connectedComponents(using: observed)
 
-            var v2 = DFSConnectedComponents<AdjacencyList>.Visitor()
-            v2.discoverVertex = { _ in discovered2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.finishComponent = { _ in components2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = DFSConnectedComponents(on: graph).connectedComponents(visitor: combined)
-
-            #expect(discovered1 == 2, "discoverVertex fires for both A and B")
+            #expect(discovered1 == 2, "vertexDiscovered fires for both A and B")
             #expect(discovered2 == 2)
-            #expect(examEdge1 >= 1, "examineEdge fires for the A→B edge")
+            #expect(examEdge1 >= 1, "edgeExamined fires for the A→B edge")
             #expect(examEdge2 >= 1)
             #expect(components1 == 1, "A and B form one component")
             #expect(components2 == 1)
@@ -350,7 +347,7 @@
             #expect(components1 == components2)
         }
 
-        @Test func unionFindComposedVisitorsReceiveAllEvents() {
+        @Test func unionFindComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             graph.addEdge(
                 from: graph.addVertex { $0.label = "A" },
@@ -364,22 +361,19 @@
             var components1 = 0
             var components2 = 0
 
-            var v1 = UnionFindConnectedComponents<AdjacencyList>.Visitor()
-            v1.discoverVertex = { _ in discovered1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.finishComponent = { _ in components1 += 1 }
+            typealias Cases = UnionFindConnectedComponents<AdjacencyList>.EventCases
+            let observed = UnionFindConnectedComponents(on: graph)
+                .observing(Cases.vertexDiscovered) { _ in discovered1 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+                .observing(Cases.componentFinished) { _ in components1 += 1 }
+                .observing(Cases.vertexDiscovered) { _ in discovered2 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+                .observing(Cases.componentFinished) { _ in components2 += 1 }
+            _ = graph.connectedComponents(using: observed)
 
-            var v2 = UnionFindConnectedComponents<AdjacencyList>.Visitor()
-            v2.discoverVertex = { _ in discovered2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.finishComponent = { _ in components2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = UnionFindConnectedComponents(on: graph).connectedComponents(visitor: combined)
-
-            #expect(discovered1 == 2, "discoverVertex fires for both A and B")
+            #expect(discovered1 == 2, "vertexDiscovered fires for both A and B")
             #expect(discovered2 == 2)
-            #expect(examEdge1 >= 1, "examineEdge fires for the A→B edge")
+            #expect(examEdge1 >= 1, "edgeExamined fires for the A→B edge")
             #expect(examEdge2 >= 1)
             #expect(components1 == 1, "A and B form one component")
             #expect(components2 == 1)

@@ -20,7 +20,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
         }
 
         // Fall back to more expensive algorithms
-        return cycleAlgorithm.hamiltonianCycle(in: self, visitor: nil) != nil
+        return cycleAlgorithm.hamiltonianCycle(in: self, observation: nil) != nil
     }
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
@@ -60,7 +60,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
         }
 
         // Fall back to more expensive algorithms
-        return pathAlgorithm.hamiltonianPath(in: self, visitor: nil) != nil
+        return pathAlgorithm.hamiltonianPath(in: self, observation: nil) != nil
     }
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
@@ -87,7 +87,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
     public func satisfiesDirac(
         using algorithm: some DiracPropertyAlgorithm<Self>
     ) -> Bool {
-        algorithm.satisfiesDirac(in: self, visitor: nil)
+        algorithm.satisfiesDirac(in: self, observation: nil)
     }
 
     /// Checks if the graph satisfies Ore's theorem using the specified algorithm.
@@ -98,7 +98,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
     public func satisfiesOre(
         using algorithm: some OrePropertyAlgorithm<Self>
     ) -> Bool {
-        algorithm.satisfiesOre(in: self, visitor: nil)
+        algorithm.satisfiesOre(in: self, observation: nil)
     }
 }
 
@@ -125,59 +125,59 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
 }
 
 /// A protocol for Dirac property algorithms.
-public protocol DiracPropertyAlgorithm<Graph> {
+public protocol DiracPropertyAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & BidirectionalGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Checks if the graph satisfies Dirac's theorem for Hamiltonian cycles.
     ///
     /// - Parameters:
     ///   - graph: The graph to check
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: `true` if the graph satisfies Dirac's theorem, `false` otherwise
     @inlinable
     func satisfiesDirac(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Bool
 }
 
 /// A protocol for Ore property algorithms.
-public protocol OrePropertyAlgorithm<Graph> {
+public protocol OrePropertyAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & BidirectionalGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Checks if the graph satisfies Ore's theorem for Hamiltonian cycles.
     ///
     /// - Parameters:
     ///   - graph: The graph to check
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: `true` if the graph satisfies Ore's theorem, `false` otherwise
     @inlinable
     func satisfiesOre(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Bool
 }
 
-extension VisitorWrapper: DiracPropertyAlgorithm where Base: DiracPropertyAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: DiracPropertyAlgorithm where Base: DiracPropertyAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
-    public func satisfiesDirac(in graph: Base.Graph, visitor: Base.Visitor?) -> Bool {
-        base.satisfiesDirac(in: graph, visitor: self.visitor.combined(with: visitor))
+    public func satisfiesDirac(in graph: Base.Graph, observation: AlgorithmObservation<Base.Event>?) -> Bool {
+        base.satisfiesDirac(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 
-extension VisitorWrapper: OrePropertyAlgorithm where Base: OrePropertyAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: OrePropertyAlgorithm where Base: OrePropertyAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
-    public func satisfiesOre(in graph: Base.Graph, visitor: Base.Visitor?) -> Bool {
-        base.satisfiesOre(in: graph, visitor: self.visitor.combined(with: visitor))
+    public func satisfiesOre(in graph: Base.Graph, observation: AlgorithmObservation<Base.Event>?) -> Bool {
+        base.satisfiesOre(in: graph, observation: self.observation.followed(by: observation))
     }
 }

@@ -216,9 +216,9 @@
             #expect(item1 != item3, "different vertices → not equal")
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        /// Exercises all five Dijkstra visitor events through a composed visitor pair.
+        /// Exercises all five Dijkstra events through a composed observation pair.
         ///
         /// Graph: a→b(1), a→c(1), b→c(5).
         /// - `examineVertex` fires for each of the 3 vertices.
@@ -226,7 +226,7 @@
         /// - `edgeRelaxed` fires for a→b and a→c (both improve their targets).
         /// - `edgeNotRelaxed` fires for b→c (c already settled at cost 1 via a→c; b→c would cost 6).
         /// - `finishVertex` fires for each of the 3 vertices.
-        @Test func composedVisitorsReceiveAllEvents() {
+        @Test func composedObservationsReceiveAllEventsInOrder() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -246,24 +246,29 @@
             var notRelaxed2 = 0
             var finished1 = 0
             var finished2 = 0
+            var observationOrder: [Int] = []
 
-            var v1 = Dijkstra<AdjacencyList, Double>.Visitor()
-            v1.examineVertex = { _ in examined1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.edgeRelaxed = { _ in relaxed1 += 1 }
-            v1.edgeNotRelaxed = { _ in notRelaxed1 += 1 }
-            v1.finishVertex = { _ in finished1 += 1 }
-
-            var v2 = Dijkstra<AdjacencyList, Double>.Visitor()
-            v2.examineVertex = { _ in examined2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.edgeRelaxed = { _ in relaxed2 += 1 }
-            v2.edgeNotRelaxed = { _ in notRelaxed2 += 1 }
-            v2.finishVertex = { _ in finished2 += 1 }
-
-            let combined = v1.combined(with: v2)
             Dijkstra(on: graph, from: a, edgeWeight: .property(\.weight))
-                .withVisitor { combined }
+                .observing { event in
+                    observationOrder.append(1)
+                    switch event {
+                        case .vertexExamined: examined1 += 1
+                        case .edgeExamined: examEdge1 += 1
+                        case .edgeRelaxed: relaxed1 += 1
+                        case .edgeNotRelaxed: notRelaxed1 += 1
+                        case .vertexFinished: finished1 += 1
+                    }
+                }
+                .observing { event in
+                    observationOrder.append(2)
+                    switch event {
+                        case .vertexExamined: examined2 += 1
+                        case .edgeExamined: examEdge2 += 1
+                        case .edgeRelaxed: relaxed2 += 1
+                        case .edgeNotRelaxed: notRelaxed2 += 1
+                        case .vertexFinished: finished2 += 1
+                    }
+                }
                 .forEach { _ in }
 
             #expect(examined1 == 3, "examineVertex fires once per vertex")
@@ -276,12 +281,13 @@
             #expect(notRelaxed2 >= 1)
             #expect(finished1 == 3, "finishVertex fires once per vertex")
             #expect(finished2 == 3)
-            // Both composed visitors must see identical event counts
+            // Both composed observations must see identical event counts and attachment order.
             #expect(examined1 == examined2)
             #expect(examEdge1 == examEdge2)
             #expect(relaxed1 == relaxed2)
             #expect(notRelaxed1 == notRelaxed2)
             #expect(finished1 == finished2)
+            #expect(observationOrder.enumerated().allSatisfy { index, value in value == (index % 2) + 1 })
         }
 
         // MARK: - Edge Cases

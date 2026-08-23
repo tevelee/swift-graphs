@@ -81,7 +81,7 @@ struct DepthFirstSearchTests {
         #expect(last?.vertices(to: d, in: graph) == [root, c, d])
     }
 
-    @Test func visitorSeesPreorderOfVertices() {
+    @Test func observationSeesPreorderOfVertices() {
         let graph = createComplexTreeGraph()
 
         let root = graph.findVertex(labeled: "root")!
@@ -89,11 +89,11 @@ struct DepthFirstSearchTests {
         var discovered: [Any] = []
         var examined: [Any] = []
         DepthFirstSearch(on: graph, from: root)
-            .withVisitor {
-                .init(
-                    discoverVertex: { discovered.append($0) },
-                    examineVertex: { examined.append($0) }
-                )
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.vertexDiscovered) {
+                discovered.append($0)
+            }
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.vertexExamined) {
+                examined.append($0)
             }
             .forEach { _ in }
         #expect(discovered.count == 8)
@@ -148,11 +148,11 @@ struct DepthFirstSearchTests {
         var backEdges: [Any] = []
         var treeEdges: [Any] = []
         DepthFirstSearch(on: graph, from: a)
-            .withVisitor {
-                .init(
-                    treeEdge: { treeEdges.append($0) },
-                    backEdge: { backEdges.append($0) }
-                )
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.treeEdgeTraversed) {
+                treeEdges.append($0)
+            }
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.backEdgeTraversed) {
+                backEdges.append($0)
             }
             .forEach { _ in }
 
@@ -240,27 +240,27 @@ struct DepthFirstSearchTests {
         #endif
     }
 
-    // MARK: - Visitor Support
+    // MARK: - Observation Support
 
-    /// Exercises all DFS visitor events through a composed visitor pair.
+    /// Exercises all DFS events through two composed observation groups.
     ///
     /// Graph: a→b, b→c, b→a, a→c, a→d, d→c — covers all reachable edge classifications.
     ///
     /// The iterative DFS classifies edges when a vertex is first popped. At that moment
-    /// all WHITE neighbors are pushed simultaneously and receive `treeEdge` (including a→c
+    /// all WHITE neighbors are pushed simultaneously and emit `treeEdgeTraversed` (including a→c
     /// and b→c, even though they share a destination). Later, once c is BLACK, d→c fires
-    /// `crossEdge` (d.discTime > c.discTime).
+    /// `crossEdgeTraversed` (d.discTime > c.discTime).
     ///
-    /// Note: `forwardEdge` cannot fire in this iterative implementation — the classification
+    /// Note: `forwardEdgeTraversed` cannot fire in this iterative implementation — the classification
     /// criterion (sourceDiscTime < destDiscTime ∧ dest.color=BLACK) is structurally unreachable
     /// from a single source when all neighbors are pushed in one batch on first-visit.
     ///
-    /// - `discoverVertex` / `examineVertex` / `finishVertex`: once per vertex (4 vertices).
-    /// - `examineEdge`: once per directed edge (6 edges).
-    /// - `treeEdge`: fires for all edges to WHITE destinations (a→b, a→c, a→d, b→c = 4).
-    /// - `backEdge`: fires for b→a (a is GRAY/on the DFS stack when b examines b→a).
-    /// - `crossEdge`: fires for d→c (c is BLACK; d.discTime > c.discTime).
-    @Test func composedVisitorsReceiveAllEvents() {
+    /// - `vertexDiscovered` / `vertexExamined` / `vertexFinished`: once per vertex (4 vertices).
+    /// - `edgeExamined`: once per directed edge (6 edges).
+    /// - `treeEdgeTraversed`: fires for all edges to WHITE destinations (a→b, a→c, a→d, b→c = 4).
+    /// - `backEdgeTraversed`: fires for b→a (a is GRAY/on the DFS stack when b examines b→a).
+    /// - `crossEdgeTraversed`: fires for d→c (c is BLACK; d.discTime > c.discTime).
+    @Test func composedObservationsReceiveAllEvents() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
@@ -290,50 +290,45 @@ struct DepthFirstSearchTests {
         var finished1 = 0
         var finished2 = 0
 
-        var v1 = DepthFirstSearch<AdjacencyList>.Visitor()
-        v1.discoverVertex = { _ in discovered1 += 1 }
-        v1.examineVertex = { _ in examined1 += 1 }
-        v1.examineEdge = { _ in examEdge1 += 1 }
-        v1.treeEdge = { _ in tree1 += 1 }
-        v1.backEdge = { _ in back1 += 1 }
-        v1.forwardEdge = { _ in forward1 += 1 }
-        v1.crossEdge = { _ in cross1 += 1 }
-        v1.finishVertex = { _ in finished1 += 1 }
-
-        var v2 = DepthFirstSearch<AdjacencyList>.Visitor()
-        v2.discoverVertex = { _ in discovered2 += 1 }
-        v2.examineVertex = { _ in examined2 += 1 }
-        v2.examineEdge = { _ in examEdge2 += 1 }
-        v2.treeEdge = { _ in tree2 += 1 }
-        v2.backEdge = { _ in back2 += 1 }
-        v2.forwardEdge = { _ in forward2 += 1 }
-        v2.crossEdge = { _ in cross2 += 1 }
-        v2.finishVertex = { _ in finished2 += 1 }
-
-        let combined = v1.combined(with: v2)
+        typealias Cases = DepthFirstSearch<AdjacencyList>.EventCases
         DepthFirstSearch(on: graph, from: a)
-            .withVisitor { combined }
+            .observing(Cases.vertexDiscovered) { _ in discovered1 += 1 }
+            .observing(Cases.vertexExamined) { _ in examined1 += 1 }
+            .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+            .observing(Cases.treeEdgeTraversed) { _ in tree1 += 1 }
+            .observing(Cases.backEdgeTraversed) { _ in back1 += 1 }
+            .observing(Cases.forwardEdgeTraversed) { _ in forward1 += 1 }
+            .observing(Cases.crossEdgeTraversed) { _ in cross1 += 1 }
+            .observing(Cases.vertexFinished) { _ in finished1 += 1 }
+            .observing(Cases.vertexDiscovered) { _ in discovered2 += 1 }
+            .observing(Cases.vertexExamined) { _ in examined2 += 1 }
+            .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+            .observing(Cases.treeEdgeTraversed) { _ in tree2 += 1 }
+            .observing(Cases.backEdgeTraversed) { _ in back2 += 1 }
+            .observing(Cases.forwardEdgeTraversed) { _ in forward2 += 1 }
+            .observing(Cases.crossEdgeTraversed) { _ in cross2 += 1 }
+            .observing(Cases.vertexFinished) { _ in finished2 += 1 }
             .forEach { _ in }
 
-        #expect(discovered1 == 4, "discoverVertex fires for a, b, c, d")
+        #expect(discovered1 == 4, "vertexDiscovered fires for a, b, c, d")
         #expect(discovered2 == 4)
-        #expect(examined1 == 4, "examineVertex fires for each vertex when processing its edges")
+        #expect(examined1 == 4, "vertexExamined fires for each vertex when processing its edges")
         #expect(examined2 == 4)
-        #expect(examEdge1 == 6, "examineEdge fires for all 6 edges")
+        #expect(examEdge1 == 6, "edgeExamined fires for all 6 edges")
         #expect(examEdge2 == 6)
         // a→b, a→c, a→d are all WHITE when a processes them; b→c is WHITE when b processes it → 4 tree edges
-        #expect(tree1 == 4, "treeEdge fires for all edges to WHITE destinations (a→b, a→c, a→d, b→c)")
+        #expect(tree1 == 4, "treeEdgeTraversed fires for all WHITE destinations (a→b, a→c, a→d, b→c)")
         #expect(tree2 == 4)
-        #expect(back1 >= 1, "backEdge fires for b→a (a is GRAY/on the DFS stack)")
+        #expect(back1 >= 1, "backEdgeTraversed fires for b→a (a is GRAY/on the DFS stack)")
         #expect(back2 >= 1)
-        // forwardEdge is structurally unreachable in the single-source iterative DFS
-        #expect(forward1 == 0, "forwardEdge cannot fire in this iterative DFS (by design)")
+        // forwardEdgeTraversed is structurally unreachable in the single-source iterative DFS.
+        #expect(forward1 == 0, "forwardEdgeTraversed cannot fire in this iterative DFS (by design)")
         #expect(forward2 == 0)
-        #expect(cross1 >= 1, "crossEdge fires for d→c (c is BLACK; d.discTime > c.discTime)")
+        #expect(cross1 >= 1, "crossEdgeTraversed fires for d→c (c is BLACK; d.discTime > c.discTime)")
         #expect(cross2 >= 1)
-        #expect(finished1 == 4, "finishVertex fires for all 4 vertices")
+        #expect(finished1 == 4, "vertexFinished fires for all 4 vertices")
         #expect(finished2 == 4)
-        // Both composed visitors must see identical event counts
+        // Both composed observation groups must see identical event counts.
         #expect(discovered1 == discovered2)
         #expect(examined1 == examined2)
         #expect(examEdge1 == examEdge2)
@@ -455,7 +450,7 @@ struct DepthFirstSearchTests {
     /// and must not cause DFS to visit `a` more than once.
     ///
     /// DFS colors vertices gray on first discovery. When examining `a`'s outgoing edges,
-    /// the self-loop points back to a gray vertex — so it fires the `backEdge` hook and
+    /// the self-loop points back to a gray vertex — so it emits `backEdgeTraversed` and
     /// is skipped, preventing an infinite recursion.
     @Test func selfLoopIsBackEdgeAndDoesNotRevisitVertex() {
         var graph = AdjacencyList()
@@ -467,11 +462,11 @@ struct DepthFirstSearchTests {
         var backEdges: [Any] = []
         var treeEdges: [Any] = []
         DepthFirstSearch(on: graph, from: a)
-            .withVisitor {
-                .init(
-                    treeEdge: { treeEdges.append($0) },
-                    backEdge: { backEdges.append($0) }
-                )
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.treeEdgeTraversed) {
+                treeEdges.append($0)
+            }
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.backEdgeTraversed) {
+                backEdges.append($0)
             }
             .forEach { _ in }
 
@@ -499,11 +494,11 @@ struct DepthFirstSearchTests {
         #expect(Set(result.vertices) == Set([a, b, c]))
     }
 
-    /// Parallel edges a → b (two edges) must fire `treeEdge` exactly once for `b`.
+    /// Parallel edges a → b (two edges) must emit `treeEdgeTraversed` exactly once for `b`.
     ///
     /// The iterative DFS batches all white-neighbor classification in one pass. Without
     /// deduplication, both parallel edges would see `b` as white and both would fire
-    /// `treeEdge`. Only the first edge to each unique white destination is a tree edge.
+    /// `treeEdgeTraversed`. Only the first edge to each unique white destination is a tree edge.
     @Test func parallelEdgesFireTreeEdgeOncePerDestination() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
@@ -514,20 +509,20 @@ struct DepthFirstSearchTests {
         var treeEdgeCount = 0
         var examineEdgeCount = 0
         DepthFirstSearch(on: graph, from: a)
-            .withVisitor {
-                .init(
-                    examineEdge: { _ in examineEdgeCount += 1 },
-                    treeEdge: { _ in treeEdgeCount += 1 }
-                )
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.edgeExamined) { _ in
+                examineEdgeCount += 1
+            }
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.treeEdgeTraversed) { _ in
+                treeEdgeCount += 1
             }
             .forEach { _ in }
 
-        #expect(examineEdgeCount == 2, "examineEdge fires for every edge including parallel ones")
-        #expect(treeEdgeCount == 1, "treeEdge fires only once for b despite two parallel edges")
+        #expect(examineEdgeCount == 2, "edgeExamined fires for every edge including parallel ones")
+        #expect(treeEdgeCount == 1, "treeEdgeTraversed fires only once for b despite two parallel edges")
     }
 
-    /// When `shouldTraverse` vetoes the first parallel edge to a white vertex, the second
-    /// parallel edge must still be presented to `shouldTraverse` and, if accepted, must
+    /// When the traversal policy vetoes the first parallel edge to a white vertex, the second
+    /// parallel edge must still be presented to the policy and, if accepted, must
     /// result in the destination being visited.
     ///
     /// Regression test for the ordering bug where `pendingWhite.insert` ran before the
@@ -539,24 +534,24 @@ struct DepthFirstSearchTests {
         graph.addEdge(from: a, to: b)
         graph.addEdge(from: a, to: b)  // parallel edge
 
-        // Reject the first shouldTraverse call (first parallel edge), accept the second.
+        // Reject the first policy call (first parallel edge), accept the second.
         var vetoCallCount = 0
         var bDiscovered = false
         var treeEdgeCount = 0
         DepthFirstSearch(on: graph, from: a)
-            .withVisitor {
-                .init(
-                    discoverVertex: { v in if v == b { bDiscovered = true } },
-                    treeEdge: { _ in treeEdgeCount += 1 },
-                    shouldTraverse: { _ in
-                        vetoCallCount += 1
-                        return vetoCallCount > 1
-                    }
-                )
+            .allowingTraversal { _ in
+                vetoCallCount += 1
+                return vetoCallCount > 1
+            }
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.vertexDiscovered) { vertex in
+                if vertex == b { bDiscovered = true }
+            }
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.treeEdgeTraversed) { _ in
+                treeEdgeCount += 1
             }
             .forEach { _ in }
 
         #expect(bDiscovered, "b must be visited via the second parallel edge despite e1 being vetoed")
-        #expect(treeEdgeCount == 1, "treeEdge fires once via the accepted second parallel edge")
+        #expect(treeEdgeCount == 1, "treeEdgeTraversed fires once via the accepted second parallel edge")
     }
 }

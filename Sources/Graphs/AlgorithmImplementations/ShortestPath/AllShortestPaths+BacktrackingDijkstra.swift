@@ -52,8 +52,8 @@
         Graph.VertexDescriptor: Hashable,
         Weight.Magnitude == Weight
     {
-        /// The visitor type for observing algorithm progress.
-        public typealias Visitor = BacktrackingDijkstra<Graph, Weight>.Visitor
+        /// The event type for observing algorithm progress.
+        public typealias Event = BacktrackingDijkstra<Graph, Weight>.Event
 
         /// The cost definition for edge weights.
         public let weight: CostDefinition<Graph, Weight>
@@ -72,20 +72,20 @@
         ///   - source: The source vertex
         ///   - condition: The condition that determines when to stop
         ///   - graph: The graph to search in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation to observe the algorithm progress
         /// - Returns: An array of all shortest paths
         @inlinable
         public func allShortestPaths(
             from source: Graph.VertexDescriptor,
             until condition: @escaping (Graph.VertexDescriptor) -> Bool,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>] {
             let algorithm = BacktrackingDijkstra(on: graph, edgeWeight: weight)
-            let result = algorithm.findAllShortestPaths(from: source, until: condition, visitor: visitor)
+            let result = algorithm.findAllShortestPaths(from: source, until: condition, observation: observation)
             return result.paths
         }
     }
 
-    extension BacktrackingDijkstraAllShortestPathsAlgorithm: VisitorSupporting {}
+    extension BacktrackingDijkstraAllShortestPathsAlgorithm: AlgorithmObserving {}
 #endif

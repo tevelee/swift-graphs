@@ -38,8 +38,8 @@
     where
         Graph.VertexDescriptor: Hashable
     {
-        /// The visitor type for observing algorithm progress.
-        public typealias Visitor = BellmanFord<Graph, Weight>.Visitor
+        /// The event type for observing algorithm progress.
+        public typealias Event = BellmanFord<Graph, Weight>.Event
 
         /// The cost definition for edge weights.
         public let weight: CostDefinition<Graph, Weight>
@@ -58,16 +58,16 @@
         ///   - source: The source vertex
         ///   - destination: The destination vertex
         ///   - graph: The graph to search in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation to observe the algorithm progress
         /// - Returns: The shortest path, if one exists and no negative cycle is detected
         @inlinable
         public func shortestPath(
             from source: Graph.VertexDescriptor,
             to destination: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-            shortestPaths(from: source, in: graph, visitor: visitor)
+            shortestPaths(from: source, in: graph, observation: observation)
                 .path(from: source, to: destination, in: graph)
         }
 
@@ -76,16 +76,16 @@
         /// - Parameters:
         ///   - source: The source vertex
         ///   - graph: The graph to search in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation to observe the algorithm progress
         /// - Returns: The result containing distances, predecessors, and negative cycle information
         @inlinable
         public func shortestPaths(
             from source: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> SingleSourceShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
             let bellmanFord = BellmanFord(on: graph, edgeWeight: weight)
-            let result = bellmanFord.shortestPathsFromSource(source, visitor: visitor)
+            let result = bellmanFord.shortestPathsFromSource(source, observation: observation)
             return SingleSourceShortestPaths(
                 distances: result.distances,
                 predecessors: result.predecessors,
@@ -94,5 +94,5 @@
         }
     }
 
-    extension BellmanFordShortestPath: VisitorSupporting {}
+    extension BellmanFordShortestPath: AlgorithmObserving {}
 #endif

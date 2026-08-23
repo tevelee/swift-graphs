@@ -78,8 +78,8 @@
     where
         Graph.VertexDescriptor: Hashable
     {
-        /// The visitor type for observing algorithm progress.
-        public typealias Visitor = AStar<Graph, Weight, HScore, FScore>.Visitor
+        /// The event type emitted by the core algorithm.
+        public typealias Event = AStar<Graph, Weight, HScore, FScore>.Event
 
         /// The cost definition for edge weights.
         public let weight: CostDefinition<Graph, Weight>
@@ -111,14 +111,14 @@
         ///   - source: The source vertex
         ///   - condition: The condition that determines when to stop
         ///   - graph: The graph to search in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation of the algorithm progress
         /// - Returns: The shortest path to the first vertex that satisfies the condition, if one exists
         @inlinable
         public func shortestPath(
             from source: Graph.VertexDescriptor,
             until condition: @escaping (Graph.VertexDescriptor) -> Bool,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
             let sequence = AStar(
                 on: graph,
@@ -126,20 +126,23 @@
                 edgeWeight: weight,
                 heuristic: heuristic,
                 calculateTotalCost: calculateTotalCost
-            )
-            .withVisitor { visitor }
-            guard let result = sequence.first(where: { condition($0.currentVertex) }) else { return nil }
-            let destination = result.currentVertex
-            return Path(
-                source: source,
-                destination: destination,
-                vertices: result.vertices(to: destination, in: graph),
-                edges: result.edges(to: destination, in: graph)
-            )
+            ).makeIterator(observation: observation)
+            var iterator = sequence
+            while let result = iterator.next() {
+                guard condition(result.currentVertex) else { continue }
+                let destination = result.currentVertex
+                return Path(
+                    source: source,
+                    destination: destination,
+                    vertices: result.vertices(to: destination, in: graph),
+                    edges: result.edges(to: destination, in: graph)
+                )
+            }
+            return nil
         }
     }
 
-    extension AStarShortestPathAlgorithm: VisitorSupporting {}
+    extension AStarShortestPathAlgorithm: AlgorithmObserving {}
 
     // MARK: - Destination-specific A* with HeuristicToDestination
 
@@ -169,7 +172,7 @@
     where
         Graph.VertexDescriptor: Hashable
     {
-        typealias Visitor = AStar<Graph, Weight, HScore, FScore>.Visitor
+        typealias Event = AStar<Graph, Weight, HScore, FScore>.Event
 
         let weight: CostDefinition<Graph, Weight>
         let heuristicForDestination: HeuristicToDestination<Graph, HScore>
@@ -179,7 +182,7 @@
             from source: Graph.VertexDescriptor,
             to destination: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
             let sequence = AStar(
                 on: graph,
@@ -187,15 +190,18 @@
                 edgeWeight: weight,
                 heuristic: heuristicForDestination.estimatedCost(destination),
                 calculateTotalCost: calculateTotalCost
-            )
-            .withVisitor { visitor }
-            guard let result = sequence.first(where: { $0.currentVertex == destination }) else { return nil }
-            return Path(
-                source: source,
-                destination: destination,
-                vertices: result.vertices(to: destination, in: graph),
-                edges: result.edges(to: destination, in: graph)
-            )
+            ).makeIterator(observation: observation)
+            var iterator = sequence
+            while let result = iterator.next() {
+                guard result.currentVertex == destination else { continue }
+                return Path(
+                    source: source,
+                    destination: destination,
+                    vertices: result.vertices(to: destination, in: graph),
+                    edges: result.edges(to: destination, in: graph)
+                )
+            }
+            return nil
         }
     }
 
@@ -225,5 +231,5 @@
         }
     #endif
 
-    extension AStarShortestPathToDestination: VisitorSupporting {}
+    extension AStarShortestPathToDestination: AlgorithmObserving {}
 #endif

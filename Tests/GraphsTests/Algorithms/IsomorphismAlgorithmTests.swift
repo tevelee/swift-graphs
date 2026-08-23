@@ -355,9 +355,9 @@
             #expect(mapping?.count == 4)
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        @Test func vf2WithVisitor() {
+        @Test func vf2WithObservation() {
             let graph1 = createSimpleGraph()
             let graph2 = createSimpleGraph()
 
@@ -367,27 +367,23 @@
             var mappingFound: [AdjacencyList.VertexDescriptor: AdjacencyList.VertexDescriptor]?
             var backtracks: [(AdjacencyList.VertexDescriptor, AdjacencyList.VertexDescriptor)] = []
 
-            let visitor = VF2Isomorphism<AdjacencyList>.Visitor(
-                examineVertex: { vertex in
-                    examinedVertices.append(vertex)
-                },
-                examineEdge: { edge in
-                    examinedEdges.append(edge)
-                },
-                tryMapping: { v1, v2 in
-                    tryMappings.append((v1, v2))
-                },
-                mappingFound: { mapping in
-                    mappingFound = mapping
-                },
-                backtrack: { v1, v2 in
-                    backtracks.append((v1, v2))
+            let observation = AlgorithmObservation<VF2Isomorphism<AdjacencyList>.Event> { event in
+                switch event {
+                    case .vertexExamined(let vertex):
+                        examinedVertices.append(vertex)
+                    case .edgeExamined(let edge):
+                        examinedEdges.append(edge)
+                    case .mappingTried(let pair):
+                        tryMappings.append((pair.first, pair.second))
+                    case .mappingFound(let mapping):
+                        mappingFound = mapping
+                    case .mappingBacktracked(let pair):
+                        backtracks.append((pair.first, pair.second))
                 }
-            )
+            }
 
             let algorithm = VF2Isomorphism<AdjacencyList>()
-            let wrapper = algorithm.withVisitor(visitor)
-            let result = wrapper.base.areIsomorphic(graph1, graph2, visitor: wrapper.visitor)
+            let result = algorithm.areIsomorphic(graph1, graph2, observation: observation)
 
             #expect(result)
             #expect(!examinedVertices.isEmpty)
@@ -396,7 +392,7 @@
             #expect(mappingFound != nil)
         }
 
-        @Test func weisfeilerLehmanWithVisitor() {
+        @Test func weisfeilerLehmanWithObservation() {
             let graph1 = createSimpleGraph()
             let graph2 = createSimpleGraph()
 
@@ -406,26 +402,23 @@
             var iterations: [(Int, [AdjacencyList.VertexDescriptor: Int])] = []
             var stabilized: [AdjacencyList.VertexDescriptor: Int]?
 
-            let visitor = WeisfeilerLehmanIsomorphism<AdjacencyList>.Visitor(
-                examineVertex: { vertex in
-                    examinedVertices.append(vertex)
-                },
-                examineEdge: { edge in
-                    examinedEdges.append(edge)
-                },
-                labelVertex: { vertex, label in
-                    labeledVertices.append((vertex, label))
-                },
-                iterationComplete: { iteration, labels in
-                    iterations.append((iteration, labels))
-                },
-                labelsStabilized: { labels in
-                    stabilized = labels
+            let observation = AlgorithmObservation<WeisfeilerLehmanIsomorphism<AdjacencyList>.Event> { event in
+                switch event {
+                    case .vertexExamined(let vertex):
+                        examinedVertices.append(vertex)
+                    case .edgeExamined(let edge):
+                        examinedEdges.append(edge)
+                    case .vertexLabeled(let labeled):
+                        labeledVertices.append((labeled.vertex, labeled.label))
+                    case .iterationCompleted(let iteration):
+                        iterations.append((iteration.number, iteration.labels))
+                    case .labelsStabilized(let labels):
+                        stabilized = labels
                 }
-            )
+            }
 
             let algorithm = WeisfeilerLehmanIsomorphism<AdjacencyList>()
-            let result = algorithm.areIsomorphic(graph1, graph2, visitor: visitor)
+            let result = algorithm.areIsomorphic(graph1, graph2, observation: observation)
 
             #expect(result)
             #expect(!examinedVertices.isEmpty)
@@ -435,7 +428,7 @@
             #expect(stabilized != nil)
         }
 
-        @Test func enhancedWeisfeilerLehmanWithVisitor() {
+        @Test func enhancedWeisfeilerLehmanWithObservation() {
             let graph1 = createSimpleGraph()
             let graph2 = createSimpleGraph()
 
@@ -445,26 +438,23 @@
             var iterations: [(Int, [AdjacencyList.VertexDescriptor: Int])] = []
             var stabilized: [AdjacencyList.VertexDescriptor: Int]?
 
-            let visitor = EnhancedWeisfeilerLehmanIsomorphism<AdjacencyList>.Visitor(
-                examineVertex: { vertex in
-                    examinedVertices.append(vertex)
-                },
-                examineEdge: { edge in
-                    examinedEdges.append(edge)
-                },
-                labelVertex: { vertex, label in
-                    labeledVertices.append((vertex, label))
-                },
-                iterationComplete: { iteration, labels in
-                    iterations.append((iteration, labels))
-                },
-                labelsStabilized: { labels in
-                    stabilized = labels
+            let observation = AlgorithmObservation<EnhancedWeisfeilerLehmanIsomorphism<AdjacencyList>.Event> { event in
+                switch event {
+                    case .vertexExamined(let vertex):
+                        examinedVertices.append(vertex)
+                    case .edgeExamined(let edge):
+                        examinedEdges.append(edge)
+                    case .vertexLabeled(let labeled):
+                        labeledVertices.append((labeled.vertex, labeled.label))
+                    case .iterationCompleted(let iteration):
+                        iterations.append((iteration.number, iteration.labels))
+                    case .labelsStabilized(let labels):
+                        stabilized = labels
                 }
-            )
+            }
 
             let algorithm = EnhancedWeisfeilerLehmanIsomorphism<AdjacencyList>()
-            let result = algorithm.areIsomorphic(graph1, graph2, visitor: visitor)
+            let result = algorithm.areIsomorphic(graph1, graph2, observation: observation)
 
             #expect(result)
             #expect(!examinedVertices.isEmpty)
@@ -476,13 +466,13 @@
 
         // MARK: - Composition
 
-        /// Exercises all five VF2Isomorphism visitor events through a composed visitor pair.
+        /// Exercises all five VF2Isomorphism events through a composed observation pair.
         ///
         /// Two identical triangle graphs (isomorphic). VF2 will discover a mapping, triggering
         /// `mappingFound`; it tries vertex mappings (`tryMapping`) and examines vertices and edges.
         /// Since both graphs are isomorphic, backtracking may occur as the algorithm explores the
         /// search space before finding the full mapping.
-        @Test func vf2ComposedVisitorsReceiveAllEvents() {
+        @Test func vf2ComposedObservationsReceiveAllEventsInOrder() {
             let graph1 = createSimpleGraph()
             let graph2 = createSimpleGraph()
 
@@ -492,20 +482,28 @@
             var tryMap2 = 0
             var mapFound1 = 0
             var mapFound2 = 0
+            var observationOrder: [Int] = []
 
-            var v1 = VF2Isomorphism<AdjacencyList>.Visitor()
-            v1.examineVertex = { _ in examVtx1 += 1 }
-            v1.tryMapping = { _, _ in tryMap1 += 1 }
-            v1.mappingFound = { _ in mapFound1 += 1 }
-
-            var v2 = VF2Isomorphism<AdjacencyList>.Visitor()
-            v2.examineVertex = { _ in examVtx2 += 1 }
-            v2.tryMapping = { _, _ in tryMap2 += 1 }
-            v2.mappingFound = { _ in mapFound2 += 1 }
-
-            let combined = v1.combined(with: v2)
             let algorithm = VF2Isomorphism<AdjacencyList>()
-            let result = algorithm.areIsomorphic(graph1, graph2, visitor: combined)
+                .observing { event in
+                    observationOrder.append(1)
+                    switch event {
+                        case .vertexExamined: examVtx1 += 1
+                        case .mappingTried: tryMap1 += 1
+                        case .mappingFound: mapFound1 += 1
+                        default: break
+                    }
+                }
+                .observing { event in
+                    observationOrder.append(2)
+                    switch event {
+                        case .vertexExamined: examVtx2 += 1
+                        case .mappingTried: tryMap2 += 1
+                        case .mappingFound: mapFound2 += 1
+                        default: break
+                    }
+                }
+            let result = graph1.isIsomorphic(to: graph2, using: algorithm)
 
             #expect(result, "two identical graphs must be isomorphic")
             #expect(examVtx1 >= 1, "examineVertex fires during the search")
@@ -514,17 +512,18 @@
             #expect(tryMap2 >= 1)
             #expect(mapFound1 >= 1, "mappingFound fires when the full isomorphism is found")
             #expect(mapFound2 >= 1)
-            // Both composed visitors must see identical event counts
+            // Both composed observations must see identical event counts and attachment order.
             #expect(examVtx1 == examVtx2)
             #expect(tryMap1 == tryMap2)
             #expect(mapFound1 == mapFound2)
+            #expect(observationOrder.enumerated().allSatisfy { index, value in value == (index % 2) + 1 })
         }
 
-        /// Exercises all five WeisfeilerLehman visitor events through a composed visitor pair.
+        /// Exercises all five Weisfeiler-Lehman events through a composed observation pair.
         ///
         /// Two identical triangle graphs (isomorphic). WeisfeilerLehman relabels vertices
         /// iteratively until labels stabilize, firing label and iteration events.
-        @Test func weisfeilerLehmanComposedVisitorsReceiveAllEvents() {
+        @Test func weisfeilerLehmanComposedObservationsReceiveAllEventsInOrder() {
             let graph1 = createSimpleGraph()
             let graph2 = createSimpleGraph()
 
@@ -539,24 +538,30 @@
 
             var examEdge1 = 0
             var examEdge2 = 0
+            var observationOrder: [Int] = []
 
-            var v1 = WeisfeilerLehmanIsomorphism<AdjacencyList>.Visitor()
-            v1.examineVertex = { _ in examVtx1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.labelVertex = { _, _ in label1 += 1 }
-            v1.iterationComplete = { _, _ in iter1 += 1 }
-            v1.labelsStabilized = { _ in stable1 += 1 }
-
-            var v2 = WeisfeilerLehmanIsomorphism<AdjacencyList>.Visitor()
-            v2.examineVertex = { _ in examVtx2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.labelVertex = { _, _ in label2 += 1 }
-            v2.iterationComplete = { _, _ in iter2 += 1 }
-            v2.labelsStabilized = { _ in stable2 += 1 }
-
-            let combined = v1.combined(with: v2)
             let algorithm = WeisfeilerLehmanIsomorphism<AdjacencyList>()
-            let result = algorithm.areIsomorphic(graph1, graph2, visitor: combined)
+                .observing { event in
+                    observationOrder.append(1)
+                    switch event {
+                        case .vertexExamined: examVtx1 += 1
+                        case .edgeExamined: examEdge1 += 1
+                        case .vertexLabeled: label1 += 1
+                        case .iterationCompleted: iter1 += 1
+                        case .labelsStabilized: stable1 += 1
+                    }
+                }
+                .observing { event in
+                    observationOrder.append(2)
+                    switch event {
+                        case .vertexExamined: examVtx2 += 1
+                        case .edgeExamined: examEdge2 += 1
+                        case .vertexLabeled: label2 += 1
+                        case .iterationCompleted: iter2 += 1
+                        case .labelsStabilized: stable2 += 1
+                    }
+                }
+            let result = graph1.isIsomorphic(to: graph2, using: algorithm)
 
             #expect(result, "two identical graphs must be isomorphic")
             #expect(examVtx1 >= 1, "examineVertex fires during label propagation")
@@ -569,17 +574,18 @@
             #expect(iter2 >= 1)
             #expect(stable1 >= 1, "labelsStabilized fires when WL converges (once per graph)")
             #expect(stable2 >= 1)
-            // Both composed visitors must see identical event counts
+            // Both composed observations must see identical event counts and attachment order.
             #expect(examVtx1 == examVtx2)
             #expect(examEdge1 == examEdge2)
             #expect(label1 == label2)
             #expect(iter1 == iter2)
             #expect(stable1 == stable2)
+            #expect(observationOrder.enumerated().allSatisfy { index, value in value == (index % 2) + 1 })
         }
 
-        /// Exercises all five `EnhancedWeisfeilerLehmanIsomorphism.Visitor` events through
-        /// a composed visitor pair. Uses two identical triangle graphs (isomorphic).
-        @Test func enhancedWeisfeilerLehmanComposedVisitorsReceiveAllEvents() {
+        /// Exercises all five enhanced Weisfeiler-Lehman events through a composed
+        /// observation pair. Uses two identical triangle graphs (isomorphic).
+        @Test func enhancedWeisfeilerLehmanComposedObservationsReceiveAllEventsInOrder() {
             let graph1 = createSimpleGraph()
             let graph2 = createSimpleGraph()
 
@@ -593,24 +599,30 @@
             var iter2 = 0
             var stable1 = 0
             var stable2 = 0
+            var observationOrder: [Int] = []
 
-            var v1 = EnhancedWeisfeilerLehmanIsomorphism<AdjacencyList>.Visitor()
-            v1.examineVertex = { _ in examVtx1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.labelVertex = { _, _ in label1 += 1 }
-            v1.iterationComplete = { _, _ in iter1 += 1 }
-            v1.labelsStabilized = { _ in stable1 += 1 }
-
-            var v2 = EnhancedWeisfeilerLehmanIsomorphism<AdjacencyList>.Visitor()
-            v2.examineVertex = { _ in examVtx2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.labelVertex = { _, _ in label2 += 1 }
-            v2.iterationComplete = { _, _ in iter2 += 1 }
-            v2.labelsStabilized = { _ in stable2 += 1 }
-
-            let combined = v1.combined(with: v2)
             let algorithm = EnhancedWeisfeilerLehmanIsomorphism<AdjacencyList>()
-            let result = algorithm.areIsomorphic(graph1, graph2, visitor: combined)
+                .observing { event in
+                    observationOrder.append(1)
+                    switch event {
+                        case .vertexExamined: examVtx1 += 1
+                        case .edgeExamined: examEdge1 += 1
+                        case .vertexLabeled: label1 += 1
+                        case .iterationCompleted: iter1 += 1
+                        case .labelsStabilized: stable1 += 1
+                    }
+                }
+                .observing { event in
+                    observationOrder.append(2)
+                    switch event {
+                        case .vertexExamined: examVtx2 += 1
+                        case .edgeExamined: examEdge2 += 1
+                        case .vertexLabeled: label2 += 1
+                        case .iterationCompleted: iter2 += 1
+                        case .labelsStabilized: stable2 += 1
+                    }
+                }
+            let result = graph1.isIsomorphic(to: graph2, using: algorithm)
 
             #expect(result, "two identical triangle graphs must be isomorphic")
             #expect(examVtx1 >= 1, "examineVertex fires for each vertex examined")
@@ -628,6 +640,7 @@
             #expect(label1 == label2)
             #expect(iter1 == iter2)
             #expect(stable1 == stable2)
+            #expect(observationOrder.enumerated().allSatisfy { index, value in value == (index % 2) + 1 })
         }
     }
 #endif

@@ -249,10 +249,10 @@
             graph.addEdge(from: d, to: e)
 
             let kahn = Kahn<AdjacencyList>()
-            let kahnResult = kahn.topologicalSort(in: graph, visitor: nil)
+            let kahnResult = kahn.topologicalSort(in: graph, observation: nil)
 
             let dfs = DFSTopologicalSort<AdjacencyList>()
-            let dfsResult = dfs.topologicalSort(in: graph, visitor: nil)
+            let dfsResult = dfs.topologicalSort(in: graph, observation: nil)
 
             // Both should be valid
             #expect(kahnResult.isValid)
@@ -300,9 +300,9 @@
             #expect(result.sortedVertices == [a, b, c])
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        @Test func kahnVisitorObservesEvents() {
+        @Test func kahnObservationReceivesEvents() {
             var graph = AdjacencyList()
 
             let a = graph.addVertex()
@@ -315,18 +315,17 @@
             var examinedEdges: Int = 0
             var finishedVertices: [String] = []
 
-            var visitor = Kahn<AdjacencyList>.Visitor()
-            visitor.discoverVertex = { vertex in
-                discoveredVertices.append(graph[vertex].label)
-            }
-            visitor.examineEdge = { _ in
-                examinedEdges += 1
-            }
-            visitor.finishVertex = { vertex in
-                finishedVertices.append(graph[vertex].label)
-            }
+            typealias Cases = Kahn<AdjacencyList>.EventCases
+            let observed = Kahn<AdjacencyList>()
+                .observing(Cases.vertexDiscovered) { vertex in
+                    discoveredVertices.append(graph[vertex].label)
+                }
+                .observing(Cases.edgeExamined) { _ in examinedEdges += 1 }
+                .observing(Cases.vertexFinished) { vertex in
+                    finishedVertices.append(graph[vertex].label)
+                }
 
-            let result = graph.topologicalSort(using: .kahn().withVisitor(visitor))
+            let result = graph.topologicalSort(using: observed)
 
             #expect(result.isValid)
             #expect(discoveredVertices.count == 3)
@@ -334,7 +333,7 @@
             #expect(finishedVertices.count == 3)
         }
 
-        @Test func dfsVisitorObservesEvents() {
+        @Test func dfsObservationReceivesEvents() {
             var graph = AdjacencyList()
 
             let a = graph.addVertex()
@@ -348,21 +347,18 @@
             var treeEdges: Int = 0
             var finishedVertices: [String] = []
 
-            var visitor = DFSTopologicalSort<AdjacencyList>.Visitor()
-            visitor.discoverVertex = { vertex in
-                discoveredVertices.append(graph[vertex].label)
-            }
-            visitor.examineEdge = { _ in
-                examinedEdges += 1
-            }
-            visitor.treeEdge = { _ in
-                treeEdges += 1
-            }
-            visitor.finishVertex = { vertex in
-                finishedVertices.append(graph[vertex].label)
-            }
+            typealias Cases = DFSTopologicalSort<AdjacencyList>.EventCases
+            let observed = DFSTopologicalSort<AdjacencyList>()
+                .observing(Cases.vertexDiscovered) { vertex in
+                    discoveredVertices.append(graph[vertex].label)
+                }
+                .observing(Cases.edgeExamined) { _ in examinedEdges += 1 }
+                .observing(Cases.treeEdgeTraversed) { _ in treeEdges += 1 }
+                .observing(Cases.vertexFinished) { vertex in
+                    finishedVertices.append(graph[vertex].label)
+                }
 
-            let result = graph.topologicalSort(using: .dfs().withVisitor(visitor))
+            let result = graph.topologicalSort(using: observed)
 
             #expect(result.isValid)
             #expect(discoveredVertices.count == 3)
@@ -371,7 +367,7 @@
             #expect(finishedVertices.count == 3)  // DFS finishes in reverse order
         }
 
-        @Test func cycleDetectionVisitorReportsCycle() {
+        @Test func cycleDetectionObservationReportsCycle() {
             var graph = AdjacencyList()
 
             let a = graph.addVertex()
@@ -385,13 +381,13 @@
             var cycleDetected = false
             var cycleVertices: [String] = []
 
-            var kahnVisitor = Kahn<AdjacencyList>.Visitor()
-            kahnVisitor.detectCycle = { vertices in
-                cycleDetected = true
-                cycleVertices = vertices.map { graph[$0].label }
-            }
+            let observed = Kahn<AdjacencyList>()
+                .observing(Kahn<AdjacencyList>.EventCases.cycleDetected) { vertices in
+                    cycleDetected = true
+                    cycleVertices = vertices.map { graph[$0].label }
+                }
 
-            let result = graph.topologicalSort(using: .kahn().withVisitor(kahnVisitor))
+            let result = graph.topologicalSort(using: observed)
 
             #expect(!result.isValid)
             #expect(result.hasCycle)
@@ -399,9 +395,9 @@
             #expect(!cycleVertices.isEmpty)
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Composition
 
-        /// Exercises all four Kahn visitor events through a composed visitor pair.
+        /// Exercises all four Kahn events through two composed observation groups.
         ///
         /// Graph: a→b→c (chain DAG).
         /// - `discoverVertex` fires once per vertex when dequeued (3 times).
@@ -410,7 +406,7 @@
         ///   For 2 edges that is 4 total.
         /// - `finishVertex` fires once per vertex in topological order (3 times).
         /// - `detectCycle` is absent because the graph is acyclic.
-        @Test func composedVisitorsReceiveAllEvents() {
+        @Test func composedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -425,18 +421,15 @@
             var finished1 = 0
             var finished2 = 0
 
-            var visitor1 = Kahn<AdjacencyList>.Visitor()
-            visitor1.discoverVertex = { _ in discovered1 += 1 }
-            visitor1.examineEdge = { _ in examEdge1 += 1 }
-            visitor1.finishVertex = { _ in finished1 += 1 }
-
-            var visitor2 = Kahn<AdjacencyList>.Visitor()
-            visitor2.discoverVertex = { _ in discovered2 += 1 }
-            visitor2.examineEdge = { _ in examEdge2 += 1 }
-            visitor2.finishVertex = { _ in finished2 += 1 }
-
-            let combinedVisitor = visitor1.combined(with: visitor2)
-            let result = graph.topologicalSort(using: .kahn().withVisitor(combinedVisitor))
+            typealias Cases = Kahn<AdjacencyList>.EventCases
+            let observed = Kahn<AdjacencyList>()
+                .observing(Cases.vertexDiscovered) { _ in discovered1 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+                .observing(Cases.vertexFinished) { _ in finished1 += 1 }
+                .observing(Cases.vertexDiscovered) { _ in discovered2 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+                .observing(Cases.vertexFinished) { _ in finished2 += 1 }
+            let result = graph.topologicalSort(using: observed)
 
             #expect(result.isValid, "a→b→c is a valid DAG with a unique topological order")
             #expect(discovered1 == 3, "discoverVertex fires for all 3 vertices")
@@ -447,13 +440,13 @@
             #expect(examEdge2 == 4)
             #expect(finished1 == 3, "finishVertex fires for all 3 vertices")
             #expect(finished2 == 3)
-            // Both composed visitors must see identical event counts
+            // Both composed observation groups must see identical event counts.
             #expect(discovered1 == discovered2)
             #expect(examEdge1 == examEdge2)
             #expect(finished1 == finished2)
         }
 
-        /// Exercises all eight DFSTopologicalSort visitor events through a composed visitor pair.
+        /// Exercises all eight DFS topological-sort events through two observation groups.
         ///
         /// Graph: two disconnected components.
         /// - Component 1: a→b (tree), b→a (back — creates cycle, b→a where a is gray ancestor).
@@ -474,7 +467,7 @@
         /// - `crossEdge` fires for c→b (b is already BLACK when component 2 starts).
         /// - `finishVertex` fires for b, a, d, c (4 times).
         /// - `detectCycle` fires once after the full traversal (cycle from b→a).
-        @Test func dfsComposedVisitorsReceiveAllEvents() {
+        @Test func dfsComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -504,28 +497,25 @@
             var cycle1 = 0
             var cycle2 = 0
 
-            var v1 = DFSTopologicalSort<AdjacencyList>.Visitor()
-            v1.discoverVertex = { _ in discovered1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.treeEdge = { _ in tree1 += 1 }
-            v1.backEdge = { _ in back1 += 1 }
-            v1.forwardEdge = { _ in forward1 += 1 }
-            v1.crossEdge = { _ in cross1 += 1 }
-            v1.finishVertex = { _ in finished1 += 1 }
-            v1.detectCycle = { _ in cycle1 += 1 }
-
-            var v2 = DFSTopologicalSort<AdjacencyList>.Visitor()
-            v2.discoverVertex = { _ in discovered2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.treeEdge = { _ in tree2 += 1 }
-            v2.backEdge = { _ in back2 += 1 }
-            v2.forwardEdge = { _ in forward2 += 1 }
-            v2.crossEdge = { _ in cross2 += 1 }
-            v2.finishVertex = { _ in finished2 += 1 }
-            v2.detectCycle = { _ in cycle2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = graph.topologicalSort(using: .dfs().withVisitor(combined))
+            typealias Cases = DFSTopologicalSort<AdjacencyList>.EventCases
+            let observed = DFSTopologicalSort<AdjacencyList>()
+                .observing(Cases.vertexDiscovered) { _ in discovered1 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+                .observing(Cases.treeEdgeTraversed) { _ in tree1 += 1 }
+                .observing(Cases.backEdgeDetected) { _ in back1 += 1 }
+                .observing(Cases.forwardEdgeTraversed) { _ in forward1 += 1 }
+                .observing(Cases.crossEdgeTraversed) { _ in cross1 += 1 }
+                .observing(Cases.vertexFinished) { _ in finished1 += 1 }
+                .observing(Cases.cycleDetected) { _ in cycle1 += 1 }
+                .observing(Cases.vertexDiscovered) { _ in discovered2 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+                .observing(Cases.treeEdgeTraversed) { _ in tree2 += 1 }
+                .observing(Cases.backEdgeDetected) { _ in back2 += 1 }
+                .observing(Cases.forwardEdgeTraversed) { _ in forward2 += 1 }
+                .observing(Cases.crossEdgeTraversed) { _ in cross2 += 1 }
+                .observing(Cases.vertexFinished) { _ in finished2 += 1 }
+                .observing(Cases.cycleDetected) { _ in cycle2 += 1 }
+            _ = graph.topologicalSort(using: observed)
 
             #expect(discovered1 == 4, "discoverVertex fires for a, b, c, d")
             #expect(discovered2 == 4)
@@ -546,7 +536,7 @@
             #expect(finished2 == 4)
             #expect(cycle1 == 1, "detectCycle fires once after the traversal (cycle b→a)")
             #expect(cycle2 == 1)
-            // Both composed visitors must see identical event counts
+            // Both composed observation groups must see identical event counts.
             #expect(discovered1 == discovered2)
             #expect(examEdge1 == examEdge2)
             #expect(tree1 == tree2)

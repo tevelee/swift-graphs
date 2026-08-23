@@ -11,29 +11,50 @@
         /// The vertex type of the graph.
         public typealias Vertex = Graph.VertexDescriptor
 
-        /// A visitor that can be used to observe the Barabasi-Albert algorithm progress.
-        public struct Visitor {
-            /// Called when adding a vertex.
-            public var addVertex: ((Vertex) -> Void)?
-            /// Called when adding an edge.
-            public var addEdge: ((Vertex, Vertex) -> Void)?
-            /// Called when selecting a target vertex.
-            public var selectTarget: ((Vertex, [Vertex]) -> Void)?
-            /// Called when updating a vertex degree.
-            public var updateDegree: ((Vertex, Int) -> Void)?
+        /// An event emitted while generating a Barabasi-Albert graph.
+        public enum Event {
+            /// A vertex was added.
+            case vertexAdded(Vertex)
+            /// An edge was added between two vertices.
+            case edgeAdded(source: Vertex, destination: Vertex)
+            /// A preferential-attachment target was selected.
+            case targetSelected(Vertex, candidates: [Vertex])
+            /// A vertex degree was updated.
+            case degreeUpdated(Vertex, degree: Int)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                addVertex: ((Vertex) -> Void)? = nil,
-                addEdge: ((Vertex, Vertex) -> Void)? = nil,
-                selectTarget: ((Vertex, [Vertex]) -> Void)? = nil,
-                updateDegree: ((Vertex, Int) -> Void)? = nil
-            ) {
-                self.addVertex = addVertex
-                self.addEdge = addEdge
-                self.selectTarget = selectTarget
-                self.updateDegree = updateDegree
+        /// Typed selectors for Barabasi-Albert events.
+        public enum EventCases {
+            /// Selects added vertices.
+            public static var vertexAdded: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexAdded(let vertex) = $0 else { return nil }
+                    return vertex
+                }
+            }
+
+            /// Selects added edges.
+            public static var edgeAdded: AlgorithmEventCase<Event, (source: Vertex, destination: Vertex)> {
+                .init {
+                    guard case .edgeAdded(let source, let destination) = $0 else { return nil }
+                    return (source, destination)
+                }
+            }
+
+            /// Selects preferential-attachment targets.
+            public static var targetSelected: AlgorithmEventCase<Event, (target: Vertex, candidates: [Vertex])> {
+                .init {
+                    guard case .targetSelected(let target, let candidates) = $0 else { return nil }
+                    return (target, candidates)
+                }
+            }
+
+            /// Selects degree updates.
+            public static var degreeUpdated: AlgorithmEventCase<Event, (vertex: Vertex, degree: Int)> {
+                .init {
+                    guard case .degreeUpdated(let vertex, let degree) = $0 else { return nil }
+                    return (vertex, degree)
+                }
             }
         }
 
@@ -68,13 +89,13 @@
         ///   - graph: The graph to append to (modified in place)
         ///   - vertexCount: The number of vertices to add
         ///   - generator: The random number generator to use
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation of algorithm progress.
         @inlinable
         public func appendRandomGraph<RNG: RandomNumberGenerator>(
             into graph: inout Graph,
             vertexCount: Int,
             using generator: inout RNG,
-            visitor: Visitor? = nil
+            observation: AlgorithmObservation<Event>? = nil
         ) {
             guard vertexCount > 0 else { return }
 
@@ -82,7 +103,7 @@
             var vertices: [Vertex] = []
             for _ in 0 ..< vertexCount {
                 let newVertex = graph.addVertex()
-                visitor?.addVertex?(newVertex)
+                observation?.receive(.vertexAdded(newVertex))
                 vertices.append(newVertex)
 
                 // Calculate number of edges to add for this vertex
@@ -94,12 +115,12 @@
                         if let target = selectVertexByPreferentialAttachment(
                             from: vertices.dropLast(),
                             using: &generator,
-                            visitor: visitor,
+                            observation: observation,
                             graph: graph
                         ) {
                             graph.addEdge(from: newVertex, to: target)
-                            visitor?.addEdge?(newVertex, target)
-                            visitor?.updateDegree?(target, graph.degree(of: target))
+                            observation?.receive(.edgeAdded(source: newVertex, destination: target))
+                            observation?.receive(.degreeUpdated(target, degree: graph.degree(of: target)))
                         }
                     }
                 }
@@ -110,7 +131,7 @@
         func selectVertexByPreferentialAttachment<RNG: RandomNumberGenerator>(
             from vertices: ArraySlice<Vertex>,
             using generator: inout RNG,
-            visitor: Visitor?,
+            observation: AlgorithmObservation<Event>?,
             graph: Graph
         ) -> Vertex? {
             guard !vertices.isEmpty else { return nil }
@@ -137,11 +158,10 @@
             }
 
             if let target = selected {
-                visitor?.selectTarget?(target, Array(vertices))
+                observation?.receive(.targetSelected(target, candidates: Array(vertices)))
             }
             return selected
         }
     }
 
-    extension BarabasiAlbert: VisitorSupporting {}
 #endif

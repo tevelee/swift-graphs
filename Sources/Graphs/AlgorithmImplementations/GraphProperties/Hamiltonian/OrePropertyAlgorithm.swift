@@ -1,6 +1,6 @@
 /// Standard implementation of Ore's theorem for Hamiltonian cycles.
 public struct StandardOrePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph> where Graph.VertexDescriptor: Hashable {
-    public typealias Visitor = OreProperty<Graph>.Visitor
+    public typealias Event = OreProperty<Graph>.Event
 
     /// Creates a new standard Ore property algorithm.
     @inlinable
@@ -10,23 +10,23 @@ public struct StandardOrePropertyAlgorithm<Graph: IncidenceGraph & VertexListGra
     ///
     /// - Parameters:
     ///   - graph: The graph to check
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional observation of algorithm progress.
     /// - Returns: `true` if the graph satisfies Ore's theorem, `false` otherwise
     @inlinable
     public func satisfiesOre(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Bool {
         let n = graph.vertexCount
 
         // Ore's theorem requires at least 3 vertices
         guard n >= 3 else {
-            visitor?.insufficientVertices?(n)
+            observation?.receive(.insufficientVertexCount(n))
             return false
         }
 
         let vertices = Array(graph.vertices())
-        visitor?.checkVertexCount?(n)
+        observation?.receive(.vertexCountChecked(n))
 
         // Check all pairs of non-adjacent vertices
         for i in 0 ..< vertices.count {
@@ -39,14 +39,14 @@ public struct StandardOrePropertyAlgorithm<Graph: IncidenceGraph & VertexListGra
                     graph.destination(of: edge) == v
                 }
 
-                visitor?.checkVertexPair?(u, v, areAdjacent)
+                observation?.receive(.vertexPairChecked(u, v, adjacent: areAdjacent))
 
                 if !areAdjacent {
                     let degreeSum = graph.degree(of: u) + graph.degree(of: v)
-                    visitor?.checkDegreeSum?(u, v, degreeSum, n)
+                    observation?.receive(.degreeSumChecked(u, v, sum: degreeSum, required: n))
 
                     if degreeSum < n {
-                        visitor?.degreeSumTooLow?(u, v, degreeSum, n)
+                        observation?.receive(.degreeSumTooLow(u, v, sum: degreeSum, required: n))
                         return false
                     }
                 }

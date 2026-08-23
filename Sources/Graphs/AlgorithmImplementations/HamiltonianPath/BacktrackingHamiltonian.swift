@@ -8,33 +8,46 @@
     public struct BacktrackingHamiltonian<Graph: IncidenceGraph & VertexListGraph>
     where Graph.VertexDescriptor: Hashable {
 
-        /// A visitor that can be used to observe the backtracking Hamiltonian algorithm progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
-            /// Called when adding a vertex to the path.
-            public var addToPath: ((Graph.VertexDescriptor) -> Void)?
-            /// Called when removing a vertex from the path.
-            public var removeFromPath: ((Graph.VertexDescriptor) -> Void)?
-            /// Called when backtracking.
-            public var backtrack: ((Graph.VertexDescriptor) -> Void)?
+        /// An event emitted while the backtracking Hamiltonian algorithm runs.
+        public enum Event {
+            case vertexExamined(Graph.VertexDescriptor)
+            case edgeExamined(Graph.EdgeDescriptor)
+            case vertexAddedToPath(Graph.VertexDescriptor)
+            case vertexRemovedFromPath(Graph.VertexDescriptor)
+            case vertexBacktracked(Graph.VertexDescriptor)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
-                examineEdge: ((Graph.EdgeDescriptor) -> Void)? = nil,
-                addToPath: ((Graph.VertexDescriptor) -> Void)? = nil,
-                removeFromPath: ((Graph.VertexDescriptor) -> Void)? = nil,
-                backtrack: ((Graph.VertexDescriptor) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.addToPath = addToPath
-                self.removeFromPath = removeFromPath
-                self.backtrack = backtrack
+        /// Selectors for backtracking Hamiltonian events.
+        public enum EventCases {
+            public static var vertexExamined: AlgorithmEventCase<Event, Graph.VertexDescriptor> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeExamined: AlgorithmEventCase<Event, Graph.EdgeDescriptor> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var vertexAddedToPath: AlgorithmEventCase<Event, Graph.VertexDescriptor> {
+                .init {
+                    guard case .vertexAddedToPath(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var vertexRemovedFromPath: AlgorithmEventCase<Event, Graph.VertexDescriptor> {
+                .init {
+                    guard case .vertexRemovedFromPath(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var vertexBacktracked: AlgorithmEventCase<Event, Graph.VertexDescriptor> {
+                .init {
+                    guard case .vertexBacktracked(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -46,17 +59,17 @@
         ///
         /// - Parameters:
         ///   - graph: The graph to search in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation to observe the algorithm progress
         /// - Returns: A Hamiltonian path if one exists, nil otherwise
         @inlinable
-        public func hamiltonianPath(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        public func hamiltonianPath(in graph: Graph, observation: AlgorithmObservation<Event>? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
             let vertices = Array(graph.vertices())
             guard !vertices.isEmpty else { return nil }
 
             // Try starting from each vertex
             for startVertex in vertices {
-                visitor?.examineVertex?(startVertex)
-                if let path = findHamiltonianPath(from: startVertex, in: graph, visitor: visitor) {
+                observation?.receive(.vertexExamined(startVertex))
+                if let path = findHamiltonianPath(from: startVertex, in: graph, observation: observation) {
                     return path
                 }
             }
@@ -69,15 +82,15 @@
         /// - Parameters:
         ///   - source: The starting vertex
         ///   - graph: The graph to search in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation to observe the algorithm progress
         /// - Returns: A Hamiltonian path if one exists, nil otherwise
         @inlinable
         public func hamiltonianPath(
             from source: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor? = nil
+            observation: AlgorithmObservation<Event>? = nil
         ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-            return findHamiltonianPath(from: source, in: graph, visitor: visitor)
+            return findHamiltonianPath(from: source, in: graph, observation: observation)
         }
 
         /// Finds a Hamiltonian path between two specific vertices.
@@ -86,33 +99,33 @@
         ///   - source: The starting vertex
         ///   - destination: The ending vertex
         ///   - graph: The graph to search in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation to observe the algorithm progress
         /// - Returns: A Hamiltonian path if one exists, nil otherwise
         @inlinable
         public func hamiltonianPath(
             from source: Graph.VertexDescriptor,
             to destination: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor? = nil
+            observation: AlgorithmObservation<Event>? = nil
         ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-            return findHamiltonianPath(from: source, to: destination, in: graph, visitor: visitor)
+            return findHamiltonianPath(from: source, to: destination, in: graph, observation: observation)
         }
 
         /// Finds a Hamiltonian cycle in the graph.
         ///
         /// - Parameters:
         ///   - graph: The graph to search in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation to observe the algorithm progress
         /// - Returns: A Hamiltonian cycle if one exists, nil otherwise
         @inlinable
-        public func hamiltonianCycle(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        public func hamiltonianCycle(in graph: Graph, observation: AlgorithmObservation<Event>? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
             let vertices = Array(graph.vertices())
             guard !vertices.isEmpty else { return nil }
 
             // Try starting from each vertex
             for startVertex in vertices {
-                visitor?.examineVertex?(startVertex)
-                if let cycle = findHamiltonianCycle(from: startVertex, in: graph, visitor: visitor) {
+                observation?.receive(.vertexExamined(startVertex))
+                if let cycle = findHamiltonianCycle(from: startVertex, in: graph, observation: observation) {
                     return cycle
                 }
             }
@@ -124,11 +137,11 @@
         func findHamiltonianPath(
             from source: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
             var path: [Graph.VertexDescriptor] = [source]
             var visited: Set<Graph.VertexDescriptor> = [source]
-            visitor?.addToPath?(source)
+            observation?.receive(.vertexAddedToPath(source))
 
             if backtrackPath(
                 current: source,
@@ -136,7 +149,7 @@
                 visited: &visited,
                 target: nil,
                 in: graph,
-                visitor: visitor
+                observation: observation
             ) {
                 return buildPath(from: path, in: graph)
             }
@@ -149,11 +162,11 @@
             from source: Graph.VertexDescriptor,
             to destination: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
             var path: [Graph.VertexDescriptor] = [source]
             var visited: Set<Graph.VertexDescriptor> = [source]
-            visitor?.addToPath?(source)
+            observation?.receive(.vertexAddedToPath(source))
 
             if backtrackPath(
                 current: source,
@@ -161,7 +174,7 @@
                 visited: &visited,
                 target: destination,
                 in: graph,
-                visitor: visitor
+                observation: observation
             ) {
                 return buildPath(from: path, in: graph)
             }
@@ -173,11 +186,11 @@
         func findHamiltonianCycle(
             from source: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
             var path: [Graph.VertexDescriptor] = [source]
             var visited: Set<Graph.VertexDescriptor> = [source]
-            visitor?.addToPath?(source)
+            observation?.receive(.vertexAddedToPath(source))
 
             if backtrackCycle(
                 current: source,
@@ -185,11 +198,11 @@
                 visited: &visited,
                 start: source,
                 in: graph,
-                visitor: visitor
+                observation: observation
             ) {
                 // Add the starting vertex at the end to complete the cycle
                 path.append(source)
-                visitor?.addToPath?(source)
+                observation?.receive(.vertexAddedToPath(source))
                 return buildPath(from: path, in: graph)
             }
 
@@ -202,7 +215,7 @@
             visited: inout Set<Graph.VertexDescriptor>,
             target: Graph.VertexDescriptor?,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Bool {
             let vertices = Array(graph.vertices())
 
@@ -218,19 +231,19 @@
 
             // Try all unvisited neighbors
             for neighbor in graph.successors(of: current) {
-                visitor?.examineVertex?(neighbor)
+                observation?.receive(.vertexExamined(neighbor))
 
                 // Examine edges to neighbors
                 for edge in graph.outgoingEdges(of: current) {
                     if graph.destination(of: edge) == neighbor {
-                        visitor?.examineEdge?(edge)
+                        observation?.receive(.edgeExamined(edge))
                     }
                 }
 
                 if !visited.contains(neighbor) {
                     path.append(neighbor)
                     visited.insert(neighbor)
-                    visitor?.addToPath?(neighbor)
+                    observation?.receive(.vertexAddedToPath(neighbor))
 
                     if backtrackPath(
                         current: neighbor,
@@ -238,7 +251,7 @@
                         visited: &visited,
                         target: target,
                         in: graph,
-                        visitor: visitor
+                        observation: observation
                     ) {
                         return true
                     }
@@ -246,8 +259,8 @@
                     // Backtrack
                     path.removeLast()
                     visited.remove(neighbor)
-                    visitor?.removeFromPath?(neighbor)
-                    visitor?.backtrack?(neighbor)
+                    observation?.receive(.vertexRemovedFromPath(neighbor))
+                    observation?.receive(.vertexBacktracked(neighbor))
                 }
             }
 
@@ -260,7 +273,7 @@
             visited: inout Set<Graph.VertexDescriptor>,
             start: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Bool {
             let vertices = Array(graph.vertices())
 
@@ -271,19 +284,19 @@
 
             // Try all unvisited neighbors
             for neighbor in graph.successors(of: current) {
-                visitor?.examineVertex?(neighbor)
+                observation?.receive(.vertexExamined(neighbor))
 
                 // Examine edges to neighbors
                 for edge in graph.outgoingEdges(of: current) {
                     if graph.destination(of: edge) == neighbor {
-                        visitor?.examineEdge?(edge)
+                        observation?.receive(.edgeExamined(edge))
                     }
                 }
 
                 if !visited.contains(neighbor) {
                     path.append(neighbor)
                     visited.insert(neighbor)
-                    visitor?.addToPath?(neighbor)
+                    observation?.receive(.vertexAddedToPath(neighbor))
 
                     if backtrackCycle(
                         current: neighbor,
@@ -291,7 +304,7 @@
                         visited: &visited,
                         start: start,
                         in: graph,
-                        visitor: visitor
+                        observation: observation
                     ) {
                         return true
                     }
@@ -299,8 +312,8 @@
                     // Backtrack
                     path.removeLast()
                     visited.remove(neighbor)
-                    visitor?.removeFromPath?(neighbor)
-                    visitor?.backtrack?(neighbor)
+                    observation?.receive(.vertexRemovedFromPath(neighbor))
+                    observation?.receive(.vertexBacktracked(neighbor))
                 }
             }
 
@@ -352,5 +365,21 @@
         }
     }
 
-    extension BacktrackingHamiltonian: VisitorSupporting {}
+    extension BacktrackingHamiltonian: AlgorithmObserving {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
+    extension BacktrackingHamiltonian.Event: VertexExaminedEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+    }
 #endif

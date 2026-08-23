@@ -156,9 +156,9 @@ struct TreePropertyTests {
         #expect(!graph.isTree(using: .bfs()))
     }
 
-    // MARK: - Visitor Support
+    // MARK: - Observation-Capable Algorithms
 
-    @Test func visitorCallbacks() {
+    @Test func singlePassAcceptsAcyclicGraph() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -169,7 +169,7 @@ struct TreePropertyTests {
         #expect(result)
     }
 
-    @Test func visitorCallbacksWithCycle() {
+    @Test func singlePassRejectsCycle() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }

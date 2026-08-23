@@ -1,11 +1,11 @@
 /// A protocol for maximum flow algorithms.
-public protocol MaxFlowAlgorithm<Graph, Flow> {
+public protocol MaxFlowAlgorithm<Graph, Flow>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & EdgeListGraph & VertexListGraph where Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable
     /// The flow type for edge capacities and flows.
     associatedtype Flow: AdditiveArithmetic & Comparable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Computes the maximum flow from source to sink.
     ///
@@ -13,13 +13,13 @@ public protocol MaxFlowAlgorithm<Graph, Flow> {
     ///   - source: The source vertex
     ///   - sink: The sink vertex
     ///   - graph: The flow network graph
-    ///   - visitor: Optional visitor for algorithm events
+    ///   - observation: An optional algorithm observation
     /// - Returns: The maximum flow result
     func maximumFlow(
         from source: Graph.VertexDescriptor,
         to sink: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> MaxFlowResult<Graph.VertexDescriptor, Graph.EdgeDescriptor, Flow>
 }
 
@@ -99,7 +99,7 @@ public struct MaxFlowResult<Vertex: Hashable, Edge: Hashable, Flow: AdditiveArit
 
 extension MaxFlowResult: Sendable where Vertex: Sendable, Edge: Sendable, Flow: Sendable {}
 
-extension VisitorWrapper: MaxFlowAlgorithm where Base: MaxFlowAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: MaxFlowAlgorithm where Base: MaxFlowAlgorithm {
     public typealias Graph = Base.Graph
     public typealias Flow = Base.Flow
 
@@ -108,9 +108,9 @@ extension VisitorWrapper: MaxFlowAlgorithm where Base: MaxFlowAlgorithm, Base.Vi
         from source: Base.Graph.VertexDescriptor,
         to sink: Base.Graph.VertexDescriptor,
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> MaxFlowResult<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Flow> {
-        base.maximumFlow(from: source, to: sink, in: graph, visitor: self.visitor.combined(with: visitor))
+        base.maximumFlow(from: source, to: sink, in: graph, observation: self.observation.followed(by: observation))
     }
 }
 
@@ -128,7 +128,7 @@ extension IncidenceGraph {
         to sink: VertexDescriptor,
         using algorithm: some MaxFlowAlgorithm<Self, Flow>
     ) -> MaxFlowResult<VertexDescriptor, EdgeDescriptor, Flow> {
-        algorithm.maximumFlow(from: source, to: sink, in: self, visitor: nil)
+        algorithm.maximumFlow(from: source, to: sink, in: self, observation: nil)
     }
 }
 

@@ -11,33 +11,66 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe the Weisfeiler-Lehman algorithm progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when labeling a vertex.
-            public var labelVertex: ((Vertex, Int) -> Void)?
-            /// Called when an iteration is complete.
-            public var iterationComplete: ((Int, [Vertex: Int]) -> Void)?
-            /// Called when labels have stabilized.
-            public var labelsStabilized: (([Vertex: Int]) -> Void)?
+        public struct VertexLabel {
+            public let vertex: Vertex
+            public let label: Int
 
-            /// Creates a new visitor.
             @inlinable
-            public init(
-                examineVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                labelVertex: ((Vertex, Int) -> Void)? = nil,
-                iterationComplete: ((Int, [Vertex: Int]) -> Void)? = nil,
-                labelsStabilized: (([Vertex: Int]) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.labelVertex = labelVertex
-                self.iterationComplete = iterationComplete
-                self.labelsStabilized = labelsStabilized
+            public init(vertex: Vertex, label: Int) {
+                self.vertex = vertex
+                self.label = label
+            }
+        }
+
+        public struct Iteration {
+            public let number: Int
+            public let labels: [Vertex: Int]
+
+            @inlinable
+            public init(number: Int, labels: [Vertex: Int]) {
+                self.number = number
+                self.labels = labels
+            }
+        }
+
+        public enum Event {
+            case vertexExamined(Vertex)
+            case edgeExamined(Edge)
+            case vertexLabeled(VertexLabel)
+            case iterationCompleted(Iteration)
+            case labelsStabilized([Vertex: Int])
+        }
+
+        public enum EventCases {
+            public static var vertexExamined: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var vertexLabeled: AlgorithmEventCase<Event, VertexLabel> {
+                .init {
+                    guard case .vertexLabeled(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var iterationCompleted: AlgorithmEventCase<Event, Iteration> {
+                .init {
+                    guard case .iterationCompleted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var labelsStabilized: AlgorithmEventCase<Event, [Vertex: Int]> {
+                .init {
+                    guard case .labelsStabilized(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -50,19 +83,19 @@
         }
 
         @inlinable
-        public func areIsomorphic(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> Bool {
-            return findIsomorphism(graph1, graph2, visitor: visitor) != nil
+        public func areIsomorphic(_ graph1: Graph, _ graph2: Graph, observation: AlgorithmObservation<Event>? = nil) -> Bool {
+            return findIsomorphism(graph1, graph2, observation: observation) != nil
         }
 
         @inlinable
-        public func findIsomorphism(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> [Vertex: Vertex]? {
+        public func findIsomorphism(_ graph1: Graph, _ graph2: Graph, observation: AlgorithmObservation<Event>? = nil) -> [Vertex: Vertex]? {
             // Quick checks for basic isomorphism requirements
             guard graph1.vertexCount == graph2.vertexCount else { return nil }
             guard graph1.edgeCount == graph2.edgeCount else { return nil }
 
             // Run Weisfeiler-Lehman test
-            let labels1 = computeWLLabels(graph: graph1, visitor: visitor)
-            let labels2 = computeWLLabels(graph: graph2, visitor: visitor)
+            let labels1 = computeWLLabels(graph: graph1, observation: observation)
+            let labels2 = computeWLLabels(graph: graph2, observation: observation)
 
             // Check if the label multisets are equal
             guard areLabelMultisetsEqual(labels1, labels2) else { return nil }
@@ -74,14 +107,14 @@
         }
 
         @usableFromInline
-        func computeWLLabels(graph: Graph, visitor: Visitor?) -> [Vertex: Int] {
+        func computeWLLabels(graph: Graph, observation: AlgorithmObservation<Event>?) -> [Vertex: Int] {
             var labels: [Vertex: Int] = [:]
 
             // Initialize with degree-based labels
             for vertex in graph.vertices() {
                 let degree = graph.outDegree(of: vertex)
                 labels[vertex] = degree
-                visitor?.labelVertex?(vertex, degree)
+                observation?.receive(.vertexLabeled(.init(vertex: vertex, label: degree)))
             }
 
             // Iteratively refine labels
@@ -91,14 +124,14 @@
                 var nextNewLabel = 0
 
                 for vertex in graph.vertices() {
-                    visitor?.examineVertex?(vertex)
+                    observation?.receive(.vertexExamined(vertex))
 
                     // Create a signature based on current label and neighbor labels
                     guard let currentLabel = labels[vertex] else { continue }
                     var neighborLabels: [Int] = []
 
                     for edge in graph.outgoingEdges(of: vertex) {
-                        visitor?.examineEdge?(edge)
+                        observation?.receive(.edgeExamined(edge))
                         guard let neighbor = graph.destination(of: edge),
                             let neighborLabel = labels[neighbor]
                         else { continue }
@@ -122,15 +155,15 @@
                     }
 
                     if let newLabel = newLabels[vertex] {
-                        visitor?.labelVertex?(vertex, newLabel)
+                        observation?.receive(.vertexLabeled(.init(vertex: vertex, label: newLabel)))
                     }
                 }
 
-                visitor?.iterationComplete?(iteration + 1, newLabels)
+                observation?.receive(.iterationCompleted(.init(number: iteration + 1, labels: newLabels)))
 
                 // Check if labels have stabilized
                 if labels == newLabels {
-                    visitor?.labelsStabilized?(newLabels)
+                    observation?.receive(.labelsStabilized(newLabels))
                     break
                 }
 
@@ -166,33 +199,66 @@
         public typealias Vertex = Graph.VertexDescriptor
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe the enhanced Weisfeiler-Lehman algorithm progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when labeling a vertex.
-            public var labelVertex: ((Vertex, Int) -> Void)?
-            /// Called when an iteration is complete.
-            public var iterationComplete: ((Int, [Vertex: Int]) -> Void)?
-            /// Called when labels have stabilized.
-            public var labelsStabilized: (([Vertex: Int]) -> Void)?
+        public struct VertexLabel {
+            public let vertex: Vertex
+            public let label: Int
 
-            /// Creates a new visitor.
             @inlinable
-            public init(
-                examineVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                labelVertex: ((Vertex, Int) -> Void)? = nil,
-                iterationComplete: ((Int, [Vertex: Int]) -> Void)? = nil,
-                labelsStabilized: (([Vertex: Int]) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.labelVertex = labelVertex
-                self.iterationComplete = iterationComplete
-                self.labelsStabilized = labelsStabilized
+            public init(vertex: Vertex, label: Int) {
+                self.vertex = vertex
+                self.label = label
+            }
+        }
+
+        public struct Iteration {
+            public let number: Int
+            public let labels: [Vertex: Int]
+
+            @inlinable
+            public init(number: Int, labels: [Vertex: Int]) {
+                self.number = number
+                self.labels = labels
+            }
+        }
+
+        public enum Event {
+            case vertexExamined(Vertex)
+            case edgeExamined(Edge)
+            case vertexLabeled(VertexLabel)
+            case iterationCompleted(Iteration)
+            case labelsStabilized([Vertex: Int])
+        }
+
+        public enum EventCases {
+            public static var vertexExamined: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var vertexLabeled: AlgorithmEventCase<Event, VertexLabel> {
+                .init {
+                    guard case .vertexLabeled(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var iterationCompleted: AlgorithmEventCase<Event, Iteration> {
+                .init {
+                    guard case .iterationCompleted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var labelsStabilized: AlgorithmEventCase<Event, [Vertex: Int]> {
+                .init {
+                    guard case .labelsStabilized(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -205,19 +271,19 @@
         }
 
         @inlinable
-        public func areIsomorphic(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> Bool {
-            return findIsomorphism(graph1, graph2, visitor: visitor) != nil
+        public func areIsomorphic(_ graph1: Graph, _ graph2: Graph, observation: AlgorithmObservation<Event>? = nil) -> Bool {
+            return findIsomorphism(graph1, graph2, observation: observation) != nil
         }
 
         @inlinable
-        public func findIsomorphism(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> [Vertex: Vertex]? {
+        public func findIsomorphism(_ graph1: Graph, _ graph2: Graph, observation: AlgorithmObservation<Event>? = nil) -> [Vertex: Vertex]? {
             // Quick checks for basic isomorphism requirements
             guard graph1.vertexCount == graph2.vertexCount else { return nil }
             guard graph1.edgeCount == graph2.edgeCount else { return nil }
 
             // Run enhanced Weisfeiler-Lehman test
-            let labels1 = computeEnhancedWLLabels(graph: graph1, visitor: visitor)
-            let labels2 = computeEnhancedWLLabels(graph: graph2, visitor: visitor)
+            let labels1 = computeEnhancedWLLabels(graph: graph1, observation: observation)
+            let labels2 = computeEnhancedWLLabels(graph: graph2, observation: observation)
 
             // Check if the label multisets are equal
             guard areLabelMultisetsEqual(labels1, labels2) else { return nil }
@@ -228,14 +294,14 @@
         }
 
         @usableFromInline
-        func computeEnhancedWLLabels(graph: Graph, visitor: Visitor?) -> [Vertex: Int] {
+        func computeEnhancedWLLabels(graph: Graph, observation: AlgorithmObservation<Event>?) -> [Vertex: Int] {
             var labels: [Vertex: Int] = [:]
 
             // Initialize with degree-based labels
             for vertex in graph.vertices() {
                 let degree = graph.outDegree(of: vertex)
                 labels[vertex] = degree
-                visitor?.labelVertex?(vertex, degree)
+                observation?.receive(.vertexLabeled(.init(vertex: vertex, label: degree)))
             }
 
             // Iteratively refine labels
@@ -245,14 +311,14 @@
                 var nextNewLabel = 0
 
                 for vertex in graph.vertices() {
-                    visitor?.examineVertex?(vertex)
+                    observation?.receive(.vertexExamined(vertex))
 
                     // Create a signature based on current label and neighbor labels with edge information
                     guard let currentLabel = labels[vertex] else { continue }
                     var neighborInfo: [(Int, String)] = []
 
                     for edge in graph.outgoingEdges(of: vertex) {
-                        visitor?.examineEdge?(edge)
+                        observation?.receive(.edgeExamined(edge))
                         guard let neighbor = graph.destination(of: edge),
                             let neighborLabel = labels[neighbor]
                         else { continue }
@@ -279,15 +345,15 @@
                     }
 
                     if let newLabel = newLabels[vertex] {
-                        visitor?.labelVertex?(vertex, newLabel)
+                        observation?.receive(.vertexLabeled(.init(vertex: vertex, label: newLabel)))
                     }
                 }
 
-                visitor?.iterationComplete?(iteration + 1, newLabels)
+                observation?.receive(.iterationCompleted(.init(number: iteration + 1, labels: newLabels)))
 
                 // Check if labels have stabilized
                 if labels == newLabels {
-                    visitor?.labelsStabilized?(newLabels)
+                    observation?.receive(.labelsStabilized(newLabels))
                     break
                 }
 
@@ -316,6 +382,36 @@
         }
     }
 
-    extension WeisfeilerLehmanIsomorphism: VisitorSupporting {}
-    extension EnhancedWeisfeilerLehmanIsomorphism: VisitorSupporting {}
+    extension WeisfeilerLehmanIsomorphism: AlgorithmObserving {}
+    extension EnhancedWeisfeilerLehmanIsomorphism: AlgorithmObserving {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
+    extension WeisfeilerLehmanIsomorphism.Event: VertexExaminedEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+    }
+
+    extension EnhancedWeisfeilerLehmanIsomorphism.Event: VertexExaminedEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+    }
 #endif

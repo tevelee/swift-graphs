@@ -26,6 +26,9 @@
         Graph.VertexDescriptor: Hashable,
         Weight.Magnitude == Weight
     {
+        /// The event type emitted by the core algorithm.
+        public typealias Event = BidirectionalDijkstra<Graph, Weight>.Event
+
         /// The cost definition for edge weights.
         public let weight: CostDefinition<Graph, Weight>
 
@@ -43,20 +46,20 @@
         ///   - source: The source vertex
         ///   - destination: The destination vertex
         ///   - graph: The graph to search in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation to observe the algorithm progress
         /// - Returns: The shortest path, if one exists
         @inlinable
         public func shortestPath(
             from source: Graph.VertexDescriptor,
             to destination: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: BidirectionalDijkstra<Graph, Weight>.Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
             let bidirectionalDijkstra = BidirectionalDijkstra(on: graph, edgeWeight: weight)
-            let result = bidirectionalDijkstra.shortestPath(from: source, to: destination)
+            let result = bidirectionalDijkstra.shortestPath(from: source, to: destination, observation: observation)
             return result.path
         }
     }
 
-    extension BidirectionalDijkstraShortestPath: VisitorSupporting {}
+    extension BidirectionalDijkstraShortestPath: AlgorithmObserving {}
 #endif

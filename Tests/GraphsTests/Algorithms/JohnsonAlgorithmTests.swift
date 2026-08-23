@@ -169,7 +169,7 @@
 
         /// Calls the `shortestPathsForAllPairs(in:)` no-argument conformance method (lines 231–233 in
         /// Johnson.swift) directly on a `Johnson` instance, bypassing the `graph.shortestPathsForAllPairs(using:)`
-        /// graph extension which calls the `visitor: nil` overload explicitly.
+        /// graph extension which calls the `observation: nil` overload explicitly.
         @Test func johnsonShortestPathsForAllPairsNoArgConvenienceMethod() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
@@ -186,9 +186,9 @@
             #expect(result.distance(from: a, to: b) == 2.0, "a→b costs 2")
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        @Test func composedVisitorsReceiveAllEvents() {
+        @Test func composedObservationsReceiveAllEventsInOrder() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -200,24 +200,33 @@
             var dijkstraStarts2 = 0
             var dijkstraCompletes1 = 0
             var dijkstraCompletes2 = 0
+            var observationOrder: [Int] = []
 
-            var v1 = Johnson<AdjacencyList, Double>.Visitor()
-            v1.startDijkstraFromSource = { _ in dijkstraStarts1 += 1 }
-            v1.completeDijkstraFromSource = { _ in dijkstraCompletes1 += 1 }
-
-            var v2 = Johnson<AdjacencyList, Double>.Visitor()
-            v2.startDijkstraFromSource = { _ in dijkstraStarts2 += 1 }
-            v2.completeDijkstraFromSource = { _ in dijkstraCompletes2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = Johnson<AdjacencyList, Double>(edgeWeight: .property(\.weight))
-                .shortestPathsForAllPairs(in: graph, visitor: combined)
+            let algorithm = Johnson<AdjacencyList, Double>(edgeWeight: .property(\.weight))
+                .observing { event in
+                    observationOrder.append(1)
+                    switch event {
+                        case .dijkstraStarted: dijkstraStarts1 += 1
+                        case .dijkstraCompleted: dijkstraCompletes1 += 1
+                        default: break
+                    }
+                }
+                .observing { event in
+                    observationOrder.append(2)
+                    switch event {
+                        case .dijkstraStarted: dijkstraStarts2 += 1
+                        case .dijkstraCompleted: dijkstraCompletes2 += 1
+                        default: break
+                    }
+                }
+            _ = graph.shortestPathsForAllPairs(using: algorithm)
 
             // Johnson runs one Dijkstra per vertex (3 vertices → 3 starts and 3 completes each)
             #expect(dijkstraStarts1 == 3)
             #expect(dijkstraStarts2 == 3)
             #expect(dijkstraCompletes1 == 3)
             #expect(dijkstraCompletes2 == 3)
+            #expect(observationOrder.enumerated().allSatisfy { index, value in value == (index % 2) + 1 })
             #expect(dijkstraStarts1 == dijkstraStarts2)
             #expect(dijkstraCompletes1 == dijkstraCompletes2)
         }

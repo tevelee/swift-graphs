@@ -11,41 +11,58 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe the articulation points algorithm progress.
-        public struct Visitor {
-            /// Called when discovering a vertex.
-            public var discoverVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when encountering a tree edge.
-            public var treeEdge: ((Edge) -> Void)?
-            /// Called when encountering a back edge.
-            public var backEdge: ((Edge) -> Void)?
-            /// Called when finishing a vertex.
-            public var finishVertex: ((Vertex) -> Void)?
-            /// Called when an articulation point is found.
-            public var foundArticulationPoint: ((Vertex) -> Void)?
-            /// Called when a bridge is found.
-            public var foundBridge: ((Edge) -> Void)?
+        public enum Event {
+            case vertexDiscovered(Vertex)
+            case edgeExamined(Edge)
+            case treeEdgeEncountered(Edge)
+            case backEdgeEncountered(Edge)
+            case vertexFinished(Vertex)
+            case articulationPointFound(Vertex)
+            case bridgeFound(Edge)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                discoverVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                treeEdge: ((Edge) -> Void)? = nil,
-                backEdge: ((Edge) -> Void)? = nil,
-                finishVertex: ((Vertex) -> Void)? = nil,
-                foundArticulationPoint: ((Vertex) -> Void)? = nil,
-                foundBridge: ((Edge) -> Void)? = nil
-            ) {
-                self.discoverVertex = discoverVertex
-                self.examineEdge = examineEdge
-                self.treeEdge = treeEdge
-                self.backEdge = backEdge
-                self.finishVertex = finishVertex
-                self.foundArticulationPoint = foundArticulationPoint
-                self.foundBridge = foundBridge
+        public enum EventCases {
+            public static var vertexDiscovered: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexDiscovered(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var treeEdgeEncountered: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .treeEdgeEncountered(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var backEdgeEncountered: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .backEdgeEncountered(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var vertexFinished: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexFinished(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var articulationPointFound: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .articulationPointFound(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var bridgeFound: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .bridgeFound(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -128,10 +145,12 @@
 
         /// Finds articulation points and bridges using Tarjan's algorithm.
         ///
-        /// - Parameter visitor: An optional visitor to observe the algorithm progress
+        /// - Parameter observation: An optional observation of the algorithm progress
         /// - Returns: The articulation points result
         @inlinable
-        public func articulationPoints(visitor: Visitor?) -> ArticulationPointsResult<Vertex, Edge> {
+        public func articulationPoints(
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> ArticulationPointsResult<Vertex, Edge> {
             var propertyMap = graph.makeVertexPropertyMap()
             let colorProperty = ColorProperty.self
             let discoveryTimeProperty = DiscoveryTimeProperty.self
@@ -149,7 +168,7 @@
                 propertyMap[startVertex][discoveryTimeProperty] = timer
                 propertyMap[startVertex][lowProperty] = timer
                 propertyMap[startVertex][colorProperty] = .gray
-                visitor?.discoverVertex?(startVertex)
+                observation?.receive(.vertexDiscovered(startVertex))
 
                 frameStack.append(
                     Frame(
@@ -168,7 +187,7 @@
                         let edge = frameStack[frameIndex].edges[frameStack[frameIndex].edgeIndex]
                         frameStack[frameIndex].edgeIndex += 1
 
-                        visitor?.examineEdge?(edge)
+                        observation?.receive(.edgeExamined(edge))
 
                         guard let destination = graph.destination(of: edge) else { continue }
 
@@ -179,13 +198,13 @@
                             case .white:
                                 // Tree edge — push child frame
                                 frameStack[frameIndex].childCount += 1
-                                visitor?.treeEdge?(edge)
+                                observation?.receive(.treeEdgeEncountered(edge))
 
                                 timer += 1
                                 propertyMap[destination][discoveryTimeProperty] = timer
                                 propertyMap[destination][lowProperty] = timer
                                 propertyMap[destination][colorProperty] = .gray
-                                visitor?.discoverVertex?(destination)
+                                observation?.receive(.vertexDiscovered(destination))
 
                                 frameStack.append(
                                     Frame(
@@ -203,7 +222,7 @@
                                 if destination == parentVertex && !frameStack[frameIndex].skippedParentEdge {
                                     frameStack[frameIndex].skippedParentEdge = true
                                 } else {
-                                    visitor?.backEdge?(edge)
+                                    observation?.receive(.backEdgeEncountered(edge))
                                     let vertexLow = propertyMap[currentVertex][lowProperty] ?? 0
                                     let destinationDiscovery = propertyMap[destination][discoveryTimeProperty] ?? 0
                                     propertyMap[currentVertex][lowProperty] = min(vertexLow, destinationDiscovery)
@@ -223,12 +242,12 @@
                         // Root AP check: 2+ DFS tree children
                         if frame.isRoot && frame.childCount >= 2 {
                             if cutVertices.insert(vertex).inserted {
-                                visitor?.foundArticulationPoint?(vertex)
+                                observation?.receive(.articulationPointFound(vertex))
                             }
                         }
 
                         propertyMap[vertex][colorProperty] = .black
-                        visitor?.finishVertex?(vertex)
+                        observation?.receive(.vertexFinished(vertex))
 
                         // Propagate low-link and perform AP / bridge checks on the parent
                         if !frameStack.isEmpty {
@@ -245,7 +264,7 @@
                                 let parentDiscovery = propertyMap[parentVertex][discoveryTimeProperty] ?? 0
                                 if childLow >= parentDiscovery {
                                     if cutVertices.insert(parentVertex).inserted {
-                                        visitor?.foundArticulationPoint?(parentVertex)
+                                        observation?.receive(.articulationPointFound(parentVertex))
                                     }
                                 }
                             }
@@ -255,7 +274,7 @@
                                 let parentDiscovery = propertyMap[parentVertex][discoveryTimeProperty] ?? 0
                                 if childLow > parentDiscovery {
                                     bridges.append(treeEdge)
-                                    visitor?.foundBridge?(treeEdge)
+                                    observation?.receive(.bridgeFound(treeEdge))
                                 }
                             }
                         }
@@ -264,6 +283,22 @@
             }
 
             return ArticulationPointsResult(cutVertices: cutVertices, bridges: bridges)
+        }
+    }
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
+    extension TarjanArticulationPoints.Event: VertexDiscoveredEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func discoveredVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexDiscovered(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
         }
     }
 #endif

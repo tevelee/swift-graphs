@@ -26,8 +26,7 @@
         Graph.VertexDescriptor: Hashable,
         Weight.Magnitude == Weight
     {
-        /// The visitor type for observing search progress.
-        public typealias Visitor = Dijkstra<Graph, Weight>.Visitor
+        public typealias Event = Dijkstra<Graph, Weight>.Event
 
         /// The cost definition for edge weights.
         public let edgeWeight: CostDefinition<Graph, Weight>
@@ -45,17 +44,18 @@
         /// - Parameters:
         ///   - source: The vertex to start search from.
         ///   - graph: The graph to search in.
-        ///   - visitor: An optional visitor to observe the search progress.
+        ///   - observation: An optional observation of the search progress.
         /// - Returns: A Dijkstra algorithm instance.
         @inlinable
         public func search(
             from source: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
-        ) -> Dijkstra<Graph, Weight> {
+            observation: AlgorithmObservation<Event>?
+        ) -> ObservedAlgorithm<Dijkstra<Graph, Weight>> {
             Dijkstra(on: graph, from: source, edgeWeight: edgeWeight)
+                .observing { event in observation?.receive(event) }
         }
     }
 
-    extension DijkstraSearch: VisitorSupporting {}
+    extension DijkstraSearch: AlgorithmObserving {}
 #endif

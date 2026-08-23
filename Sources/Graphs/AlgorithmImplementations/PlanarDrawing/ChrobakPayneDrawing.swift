@@ -8,25 +8,40 @@ public struct ChrobakPayneDrawing<Graph: IncidenceGraph & VertexListGraph & Edge
 where Graph.VertexDescriptor: Hashable {
     public typealias Vertex = Graph.VertexDescriptor
 
-    /// A visitor that can observe the drawing algorithm's progress.
-    public struct Visitor {
-        /// Called when the drawing computation starts.
-        public var start: (() -> Void)?
-        /// Called when a drawing has been produced for a planar graph.
-        public var foundDrawing: ((PlanarDrawing<Vertex>) -> Void)?
-        /// Called when the graph is non-planar and no drawing exists.
-        public var foundNonPlanar: (() -> Void)?
+    /// An event emitted while computing a planar drawing.
+    public enum Event {
+        /// Drawing computation started.
+        case started
+        /// A drawing was produced.
+        case drawingFound(PlanarDrawing<Vertex>)
+        /// The graph was found to be non-planar.
+        case nonPlanarFound
+    }
 
-        /// Creates a new visitor.
-        @inlinable
-        public init(
-            start: (() -> Void)? = nil,
-            foundDrawing: ((PlanarDrawing<Vertex>) -> Void)? = nil,
-            foundNonPlanar: (() -> Void)? = nil
-        ) {
-            self.start = start
-            self.foundDrawing = foundDrawing
-            self.foundNonPlanar = foundNonPlanar
+    /// Typed selectors for planar-drawing events.
+    public enum EventCases {
+        /// Selects computation start.
+        public static var started: AlgorithmEventCase<Event, Void> {
+            .init {
+                guard case .started = $0 else { return nil }
+                return ()
+            }
+        }
+
+        /// Selects produced drawings.
+        public static var drawingFound: AlgorithmEventCase<Event, PlanarDrawing<Vertex>> {
+            .init {
+                guard case .drawingFound(let drawing) = $0 else { return nil }
+                return drawing
+            }
+        }
+
+        /// Selects non-planar results.
+        public static var nonPlanarFound: AlgorithmEventCase<Event, Void> {
+            .init {
+                guard case .nonPlanarFound = $0 else { return nil }
+                return ()
+            }
         }
     }
 
@@ -38,23 +53,21 @@ where Graph.VertexDescriptor: Hashable {
     ///
     /// - Parameters:
     ///   - graph: The graph to draw.
-    ///   - visitor: An optional visitor to observe the algorithm progress.
+    ///   - observation: An optional observation of algorithm progress.
     /// - Returns: The drawing, or `nil` if the graph is not planar.
     public func planarDrawing(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> PlanarDrawing<Vertex>? {
-        visitor?.start?()
+        observation?.receive(.started)
         guard let drawing = PlanarityCore.drawing(graph) else {
-            visitor?.foundNonPlanar?()
+            observation?.receive(.nonPlanarFound)
             return nil
         }
-        visitor?.foundDrawing?(drawing)
+        observation?.receive(.drawingFound(drawing))
         return drawing
     }
 }
-
-extension ChrobakPayneDrawing: VisitorSupporting {}
 
 extension PlanarDrawingAlgorithm {
     /// Creates a Chrobak-Payne straight-line planar drawing algorithm.

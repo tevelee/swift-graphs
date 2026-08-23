@@ -13,12 +13,12 @@
     extension VF2Isomorphism: IsomorphismAlgorithm {
         @inlinable
         public func areIsomorphic(_ graph1: Graph, _ graph2: Graph) -> Bool {
-            areIsomorphic(graph1, graph2, visitor: nil)
+            areIsomorphic(graph1, graph2, observation: nil)
         }
 
         @inlinable
         public func findIsomorphism(_ graph1: Graph, _ graph2: Graph) -> [Graph.VertexDescriptor: Graph.VertexDescriptor]? {
-            findIsomorphism(graph1, graph2, visitor: nil)
+            findIsomorphism(graph1, graph2, observation: nil)
         }
     }
 #endif

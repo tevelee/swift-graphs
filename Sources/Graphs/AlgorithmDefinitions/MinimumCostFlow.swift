@@ -9,14 +9,14 @@
 /// - Route traffic or goods through a network as cheaply as possible
 /// - Solve assignment and transportation problems
 /// - Find minimum cost maximum flow
-public protocol MinCostFlowAlgorithm<Graph, Value> {
+public protocol MinCostFlowAlgorithm<Graph, Value>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & EdgeListGraph & VertexListGraph
     where Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable
     /// The numeric type used for both flow amounts and per-unit costs.
     associatedtype Value: AdditiveArithmetic & Comparable & SignedNumeric
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Computes the minimum cost flow from source to sink.
     ///
@@ -25,14 +25,14 @@ public protocol MinCostFlowAlgorithm<Graph, Value> {
     ///   - sink: The sink vertex.
     ///   - demand: The required flow amount, or `nil` to compute minimum cost maximum flow.
     ///   - graph: The flow network graph.
-    ///   - visitor: Optional visitor for observing algorithm events.
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The minimum cost flow result.
     func minimumCostFlow(
         from source: Graph.VertexDescriptor,
         to sink: Graph.VertexDescriptor,
         demand: Value?,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> MinCostFlowResult<Graph.VertexDescriptor, Graph.EdgeDescriptor, Value>
 }
 
@@ -73,13 +73,7 @@ public struct MinCostFlowResult<Vertex: Hashable, Edge: Hashable, Value: Additiv
 
 extension MinCostFlowResult: Sendable where Vertex: Sendable, Edge: Sendable, Value: Sendable {}
 
-extension VisitorWrapper: MinCostFlowAlgorithm
-where
-    Base: MinCostFlowAlgorithm,
-    Base.Visitor == Visitor,
-    Visitor: Composable,
-    Visitor.Other == Visitor
-{
+extension ObservedAlgorithm: MinCostFlowAlgorithm where Base: MinCostFlowAlgorithm {
     public typealias Graph = Base.Graph
     public typealias Value = Base.Value
 
@@ -89,14 +83,14 @@ where
         to sink: Base.Graph.VertexDescriptor,
         demand: Base.Value?,
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> MinCostFlowResult<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Value> {
         base.minimumCostFlow(
             from: source,
             to: sink,
             demand: demand,
             in: graph,
-            visitor: self.visitor.combined(with: visitor)
+            observation: self.observation.followed(by: observation)
         )
     }
 }
@@ -117,7 +111,7 @@ extension IncidenceGraph {
         demand: Value? = nil,
         using algorithm: some MinCostFlowAlgorithm<Self, Value>
     ) -> MinCostFlowResult<VertexDescriptor, EdgeDescriptor, Value> {
-        algorithm.minimumCostFlow(from: source, to: sink, demand: demand, in: self, visitor: nil)
+        algorithm.minimumCostFlow(from: source, to: sink, demand: demand, in: self, observation: nil)
     }
 }
 

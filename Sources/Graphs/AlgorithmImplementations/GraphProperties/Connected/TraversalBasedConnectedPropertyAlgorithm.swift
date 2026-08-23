@@ -1,7 +1,7 @@
 /// A connected property algorithm based on graph traversal.
 public struct TraversalBasedConnectedPropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph, Traversal: TraversalAlgorithm>
 where Graph.VertexDescriptor: Hashable, Traversal.Graph == Graph {
-    public typealias Visitor = Traversal.Visitor
+    public typealias Event = Traversal.Event
 
     @usableFromInline
     let using: Traversal
@@ -26,12 +26,12 @@ where Graph.VertexDescriptor: Hashable, Traversal.Graph == Graph {
     ///
     /// - Parameters:
     ///   - graph: The graph to check
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional observation of the algorithm progress
     /// - Returns: `true` if the graph is connected, `false` otherwise
     @inlinable
     public func isConnected(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Bool {
         // Handle empty graphs
         guard graph.vertexCount > 0 else {
@@ -49,7 +49,7 @@ where Graph.VertexDescriptor: Hashable, Traversal.Graph == Graph {
         }
 
         // Perform the traversal using the provided algorithm
-        let result = using.traverse(from: firstVertex, in: graph, visitor: visitor)
+        let result = using.traverse(from: firstVertex, in: graph, observation: observation)
 
         // Count unique vertices visited
         let uniqueVertices = Set(result.vertices)
@@ -60,5 +60,3 @@ where Graph.VertexDescriptor: Hashable, Traversal.Graph == Graph {
         return verticesVisited == totalVertices
     }
 }
-
-extension TraversalBasedConnectedPropertyAlgorithm: VisitorSupporting where Traversal.Visitor: Composable, Traversal.Visitor.Other == Traversal.Visitor {}

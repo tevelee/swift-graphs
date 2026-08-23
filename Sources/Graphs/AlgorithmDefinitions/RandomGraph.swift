@@ -1,9 +1,9 @@
 /// A protocol for random graph generation algorithms.
-public protocol RandomGraphAlgorithm<Graph> {
+public protocol RandomGraphAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: MutableGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Appends a random graph to an existing graph.
     ///
@@ -11,26 +11,24 @@ public protocol RandomGraphAlgorithm<Graph> {
     ///   - graph: The graph to append to (modified in place)
     ///   - vertexCount: The number of vertices to add
     ///   - generator: The random number generator to use
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     func appendRandomGraph<RNG: RandomNumberGenerator>(
         into graph: inout Graph,
         vertexCount: Int,
         using generator: inout RNG,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     )
 }
 
-extension VisitorWrapper: RandomGraphAlgorithm where Base: RandomGraphAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
-    public typealias Visitor = Base.Visitor
-
+extension ObservedAlgorithm: RandomGraphAlgorithm where Base: RandomGraphAlgorithm {
     @inlinable
     public func appendRandomGraph<RNG: RandomNumberGenerator>(
         into graph: inout Base.Graph,
         vertexCount: Int,
         using generator: inout RNG,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) {
-        base.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &generator, visitor: self.visitor.combined(with: visitor))
+        base.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &generator, observation: self.observation.followed(by: observation))
     }
 }
 
@@ -65,18 +63,18 @@ extension RandomGraphConstructible where VertexDescriptor: Hashable {
     ) -> Self {
         var graph = Self()
         var rng = SystemRandomNumberGenerator()
-        algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &rng, visitor: nil)
+        algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &rng, observation: nil)
         return graph
     }
 
     static func randomGraph<Algorithm: RandomGraphAlgorithm<Self>>(
         vertexCount: Int,
         using algorithm: Algorithm,
-        visitor: Algorithm.Visitor?
+        observation: AlgorithmObservation<Algorithm.Event>?
     ) -> Self {
         var graph = Self()
         var rng = SystemRandomNumberGenerator()
-        algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &rng, visitor: visitor)
+        algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &rng, observation: observation)
         return graph
     }
 }
@@ -118,7 +116,7 @@ extension RandomGraphConstructible where VertexDescriptor: Hashable {
 extension MutableGraph where VertexDescriptor: Hashable {
     mutating func appendRandom<Algorithm: RandomGraphAlgorithm<Self>>(vertexCount: Int, using algorithm: Algorithm) {
         var rng = SystemRandomNumberGenerator()
-        algorithm.appendRandomGraph(into: &self, vertexCount: vertexCount, using: &rng, visitor: nil)
+        algorithm.appendRandomGraph(into: &self, vertexCount: vertexCount, using: &rng, observation: nil)
     }
 
     mutating func appendRandom<Algorithm: RandomGraphAlgorithm<Self>, RNG: RandomNumberGenerator>(
@@ -126,13 +124,14 @@ extension MutableGraph where VertexDescriptor: Hashable {
         using algorithm: Algorithm,
         generator: inout RNG
     ) {
-        algorithm.appendRandomGraph(into: &self, vertexCount: vertexCount, using: &generator, visitor: nil)
+        algorithm.appendRandomGraph(into: &self, vertexCount: vertexCount, using: &generator, observation: nil)
     }
 }
 
 // A wrapper that fixes a particular RNG to an algorithm.
 public struct RandomGraphAlgorithmWithGenerator<Algorithm: RandomGraphAlgorithm, RNG: RandomNumberGenerator>: RandomGraphAlgorithm {
     public typealias Graph = Algorithm.Graph
+    public typealias Event = Algorithm.Event
 
     @usableFromInline
     var algorithm: Algorithm
@@ -151,9 +150,9 @@ public struct RandomGraphAlgorithmWithGenerator<Algorithm: RandomGraphAlgorithm,
         into graph: inout Algorithm.Graph,
         vertexCount: Int,
         using generator: inout R,
-        visitor: Algorithm.Visitor?
+        observation: AlgorithmObservation<Algorithm.Event>? = nil
     ) {
         var g = fixedGenerator
-        algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &g, visitor: visitor)
+        algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &g, observation: observation)
     }
 }

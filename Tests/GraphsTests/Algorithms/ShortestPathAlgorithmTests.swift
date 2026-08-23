@@ -168,9 +168,9 @@
             #expect(distanceToA == .finite(0.0))
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        @Test func floydWarshallComposedVisitorsReceiveAllEvents() {
+        @Test func floydWarshallComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -183,17 +183,22 @@
             var updated1 = 0
             var updated2 = 0
 
-            var v1 = FloydWarshall<AdjacencyList, Double>.Visitor()
-            v1.examineVertex = { _ in examined1 += 1 }
-            v1.updateDistance = { _, _, _ in updated1 += 1 }
-
-            var v2 = FloydWarshall<AdjacencyList, Double>.Visitor()
-            v2.examineVertex = { _ in examined2 += 1 }
-            v2.updateDistance = { _, _, _ in updated2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = FloydWarshall(on: graph, edgeWeight: .property(\.weight))
-                .shortestPathsForAllPairs(visitor: combined)
+            let algorithm = FloydWarshallAllPairs<AdjacencyList, Double>(weight: .property(\.weight))
+                .observing { event in
+                    switch event {
+                        case .vertexExamined: examined1 += 1
+                        case .distanceUpdated: updated1 += 1
+                        default: break
+                    }
+                }
+                .observing { event in
+                    switch event {
+                        case .vertexExamined: examined2 += 1
+                        case .distanceUpdated: updated2 += 1
+                        default: break
+                    }
+                }
+            _ = graph.shortestPathsForAllPairs(using: algorithm)
 
             #expect(examined1 >= 1)  // each vertex examined as intermediate
             #expect(examined2 >= 1)
@@ -256,8 +261,8 @@
             #expect(path == nil, "negative cycle must cause shortestPath to return nil")
         }
 
-        /// BellmanFord detects negative cycles and fires the `detectNegativeCycle` visitor callback.
-        @Test func bellmanFordDetectsNegativeCycleAndCallsVisitor() {
+        /// BellmanFord detects negative cycles and emits `negativeCycleDetected`.
+        @Test func bellmanFordDetectsNegativeCycleAndEmitsObservation() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -268,20 +273,19 @@
 
             var cycleDetected = false
             let bellmanFord = BellmanFord(on: graph, edgeWeight: .property(\.weight))
-            let result = bellmanFord.shortestPathsFromSource(
-                a,
-                visitor: .init(
-                    detectNegativeCycle: { _ in cycleDetected = true }
-                )
-            )
+            let observation = AlgorithmObservation<BellmanFord<AdjacencyList, Double>.Event> { event in
+                guard case .negativeCycleDetected = event else { return }
+                cycleDetected = true
+            }
+            let result = bellmanFord.shortestPathsFromSource(a, observation: observation)
 
             #expect(result.hasNegativeCycle, "result must signal a negative cycle")
-            #expect(cycleDetected, "detectNegativeCycle visitor must fire for a→b→c→a (1+1-3=-1)")
+            #expect(cycleDetected, "negativeCycleDetected must be emitted for a→b→c→a (1+1-3=-1)")
         }
 
-        /// `edgeNotRelaxed` fires when an edge is examined but does NOT improve the current best distance.
-        /// `completeRelaxationIteration` fires at the end of each relaxation sweep.
-        @Test func bellmanFordEdgeNotRelaxedAndIterationCompletionCallbacks() {
+        /// `edgeNotRelaxed` is emitted when an edge does NOT improve the current best distance.
+        /// `relaxationIterationCompleted` is emitted at the end of each relaxation sweep.
+        @Test func bellmanFordEmitsEdgeNotRelaxedAndIterationCompleted() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -294,28 +298,29 @@
             var notRelaxedCount = 0
             var iterationsCompleted = 0
             let bellmanFord = BellmanFord(on: graph, edgeWeight: .property(\.weight))
-            _ = bellmanFord.shortestPathsFromSource(
-                a,
-                visitor: .init(
-                    edgeNotRelaxed: { _ in notRelaxedCount += 1 },
-                    completeRelaxationIteration: { _ in iterationsCompleted += 1 }
-                )
-            )
+            let observation = AlgorithmObservation<BellmanFord<AdjacencyList, Double>.Event> { event in
+                switch event {
+                    case .edgeNotRelaxed: notRelaxedCount += 1
+                    case .relaxationIterationCompleted: iterationsCompleted += 1
+                    default: break
+                }
+            }
+            _ = bellmanFord.shortestPathsFromSource(a, observation: observation)
 
             // In iteration 2, a→c (cost 10 vs settled 3) and a→b (cost 1 vs settled 1) will not be relaxed
             #expect(notRelaxedCount >= 1, "at least one edge must not be relaxed in a converged iteration")
-            #expect(iterationsCompleted >= 1, "completeRelaxationIteration must fire for each sweep")
+            #expect(iterationsCompleted >= 1, "relaxationIterationCompleted must be emitted for each sweep")
         }
 
-        /// Exercises all six BellmanFord visitor events through a composed visitor pair.
+        /// Exercises BellmanFord's progress events through a composed observation pair.
         ///
         /// Graph: a→b(1), a→c(1), b→c(5) — c settles via a→c (cost 1), not b→c (cost 6).
-        /// - `examineVertex` fires per vertex per relaxation iteration.
-        /// - `examineEdge` fires per edge per iteration.
-        /// - `edgeRelaxed` fires for a→b and a→c in iteration 1.
-        /// - `edgeNotRelaxed` fires for b→c (c already settled; 1+5=6 > 1) and all edges in iteration 2.
-        /// - `completeRelaxationIteration` fires once per iteration (N−1 = 2 times).
-        @Test func bellmanFordComposedVisitorsReceiveAllEvents() {
+        /// - `vertexExamined` is emitted per vertex per relaxation iteration.
+        /// - `edgeExamined` is emitted per edge per iteration.
+        /// - `edgeRelaxed` is emitted for a→b and a→c in iteration 1.
+        /// - `edgeNotRelaxed` is emitted for b→c and all edges in iteration 2.
+        /// - `relaxationIterationCompleted` is emitted once per iteration (N−1 = 2 times).
+        @Test func bellmanFordComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -331,40 +336,49 @@
             var examEdge2 = 0
             var relaxed1 = 0
             var relaxed2 = 0
+            var relaxedCosts: [Double] = []
             var notRelaxed1 = 0
             var notRelaxed2 = 0
             var iterations1 = 0
             var iterations2 = 0
 
-            var v1 = BellmanFord<AdjacencyList, Double>.Visitor()
-            v1.examineVertex = { _ in examined1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.edgeRelaxed = { _ in relaxed1 += 1 }
-            v1.edgeNotRelaxed = { _ in notRelaxed1 += 1 }
-            v1.completeRelaxationIteration = { _ in iterations1 += 1 }
+            let algorithm = BellmanFordShortestPath<AdjacencyList, Double>(weight: .property(\.weight))
+                .observing { event in
+                    switch event {
+                        case .vertexExamined: examined1 += 1
+                        case .edgeExamined: examEdge1 += 1
+                        case .edgeRelaxed(let relaxation):
+                            relaxed1 += 1
+                            relaxedCosts.append(relaxation.newCost)
+                        case .edgeNotRelaxed: notRelaxed1 += 1
+                        case .relaxationIterationCompleted: iterations1 += 1
+                        case .negativeCycleDetected: break
+                    }
+                }
+                .observing { event in
+                    switch event {
+                        case .vertexExamined: examined2 += 1
+                        case .edgeExamined: examEdge2 += 1
+                        case .edgeRelaxed: relaxed2 += 1
+                        case .edgeNotRelaxed: notRelaxed2 += 1
+                        case .relaxationIterationCompleted: iterations2 += 1
+                        case .negativeCycleDetected: break
+                    }
+                }
+            _ = graph.shortestPaths(from: a, using: algorithm)
 
-            var v2 = BellmanFord<AdjacencyList, Double>.Visitor()
-            v2.examineVertex = { _ in examined2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.edgeRelaxed = { _ in relaxed2 += 1 }
-            v2.edgeNotRelaxed = { _ in notRelaxed2 += 1 }
-            v2.completeRelaxationIteration = { _ in iterations2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = BellmanFord(on: graph, edgeWeight: .property(\.weight))
-                .shortestPathsFromSource(a, visitor: combined)
-
-            #expect(examined1 >= 1, "examineVertex fires per vertex per iteration")
+            #expect(examined1 >= 1, "vertexExamined is emitted per vertex per iteration")
             #expect(examined2 >= 1)
-            #expect(examEdge1 >= 3, "examineEdge fires for at least all 3 edges")
+            #expect(examEdge1 >= 3, "edgeExamined is emitted for at least all 3 edges")
             #expect(examEdge2 >= 3)
             #expect(relaxed1 >= 1, "at least a→b and a→c are relaxed in iteration 1")
             #expect(relaxed2 >= 1)
+            #expect(relaxedCosts.allSatisfy { $0 >= 0 }, "Bellman-Ford reports finite updated costs")
             #expect(notRelaxed1 >= 1, "b→c and edges in iteration 2 are not relaxed")
             #expect(notRelaxed2 >= 1)
-            #expect(iterations1 >= 1, "completeRelaxationIteration fires once per sweep")
+            #expect(iterations1 >= 1, "relaxationIterationCompleted is emitted once per sweep")
             #expect(iterations2 >= 1)
-            // Both composed visitors must see identical event counts
+            // Both composed observations must see identical event counts
             #expect(examined1 == examined2)
             #expect(examEdge1 == examEdge2)
             #expect(relaxed1 == relaxed2)
@@ -372,8 +386,8 @@
             #expect(iterations1 == iterations2)
         }
 
-        /// Ensures the `detectNegativeCycle` event propagates through composed BellmanFord visitors.
-        @Test func bellmanFordComposedVisitors_detectNegativeCycleEvent() {
+        /// Ensures `negativeCycleDetected` propagates through composed BellmanFord observations.
+        @Test func bellmanFordComposedObservationsReceiveNegativeCycleEvent() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -385,30 +399,29 @@
             var detected1 = 0
             var detected2 = 0
 
-            var v1 = BellmanFord<AdjacencyList, Double>.Visitor()
-            v1.detectNegativeCycle = { _ in detected1 += 1 }
+            let algorithm = BellmanFordShortestPath<AdjacencyList, Double>(weight: .property(\.weight))
+                .observing(BellmanFord<AdjacencyList, Double>.EventCases.negativeCycleDetected) { _ in
+                    detected1 += 1
+                }
+                .observing(BellmanFord<AdjacencyList, Double>.EventCases.negativeCycleDetected) { _ in
+                    detected2 += 1
+                }
+            _ = graph.shortestPaths(from: a, using: algorithm)
 
-            var v2 = BellmanFord<AdjacencyList, Double>.Visitor()
-            v2.detectNegativeCycle = { _ in detected2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = BellmanFord(on: graph, edgeWeight: .property(\.weight))
-                .shortestPathsFromSource(a, visitor: combined)
-
-            #expect(detected1 >= 1, "detectNegativeCycle must fire through composed visitor v1")
-            #expect(detected2 >= 1, "detectNegativeCycle must fire through composed visitor v2")
+            #expect(detected1 >= 1, "negativeCycleDetected must reach the first observation")
+            #expect(detected2 >= 1, "negativeCycleDetected must reach the second observation")
             #expect(detected1 == detected2, "both composed observers see the same detection events")
         }
 
-        /// Exercises all five BidirectionalDijkstra visitor events through a composed visitor pair.
+        /// Exercises all five BidirectionalDijkstra events through a composed observation pair.
         ///
         /// Graph: a→b(1), b→c(1), b→a(1), c→b(1) — a path a→b→c with back-edges so both searches run.
-        /// - `examineVertex` fires for each vertex settled in either direction.
-        /// - `examineEdge` fires for each edge examined in either direction.
-        /// - `edgeRelaxed` fires when an edge improves a tentative distance.
-        /// - `edgeNotRelaxed` fires for edges pointing to already-settled vertices (e.g. b→a).
-        /// - `meetingFound` fires when the forward and backward frontiers share a settled vertex.
-        @Test func bidirectionalDijkstraComposedVisitorsReceiveAllEvents() {
+        /// - `vertexExamined` is emitted for each vertex settled in either direction.
+        /// - `edgeExamined` is emitted for each edge examined in either direction.
+        /// - `edgeRelaxed` is emitted when an edge improves a tentative distance.
+        /// - `edgeNotRelaxed` is emitted for edges pointing to already-settled vertices.
+        /// - `meetingFound` is emitted when the forward and backward frontiers share a settled vertex.
+        @Test func bidirectionalDijkstraComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -425,38 +438,53 @@
             var examEdge2 = 0
             var relaxed1 = 0
             var relaxed2 = 0
+            var relaxedEdges: [AdjacencyList.EdgeDescriptor] = []
+            var relaxedCosts: [Double] = []
+            var observedRelaxationDirection = false
             var notRelaxed1 = 0
             var notRelaxed2 = 0
             var meetings1 = 0
             var meetings2 = 0
 
-            var v1 = BidirectionalDijkstra<AdjacencyList, Double>.Visitor()
-            v1.examineVertex = { _, _ in examined1 += 1 }
-            v1.examineEdge = { _, _ in examEdge1 += 1 }
-            v1.edgeRelaxed = { _, _ in relaxed1 += 1 }
-            v1.edgeNotRelaxed = { _, _ in notRelaxed1 += 1 }
-            v1.meetingFound = { _, _ in meetings1 += 1 }
+            let algorithm = BidirectionalDijkstraShortestPath<AdjacencyList, Double>(weight: .property(\.weight))
+                .observing { event in
+                    switch event {
+                        case .vertexExamined: examined1 += 1
+                        case .edgeExamined: examEdge1 += 1
+                        case .edgeRelaxed(let relaxation):
+                            relaxed1 += 1
+                            relaxedEdges.append(relaxation.edge)
+                            relaxedCosts.append(relaxation.newCost)
+                            switch relaxation.direction {
+                                case .forward, .backward: observedRelaxationDirection = true
+                            }
+                        case .edgeNotRelaxed: notRelaxed1 += 1
+                        case .meetingFound: meetings1 += 1
+                    }
+                }
+                .observing { event in
+                    switch event {
+                        case .vertexExamined: examined2 += 1
+                        case .edgeExamined: examEdge2 += 1
+                        case .edgeRelaxed: relaxed2 += 1
+                        case .edgeNotRelaxed: notRelaxed2 += 1
+                        case .meetingFound: meetings2 += 1
+                    }
+                }
+            _ = graph.shortestPath(from: a, to: c, using: algorithm)
 
-            var v2 = BidirectionalDijkstra<AdjacencyList, Double>.Visitor()
-            v2.examineVertex = { _, _ in examined2 += 1 }
-            v2.examineEdge = { _, _ in examEdge2 += 1 }
-            v2.edgeRelaxed = { _, _ in relaxed2 += 1 }
-            v2.edgeNotRelaxed = { _, _ in notRelaxed2 += 1 }
-            v2.meetingFound = { _, _ in meetings2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = BidirectionalDijkstra(on: graph, edgeWeight: .property(\.weight))
-                .shortestPath(from: a, to: c, visitor: combined)
-
-            #expect(examined1 >= 1, "examineVertex fires for settled vertices in both directions")
+            #expect(examined1 >= 1, "vertexExamined is emitted for settled vertices in both directions")
             #expect(examined2 >= 1)
-            #expect(examEdge1 >= 1, "examineEdge fires for edges explored in both directions")
+            #expect(examEdge1 >= 1, "edgeExamined is emitted for edges explored in both directions")
             #expect(examEdge2 >= 1)
             #expect(relaxed1 >= 1, "edgeRelaxed fires when an edge improves a tentative distance")
             #expect(relaxed2 >= 1)
+            #expect(relaxedEdges.count == relaxed1)
+            #expect(relaxedCosts.allSatisfy { $0 >= 0 }, "directional relaxations report finite frontier costs")
+            #expect(observedRelaxationDirection)
             #expect(notRelaxed1 >= 1, "back-edges like b→a do not improve the already-settled source")
             #expect(notRelaxed2 >= 1)
-            // Both composed visitors must see identical event counts
+            // Both composed observations must see identical event counts
             #expect(examined1 == examined2)
             #expect(examEdge1 == examEdge2)
             #expect(relaxed1 == relaxed2)
@@ -464,17 +492,17 @@
             #expect(meetings1 == meetings2)
         }
 
-        /// Exercises all five BacktrackingDijkstra visitor events through a composed visitor pair.
+        /// Exercises all five BacktrackingDijkstra events through a composed observation pair.
         ///
         /// Graph: a→b(1), a→c(3), b→c(1) — two paths from a to c:
         ///   - Shortest: a→b→c (cost 2)
         ///   - Longer: a→c (cost 3) — not on any shortest path
-        /// - `examineVertex` fires for each vertex settled.
-        /// - `examineEdge` fires for each edge examined from settled vertices.
-        /// - `edgeOnShortestPath` fires for edges that are part of the shortest path (a→b and b→c).
-        /// - `finishVertex` fires when a vertex is fully processed.
-        /// - `pathFound` fires once for the single shortest path a→b→c.
-        @Test func backtrackingDijkstraComposedVisitorsReceiveAllEvents() {
+        /// - `vertexExamined` is emitted for each vertex settled.
+        /// - `edgeExamined` is emitted for each edge examined from settled vertices.
+        /// - `edgeFoundOnShortestPath` is emitted for edges on the shortest path.
+        /// - `vertexFinished` is emitted when a vertex is fully processed.
+        /// - `pathFound` is emitted once for the single shortest path a→b→c.
+        @Test func backtrackingDijkstraComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -495,35 +523,40 @@
             var pathsFound1 = 0
             var pathsFound2 = 0
 
-            var v1 = BacktrackingDijkstra<AdjacencyList, Double>.Visitor()
-            v1.examineVertex = { _ in examined1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.edgeOnShortestPath = { _ in onShortest1 += 1 }
-            v1.finishVertex = { _ in finished1 += 1 }
-            v1.pathFound = { _, _ in pathsFound1 += 1 }
+            let algorithm = BacktrackingDijkstraAllShortestPathsAlgorithm<AdjacencyList, Double>(
+                weight: .property(\.weight)
+            )
+            .observing { event in
+                switch event {
+                    case .vertexExamined: examined1 += 1
+                    case .edgeExamined: examEdge1 += 1
+                    case .edgeFoundOnShortestPath: onShortest1 += 1
+                    case .vertexFinished: finished1 += 1
+                    case .pathFound: pathsFound1 += 1
+                }
+            }
+            .observing { event in
+                switch event {
+                    case .vertexExamined: examined2 += 1
+                    case .edgeExamined: examEdge2 += 1
+                    case .edgeFoundOnShortestPath: onShortest2 += 1
+                    case .vertexFinished: finished2 += 1
+                    case .pathFound: pathsFound2 += 1
+                }
+            }
+            _ = graph.allShortestPaths(from: a, to: c, using: algorithm)
 
-            var v2 = BacktrackingDijkstra<AdjacencyList, Double>.Visitor()
-            v2.examineVertex = { _ in examined2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.edgeOnShortestPath = { _ in onShortest2 += 1 }
-            v2.finishVertex = { _ in finished2 += 1 }
-            v2.pathFound = { _, _ in pathsFound2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = BacktrackingDijkstra(on: graph, edgeWeight: .property(\.weight))
-                .findAllShortestPaths(from: a, to: c, visitor: combined)
-
-            #expect(examined1 >= 1, "examineVertex fires for each settled vertex")
+            #expect(examined1 >= 1, "vertexExamined is emitted for each settled vertex")
             #expect(examined2 >= 1)
-            #expect(examEdge1 >= 1, "examineEdge fires for each edge examined")
+            #expect(examEdge1 >= 1, "edgeExamined is emitted for each edge examined")
             #expect(examEdge2 >= 1)
-            #expect(onShortest1 >= 1, "edgeOnShortestPath fires for a→b and b→c")
+            #expect(onShortest1 >= 1, "edgeFoundOnShortestPath is emitted for a→b and b→c")
             #expect(onShortest2 >= 1)
-            #expect(finished1 >= 1, "finishVertex fires for each processed vertex")
+            #expect(finished1 >= 1, "vertexFinished is emitted for each processed vertex")
             #expect(finished2 >= 1)
             #expect(pathsFound1 == 1, "exactly one shortest path: a→b→c")
             #expect(pathsFound2 == 1)
-            // Both composed visitors must see identical event counts
+            // Both composed observations must see identical event counts
             #expect(examined1 == examined2)
             #expect(examEdge1 == examEdge2)
             #expect(onShortest1 == onShortest2)

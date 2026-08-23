@@ -209,10 +209,10 @@ struct CyclicPropertyTests {
         #expect(!graph.isCyclic(using: .unionFind()), "a→b, c→a has no cycle; exercises rankX < rankY in union()")
     }
 
-    // MARK: - UnionFindCyclicProperty Direct API Coverage
+    // MARK: - UnionFindCyclicPropertyAlgorithm Direct API Coverage
 
-    /// Directly instantiates `UnionFindCyclicProperty` (the lower-level data structure).
-    /// Exercises `examineEdge`, `findRoot`, `unionVertices` visitors and all three union rank branches:
+    /// Directly instantiates `UnionFindCyclicPropertyAlgorithm`.
+    /// Exercises its edge, root, union, and cycle events and all three union rank branches:
     /// - a→b: equal ranks → rank[a]=1
     /// - b→c: findRoot(b)=a (rank 1) > rank[c]=0 → rankX > rankY
     /// - d→a: findRoot(d)=d (rank 0) < findRoot(a)=a (rank 1) → rankX < rankY
@@ -226,29 +226,28 @@ struct CyclicPropertyTests {
         graph.addEdge(from: b, to: c)  // rankX(a)=1 > rankY(c)=0 → parent[c]=a
         graph.addEdge(from: d, to: a)  // rankX(d)=0 < rankY(a)=1 → parent[d]=a (rankX < rankY)
 
-        var uf = UnionFindCyclicProperty(on: graph)
         var examineEdgeCount = 0
-        var findRootCount = 0
+        var rootsFoundCount = 0
         var unionCount = 0
         var cycleCount = 0
 
-        let hasCycle = uf.hasCycle(
-            visitor: .init(
-                examineEdge: { _ in examineEdgeCount += 1 },
-                findRoot: { _, _ in findRootCount += 1 },
-                unionVertices: { _, _ in unionCount += 1 },
-                cycleDetected: { _ in cycleCount += 1 }
-            )
-        )
+        typealias Cases = UnionFindCyclicPropertyAlgorithm<AdjacencyList>.EventCases
+        let observed = UnionFindCyclicPropertyAlgorithm<AdjacencyList>()
+            .observing(Cases.edgeExamined) { _ in examineEdgeCount += 1 }
+            .observing(Cases.rootsFound) { _ in rootsFoundCount += 1 }
+            .observing(Cases.verticesUnioned) { _ in unionCount += 1 }
+            .observing(Cases.cycleDetected) { _ in cycleCount += 1 }
+        let hasCycle = graph.isCyclic(using: observed)
 
         #expect(!hasCycle, "a→b, b→c, d→a form a tree with no cycle")
         #expect(examineEdgeCount == 3, "three edges examined")
+        #expect(rootsFoundCount == 3, "roots are found for all three edges")
         #expect(unionCount == 3, "three union operations performed")
         #expect(cycleCount == 0, "no cycle detected")
     }
 
-    /// Directly instantiates `UnionFindCyclicProperty` on a cyclic graph to exercise
-    /// `cycleDetected` visitor callback and the early-return path.
+    /// Directly instantiates `UnionFindCyclicPropertyAlgorithm` on a cyclic graph to exercise
+    /// the `cycleDetected` event and early-return path.
     @Test func unionFindCyclicPropertyDirectInstantiation_withCycle() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
@@ -258,17 +257,20 @@ struct CyclicPropertyTests {
         graph.addEdge(from: b, to: c)
         graph.addEdge(from: c, to: a)  // closes cycle a→b→c→a
 
-        var uf = UnionFindCyclicProperty(on: graph)
         var cycleEdgeCount = 0
-        let hasCycle = uf.hasCycle(visitor: .init(cycleDetected: { _ in cycleEdgeCount += 1 }))
+        let observed = UnionFindCyclicPropertyAlgorithm<AdjacencyList>()
+            .observing(UnionFindCyclicPropertyAlgorithm<AdjacencyList>.EventCases.cycleDetected) { _ in
+                cycleEdgeCount += 1
+            }
+        let hasCycle = graph.isCyclic(using: observed)
 
         #expect(hasCycle, "a→b→c→a has a cycle")
         #expect(cycleEdgeCount == 1, "cycleDetected fires once")
     }
 
-    // MARK: - Visitor Support
+    // MARK: - Observation Support
 
-    @Test func visitorCallbacks() {
+    @Test func dfsObservationReceivesEvents() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -282,13 +284,14 @@ struct CyclicPropertyTests {
         var examineEdgeCount = 0
         var backEdgeCount = 0
 
-        var visitor = DepthFirstSearch<AdjacencyList>.Visitor()
-        visitor.discoverVertex = { _ in discoverVertexCount += 1 }
-        visitor.examineVertex = { _ in examineVertexCount += 1 }
-        visitor.examineEdge = { _ in examineEdgeCount += 1 }
-        visitor.backEdge = { _ in backEdgeCount += 1 }
+        typealias Cases = DepthFirstSearch<AdjacencyList>.EventCases
+        let observed = DFSCyclicPropertyAlgorithm<AdjacencyList>()
+            .observing(Cases.vertexDiscovered) { _ in discoverVertexCount += 1 }
+            .observing(Cases.vertexExamined) { _ in examineVertexCount += 1 }
+            .observing(Cases.edgeExamined) { _ in examineEdgeCount += 1 }
+            .observing(Cases.backEdgeTraversed) { _ in backEdgeCount += 1 }
 
-        let result = graph.isCyclic(using: .dfs().withVisitor(visitor))
+        let result = graph.isCyclic(using: observed)
 
         #expect(result)
         #expect(discoverVertexCount > 0)
@@ -297,7 +300,7 @@ struct CyclicPropertyTests {
         #expect(backEdgeCount > 0)
     }
 
-    @Test func unionFindVisitorCallbacks() {
+    @Test func unionFindObservationReceivesEvents() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -307,21 +310,24 @@ struct CyclicPropertyTests {
         graph.addEdge(from: v3, to: v1)  // Creates a cycle
 
         var examineEdgeCount = 0
-        var findRootCount = 0
+        var rootsFoundCount = 0
         var unionVerticesCount = 0
         var cycleDetectedCount = 0
 
-        var visitor = UnionFindCyclicProperty<AdjacencyList>.Visitor()
-        visitor.examineEdge = { _ in examineEdgeCount += 1 }
-        visitor.findRoot = { _, _ in findRootCount += 1 }
-        visitor.unionVertices = { _, _ in unionVerticesCount += 1 }
-        visitor.cycleDetected = { _ in cycleDetectedCount += 1 }
+        typealias Cases = UnionFindCyclicPropertyAlgorithm<AdjacencyList>.EventCases
+        let observed = UnionFindCyclicPropertyAlgorithm<AdjacencyList>()
+            .observing(Cases.edgeExamined) { _ in examineEdgeCount += 1 }
+            .observing(Cases.rootsFound) { _ in rootsFoundCount += 1 }
+            .observing(Cases.verticesUnioned) { _ in unionVerticesCount += 1 }
+            .observing(Cases.cycleDetected) { _ in cycleDetectedCount += 1 }
 
-        let result = graph.isCyclic(using: .unionFind())
+        let result = graph.isCyclic(using: observed)
 
         #expect(result)
-        // Note: Union-Find doesn't support visitors yet, so we can't test callbacks
-        // This test just verifies the algorithm works correctly
+        #expect(examineEdgeCount > 0)
+        #expect(rootsFoundCount > 0)
+        #expect(unionVerticesCount > 0)
+        #expect(cycleDetectedCount == 1)
     }
 
     // MARK: - Performance

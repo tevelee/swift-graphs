@@ -218,16 +218,16 @@ Protocols defining algorithm families:
 ### Shortest Path Algorithms
 
 ```swift
-protocol ShortestPathAlgorithm<Graph, Weight> {
+protocol ShortestPathAlgorithm<Graph, Weight>: AlgorithmObserving {
     associatedtype Graph: IncidenceGraph
     associatedtype Weight: AdditiveArithmetic & Comparable
-    associatedtype Visitor
+    associatedtype Event
     
     func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 }
 ```
@@ -237,14 +237,14 @@ protocol ShortestPathAlgorithm<Graph, Weight> {
 ### Traversal Algorithms
 
 ```swift
-protocol TraversalAlgorithm<Graph> {
+protocol TraversalAlgorithm<Graph>: AlgorithmObserving {
     associatedtype Graph: IncidenceGraph
-    associatedtype Visitor
+    associatedtype Event
     
     func traverse(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor>
 }
 ```
@@ -252,15 +252,15 @@ protocol TraversalAlgorithm<Graph> {
 ### Search Algorithms
 
 ```swift
-protocol SearchAlgorithm<Graph> {
+protocol SearchAlgorithm<Graph>: AlgorithmObserving {
     associatedtype Graph: IncidenceGraph
     associatedtype SearchSequence: Sequence
-    associatedtype Visitor
+    associatedtype Event
     
     func search(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> SearchSequence
 }
 ```
@@ -433,7 +433,7 @@ let path = graph.shortestPath(
 // 3. Protocol extension dispatches to algorithm
 extension IncidenceGraph where Self: EdgePropertyGraph {
     func shortestPath<Algorithm: ShortestPathAlgorithm>(...) -> Path? {
-        algorithm.shortestPath(from:to:in:visitor:)
+        algorithm.shortestPath(from:to:in:observation:)
     }
 }
 

@@ -32,5 +32,4 @@ extension ConnectedPropertyAlgorithm {
     }
 }
 
-extension TraversalBasedConnectedPropertyAlgorithm: ConnectedPropertyAlgorithm
-where Traversal.Visitor: Composable, Traversal.Visitor.Other == Traversal.Visitor {}
+extension TraversalBasedConnectedPropertyAlgorithm: ConnectedPropertyAlgorithm {}

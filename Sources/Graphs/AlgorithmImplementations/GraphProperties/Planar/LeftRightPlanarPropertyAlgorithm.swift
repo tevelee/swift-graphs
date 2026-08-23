@@ -4,41 +4,40 @@ public struct LeftRightPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexLis
     public typealias Vertex = Graph.VertexDescriptor
     public typealias Edge = Graph.EdgeDescriptor
 
-    /// A visitor that can be used to observe the Left-Right algorithm progress.
-    public struct Visitor {
-        /// Called when starting the embedding process.
-        public var startEmbedding: (() -> Void)?
-        /// Called when examining a vertex.
-        public var examineVertex: ((Vertex) -> Void)?
-        /// Called when examining an edge.
-        public var examineEdge: ((Edge) -> Void)?
-        /// Called when adding an edge to the embedding.
-        public var addEdgeToEmbedding: ((Edge, Int) -> Void)?
-        /// Called when an embedding conflict is detected.
-        public var embeddingConflict: ((Edge, Edge) -> Void)?
-        /// Called when embedding succeeds.
-        public var embeddingSuccess: (() -> Void)?
-        /// Called when embedding fails.
-        public var embeddingFailure: (() -> Void)?
+    /// An event emitted by the Left-Right planarity check.
+    public enum Event {
+        /// Embedding computation started.
+        case embeddingStarted
+        /// Embedding succeeded.
+        case embeddingSucceeded
+        /// Embedding failed.
+        case embeddingFailed
+    }
 
-        /// Creates a new visitor.
-        @inlinable
-        public init(
-            startEmbedding: (() -> Void)? = nil,
-            examineVertex: ((Vertex) -> Void)? = nil,
-            examineEdge: ((Edge) -> Void)? = nil,
-            addEdgeToEmbedding: ((Edge, Int) -> Void)? = nil,
-            embeddingConflict: ((Edge, Edge) -> Void)? = nil,
-            embeddingSuccess: (() -> Void)? = nil,
-            embeddingFailure: (() -> Void)? = nil
-        ) {
-            self.startEmbedding = startEmbedding
-            self.examineVertex = examineVertex
-            self.examineEdge = examineEdge
-            self.addEdgeToEmbedding = addEdgeToEmbedding
-            self.embeddingConflict = embeddingConflict
-            self.embeddingSuccess = embeddingSuccess
-            self.embeddingFailure = embeddingFailure
+    /// Typed selectors for Left-Right planarity events.
+    public enum EventCases {
+        /// Selects embedding starts.
+        public static var embeddingStarted: AlgorithmEventCase<Event, Void> {
+            .init {
+                guard case .embeddingStarted = $0 else { return nil }
+                return ()
+            }
+        }
+
+        /// Selects successful embeddings.
+        public static var embeddingSucceeded: AlgorithmEventCase<Event, Void> {
+            .init {
+                guard case .embeddingSucceeded = $0 else { return nil }
+                return ()
+            }
+        }
+
+        /// Selects failed embeddings.
+        public static var embeddingFailed: AlgorithmEventCase<Event, Void> {
+            .init {
+                guard case .embeddingFailed = $0 else { return nil }
+                return ()
+            }
         }
     }
 
@@ -54,23 +53,23 @@ public struct LeftRightPlanarPropertyAlgorithm<Graph: IncidenceGraph & VertexLis
     ///
     /// - Parameters:
     ///   - graph: The graph to check
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional observation of algorithm progress.
     /// - Returns: `true` if the graph is planar, `false` otherwise
     public func isPlanar(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Bool {
-        // Graphs on four or fewer vertices are always planar; the visitor's embedding
+        // Graphs on four or fewer vertices are always planar; embedding
         // events only fire once the real test runs (matching prior observable behavior).
         guard graph.vertexCount > 4 else {
             return PlanarityCore.isPlanar(graph)
         }
-        visitor?.startEmbedding?()
+        observation?.receive(.embeddingStarted)
         let planar = PlanarityCore.isPlanar(graph)
         if planar {
-            visitor?.embeddingSuccess?()
+            observation?.receive(.embeddingSucceeded)
         } else {
-            visitor?.embeddingFailure?()
+            observation?.receive(.embeddingFailed)
         }
         return planar
     }

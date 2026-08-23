@@ -284,12 +284,12 @@
             #expect(kruskal.totalWeight == 3.0, "MST must select cheaper a−b (w=1) and b−c (w=2)")
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
         /// Kruskal fires `examineEdge` for every candidate edge (including those that would create a
-        /// cycle) and `addEdge` only for edges selected into the MST. A composed visitor must see the
-        /// same events as a single visitor.
-        @Test func kruskalComposedVisitorsReceiveAllEvents() {
+        /// cycle) and `edgeAdded` only for edges selected into the MST. Each observation in an
+        /// ordered chain must see the same events.
+        @Test func kruskalComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -305,33 +305,32 @@
             var added1 = 0
             var added2 = 0
 
-            var v1 = Kruskal<AdjacencyList, Double>.Visitor()
-            v1.examineEdge = { _ in examined1 += 1 }
-            v1.addEdge = { _, _ in added1 += 1 }
+            typealias Algorithm = Kruskal<AdjacencyList, Double>
+            typealias Cases = MinimumSpanningTreeEventCases<Algorithm.Vertex, Algorithm.Edge, Double>
+            let algorithm = Algorithm(edgeWeight: .property(\.weight))
+                .observing(Cases.edgeExamined) { _ in examined1 += 1 }
+                .observing(Cases.edgeAdded) { _ in added1 += 1 }
+                .observing(Cases.edgeExamined) { _ in examined2 += 1 }
+                .observing(Cases.edgeAdded) { _ in added2 += 1 }
 
-            var v2 = Kruskal<AdjacencyList, Double>.Visitor()
-            v2.examineEdge = { _ in examined2 += 1 }
-            v2.addEdge = { _, _ in added2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = graph.minimumSpanningTree(using: .kruskal(weight: .property(\.weight)).withVisitor(combined))
+            _ = graph.minimumSpanningTree(using: algorithm)
 
             // All 4 directed edges are examined; 2 are added to the MST
             #expect(examined1 == 4, "Kruskal examines all 4 directed edges in the sorted order")
             #expect(examined2 == 4)
             #expect(added1 == 2, "Kruskal adds exactly 2 MST edges for a 3-vertex chain")
             #expect(added2 == 2)
-            #expect(examined1 == examined2, "both composed visitors must see the same examineEdge events")
-            #expect(added1 == added2, "both composed visitors must see the same addEdge events")
+            #expect(examined1 == examined2, "both composed observations must see the same edgeExamined events")
+            #expect(added1 == added2, "both composed observations must see the same edgeAdded events")
         }
 
-        /// Exercises all three Prim visitor events through a composed visitor pair.
+        /// Exercises all three emitted Prim events through an ordered observation chain.
         ///
         /// Graph: undirected chain a−b−c (4 directed edges).
         /// - `examineVertex` fires for each vertex visited by Prim.
         /// - `examineEdge` fires for each edge considered when selecting the minimum weight edge.
         /// - `addEdge` fires for each edge added to the MST (2 edges for a 3-vertex chain).
-        @Test func primComposedVisitorsReceiveAllEvents() {
+        @Test func primComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -348,18 +347,17 @@
             var added1 = 0
             var added2 = 0
 
-            var v1 = Prim<AdjacencyList, Double>.Visitor()
-            v1.examineVertex = { _ in examined1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.addEdge = { _, _ in added1 += 1 }
+            typealias Algorithm = Prim<AdjacencyList, Double>
+            typealias Cases = MinimumSpanningTreeEventCases<Algorithm.Vertex, Algorithm.Edge, Double>
+            let algorithm = Algorithm(edgeWeight: .property(\.weight))
+                .observing(Cases.vertexExamined) { _ in examined1 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+                .observing(Cases.edgeAdded) { _ in added1 += 1 }
+                .observing(Cases.vertexExamined) { _ in examined2 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+                .observing(Cases.edgeAdded) { _ in added2 += 1 }
 
-            var v2 = Prim<AdjacencyList, Double>.Visitor()
-            v2.examineVertex = { _ in examined2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.addEdge = { _, _ in added2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = graph.minimumSpanningTree(using: .prim(weight: .property(\.weight)).withVisitor(combined))
+            _ = graph.minimumSpanningTree(using: algorithm)
 
             // Prim visits all 3 vertices, examines edges from each, and adds 2 MST edges
             #expect(examined1 >= 1, "examineVertex fires for each vertex visited by Prim")
@@ -368,13 +366,13 @@
             #expect(examEdge2 >= 1)
             #expect(added1 == 2, "Prim adds exactly 2 MST edges for a 3-vertex chain")
             #expect(added2 == 2)
-            // Both composed visitors must see identical event counts
+            // Both ordered observation groups must see identical event counts.
             #expect(examined1 == examined2)
             #expect(examEdge1 == examEdge2)
             #expect(added1 == added2)
         }
 
-        /// Exercises all five Borůvka visitor events through a composed visitor pair.
+        /// Exercises all five emitted Borůvka events through an ordered observation chain.
         ///
         /// Graph: undirected chain a−b−c (4 directed edges stored as weight-carrying edge pairs).
         /// - `examineEdge` fires for every edge once, before the main loop begins.
@@ -382,8 +380,8 @@
         /// - `skipEdge` fires when an edge would create a cycle (same-component check).
         /// - `unionVertices` fires when two components are merged.
         /// - `completeComponentMerge` fires at the end of each Borůvka iteration.
-        /// Both composed visitors must see identical event counts.
-        @Test func boruvkaComposedVisitorsReceiveAllEvents() {
+        /// Both observation groups must see identical event counts.
+        @Test func boruvkaComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -404,22 +402,21 @@
             var complete1 = 0
             var complete2 = 0
 
-            var v1 = Boruvka<AdjacencyList, Double>.Visitor()
-            v1.examineEdge = { _ in examined1 += 1 }
-            v1.addEdge = { _, _ in added1 += 1 }
-            v1.skipEdge = { _, _ in skipped1 += 1 }
-            v1.unionVertices = { _, _ in union1 += 1 }
-            v1.completeComponentMerge = { _ in complete1 += 1 }
+            typealias Algorithm = Boruvka<AdjacencyList, Double>
+            typealias Cases = MinimumSpanningTreeEventCases<Algorithm.Vertex, Algorithm.Edge, Double>
+            let algorithm = Algorithm(edgeWeight: .property(\.weight))
+                .observing(Cases.edgeExamined) { _ in examined1 += 1 }
+                .observing(Cases.edgeAdded) { _ in added1 += 1 }
+                .observing(Cases.edgeSkipped) { _ in skipped1 += 1 }
+                .observing(Cases.verticesJoined) { _ in union1 += 1 }
+                .observing(Cases.componentMergeFinished) { _ in complete1 += 1 }
+                .observing(Cases.edgeExamined) { _ in examined2 += 1 }
+                .observing(Cases.edgeAdded) { _ in added2 += 1 }
+                .observing(Cases.edgeSkipped) { _ in skipped2 += 1 }
+                .observing(Cases.verticesJoined) { _ in union2 += 1 }
+                .observing(Cases.componentMergeFinished) { _ in complete2 += 1 }
 
-            var v2 = Boruvka<AdjacencyList, Double>.Visitor()
-            v2.examineEdge = { _ in examined2 += 1 }
-            v2.addEdge = { _, _ in added2 += 1 }
-            v2.skipEdge = { _, _ in skipped2 += 1 }
-            v2.unionVertices = { _, _ in union2 += 1 }
-            v2.completeComponentMerge = { _ in complete2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = graph.minimumSpanningTree(using: .boruvka(weight: .property(\.weight)).withVisitor(combined))
+            _ = graph.minimumSpanningTree(using: algorithm)
 
             // Borůvka examines all 4 directed edges before the main loop
             #expect(examined1 == 4, "examineEdge fires for all 4 directed edges")
@@ -433,7 +430,7 @@
             // completeComponentMerge fires at the end of each Borůvka iteration
             #expect(complete1 >= 1, "completeComponentMerge fires once per iteration")
             #expect(complete2 >= 1)
-            // Both composed visitors must see identical event counts
+            // Both ordered observation groups must see identical event counts.
             #expect(examined1 == examined2)
             #expect(added1 == added2)
             #expect(skipped1 == skipped2)

@@ -49,16 +49,16 @@ Swift Graphs defines several algorithm protocol families:
 ### Shortest Path Algorithms
 
 ```swift
-protocol ShortestPathAlgorithm<Graph, Weight> {
+protocol ShortestPathAlgorithm<Graph, Weight>: AlgorithmObserving {
     associatedtype Graph: IncidenceGraph
     associatedtype Weight: AdditiveArithmetic & Comparable
-    associatedtype Visitor
+    associatedtype Event
     
     func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 }
 ```
@@ -84,14 +84,14 @@ let path = graph.shortestPath(
 ### Traversal Algorithms
 
 ```swift
-protocol TraversalAlgorithm<Graph> {
+protocol TraversalAlgorithm<Graph>: AlgorithmObserving {
     associatedtype Graph: IncidenceGraph
-    associatedtype Visitor
+    associatedtype Event
     
     func traverse(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor>
 }
 ```
@@ -110,15 +110,15 @@ let result = graph.traverse(from: start, using: .dfs(order: .preorder))
 ### Search Algorithms
 
 ```swift
-protocol SearchAlgorithm<Graph> {
+protocol SearchAlgorithm<Graph>: AlgorithmObserving {
     associatedtype Graph: IncidenceGraph
     associatedtype SearchSequence: Sequence
-    associatedtype Visitor
+    associatedtype Event
     
     func search(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> SearchSequence
 }
 ```
@@ -145,14 +145,14 @@ for vertex in graph.search(from: start, using: .bfs()) {
 ### Coloring Algorithms
 
 ```swift
-protocol ColoringAlgorithm<Graph, Color> {
+protocol ColoringAlgorithm<Graph, Color>: AlgorithmObserving {
     associatedtype Graph: IncidenceGraph & VertexListGraph
     associatedtype Color: Hashable & Equatable
-    associatedtype Visitor
+    associatedtype Event
     
     func color(
         graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> GraphColoring<Graph.VertexDescriptor, Color>
 }
 ```
@@ -172,13 +172,13 @@ print("Chromatic number: \(coloring.chromaticNumber)")
 ### Connected Components Algorithms
 
 ```swift
-protocol ConnectedComponentsAlgorithm<Graph> {
+protocol ConnectedComponentsAlgorithm<Graph>: AlgorithmObserving {
     associatedtype Graph: IncidenceGraph & VertexListGraph
-    associatedtype Visitor
+    associatedtype Event
     
     func connectedComponents(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> ConnectedComponentsResult<Graph.VertexDescriptor>
 }
 ```
@@ -196,13 +196,13 @@ let components = graph.connectedComponents(using: .unionFind())
 ### Articulation Points Algorithms
 
 ```swift
-protocol ArticulationPointsAlgorithm<Graph> {
+protocol ArticulationPointsAlgorithm<Graph>: AlgorithmObserving {
     associatedtype Graph: IncidenceGraph
-    associatedtype Visitor
+    associatedtype Event
 
     func articulationPoints(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> ArticulationPointsResult<Graph.VertexDescriptor, Graph.EdgeDescriptor>
 }
 ```
@@ -221,14 +221,14 @@ print("Bridges: \(result.bridges)")
 ### Minimum Spanning Tree Algorithms
 
 ```swift
-protocol MinimumSpanningTreeAlgorithm<Graph, Weight> {
+protocol MinimumSpanningTreeAlgorithm<Graph, Weight>: AlgorithmObserving {
     associatedtype Graph: IncidenceGraph
     associatedtype Weight: Numeric & Comparable
-    associatedtype Visitor
+    associatedtype Event
     
     func minimumSpanningTree(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> SpanningTree<Graph.VertexDescriptor, Graph.EdgeDescriptor>
 }
 ```
@@ -241,14 +241,14 @@ protocol MinimumSpanningTreeAlgorithm<Graph, Weight> {
 ### Minimum Cut Algorithms
 
 ```swift
-protocol MinimumCutAlgorithm<Graph, Weight> {
+protocol MinimumCutAlgorithm<Graph, Weight>: AlgorithmObserving {
     associatedtype Graph: IncidenceGraph & VertexListGraph
     associatedtype Weight: Numeric & Comparable
-    associatedtype Visitor
+    associatedtype Event
 
     func minimumCut(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> MinimumCutResult<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>?
 }
 ```
@@ -278,7 +278,9 @@ struct BidirectionalDijkstra<G: BidirectionalGraph, W: Numeric & Comparable>:
 {
     typealias Graph = G
     typealias Weight = W
-    typealias Visitor = DijkstraVisitor<G>
+    enum Event {
+        case vertexExamined(G.VertexDescriptor)
+    }
     
     let weight: CostDefinition<G, W>
     
@@ -296,7 +298,7 @@ extension BidirectionalDijkstra {
         from source: G.VertexDescriptor,
         to destination: G.VertexDescriptor,
         in graph: G,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Path<G.VertexDescriptor, G.EdgeDescriptor>? {
         // Search from both source and destination simultaneously
         var forwardDist: [G.VertexDescriptor: W] = [source: .zero]
@@ -314,7 +316,7 @@ extension BidirectionalDijkstra {
         while !forwardQueue.isEmpty && !backwardQueue.isEmpty {
             // Forward search step
             if let (u, distU) = forwardQueue.pop() {
-                visitor?.examineVertex(u)
+                observation?.receive(.vertexExamined(u))
                 
                 for edge in graph.outgoingEdges(of: u) {
                     guard let v = graph.destination(of: edge) else { continue }
@@ -481,15 +483,15 @@ struct Heuristic<Graph: Graphs.Graph, Cost> {
 }
 ```
 
-## Visitor Integration
+## Observation Integration
 
-All algorithm protocols include a `Visitor` associated type for observing execution:
+Algorithm protocols publish an `Event` associated type and accept a typed observation:
 
 ```swift
-protocol ShortestPathAlgorithm {
-    associatedtype Visitor
+protocol ShortestPathAlgorithm: AlgorithmObserving {
+    associatedtype Event
     
-    func shortestPath(..., visitor: Visitor?) -> Path?
+    func shortestPath(..., observation: AlgorithmObservation<Event>?) -> Path?
 }
 ```
 
@@ -499,15 +501,16 @@ protocol ShortestPathAlgorithm {
 let path = graph.shortestPath(
     from: start,
     to: goal,
-    using: .dijkstra(weight: .property(\.weight))
-        .withVisitor(.init(
-            examineVertex: { v in print("Examining \(v)") },
-            examineEdge: { e in print("Examining edge \(e)") }
-        ))
+    using: DijkstraShortestPathAlgorithm<AdjacencyList, Double>(
+        weight: .property(\.weight)
+    )
+    .observing(.vertexExamined) {
+        print("Examining \($0)")
+    }
 )
 ```
 
-See <doc:VisitorPattern> for details.
+See <doc:ObservingAlgorithms> for details.
 
 ## Design Guidelines
 
@@ -531,7 +534,7 @@ Use concrete types when:
 
 1. **Minimal requirements** - Only essential methods
 2. **Associated types** - Allow implementation flexibility
-3. **Visitor support** - Enable instrumentation
+3. **Typed observation** - Enable passive instrumentation
 4. **Generic constraints** - Specify graph requirements
 
 ```swift
@@ -560,14 +563,17 @@ where G.VertexDescriptor: Hashable
 {
     typealias Graph = G
     typealias SearchSequence = AnySequence<G.VertexDescriptor>
-    typealias Visitor = BFSVisitor<G>
+    enum Event {
+        case vertexExamined(G.VertexDescriptor)
+        case vertexDiscovered(G.VertexDescriptor)
+    }
     
     let priority: (G.VertexDescriptor, G) -> Double
     
     func search(
         from source: G.VertexDescriptor,
         in graph: G,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> SearchSequence {
         var visited: Set<G.VertexDescriptor> = []
         var queue = PriorityQueue<(G.VertexDescriptor, Double)>()
@@ -579,7 +585,7 @@ where G.VertexDescriptor: Hashable
             AnyIterator {
                 guard let (vertex, _) = queue.pop() else { return nil }
                 
-                visitor?.examineVertex(vertex)
+                observation?.receive(.vertexExamined(vertex))
                 
                 for edge in graph.outgoingEdges(of: vertex) {
                     guard let neighbor = graph.destination(of: edge) else { continue }
@@ -588,7 +594,7 @@ where G.VertexDescriptor: Hashable
                         visited.insert(neighbor)
                         let pri = self.priority(neighbor, graph)
                         queue.push((neighbor, pri))
-                        visitor?.discoverVertex(neighbor)
+                        observation?.receive(.vertexDiscovered(neighbor))
                     }
                 }
                 
@@ -611,16 +617,15 @@ for vertex in graph.search(from: start, using: CustomBestFirstSearch { vertex, g
 
 Now that you understand algorithm interfaces:
 
-- Learn about <doc:VisitorPattern> - Observing algorithm execution
+- Learn about <doc:ObservingAlgorithms> - Observing algorithm execution
 - Explore <doc:PluggableArchitecture> - Component composition
 - Study specific algorithms in the algorithm documentation
 
 ## See Also
 
-- <doc:VisitorPattern>
+- <doc:ObservingAlgorithms>
 - <doc:PluggableArchitecture>
 - <doc:Architecture>
 - ``ShortestPathAlgorithm``
 - ``TraversalAlgorithm``
 - ``SearchAlgorithm``
-

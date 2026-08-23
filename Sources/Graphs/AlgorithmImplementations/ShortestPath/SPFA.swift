@@ -16,32 +16,59 @@
     {
         public typealias Vertex = Graph.VertexDescriptor
         public typealias Edge = Graph.EdgeDescriptor
+        /// Details about a successful edge relaxation.
+        public typealias Relaxation = EdgeRelaxation<Edge, Weight>
 
-        /// A visitor for SPFA algorithm events.
-        ///
-        /// Visitors can observe the algorithm's progress including edge relaxations
-        /// and negative cycle detection. Unlike Bellman-Ford, negative cycles are detected
-        /// per-vertex (when a vertex is enqueued more than V times).
-        public struct Visitor {
-            public var examineVertex: ((Vertex) -> Void)?
-            public var examineEdge: ((Edge) -> Void)?
-            public var edgeRelaxed: ((Edge) -> Void)?
-            public var edgeNotRelaxed: ((Edge) -> Void)?
-            public var detectNegativeCycle: ((Vertex) -> Void)?
+        /// An event emitted while SPFA runs.
+        public enum Event {
+            /// A dequeued vertex was examined.
+            case vertexExamined(Vertex)
+            /// An outgoing edge was examined.
+            case edgeExamined(Edge)
+            /// An edge improved its destination's distance.
+            case edgeRelaxed(Relaxation)
+            /// An edge did not improve its destination's distance.
+            case edgeNotRelaxed(Edge)
+            /// A vertex exceeded the enqueue limit, indicating a negative cycle.
+            case negativeCycleDetected(Vertex)
+        }
 
-            @inlinable
-            public init(
-                examineVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                edgeRelaxed: ((Edge) -> Void)? = nil,
-                edgeNotRelaxed: ((Edge) -> Void)? = nil,
-                detectNegativeCycle: ((Vertex) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.edgeRelaxed = edgeRelaxed
-                self.edgeNotRelaxed = edgeNotRelaxed
-                self.detectNegativeCycle = detectNegativeCycle
+        /// Selectors for SPFA events.
+        public enum EventCases {
+            /// Selects examined vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects examined edges.
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects successful edge relaxations.
+            public static var edgeRelaxed: AlgorithmEventCase<Event, Relaxation> {
+                .init {
+                    guard case .edgeRelaxed(let relaxation) = $0 else { return nil }
+                    return relaxation
+                }
+            }
+            /// Selects edges that were not relaxed.
+            public static var edgeNotRelaxed: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeNotRelaxed(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects vertices that indicated a negative cycle.
+            public static var negativeCycleDetected: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .negativeCycleDetected(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -76,7 +103,7 @@
         }
 
         @inlinable
-        public func shortestPathsFromSource(_ source: Vertex, visitor: Visitor? = nil) -> Result {
+        public func shortestPathsFromSource(_ source: Vertex, observation: AlgorithmObservation<Event>? = nil) -> Result {
             var distances: [Vertex: Cost<Weight>] = [:]
             var predecessors: [Vertex: Edge?] = [:]
 
@@ -99,14 +126,14 @@
 
             while let vertex = queue.dequeue() {
                 inQueue.remove(vertex)
-                visitor?.examineVertex?(vertex)
+                observation?.receive(.vertexExamined(vertex))
 
                 for edge in graph.outgoingEdges(of: vertex) {
                     guard let destinationVertex = graph.destination(of: edge) else {
                         continue
                     }
 
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
 
                     guard let sourceCost = distances[vertex] else { continue }
                     let weight = edgeWeight.costToExplore(edge, graph)
@@ -114,9 +141,12 @@
 
                     guard let destinationCost = distances[destinationVertex] else { continue }
                     if newCost < destinationCost {
+                        guard case .finite(let relaxedCost) = newCost else {
+                            preconditionFailure("An improved SPFA cost must be finite")
+                        }
                         distances[destinationVertex] = newCost
                         predecessors[destinationVertex] = edge
-                        visitor?.edgeRelaxed?(edge)
+                        observation?.receive(.edgeRelaxed(.init(edge: edge, newCost: relaxedCost)))
 
                         if !inQueue.contains(destinationVertex) {
                             queue.enqueue(destinationVertex)
@@ -125,7 +155,7 @@
                             enqueueCount[destinationVertex] = count
 
                             if count > vertexCount {
-                                visitor?.detectNegativeCycle?(destinationVertex)
+                                observation?.receive(.negativeCycleDetected(destinationVertex))
                                 return Result(
                                     distances: distances,
                                     predecessors: predecessors,
@@ -134,7 +164,7 @@
                             }
                         }
                     } else {
-                        visitor?.edgeNotRelaxed?(edge)
+                        observation?.receive(.edgeNotRelaxed(edge))
                     }
                 }
             }
@@ -148,5 +178,28 @@
 
     }
 
-    extension SPFA: VisitorSupporting {}
+    extension SPFA: AlgorithmObserving {}
+
+    extension SPFA.Event: VertexExaminedEvent, EdgeExaminedEvent, EdgeRelaxedEvent {
+        /// Returns the examined vertex carried by the event.
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        /// Returns the examined edge carried by the event.
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+
+        /// Returns successful edge-relaxation details carried by the event.
+        @inlinable
+        public static func relaxation(from event: Self) -> SPFA.Relaxation? {
+            guard case .edgeRelaxed(let relaxation) = event else { return nil }
+            return relaxation
+        }
+    }
 #endif

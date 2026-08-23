@@ -147,11 +147,11 @@
             #expect(path == nil)
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        /// Two composed visitors must each receive the same `addEdgeToPath` events —
-        /// one per edge in the Eulerian cycle, and `examineVertex` at least once.
-        @Test func composedVisitorsReceiveAllEvents() {
+        /// Two observations must each receive the same edge-added events —
+        /// one per edge in the Eulerian cycle, and a vertex-examined event at least once.
+        @Test func composedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -168,23 +168,19 @@
             var examined1 = 0
             var examined2 = 0
 
-            var v1 = Hierholzer<AdjacencyList>.Visitor()
-            v1.addEdgeToPath = { _ in edgesAdded1 += 1 }
-            v1.examineVertex = { _ in examined1 += 1 }
-
-            var v2 = Hierholzer<AdjacencyList>.Visitor()
-            v2.addEdgeToPath = { _ in edgesAdded2 += 1 }
-            v2.examineVertex = { _ in examined2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = graph.eulerianCycle(using: Hierholzer().withVisitor(combined))
+            let observed = Hierholzer<AdjacencyList>()
+                .observing(Hierholzer<AdjacencyList>.EventCases.edgeAddedToPath) { _ in edgesAdded1 += 1 }
+                .observing(Hierholzer<AdjacencyList>.EventCases.vertexExamined) { _ in examined1 += 1 }
+                .observing(Hierholzer<AdjacencyList>.EventCases.edgeAddedToPath) { _ in edgesAdded2 += 1 }
+                .observing(Hierholzer<AdjacencyList>.EventCases.vertexExamined) { _ in examined2 += 1 }
+            _ = graph.eulerianCycle(using: observed)
 
             #expect(edgesAdded1 == 4, "addEdgeToPath must fire once per edge in the 4-cycle")
             #expect(edgesAdded2 == 4)
             #expect(examined1 >= 1, "examineVertex must fire at least once")
             #expect(examined2 >= 1)
-            #expect(edgesAdded1 == edgesAdded2, "both composed visitors must see identical addEdgeToPath events")
-            #expect(examined1 == examined2, "both composed visitors must see identical examineVertex events")
+            #expect(edgesAdded1 == edgesAdded2, "both observations must see identical edge-added events")
+            #expect(examined1 == examined2, "both observations must see identical vertex-examined events")
         }
     }
 #endif

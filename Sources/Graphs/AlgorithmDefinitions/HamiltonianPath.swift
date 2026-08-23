@@ -7,7 +7,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     public func hamiltonianPath(
         using algorithm: some HamiltonianPathAlgorithm<Self>
     ) -> Path<VertexDescriptor, EdgeDescriptor>? {
-        algorithm.hamiltonianPath(in: self, visitor: nil)
+        algorithm.hamiltonianPath(in: self, observation: nil)
     }
 
     /// Finds a Hamiltonian cycle using the specified algorithm.
@@ -18,7 +18,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     public func hamiltonianCycle(
         using algorithm: some HamiltonianCycleAlgorithm<Self>
     ) -> Path<VertexDescriptor, EdgeDescriptor>? {
-        algorithm.hamiltonianCycle(in: self, visitor: nil)
+        algorithm.hamiltonianCycle(in: self, observation: nil)
     }
 
     /// Finds a Hamiltonian path from a specific source using the specified algorithm.
@@ -32,7 +32,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         from source: VertexDescriptor,
         using algorithm: some HamiltonianPathAlgorithm<Self>
     ) -> Path<VertexDescriptor, EdgeDescriptor>? {
-        algorithm.hamiltonianPath(from: source, in: self, visitor: nil)
+        algorithm.hamiltonianPath(from: source, in: self, observation: nil)
     }
 
     /// Finds a Hamiltonian path between two specific vertices using the specified algorithm.
@@ -48,7 +48,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         to destination: VertexDescriptor,
         using algorithm: some HamiltonianPathAlgorithm<Self>
     ) -> Path<VertexDescriptor, EdgeDescriptor>? {
-        algorithm.hamiltonianPath(from: source, to: destination, in: self, visitor: nil)
+        algorithm.hamiltonianPath(from: source, to: destination, in: self, observation: nil)
     }
 }
 
@@ -91,30 +91,34 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 #endif
 
 /// A protocol for Hamiltonian path algorithms.
-public protocol HamiltonianPathAlgorithm<Graph> {
+public protocol HamiltonianPathAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Finds a Hamiltonian path in the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to search in
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: A Hamiltonian path if one exists, nil otherwise
     @inlinable
-    func hamiltonianPath(in graph: Graph, visitor: Visitor?) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
+    func hamiltonianPath(in graph: Graph, observation: AlgorithmObservation<Event>?) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 
     /// Finds a Hamiltonian path starting from a specific vertex.
     ///
     /// - Parameters:
     ///   - source: The starting vertex
     ///   - graph: The graph to search in
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: A Hamiltonian path if one exists, nil otherwise
     @inlinable
-    func hamiltonianPath(from source: Graph.VertexDescriptor, in graph: Graph, visitor: Visitor?) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
+    func hamiltonianPath(
+        from source: Graph.VertexDescriptor,
+        in graph: Graph,
+        observation: AlgorithmObservation<Event>?
+    ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 
     /// Finds a Hamiltonian path between two specific vertices.
     ///
@@ -122,50 +126,53 @@ public protocol HamiltonianPathAlgorithm<Graph> {
     ///   - source: The starting vertex
     ///   - destination: The ending vertex
     ///   - graph: The graph to search in
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: A Hamiltonian path if one exists, nil otherwise
     @inlinable
     func hamiltonianPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 }
 
 /// A protocol for Hamiltonian cycle algorithms.
-public protocol HamiltonianCycleAlgorithm<Graph> {
+public protocol HamiltonianCycleAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Finds a Hamiltonian cycle in the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to search in
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: A Hamiltonian cycle if one exists, nil otherwise
     @inlinable
-    func hamiltonianCycle(in graph: Graph, visitor: Visitor?) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
+    func hamiltonianCycle(in graph: Graph, observation: AlgorithmObservation<Event>?) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 }
 
-extension VisitorWrapper: HamiltonianPathAlgorithm
-where Base: HamiltonianPathAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: HamiltonianPathAlgorithm
+where Base: HamiltonianPathAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
-    public func hamiltonianPath(in graph: Base.Graph, visitor: Base.Visitor?) -> Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>? {
-        base.hamiltonianPath(in: graph, visitor: self.visitor.combined(with: visitor))
+    public func hamiltonianPath(
+        in graph: Base.Graph,
+        observation: AlgorithmObservation<Base.Event>?
+    ) -> Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>? {
+        base.hamiltonianPath(in: graph, observation: self.observation.followed(by: observation))
     }
 
     @inlinable
     public func hamiltonianPath(
         from source: Base.Graph.VertexDescriptor,
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>? {
-        base.hamiltonianPath(from: source, in: graph, visitor: self.visitor.combined(with: visitor))
+        base.hamiltonianPath(from: source, in: graph, observation: self.observation.followed(by: observation))
     }
 
     @inlinable
@@ -173,18 +180,21 @@ where Base: HamiltonianPathAlgorithm, Base.Visitor == Visitor, Visitor: Composab
         from source: Base.Graph.VertexDescriptor,
         to destination: Base.Graph.VertexDescriptor,
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>? {
-        base.hamiltonianPath(from: source, to: destination, in: graph, visitor: self.visitor.combined(with: visitor))
+        base.hamiltonianPath(from: source, to: destination, in: graph, observation: self.observation.followed(by: observation))
     }
 }
 
-extension VisitorWrapper: HamiltonianCycleAlgorithm
-where Base: HamiltonianCycleAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: HamiltonianCycleAlgorithm
+where Base: HamiltonianCycleAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
-    public func hamiltonianCycle(in graph: Base.Graph, visitor: Base.Visitor?) -> Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>? {
-        base.hamiltonianCycle(in: graph, visitor: self.visitor.combined(with: visitor))
+    public func hamiltonianCycle(
+        in graph: Base.Graph,
+        observation: AlgorithmObservation<Base.Event>?
+    ) -> Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>? {
+        base.hamiltonianCycle(in: graph, observation: self.observation.followed(by: observation))
     }
 }

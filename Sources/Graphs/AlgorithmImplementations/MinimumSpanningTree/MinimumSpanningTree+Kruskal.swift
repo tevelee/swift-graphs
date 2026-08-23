@@ -14,8 +14,11 @@
 
     extension Kruskal: MinimumSpanningTreeAlgorithm {
         @inlinable
-        public func minimumSpanningTree(in graph: Graph, visitor: Visitor?) -> MinimumSpanningTree<Vertex, Edge, Weight> {
-            let result = minimumSpanningTree(on: graph, visitor: visitor)
+        public func minimumSpanningTree(
+            in graph: Graph,
+            observation: AlgorithmObservation<Event>?
+        ) -> MinimumSpanningTree<Vertex, Edge, Weight> {
+            let result = minimumSpanningTree(on: graph, observation: observation)
             return MinimumSpanningTree(
                 edges: result.edges,
                 totalWeight: result.totalWeight,

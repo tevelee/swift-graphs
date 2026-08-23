@@ -134,9 +134,9 @@
                 #endif
             }
 
-            // MARK: - Visitor Support
+            // MARK: - Observation Support
 
-            /// Exercises all five A* visitor events through a composed visitor pair.
+            /// Exercises all five A* events through a composed observation pair.
             ///
             /// Graph: a→b(1), a→c(1), b→c(5) with a zero heuristic (degrades to Dijkstra).
             /// - `examineVertex` fires for each of the 3 vertices.
@@ -144,7 +144,7 @@
             /// - `edgeRelaxed` fires for a→b and a→c (both improve their targets).
             /// - `edgeNotRelaxed` fires for b→c (c already settled at cost 1 via a→c; b→c would cost 6).
             /// - `finishVertex` fires for each of the 3 vertices.
-            @Test func composedVisitorsReceiveAllEvents() {
+            @Test func composedObservationsReceiveAllEventsInOrder() {
                 var graph = AdjacencyList()
                 let a = graph.addVertex { $0.label = "A" }
                 let b = graph.addVertex { $0.label = "B" }
@@ -160,28 +160,38 @@
                 var examEdge2 = 0
                 var relaxed1 = 0
                 var relaxed2 = 0
+                var relaxedEdges: [AdjacencyList.EdgeDescriptor] = []
+                var relaxedCosts: [Double] = []
                 var notRelaxed1 = 0
                 var notRelaxed2 = 0
                 var finished1 = 0
                 var finished2 = 0
+                var observationOrder: [Int] = []
 
-                var v1 = AStar<AdjacencyList, Double, Double, Double>.Visitor()
-                v1.examineVertex = { _ in examined1 += 1 }
-                v1.examineEdge = { _ in examEdge1 += 1 }
-                v1.edgeRelaxed = { _ in relaxed1 += 1 }
-                v1.edgeNotRelaxed = { _ in notRelaxed1 += 1 }
-                v1.finishVertex = { _ in finished1 += 1 }
-
-                var v2 = AStar<AdjacencyList, Double, Double, Double>.Visitor()
-                v2.examineVertex = { _ in examined2 += 1 }
-                v2.examineEdge = { _ in examEdge2 += 1 }
-                v2.edgeRelaxed = { _ in relaxed2 += 1 }
-                v2.edgeNotRelaxed = { _ in notRelaxed2 += 1 }
-                v2.finishVertex = { _ in finished2 += 1 }
-
-                let combined = v1.combined(with: v2)
                 AStar(on: graph, from: a, edgeWeight: .property(\.weight), heuristic: .uniform(0), calculateTotalCost: +)
-                    .withVisitor { combined }
+                    .observing { event in
+                        observationOrder.append(1)
+                        switch event {
+                            case .vertexExamined: examined1 += 1
+                            case .edgeExamined: examEdge1 += 1
+                            case .edgeRelaxed(let relaxation):
+                                relaxed1 += 1
+                                relaxedEdges.append(relaxation.edge)
+                                relaxedCosts.append(relaxation.newCost)
+                            case .edgeNotRelaxed: notRelaxed1 += 1
+                            case .vertexFinished: finished1 += 1
+                        }
+                    }
+                    .observing { event in
+                        observationOrder.append(2)
+                        switch event {
+                            case .vertexExamined: examined2 += 1
+                            case .edgeExamined: examEdge2 += 1
+                            case .edgeRelaxed: relaxed2 += 1
+                            case .edgeNotRelaxed: notRelaxed2 += 1
+                            case .vertexFinished: finished2 += 1
+                        }
+                    }
                     .forEach { _ in }
 
                 #expect(examined1 == 3, "examineVertex fires once per vertex")
@@ -190,16 +200,19 @@
                 #expect(examEdge2 == 3)
                 #expect(relaxed1 == 2, "a→b and a→c both improve their targets")
                 #expect(relaxed2 == 2)
+                #expect(relaxedEdges.count == 2)
+                #expect(relaxedCosts == [1, 1], "A* reports each destination's new g-score")
                 #expect(notRelaxed1 >= 1, "b→c does not improve c (already at cost 1)")
                 #expect(notRelaxed2 >= 1)
                 #expect(finished1 == 3, "finishVertex fires once per vertex")
                 #expect(finished2 == 3)
-                // Both composed visitors must see identical event counts
+                // Both composed observations must see identical event counts and attachment order.
                 #expect(examined1 == examined2)
                 #expect(examEdge1 == examEdge2)
                 #expect(relaxed1 == relaxed2)
                 #expect(notRelaxed1 == notRelaxed2)
                 #expect(finished1 == finished2)
+                #expect(observationOrder.enumerated().allSatisfy { index, value in value == (index % 2) + 1 })
             }
 
             // MARK: - DistanceAlgorithm SIMD overloads
@@ -378,7 +391,9 @@
 
             var notRelaxedCount = 0
             AStar(on: graph, from: a, edgeWeight: .property(\.weight), heuristic: .uniform(0), calculateTotalCost: +)
-                .withVisitor { .init(edgeNotRelaxed: { _ in notRelaxedCount += 1 }) }
+                .observing(AStar<AdjacencyList, Double, Double, Double>.EventCases.edgeNotRelaxed) { _ in
+                    notRelaxedCount += 1
+                }
                 .forEach { _ in }
 
             #expect(notRelaxedCount >= 1, "c→d should not be relaxed because d already has gScore 2 via a→b→d")
@@ -404,7 +419,9 @@
 
             var notRelaxedCount = 0
             AStar(on: graph, from: a, edgeWeight: .property(\.weight), heuristic: .uniform(0), calculateTotalCost: +)
-                .withVisitor { .init(edgeNotRelaxed: { _ in notRelaxedCount += 1 }) }
+                .observing(AStar<AdjacencyList, Double, Double, Double>.EventCases.edgeNotRelaxed) { _ in
+                    notRelaxedCount += 1
+                }
                 .forEach { _ in }
 
             #expect(notRelaxedCount >= 1, "b→c must fire edgeNotRelaxed regardless of whether c was already dequeued")

@@ -13,25 +13,30 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe the Union-Find connected components algorithm progress.
-        public struct Visitor {
-            /// Called when discovering a vertex.
-            public var discoverVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when finishing a component.
-            public var finishComponent: (([Vertex]) -> Void)?
+        public enum Event {
+            case vertexDiscovered(Vertex)
+            case edgeExamined(Edge)
+            case componentFinished([Vertex])
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                discoverVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                finishComponent: (([Vertex]) -> Void)? = nil
-            ) {
-                self.discoverVertex = discoverVertex
-                self.examineEdge = examineEdge
-                self.finishComponent = finishComponent
+        public enum EventCases {
+            public static var vertexDiscovered: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexDiscovered(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var componentFinished: AlgorithmEventCase<Event, [Vertex]> {
+                .init {
+                    guard case .componentFinished(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -49,10 +54,12 @@
 
         /// Finds connected components using Union-Find.
         ///
-        /// - Parameter visitor: An optional visitor to observe the algorithm progress
+        /// - Parameter observation: An optional observation of the algorithm progress
         /// - Returns: The connected components result
         @inlinable
-        public func connectedComponents(visitor: Visitor?) -> ConnectedComponentsResult<Vertex> {
+        public func connectedComponents(
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> ConnectedComponentsResult<Vertex> {
             var parent: [Vertex: Vertex] = [:]
             var rank: [Vertex: Int] = [:]
 
@@ -93,10 +100,10 @@
 
             // Process all edges to build connected components
             for vertex in graph.vertices() {
-                visitor?.discoverVertex?(vertex)
+                observation?.receive(.vertexDiscovered(vertex))
 
                 for edge in graph.outgoingEdges(of: vertex) {
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
 
                     guard let destination = graph.destination(of: edge) else { continue }
                     union(vertex, destination)
@@ -110,10 +117,10 @@
                 components[root, default: []].append(vertex)
             }
 
-            // Convert to array of arrays and notify visitor
+            // Convert to array of arrays and publish completion events.
             let result = Array(components.values)
             for component in result {
-                visitor?.finishComponent?(component)
+                observation?.receive(.componentFinished(component))
             }
 
             return ConnectedComponentsResult(components: result)
@@ -124,9 +131,25 @@
         @inlinable
         public func connectedComponents(
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> ConnectedComponentsResult<Graph.VertexDescriptor> {
-            connectedComponents(visitor: visitor)
+            connectedComponents(observation: observation)
+        }
+    }
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
+    extension UnionFindConnectedComponents.Event: VertexDiscoveredEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func discoveredVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexDiscovered(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
         }
     }
 #endif

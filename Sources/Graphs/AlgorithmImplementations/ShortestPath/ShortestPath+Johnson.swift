@@ -27,8 +27,8 @@
         Weight: Numeric,
         Weight.Magnitude == Weight
     {
-        /// The visitor type for observing algorithm progress.
-        public typealias Visitor = Johnson<Graph, Weight>.Visitor
+        /// The event type for observing algorithm progress.
+        public typealias Event = Johnson<Graph, Weight>.Event
 
         /// The cost definition for edge weights.
         public let weight: CostDefinition<Graph, Weight>
@@ -47,17 +47,17 @@
         ///   - source: The source vertex
         ///   - destination: The destination vertex
         ///   - graph: The graph to search in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation to observe the algorithm progress
         /// - Returns: The shortest path, if one exists
         @inlinable
         public func shortestPath(
             from source: Graph.VertexDescriptor,
             to destination: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
             let johnson = Johnson(edgeWeight: weight)
-            let allPairs = johnson.shortestPathsForAllPairs(in: graph, visitor: visitor)
+            let allPairs = johnson.shortestPathsForAllPairs(in: graph, observation: observation)
 
             // Check if destination is reachable
             guard case .finite = allPairs.distance(from: source, to: destination) else { return nil }
@@ -108,5 +108,5 @@
         }
     }
 
-    extension JohnsonShortestPath: VisitorSupporting {}
+    extension JohnsonShortestPath: AlgorithmObserving {}
 #endif

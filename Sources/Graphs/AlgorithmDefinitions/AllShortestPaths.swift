@@ -3,15 +3,15 @@
 /// Unlike k-shortest paths algorithms that return paths with potentially different costs,
 /// all-shortest-paths algorithms return only paths that share the optimal (minimum) cost.
 /// This is useful when there are multiple equally-optimal paths in a graph.
-public protocol AllShortestPathsAlgorithm<Graph, Weight> {
+public protocol AllShortestPathsAlgorithm<Graph, Weight>: AlgorithmObserving {
     /// The type of graph this algorithm operates on.
     associatedtype Graph: IncidenceGraph
 
     /// The type used for edge weights.
     associatedtype Weight: AdditiveArithmetic & Comparable
 
-    /// The type of visitor used for algorithm events.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Finds all shortest paths between two vertices.
     ///
@@ -23,13 +23,13 @@ public protocol AllShortestPathsAlgorithm<Graph, Weight> {
     ///   - source: The starting vertex
     ///   - destination: The target vertex
     ///   - graph: The graph to search
-    ///   - visitor: Optional visitor for algorithm events
+    ///   - observation: An optional algorithm observation
     /// - Returns: An array of all shortest paths (may be empty if no path exists)
     func allShortestPaths(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>]
 }
 
@@ -51,13 +51,13 @@ public protocol AllShortestPathsUntilAlgorithm<Graph, Weight>: AllShortestPathsA
     ///   - source: The starting vertex
     ///   - condition: A closure that determines when to stop searching
     ///   - graph: The graph to search
-    ///   - visitor: Optional visitor for algorithm events
+    ///   - observation: An optional algorithm observation
     /// - Returns: An array of all shortest paths (may be empty if no path exists)
     func allShortestPaths(
         from source: Graph.VertexDescriptor,
         until condition: @escaping (Graph.VertexDescriptor) -> Bool,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>]
 }
 
@@ -69,16 +69,16 @@ extension AllShortestPathsUntilAlgorithm where Graph.VertexDescriptor: Equatable
     ///   - source: The starting vertex
     ///   - destination: The target vertex
     ///   - graph: The graph to search
-    ///   - visitor: Optional visitor for algorithm events
+    ///   - observation: An optional algorithm observation
     /// - Returns: An array of all shortest paths (may be empty if no path exists)
     @inlinable
     public func allShortestPaths(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>? = nil
     ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>] {
-        allShortestPaths(from: source, until: { $0 == destination }, in: graph, visitor: visitor)
+        allShortestPaths(from: source, until: { $0 == destination }, in: graph, observation: observation)
     }
 }
 
@@ -96,7 +96,7 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
         until condition: @escaping (VertexDescriptor) -> Bool,
         using algorithm: some AllShortestPathsUntilAlgorithm<Self, Weight>
     ) -> [Path<VertexDescriptor, EdgeDescriptor>] {
-        algorithm.allShortestPaths(from: source, until: condition, in: self, visitor: nil)
+        algorithm.allShortestPaths(from: source, until: condition, in: self, observation: nil)
     }
 
     /// Finds all shortest paths between two vertices using the specified algorithm.
@@ -112,7 +112,7 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
         to destination: VertexDescriptor,
         using algorithm: some AllShortestPathsAlgorithm<Self, Weight>
     ) -> [Path<VertexDescriptor, EdgeDescriptor>] {
-        algorithm.allShortestPaths(from: source, to: destination, in: self, visitor: nil)
+        algorithm.allShortestPaths(from: source, to: destination, in: self, observation: nil)
     }
 }
 
@@ -156,21 +156,21 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
     }
 #endif
 
-extension VisitorWrapper: AllShortestPathsUntilAlgorithm
-where Base: AllShortestPathsUntilAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: AllShortestPathsUntilAlgorithm
+where Base: AllShortestPathsUntilAlgorithm {
     @inlinable
     public func allShortestPaths(
         from source: Base.Graph.VertexDescriptor,
         until condition: @escaping (Base.Graph.VertexDescriptor) -> Bool,
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> [Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>] {
-        base.allShortestPaths(from: source, until: condition, in: graph, visitor: self.visitor.combined(with: visitor))
+        base.allShortestPaths(from: source, until: condition, in: graph, observation: self.observation.followed(by: observation))
     }
 }
 
-extension VisitorWrapper: AllShortestPathsAlgorithm
-where Base: AllShortestPathsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: AllShortestPathsAlgorithm
+where Base: AllShortestPathsAlgorithm {
     public typealias Weight = Base.Weight
 
     @inlinable
@@ -178,8 +178,8 @@ where Base: AllShortestPathsAlgorithm, Base.Visitor == Visitor, Visitor: Composa
         from source: Base.Graph.VertexDescriptor,
         to destination: Base.Graph.VertexDescriptor,
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> [Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>] {
-        base.allShortestPaths(from: source, to: destination, in: graph, visitor: self.visitor.combined(with: visitor))
+        base.allShortestPaths(from: source, to: destination, in: graph, observation: self.observation.followed(by: observation))
     }
 }

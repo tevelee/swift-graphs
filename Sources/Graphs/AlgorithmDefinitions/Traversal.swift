@@ -10,7 +10,7 @@ extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
         from source: VertexDescriptor,
         using algorithm: some TraversalAlgorithm<Self>
     ) -> TraversalResult<VertexDescriptor, EdgeDescriptor> {
-        algorithm.traverse(from: source, in: self, visitor: nil)
+        algorithm.traverse(from: source, in: self, observation: nil)
     }
 }
 
@@ -32,24 +32,24 @@ extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
 /// Traversal algorithms visit vertices and edges in a specific order, such as
 /// depth-first search (DFS) or breadth-first search (BFS). This protocol provides
 /// a unified interface for different traversal strategies.
-public protocol TraversalAlgorithm<Graph> {
+public protocol TraversalAlgorithm<Graph>: AlgorithmObserving {
     /// The type of graph this algorithm operates on.
     associatedtype Graph: IncidenceGraph
 
-    /// The type of visitor used for algorithm events.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Performs a traversal of the graph starting from the specified vertex.
     ///
     /// - Parameters:
     ///   - source: The starting vertex for the traversal
     ///   - graph: The graph to traverse
-    ///   - visitor: Optional visitor for algorithm events
+    ///   - observation: An optional algorithm observation
     /// - Returns: A result containing the vertices and edges visited during traversal
     func traverse(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor>
 }
 
@@ -78,15 +78,15 @@ public struct TraversalResult<Vertex, Edge> {
 
 extension TraversalResult: Sendable where Vertex: Sendable, Edge: Sendable {}
 
-extension VisitorWrapper: TraversalAlgorithm where Base: TraversalAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: TraversalAlgorithm where Base: TraversalAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
     public func traverse(
         from source: Base.Graph.VertexDescriptor,
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> TraversalResult<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor> {
-        base.traverse(from: source, in: graph, visitor: self.visitor.combined(with: visitor))
+        base.traverse(from: source, in: graph, observation: self.observation.followed(by: observation))
     }
 }

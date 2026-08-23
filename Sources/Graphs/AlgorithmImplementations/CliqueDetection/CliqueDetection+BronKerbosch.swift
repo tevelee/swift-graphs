@@ -2,7 +2,7 @@
     /// Bron-Kerbosch clique detection algorithm implementation.
     public struct BronKerboschCliqueDetectionAlgorithm<Graph: IncidenceGraph & VertexListGraph>: CliqueDetectionAlgorithm
     where Graph.VertexDescriptor: Hashable {
-        public typealias Visitor = BronKerboschCliqueDetection<Graph>.Visitor
+        public typealias Event = BronKerboschCliqueDetection<Graph>.Event
 
         /// Creates a new Bron-Kerbosch clique detection algorithm.
         @inlinable
@@ -11,10 +11,10 @@
         @inlinable
         public func findCliques(
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> CliqueDetectionResult<Graph.VertexDescriptor> {
             let bronKerbosch = BronKerboschCliqueDetection(on: graph)
-            return bronKerbosch.findCliques(visitor: visitor)
+            return bronKerbosch.findCliques(observation: observation)
         }
     }
 

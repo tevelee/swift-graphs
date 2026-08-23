@@ -39,8 +39,8 @@
         Weight.Magnitude == Weight,
         Graph.VertexDescriptor: Hashable
     {
-        /// The visitor type for observing algorithm progress.
-        public typealias Visitor = Dijkstra<Graph, Weight>.Visitor
+        /// The event type emitted by the core algorithm.
+        public typealias Event = Dijkstra<Graph, Weight>.Event
 
         /// The cost definition for edge weights.
         public let weight: CostDefinition<Graph, Weight>
@@ -59,26 +59,29 @@
         ///   - source: The source vertex
         ///   - condition: The condition that determines when to stop
         ///   - graph: The graph to search in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation of the algorithm progress
         /// - Returns: The shortest path to the first vertex that satisfies the condition, if one exists
         @inlinable
         public func shortestPath(
             from source: Graph.VertexDescriptor,
             until condition: @escaping (Graph.VertexDescriptor) -> Bool,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-            let sequence = Dijkstra(on: graph, from: source, edgeWeight: weight).withVisitor { visitor }
-            guard let result = sequence.first(where: { condition($0.currentVertex) }) else { return nil }
-            let destination = result.currentVertex
-            return Path(
-                source: source,
-                destination: destination,
-                vertices: result.vertices(to: destination, in: graph),
-                edges: result.edges(to: destination, in: graph)
-            )
+            var iterator = Dijkstra(on: graph, from: source, edgeWeight: weight).makeIterator(observation: observation)
+            while let result = iterator.next() {
+                guard condition(result.currentVertex) else { continue }
+                let destination = result.currentVertex
+                return Path(
+                    source: source,
+                    destination: destination,
+                    vertices: result.vertices(to: destination, in: graph),
+                    edges: result.edges(to: destination, in: graph)
+                )
+            }
+            return nil
         }
     }
 
-    extension DijkstraShortestPathAlgorithm: VisitorSupporting {}
+    extension DijkstraShortestPathAlgorithm: AlgorithmObserving {}
 #endif

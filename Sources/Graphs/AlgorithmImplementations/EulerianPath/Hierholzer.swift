@@ -14,33 +14,60 @@
         @inlinable
         public init() {}
 
-        /// A visitor that can be used to observe Hierholzer's algorithm progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
-            /// Called when adding a vertex to the path.
-            public var addToPath: ((Graph.VertexDescriptor) -> Void)?
-            /// Called when adding an edge to the path.
-            public var addEdgeToPath: ((Graph.EdgeDescriptor) -> Void)?
-            /// Called when backtracking.
-            public var backtrack: ((Graph.VertexDescriptor) -> Void)?
+        /// An event emitted while finding an Eulerian path.
+        public enum Event {
+            /// A vertex is about to be examined.
+            case vertexExamined(Graph.VertexDescriptor)
+            /// An edge is about to be examined.
+            case edgeExamined(Graph.EdgeDescriptor)
+            /// A vertex was added to the final path.
+            case vertexAddedToPath(Graph.VertexDescriptor)
+            /// An edge was added to the final path.
+            case edgeAddedToPath(Graph.EdgeDescriptor)
+            /// The algorithm backtracked from a vertex.
+            case vertexBacktracked(Graph.VertexDescriptor)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
-                examineEdge: ((Graph.EdgeDescriptor) -> Void)? = nil,
-                addToPath: ((Graph.VertexDescriptor) -> Void)? = nil,
-                addEdgeToPath: ((Graph.EdgeDescriptor) -> Void)? = nil,
-                backtrack: ((Graph.VertexDescriptor) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.addToPath = addToPath
-                self.addEdgeToPath = addEdgeToPath
-                self.backtrack = backtrack
+        /// Typed selectors for Hierholzer events.
+        public enum EventCases {
+            /// Selects examined vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Graph.VertexDescriptor> {
+                .init {
+                    guard case .vertexExamined(let vertex) = $0 else { return nil }
+                    return vertex
+                }
+            }
+
+            /// Selects examined edges.
+            public static var edgeExamined: AlgorithmEventCase<Event, Graph.EdgeDescriptor> {
+                .init {
+                    guard case .edgeExamined(let edge) = $0 else { return nil }
+                    return edge
+                }
+            }
+
+            /// Selects vertices added to the path.
+            public static var vertexAddedToPath: AlgorithmEventCase<Event, Graph.VertexDescriptor> {
+                .init {
+                    guard case .vertexAddedToPath(let vertex) = $0 else { return nil }
+                    return vertex
+                }
+            }
+
+            /// Selects edges added to the path.
+            public static var edgeAddedToPath: AlgorithmEventCase<Event, Graph.EdgeDescriptor> {
+                .init {
+                    guard case .edgeAddedToPath(let edge) = $0 else { return nil }
+                    return edge
+                }
+            }
+
+            /// Selects backtracked vertices.
+            public static var vertexBacktracked: AlgorithmEventCase<Event, Graph.VertexDescriptor> {
+                .init {
+                    guard case .vertexBacktracked(let vertex) = $0 else { return nil }
+                    return vertex
+                }
             }
         }
 
@@ -48,10 +75,13 @@
         ///
         /// - Parameters:
         ///   - graph: The graph to find the Eulerian path in.
-        ///   - visitor: An optional visitor to observe the algorithm's progress.
+        ///   - observation: An optional observation of algorithm progress.
         /// - Returns: An Eulerian path, if one exists.
         @inlinable
-        public func eulerianPath(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        public func eulerianPath(
+            in graph: Graph,
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
             guard graph.hasEulerianPath() else { return nil }
 
             let vertices = Array(graph.vertices())
@@ -82,17 +112,20 @@
 
             guard let start = startVertex else { return nil }
 
-            return findEulerianPath(from: start, in: graph, visitor: visitor)
+            return findEulerianPath(from: start, in: graph, observation: observation)
         }
 
         /// Finds an Eulerian cycle in the graph.
         ///
         /// - Parameters:
         ///   - graph: The graph to find the Eulerian cycle in.
-        ///   - visitor: An optional visitor to observe the algorithm's progress.
+        ///   - observation: An optional observation of algorithm progress.
         /// - Returns: An Eulerian cycle, if one exists.
         @inlinable
-        public func eulerianCycle(in graph: Graph, visitor: Visitor? = nil) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        public func eulerianCycle(
+            in graph: Graph,
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
             guard graph.hasEulerianCycle() else { return nil }
 
             let vertices = Array(graph.vertices())
@@ -113,7 +146,7 @@
 
             guard let startVertex = vertices.first else { return nil }
 
-            return findEulerianPath(from: startVertex, in: graph, visitor: visitor)
+            return findEulerianPath(from: startVertex, in: graph, observation: observation)
         }
 
         /// Finds an Eulerian path starting from a specific vertex.
@@ -121,13 +154,13 @@
         /// - Parameters:
         ///   - start: The starting vertex.
         ///   - graph: The graph to find the path in.
-        ///   - visitor: An optional visitor to observe the algorithm's progress.
+        ///   - observation: An optional observation of algorithm progress.
         /// - Returns: An Eulerian path, if one exists.
         @usableFromInline
         func findEulerianPath(
             from start: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
             // Each stack entry records the vertex and the edge used to arrive there.
             // Tracking the incoming edge avoids the post-hoc graph search that breaks
@@ -136,29 +169,29 @@
 
             var adjacency: [Graph.VertexDescriptor: [Graph.EdgeDescriptor]] = [:]
             for vertex in graph.vertices() {
-                visitor?.examineVertex?(vertex)
+                observation?.receive(.vertexExamined(vertex))
                 adjacency[vertex] = Array(graph.outgoingEdges(of: vertex))
             }
 
             var stack: [(vertex: Graph.VertexDescriptor, incomingEdge: Graph.EdgeDescriptor?)] = [(start, nil)]
-            visitor?.examineVertex?(start)
+            observation?.receive(.vertexExamined(start))
 
             while !stack.isEmpty {
                 let current = stack.last!.vertex
 
                 if let nextEdge = adjacency[current]?.first {
-                    visitor?.examineEdge?(nextEdge)
+                    observation?.receive(.edgeExamined(nextEdge))
                     adjacency[current]?.removeFirst()
 
                     guard let nextVertex = graph.destination(of: nextEdge) else { continue }
 
                     stack.append((nextVertex, nextEdge))
-                    visitor?.examineVertex?(nextVertex)
+                    observation?.receive(.vertexExamined(nextVertex))
                 } else {
                     let popped = stack.removeLast()
                     pathPairs.append(popped)
-                    visitor?.addToPath?(popped.vertex)
-                    visitor?.backtrack?(popped.vertex)
+                    observation?.receive(.vertexAddedToPath(popped.vertex))
+                    observation?.receive(.vertexBacktracked(popped.vertex))
                 }
             }
 
@@ -168,7 +201,7 @@
             // The start vertex has no incoming edge; all subsequent entries do.
             let edges: [Graph.EdgeDescriptor] = pathPairs.dropFirst().compactMap(\.incomingEdge)
             for edge in edges {
-                visitor?.addEdgeToPath?(edge)
+                observation?.receive(.edgeAddedToPath(edge))
             }
 
             guard let first = path.first, let last = path.last else { return nil }
@@ -176,5 +209,20 @@
         }
     }
 
-    extension Hierholzer: VisitorSupporting {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
+    extension Hierholzer.Event: VertexExaminedEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+    }
 #endif

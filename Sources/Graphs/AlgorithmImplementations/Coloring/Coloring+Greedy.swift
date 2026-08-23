@@ -10,10 +10,5 @@
         }
     }
 
-    extension GreedyColoringAlgorithm: ColoringAlgorithm {
-        @inlinable
-        public func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
-            color(graph: graph, visitor: nil)
-        }
-    }
+    extension GreedyColoringAlgorithm: ColoringAlgorithm {}
 #endif

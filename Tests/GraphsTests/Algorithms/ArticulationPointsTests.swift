@@ -280,28 +280,28 @@
             #expect(result.cutVertices == [b])
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        /// Exercises all seven TarjanArticulationPoints visitor events through a composed visitor pair.
+        /// Exercises all seven Tarjan articulation-point events through composed observations.
         ///
         /// Graph: undirected triangle A−B−C−A (6 bidirectional directed edges) plus bridge A−D
         /// (2 directed edges). A is the only articulation point (DFS root with 2 tree children:
         /// B and D). The edge A−D is the only bridge.
         ///
         /// Event analysis:
-        /// - `discoverVertex` fires for A, B, C, D (4 times).
-        /// - `examineEdge` fires for all 8 directed edges.
-        /// - `treeEdge` fires for a→b, b→c, and a→d (3 times).
-        /// - `backEdge` fires for c→a: a is a DFS ancestor of c but NOT c's direct parent
+        /// - `vertexDiscovered` fires for A, B, C, D (4 times).
+        /// - `edgeExamined` fires for all 8 directed edges.
+        /// - `treeEdgeEncountered` fires for a→b, b→c, and a→d (3 times).
+        /// - `backEdgeEncountered` fires for c→a: a is a DFS ancestor of c but NOT c's direct parent
         ///   (b is), so the implementation does not skip this edge as a "parent edge".
         ///   The direct-parent skipping mechanism silences b→a and c→b, which is why
-        ///   a simple A−B−C chain has zero backEdge firings.
-        /// - `finishVertex` fires for C, B, D, A (4 times).
-        /// - `foundArticulationPoint` fires once for A.
-        /// - `foundBridge` fires once for the a→d tree edge.
-        @Test func composedVisitorsReceiveAllEvents() {
+        ///   a simple A−B−C chain has zero back-edge events.
+        /// - `vertexFinished` fires for C, B, D, A (4 times).
+        /// - `articulationPointFound` fires once for A.
+        /// - `bridgeFound` fires once for the a→d tree edge.
+        @Test func composedObservationsReceiveAllEvents() {
             // Triangle A-B-C (all 6 bidirectional directed edges) + bridge A-D (2 directed edges).
-            // A is the DFS root. DFS order: a→b (tree) → b→c (tree) → c→a (backEdge, non-parent
+            // A is the DFS root. DFS order: a→b (tree) → b→c (tree) → c→a (back edge, non-parent
             // ancestor) → back to a → a→d (tree). A has 2 tree children so it is the cut vertex.
             // The bridge is A-D (D's low-link stays at disc[D] > disc[A]).
             var graph = AdjacencyList()
@@ -337,45 +337,43 @@
             var bridges1 = 0
             var bridges2 = 0
 
-            var v1 = TarjanArticulationPoints<AdjacencyList>.Visitor()
-            v1.discoverVertex = { _ in discovered1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.treeEdge = { _ in tree1 += 1 }
-            v1.backEdge = { _ in back1 += 1 }
-            v1.finishVertex = { _ in finished1 += 1 }
-            v1.foundArticulationPoint = { _ in artPoints1 += 1 }
-            v1.foundBridge = { _ in bridges1 += 1 }
+            typealias Cases = TarjanArticulationPoints<AdjacencyList>.EventCases
+            let observed = TarjanArticulationPointsAlgorithm<AdjacencyList>()
+                .observing(Cases.vertexDiscovered) { _ in discovered1 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+                .observing(Cases.treeEdgeEncountered) { _ in tree1 += 1 }
+                .observing(Cases.backEdgeEncountered) { _ in back1 += 1 }
+                .observing(Cases.vertexFinished) { _ in finished1 += 1 }
+                .observing(Cases.articulationPointFound) { _ in artPoints1 += 1 }
+                .observing(Cases.bridgeFound) { _ in bridges1 += 1 }
+                .observing(Cases.vertexDiscovered) { _ in discovered2 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+                .observing(Cases.treeEdgeEncountered) { _ in tree2 += 1 }
+                .observing(Cases.backEdgeEncountered) { _ in back2 += 1 }
+                .observing(Cases.vertexFinished) { _ in finished2 += 1 }
+                .observing(Cases.articulationPointFound) { _ in artPoints2 += 1 }
+                .observing(Cases.bridgeFound) { _ in bridges2 += 1 }
 
-            var v2 = TarjanArticulationPoints<AdjacencyList>.Visitor()
-            v2.discoverVertex = { _ in discovered2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.treeEdge = { _ in tree2 += 1 }
-            v2.backEdge = { _ in back2 += 1 }
-            v2.finishVertex = { _ in finished2 += 1 }
-            v2.foundArticulationPoint = { _ in artPoints2 += 1 }
-            v2.foundBridge = { _ in bridges2 += 1 }
+            _ = graph.articulationPoints(using: observed)
 
-            let combined = v1.combined(with: v2)
-            _ = TarjanArticulationPoints(on: graph).articulationPoints(visitor: combined)
-
-            #expect(discovered1 == 4, "discoverVertex fires for A, B, C, D")
+            #expect(discovered1 == 4, "vertexDiscovered fires for A, B, C, D")
             #expect(discovered2 == 4)
-            #expect(examEdge1 == 8, "examineEdge fires for all 8 directed edges")
+            #expect(examEdge1 == 8, "edgeExamined fires for all 8 directed edges")
             #expect(examEdge2 == 8)
-            #expect(tree1 == 3, "treeEdge fires for a→b, b→c, and a→d")
+            #expect(tree1 == 3, "treeEdgeEncountered fires for a→b, b→c, and a→d")
             #expect(tree2 == 3)
-            // c→a fires backEdge: a is a DFS ancestor of c but NOT c's direct parent (b is).
+            // c→a emits backEdgeEncountered: a is a DFS ancestor of c but NOT c's direct parent (b is).
             // The skippedParentEdge mechanism silences b→a and c→b (direct-parent edges), but
             // not c→a.
-            #expect(back1 >= 1, "backEdge fires for c→a (non-parent ancestor edge)")
+            #expect(back1 >= 1, "backEdgeEncountered fires for c→a (non-parent ancestor edge)")
             #expect(back2 >= 1)
-            #expect(finished1 == 4, "finishVertex fires for all 4 vertices")
+            #expect(finished1 == 4, "vertexFinished fires for all 4 vertices")
             #expect(finished2 == 4)
-            #expect(artPoints1 == 1, "foundArticulationPoint fires once (A is the only cut vertex)")
+            #expect(artPoints1 == 1, "articulationPointFound fires once (A is the only cut vertex)")
             #expect(artPoints2 == 1)
-            #expect(bridges1 == 1, "foundBridge fires once for the a−d bridge")
+            #expect(bridges1 == 1, "bridgeFound fires once for the a−d bridge")
             #expect(bridges2 == 1)
-            // Both composed visitors must see identical event counts
+            // Both composed observation groups must see identical event counts.
             #expect(discovered1 == discovered2)
             #expect(examEdge1 == examEdge2)
             #expect(tree1 == tree2)

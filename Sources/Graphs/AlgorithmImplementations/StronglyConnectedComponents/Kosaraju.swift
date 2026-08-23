@@ -14,33 +14,44 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe Kosaraju's algorithm progress.
-        public struct Visitor {
-            /// Called when discovering a vertex.
-            public var discoverVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when finishing a vertex.
-            public var finishVertex: ((Vertex) -> Void)?
-            /// Called when starting a new component.
-            public var startComponent: ((Vertex) -> Void)?
-            /// Called when finishing a component.
-            public var finishComponent: (([Vertex]) -> Void)?
+        public enum Event {
+            case vertexDiscovered(Vertex)
+            case edgeExamined(Edge)
+            case vertexFinished(Vertex)
+            case componentStarted(Vertex)
+            case componentFinished([Vertex])
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                discoverVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                finishVertex: ((Vertex) -> Void)? = nil,
-                startComponent: ((Vertex) -> Void)? = nil,
-                finishComponent: (([Vertex]) -> Void)? = nil
-            ) {
-                self.discoverVertex = discoverVertex
-                self.examineEdge = examineEdge
-                self.finishVertex = finishVertex
-                self.startComponent = startComponent
-                self.finishComponent = finishComponent
+        public enum EventCases {
+            public static var vertexDiscovered: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexDiscovered(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var vertexFinished: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexFinished(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var componentStarted: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .componentStarted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var componentFinished: AlgorithmEventCase<Event, [Vertex]> {
+                .init {
+                    guard case .componentFinished(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -75,10 +86,12 @@
 
         /// Finds strongly connected components in the graph.
         ///
-        /// - Parameter visitor: An optional visitor to observe the algorithm's progress.
+        /// - Parameter observation: An optional observation of the algorithm's progress.
         /// - Returns: The strongly connected components result.
         @inlinable
-        public func stronglyConnectedComponents(visitor: Visitor?) -> StronglyConnectedComponentsResult<Vertex> {
+        public func stronglyConnectedComponents(
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> StronglyConnectedComponentsResult<Vertex> {
             var propertyMap = graph.makeVertexPropertyMap()
             let colorProperty = ColorProperty.self
 
@@ -91,24 +104,26 @@
             func dfs1(_ vertex: Vertex) {
                 // Use the existing DFS algorithm but manage shared state manually
                 let dfs = DepthFirstSearch(on: graph, from: vertex)
-                let finishTimeVisitor = DepthFirstSearch<Graph>.Visitor(
-                    discoverVertex: { v in
-                        if propertyMap[v][colorProperty] == .white {
-                            propertyMap[v][colorProperty] = .gray
-                            visitor?.discoverVertex?(v)
-                        }
-                    },
-                    examineEdge: { edge in
-                        visitor?.examineEdge?(edge)
-                    },
-                    finishVertex: { v in
-                        propertyMap[v][colorProperty] = .black
-                        visitor?.finishVertex?(v)
-                        finishOrder.append(v)
+                let finishTimeObservation = AlgorithmObservation<DepthFirstSearch<Graph>.Event> { event in
+                    switch event {
+                        case .vertexDiscovered(let v):
+                            if propertyMap[v][colorProperty] == .white {
+                                propertyMap[v][colorProperty] = .gray
+                                observation?.receive(.vertexDiscovered(v))
+                            }
+                        case .edgeExamined(let edge):
+                            observation?.receive(.edgeExamined(edge))
+                        case .vertexFinished(let v):
+                            propertyMap[v][colorProperty] = .black
+                            observation?.receive(.vertexFinished(v))
+                            finishOrder.append(v)
+                        default:
+                            break
                     }
-                )
+                }
 
-                dfs.withVisitor { finishTimeVisitor }.forEach { _ in }
+                var iterator = dfs.makeIterator(observation: finishTimeObservation)
+                while iterator.next() != nil {}
             }
 
             // First pass: DFS on original graph
@@ -134,24 +149,26 @@
                 var localComponent: [Vertex] = []
 
                 let dfs = DepthFirstSearch(on: transposeGraph, from: vertex)
-                let componentVisitor = DepthFirstSearch<ReversedGraphView<Graph>>.Visitor(
-                    discoverVertex: { v in
-                        if propertyMap[v][colorProperty] == .white {
-                            propertyMap[v][colorProperty] = .gray
-                            visitor?.discoverVertex?(v)
-                            localComponent.append(v)
-                        }
-                    },
-                    examineEdge: { edge in
-                        visitor?.examineEdge?(edge)
-                    },
-                    finishVertex: { v in
-                        propertyMap[v][colorProperty] = .black
-                        visitor?.finishVertex?(v)
+                let componentObservation = AlgorithmObservation<DepthFirstSearch<ReversedGraphView<Graph>>.Event> { event in
+                    switch event {
+                        case .vertexDiscovered(let v):
+                            if propertyMap[v][colorProperty] == .white {
+                                propertyMap[v][colorProperty] = .gray
+                                observation?.receive(.vertexDiscovered(v))
+                                localComponent.append(v)
+                            }
+                        case .edgeExamined(let edge):
+                            observation?.receive(.edgeExamined(edge))
+                        case .vertexFinished(let v):
+                            propertyMap[v][colorProperty] = .black
+                            observation?.receive(.vertexFinished(v))
+                        default:
+                            break
                     }
-                )
+                }
 
-                dfs.withVisitor { componentVisitor }.forEach { _ in }
+                var iterator = dfs.makeIterator(observation: componentObservation)
+                while iterator.next() != nil {}
 
                 // Append the collected vertices to the component
                 component.append(contentsOf: localComponent)
@@ -160,13 +177,29 @@
             // Second pass: DFS on transpose graph in reverse finish order
             for vertex in finishOrder.reversed() where propertyMap[vertex][colorProperty] == .white {
                 var component: [Vertex] = []
-                visitor?.startComponent?(vertex)
+                observation?.receive(.componentStarted(vertex))
                 dfs2(vertex, component: &component)
-                visitor?.finishComponent?(component)
+                observation?.receive(.componentFinished(component))
                 components.append(component)
             }
 
             return StronglyConnectedComponentsResult(components: components)
+        }
+    }
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
+    extension Kosaraju.Event: VertexDiscoveredEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func discoveredVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexDiscovered(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
         }
     }
 #endif

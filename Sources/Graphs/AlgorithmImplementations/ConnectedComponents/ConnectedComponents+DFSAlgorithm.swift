@@ -2,7 +2,7 @@
     /// DFS-based connected components algorithm implementation.
     public struct DFSConnectedComponentsAlgorithm<Graph: IncidenceGraph & VertexListGraph>: ConnectedComponentsAlgorithm
     where Graph.VertexDescriptor: Hashable {
-        public typealias Visitor = DFSConnectedComponents<Graph>.Visitor
+        public typealias Event = DFSConnectedComponents<Graph>.Event
 
         /// Creates a new DFS connected components algorithm.
         @inlinable
@@ -11,10 +11,10 @@
         @inlinable
         public func connectedComponents(
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> ConnectedComponentsResult<Graph.VertexDescriptor> {
             let dfs = DFSConnectedComponents(on: graph)
-            return dfs.connectedComponents(visitor: visitor)
+            return dfs.connectedComponents(observation: observation)
         }
     }
 

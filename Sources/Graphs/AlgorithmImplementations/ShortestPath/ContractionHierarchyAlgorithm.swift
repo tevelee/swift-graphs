@@ -5,7 +5,7 @@
     /// Use the `.contractionHierarchy(weight:)` static factory on `ShortestPathAlgorithm` to create one,
     /// then pass it to `graph.shortestPath(from:to:using:)` just like `.dijkstra(weight:)`.
     ///
-    /// The hierarchy is built on the **first** call to `shortestPath(from:to:in:visitor:)` and cached
+    /// The hierarchy is built on the **first** call to `shortestPath(from:to:in:observation:)` and cached
     /// for all subsequent calls. Copies of this struct share the same cache.
     ///
     /// ```swift
@@ -18,8 +18,8 @@
     where G.VertexDescriptor: Hashable, W.Magnitude == W {
 
         public typealias Graph = G
-        /// No visitor support — CH query events are not exposed via the algorithm protocol.
-        public typealias Visitor = Never
+        /// No observation support — CH query events are not exposed via the algorithm protocol.
+        public typealias Event = Never
 
         /// The edge weight function supplied at construction time.
         @usableFromInline let weight: CostDefinition<G, W>
@@ -53,7 +53,7 @@
 
         /// Finds the shortest path, preprocessing the graph on the first invocation.
         ///
-        /// - Note: `visitor` is ignored — `ContractionHierarchyAlgorithm` has no visitor support.
+        /// - Note: `observation` is ignored — `ContractionHierarchyAlgorithm` emits no events.
         /// - Note: The graph passed on the **first** call is the one that gets preprocessed.
         ///   Subsequent calls reuse the cached hierarchy regardless of the `graph` argument.
         @inlinable
@@ -61,7 +61,7 @@
             from source: G.VertexDescriptor,
             to destination: G.VertexDescriptor,
             in graph: G,
-            visitor: Never?
+            observation: AlgorithmObservation<Never>?
         ) -> Path<G.VertexDescriptor, G.EdgeDescriptor>? {
             // Note: not thread-safe — concurrent first calls may race on cache.hierarchy.
             // Single-threaded repeated use (the intended pattern) is safe.

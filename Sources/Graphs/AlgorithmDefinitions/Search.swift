@@ -10,7 +10,7 @@ extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
         from source: VertexDescriptor,
         using algorithm: Algorithm
     ) -> Algorithm.SearchSequence where Algorithm.Graph == Self {
-        algorithm.search(from: source, in: self, visitor: nil)
+        algorithm.search(from: source, in: self, observation: nil)
     }
 }
 
@@ -32,31 +32,31 @@ extension Graph where Self: IncidenceGraph, VertexDescriptor: Hashable {
 /// Search algorithms explore a graph in a systematic way, typically looking for
 /// specific vertices or paths. This protocol provides a unified interface for
 /// different search strategies.
-public protocol SearchAlgorithm<Graph> {
+public protocol SearchAlgorithm<Graph>: AlgorithmObserving {
     /// The type of graph this algorithm operates on.
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
 
     /// The type of sequence returned by the search.
     associatedtype SearchSequence: Sequence
 
-    /// The type of visitor used for algorithm events.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Performs a search of the graph starting from the specified vertex.
     ///
     /// - Parameters:
     ///   - source: The starting vertex for the search
     ///   - graph: The graph to search
-    ///   - visitor: Optional visitor for algorithm events
+    ///   - observation: An optional algorithm observation
     /// - Returns: A sequence of search results
     func search(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> SearchSequence
 }
 
-extension VisitorWrapper: SearchAlgorithm where Base: SearchAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: SearchAlgorithm where Base: SearchAlgorithm {
     public typealias Graph = Base.Graph
     public typealias SearchSequence = Base.SearchSequence
 
@@ -64,8 +64,8 @@ extension VisitorWrapper: SearchAlgorithm where Base: SearchAlgorithm, Base.Visi
     public func search(
         from source: Base.Graph.VertexDescriptor,
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> Base.SearchSequence {
-        base.search(from: source, in: graph, visitor: self.visitor.combined(with: visitor))
+        base.search(from: source, in: graph, observation: self.observation.followed(by: observation))
     }
 }

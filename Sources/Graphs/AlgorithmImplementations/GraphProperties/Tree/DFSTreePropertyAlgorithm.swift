@@ -1,6 +1,72 @@
 /// Single-pass DFS-based algorithm for checking if a graph is a tree.
 public struct DFSTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    public typealias Visitor = DFSTreeProperty<Graph>.Visitor
+    public typealias Vertex = Graph.VertexDescriptor
+    public typealias Edge = Graph.EdgeDescriptor
+
+    public struct EdgeCount {
+        public let expected: Int
+        public let actual: Int
+
+        public init(expected: Int, actual: Int) {
+            self.expected = expected
+            self.actual = actual
+        }
+    }
+
+    public enum Event {
+        case edgeCountChecked(EdgeCount)
+        case edgeCountMismatchDetected(EdgeCount)
+        case vertexDiscovered(Vertex)
+        case edgeExamined(Edge)
+        case backEdgeTraversed(Edge)
+        case connectivityDetermined(Bool)
+        case acyclicityDetermined(Bool)
+    }
+
+    public enum EventCases {
+        public static var edgeCountChecked: AlgorithmEventCase<Event, EdgeCount> {
+            .init {
+                guard case .edgeCountChecked(let value) = $0 else { return nil }
+                return value
+            }
+        }
+        public static var edgeCountMismatchDetected: AlgorithmEventCase<Event, EdgeCount> {
+            .init {
+                guard case .edgeCountMismatchDetected(let value) = $0 else { return nil }
+                return value
+            }
+        }
+        public static var vertexDiscovered: AlgorithmEventCase<Event, Vertex> {
+            .init {
+                guard case .vertexDiscovered(let value) = $0 else { return nil }
+                return value
+            }
+        }
+        public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+            .init {
+                guard case .edgeExamined(let value) = $0 else { return nil }
+                return value
+            }
+        }
+        public static var backEdgeTraversed: AlgorithmEventCase<Event, Edge> {
+            .init {
+                guard case .backEdgeTraversed(let value) = $0 else { return nil }
+                return value
+            }
+        }
+        public static var connectivityDetermined: AlgorithmEventCase<Event, Bool> {
+            .init {
+                guard case .connectivityDetermined(let value) = $0 else { return nil }
+                return value
+            }
+        }
+        public static var acyclicityDetermined: AlgorithmEventCase<Event, Bool> {
+            .init {
+                guard case .acyclicityDetermined(let value) = $0 else { return nil }
+                return value
+            }
+        }
+    }
 
     /// Creates a new single-pass DFS-based tree property algorithm.
     @inlinable
@@ -10,12 +76,12 @@ public struct DFSTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph &
     ///
     /// - Parameters:
     ///   - graph: The graph to check
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional observation of the algorithm progress
     /// - Returns: `true` if the graph is a tree, `false` otherwise
     @inlinable
     public func isTree(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Bool {
         // Handle empty graphs
         guard graph.vertexCount > 0 else {
@@ -31,10 +97,11 @@ public struct DFSTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph &
         let expectedEdges = graph.vertexCount - 1
         let actualEdges = graph.edgeCount
 
-        visitor?.checkEdgeCount?(expectedEdges, actualEdges)
+        let edgeCount = EdgeCount(expected: expectedEdges, actual: actualEdges)
+        observation?.receive(.edgeCountChecked(edgeCount))
 
         if actualEdges != expectedEdges {
-            visitor?.edgeCountMismatch?(expectedEdges, actualEdges)
+            observation?.receive(.edgeCountMismatchDetected(edgeCount))
             return false
         }
 
@@ -43,72 +110,49 @@ public struct DFSTreePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph &
         var hasCycle = false
         var verticesVisited = 0
 
-        let treeVisitor = DepthFirstSearch<Graph>.Visitor(
-            discoverVertex: { vertex in
-                visitedVertices.insert(vertex)
-                verticesVisited += 1
-                visitor?.discoverVertex?(vertex)
-            },
-            examineEdge: { edge in
-                visitor?.examineEdge?(edge)
-            },
-            backEdge: { edge in
-                hasCycle = true
-                visitor?.backEdge?(edge)
+        let treeObservation = AlgorithmObservation<DepthFirstSearch<Graph>.Event> { event in
+            switch event {
+                case .vertexDiscovered(let vertex):
+                    visitedVertices.insert(vertex)
+                    verticesVisited += 1
+                    observation?.receive(.vertexDiscovered(vertex))
+                case .edgeExamined(let edge):
+                    observation?.receive(.edgeExamined(edge))
+                case .backEdgeTraversed(let edge):
+                    hasCycle = true
+                    observation?.receive(.backEdgeTraversed(edge))
+                default:
+                    break
             }
-        )
+        }
 
         // Start DFS from the first vertex
         guard let firstVertex = graph.vertices().first(where: { _ in true }) else {
             return true
         }
 
-        DepthFirstSearch(on: graph, from: firstVertex)
-            .withVisitor { treeVisitor }
-            .forEach { _ in }
+        var iterator = DepthFirstSearch(on: graph, from: firstVertex)
+            .makeIterator(observation: treeObservation)
+        while iterator.next() != nil {}
 
-        visitor?.connectivityResult?(verticesVisited == graph.vertexCount)
-        visitor?.acyclicityResult?(!hasCycle)
+        observation?.receive(.connectivityDetermined(verticesVisited == graph.vertexCount))
+        observation?.receive(.acyclicityDetermined(!hasCycle))
 
         // A tree is connected and acyclic
         return verticesVisited == graph.vertexCount && !hasCycle
     }
 }
 
-// MARK: - Visitor Support
+extension DFSTreePropertyAlgorithm.Event: VertexDiscoveredEvent, EdgeExaminedEvent {
+    @inlinable
+    public static func discoveredVertex(from event: Self) -> Graph.VertexDescriptor? {
+        guard case .vertexDiscovered(let vertex) = event else { return nil }
+        return vertex
+    }
 
-public struct DFSTreeProperty<Graph: IncidenceGraph & VertexListGraph & EdgeListGraph> where Graph.VertexDescriptor: Hashable {
-    public typealias Vertex = Graph.VertexDescriptor
-    public typealias Edge = Graph.EdgeDescriptor
-
-    public struct Visitor {
-        public var checkEdgeCount: ((Int, Int) -> Void)?
-        public var edgeCountMismatch: ((Int, Int) -> Void)?
-        public var discoverVertex: ((Vertex) -> Void)?
-        public var examineEdge: ((Edge) -> Void)?
-        public var backEdge: ((Edge) -> Void)?
-        public var connectivityResult: ((Bool) -> Void)?
-        public var acyclicityResult: ((Bool) -> Void)?
-
-        public init(
-            checkEdgeCount: ((Int, Int) -> Void)? = nil,
-            edgeCountMismatch: ((Int, Int) -> Void)? = nil,
-            discoverVertex: ((Vertex) -> Void)? = nil,
-            examineEdge: ((Edge) -> Void)? = nil,
-            backEdge: ((Edge) -> Void)? = nil,
-            connectivityResult: ((Bool) -> Void)? = nil,
-            acyclicityResult: ((Bool) -> Void)? = nil
-        ) {
-            self.checkEdgeCount = checkEdgeCount
-            self.edgeCountMismatch = edgeCountMismatch
-            self.discoverVertex = discoverVertex
-            self.examineEdge = examineEdge
-            self.backEdge = backEdge
-            self.connectivityResult = connectivityResult
-            self.acyclicityResult = acyclicityResult
-        }
+    @inlinable
+    public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+        guard case .edgeExamined(let edge) = event else { return nil }
+        return edge
     }
 }
-
-// Note: VisitorSupporting conformance requires Composable implementation
-// For now, we'll skip this to focus on core functionality

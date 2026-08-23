@@ -6,17 +6,17 @@
 public protocol BinaryIncidenceGraph: IncidenceGraph {
     /// Returns the left edge from the specified vertex.
     ///
-    /// - Parameter v: The vertex to query
+    /// - Parameter vertex: The vertex to query
     /// - Returns: The left edge descriptor, or `nil` if no left edge exists
     @inlinable
-    func leftEdge(of v: VertexDescriptor) -> EdgeDescriptor?
+    func leftEdge(of vertex: VertexDescriptor) -> EdgeDescriptor?
 
     /// Returns the right edge from the specified vertex.
     ///
-    /// - Parameter v: The vertex to query
+    /// - Parameter vertex: The vertex to query
     /// - Returns: The right edge descriptor, or `nil` if no right edge exists
     @inlinable
-    func rightEdge(of v: VertexDescriptor) -> EdgeDescriptor?
+    func rightEdge(of vertex: VertexDescriptor) -> EdgeDescriptor?
 }
 
 extension BinaryIncidenceGraph {

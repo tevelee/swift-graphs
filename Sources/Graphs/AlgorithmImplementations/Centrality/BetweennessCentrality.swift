@@ -12,7 +12,7 @@
     ///
     /// - Complexity: O(V × E) for unweighted graphs, O(V × E + V² log V) for weighted graphs
     public struct BetweennessCentralityAlgorithm<Graph: IncidenceGraph & VertexListGraph>: CentralityAlgorithm where Graph.VertexDescriptor: Hashable {
-        public typealias Visitor = BetweennessCentrality<Graph>.Visitor
+        public typealias Event = BetweennessCentrality<Graph>.Event
 
         /// Whether to normalize the centrality values.
         ///
@@ -40,29 +40,42 @@
         }
 
         @inlinable
-        public func centrality(in graph: Graph, visitor: Visitor?) -> CentralityResult<Graph.VertexDescriptor> {
+        public func centrality(
+            in graph: Graph,
+            observation: AlgorithmObservation<Event>?
+        ) -> CentralityResult<Graph.VertexDescriptor> {
             let betweenness = BetweennessCentrality(on: graph, normalized: normalized, isDirected: isDirected)
-            return betweenness.compute(visitor: visitor)
+            return betweenness.compute(observation: observation)
         }
     }
 
     /// Betweenness centrality computation implementation using Brandes' algorithm.
     public struct BetweennessCentrality<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-        /// A visitor that can be used to observe betweenness centrality computation progress.
-        public struct Visitor {
-            /// Called when examining a source vertex.
-            public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-            /// Called when a shortest path is found.
-            public var foundShortestPath: ((Graph.VertexDescriptor, Graph.VertexDescriptor, Int) -> Void)?
+        /// An event emitted while betweenness centrality is computed.
+        public enum Event {
+            /// A source vertex is about to be examined.
+            case vertexExamined(Graph.VertexDescriptor)
+            /// A shortest path to a vertex was found.
+            case shortestPathFound(source: Graph.VertexDescriptor, destination: Graph.VertexDescriptor, distance: Int)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
-                foundShortestPath: ((Graph.VertexDescriptor, Graph.VertexDescriptor, Int) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.foundShortestPath = foundShortestPath
+        /// Typed selectors for betweenness-centrality events.
+        public enum EventCases {
+            /// Selects examined source vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Graph.VertexDescriptor> {
+                .init {
+                    guard case .vertexExamined(let vertex) = $0 else { return nil }
+                    return vertex
+                }
+            }
+
+            /// Selects newly found shortest paths.
+            public static var shortestPathFound: AlgorithmEventCase<Event, (source: Graph.VertexDescriptor, destination: Graph.VertexDescriptor, distance: Int)>
+            {
+                .init {
+                    guard case .shortestPathFound(let source, let destination, let distance) = $0 else { return nil }
+                    return (source, destination, distance)
+                }
             }
         }
 
@@ -81,7 +94,9 @@
         }
 
         @inlinable
-        public func compute(visitor: Visitor?) -> CentralityResult<Graph.VertexDescriptor> {
+        public func compute(
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> CentralityResult<Graph.VertexDescriptor> {
             let vertices = Array(graph.vertices())
 
             // Handle empty graph
@@ -107,7 +122,7 @@
 
             // Brandes' algorithm: for each source vertex, compute shortest paths
             for source in vertices {
-                visitor?.examineVertex?(source)
+                observation?.receive(.vertexExamined(source))
 
                 // Single-source shortest paths using BFS
                 var distances: [Graph.VertexDescriptor: Int] = [:]
@@ -130,7 +145,7 @@
                             let wDistance = vDistance + 1
                             distances[w] = wDistance
                             queue.append(w)
-                            visitor?.foundShortestPath?(source, w, wDistance)
+                            observation?.receive(.shortestPathFound(source: source, destination: w, distance: wDistance))
                         }
 
                         // Count shortest paths to w through v
@@ -182,5 +197,14 @@
         }
     }
 
-    extension BetweennessCentralityAlgorithm: VisitorSupporting {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
+    extension BetweennessCentrality.Event: VertexExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+    }
 #endif

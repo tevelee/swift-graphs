@@ -118,11 +118,11 @@
             #expect(hiFirstLabels != loFirstLabels, "different heuristics should produce different visit orders")
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        /// `BestFirstTraversal` delegates to A* and forwards its visitor to the underlying sequence.
-        /// Two composed visitors must each receive `examineVertex` for every vertex explored.
-        @Test func composedVisitorsReceiveAllEvents() {
+        /// `BestFirstTraversal` delegates to A* and forwards its observation to the sequence.
+        /// Two composed observation groups receive `vertexExamined` for every explored vertex.
+        @Test func composedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -133,19 +133,18 @@
             var examined1 = 0
             var examined2 = 0
 
-            var v1 = BestFirstTraversal<AdjacencyList, Int>.Visitor()
-            v1.examineVertex = { _ in examined1 += 1 }
-
-            var v2 = BestFirstTraversal<AdjacencyList, Int>.Visitor()
-            v2.examineVertex = { _ in examined2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = BestFirstTraversal<AdjacencyList, Int>(heuristic: .uniform(0))
-                .traverse(from: a, in: graph, visitor: combined)
+            let observed = BestFirstTraversal<AdjacencyList, Int>(heuristic: .uniform(0))
+                .observing(AStar<AdjacencyList, Int, Int, Int>.EventCases.vertexExamined) { _ in
+                    examined1 += 1
+                }
+                .observing(AStar<AdjacencyList, Int, Int, Int>.EventCases.vertexExamined) { _ in
+                    examined2 += 1
+                }
+            _ = observed.traverse(from: a, in: graph, observation: nil)
 
             #expect(examined1 == 3, "all 3 vertices in chain a→b→c must be examined")
             #expect(examined2 == 3)
-            #expect(examined1 == examined2, "both composed visitors must receive identical examineVertex events")
+            #expect(examined1 == examined2, "both observation groups receive identical vertexExamined events")
         }
     }
 #endif

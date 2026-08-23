@@ -3,25 +3,25 @@
 /// Single-source shortest path algorithms find the shortest distances from one vertex to all others
 /// in a weighted graph. Different algorithms handle different weight constraints — for example,
 /// SPFA and Bellman-Ford support negative edge weights, while Dijkstra requires non-negative weights.
-public protocol SingleSourceShortestPathAlgorithm<Graph, Weight> {
+public protocol SingleSourceShortestPathAlgorithm<Graph, Weight>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & VertexListGraph where Graph.VertexDescriptor: Hashable
     /// The weight type used for edge weights.
     associatedtype Weight: AdditiveArithmetic & Comparable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Computes shortest paths from a single source vertex to all reachable vertices.
     ///
     /// - Parameters:
     ///   - source: The source vertex to compute shortest paths from.
     ///   - graph: The graph to compute shortest paths in.
-    ///   - visitor: An optional visitor to observe the algorithm's progress.
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The shortest paths from the source to all reachable vertices.
     func shortestPaths(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> SingleSourceShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>
 }
 
@@ -106,18 +106,18 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         from source: VertexDescriptor,
         using algorithm: some SingleSourceShortestPathAlgorithm<Self, Weight>
     ) -> SingleSourceShortestPaths<VertexDescriptor, EdgeDescriptor, Weight> {
-        algorithm.shortestPaths(from: source, in: self, visitor: nil)
+        algorithm.shortestPaths(from: source, in: self, observation: nil)
     }
 }
 
-extension VisitorWrapper: SingleSourceShortestPathAlgorithm
-where Base: SingleSourceShortestPathAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: SingleSourceShortestPathAlgorithm
+where Base: SingleSourceShortestPathAlgorithm {
     @inlinable
     public func shortestPaths(
         from source: Base.Graph.VertexDescriptor,
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> SingleSourceShortestPaths<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor, Base.Weight> {
-        base.shortestPaths(from: source, in: graph, visitor: self.visitor.combined(with: visitor))
+        base.shortestPaths(from: source, in: graph, observation: self.observation.followed(by: observation))
     }
 }

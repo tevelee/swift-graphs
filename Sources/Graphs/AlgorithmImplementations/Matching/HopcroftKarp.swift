@@ -14,39 +14,81 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe Hopcroft-Karp algorithm progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when finding an augmenting path.
-            public var findAugmentingPath: (([Edge]) -> Void)?
-            /// Called when augmenting the matching.
-            public var augmentMatching: (([Edge]) -> Void)?
-            /// Called when updating the matching.
-            public var updateMatching: ((Vertex, Vertex) -> Void)?
-            /// Called when starting a new iteration.
-            public var startIteration: ((Int) -> Void)?
+        /// Details about adding an edge's endpoints to the matching.
+        public struct MatchingUpdate {
+            /// The edge's source endpoint.
+            public let source: Vertex
+            /// The edge's destination endpoint.
+            public let destination: Vertex
 
-            /// Creates a new visitor.
+            /// Creates matching-update details.
             @inlinable
-            public init(
-                examineVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                findAugmentingPath: (([Edge]) -> Void)? = nil,
-                augmentMatching: (([Edge]) -> Void)? = nil,
-                updateMatching: ((Vertex, Vertex) -> Void)? = nil,
-                startIteration: ((Int) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.findAugmentingPath = findAugmentingPath
-                self.augmentMatching = augmentMatching
-                self.updateMatching = updateMatching
-                self.startIteration = startIteration
+            public init(source: Vertex, destination: Vertex) {
+                self.source = source
+                self.destination = destination
             }
+        }
 
+        /// An event emitted synchronously while Hopcroft-Karp advances.
+        public enum Event {
+            /// A vertex was examined during an augmenting-path search.
+            case vertexExamined(Vertex)
+            /// An edge was examined during an augmenting-path search.
+            case edgeExamined(Edge)
+            /// An augmenting path was found.
+            case augmentingPathFound([Edge])
+            /// Matching augmentation along a path started.
+            case matchingAugmentationStarted([Edge])
+            /// The matching was updated with an edge's endpoints.
+            case matchingUpdated(MatchingUpdate)
+            /// A search iteration started.
+            case iterationStarted(Int)
+        }
+
+        /// Typed selectors for Hopcroft-Karp events.
+        public enum EventCases {
+            /// Selects examined vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects examined edges.
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects found augmenting paths.
+            public static var augmentingPathFound: AlgorithmEventCase<Event, [Edge]> {
+                .init {
+                    guard case .augmentingPathFound(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects matching augmentations as they start.
+            public static var matchingAugmentationStarted: AlgorithmEventCase<Event, [Edge]> {
+                .init {
+                    guard case .matchingAugmentationStarted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects matching updates.
+            public static var matchingUpdated: AlgorithmEventCase<Event, MatchingUpdate> {
+                .init {
+                    guard case .matchingUpdated(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects search iteration starts.
+            public static var iterationStarted: AlgorithmEventCase<Event, Int> {
+                .init {
+                    guard case .iterationStarted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
         }
 
         /// Creates a new Hopcroft-Karp algorithm.
@@ -57,12 +99,12 @@
         ///
         /// - Parameters:
         ///   - graph: The bipartite graph to find matching in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional algorithm observation
         /// - Returns: The maximum matching result
         @inlinable
         public func maximumMatching(
             in graph: Graph,
-            visitor: Visitor? = nil
+            observation: AlgorithmObservation<Event>? = nil
         ) -> MatchingResult<Vertex, Edge> {
             // Initialize matching
             var matching: [Vertex: Vertex] = [:]
@@ -77,7 +119,7 @@
             // Main algorithm loop
             while true {
                 iteration += 1
-                visitor?.startIteration?(iteration)
+                observation?.receive(.iterationStarted(iteration))
 
                 // Find all augmenting paths in this iteration
                 let augmentingPaths = findAugmentingPaths(
@@ -85,7 +127,7 @@
                     leftVertices: leftVertices,
                     rightVertices: rightVertices,
                     matching: matching,
-                    visitor: visitor
+                    observation: observation
                 )
 
                 // If no augmenting paths found, we have maximum matching
@@ -95,8 +137,8 @@
 
                 // Augment the matching with all found paths
                 for path in augmentingPaths {
-                    visitor?.augmentMatching?(path)
-                    augmentMatching(path, in: graph, matching: &matching, matchingEdges: &matchingEdges, visitor: visitor)
+                    observation?.receive(.matchingAugmentationStarted(path))
+                    augmentMatching(path, in: graph, matching: &matching, matchingEdges: &matchingEdges, observation: observation)
                 }
             }
 
@@ -129,7 +171,7 @@
             leftVertices: [Vertex],
             rightVertices: [Vertex],
             matching: [Vertex: Vertex],
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> [[Edge]] {
             var augmentingPaths: [[Edge]] = []
             var visited: Set<Vertex> = []
@@ -141,7 +183,7 @@
                     in: graph,
                     matching: matching,
                     visited: &visited,
-                    visitor: visitor
+                    observation: observation
                 ) {
                     augmentingPaths.append(path)
                 }
@@ -156,7 +198,7 @@
             in graph: Graph,
             matching: [Vertex: Vertex],
             visited: inout Set<Vertex>,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> [Edge]? {
             var queue: [Vertex] = [start]
             var parent: [Vertex: Vertex] = [:]
@@ -167,7 +209,7 @@
 
             while !queue.isEmpty && !found {
                 let current = queue.removeFirst()
-                visitor?.examineVertex?(current)
+                observation?.receive(.vertexExamined(current))
 
                 // If this is an unmatched right vertex, we found an augmenting path
                 if let partition = graph.partition(of: current), partition == .right && !matching.values.contains(current) {
@@ -182,14 +224,14 @@
                     }
 
                     path.reverse()
-                    visitor?.findAugmentingPath?(path)
+                    observation?.receive(.augmentingPathFound(path))
                     return path
                 }
 
                 // Explore neighbors
                 for edge in graph.outgoingEdges(of: current) {
                     guard let destination = graph.destination(of: edge) else { continue }
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
 
                     if !visited.contains(destination) {
                         visited.insert(destination)
@@ -209,7 +251,7 @@
             in graph: Graph,
             matching: inout [Vertex: Vertex],
             matchingEdges: inout [Edge],
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) {
             // Remove existing matching edges that are in the path
             for edge in path {
@@ -235,7 +277,7 @@
                     matching[source] = destination
                     matching[destination] = source
                     matchingEdges.append(edge)
-                    visitor?.updateMatching?(source, destination)
+                    observation?.receive(.matchingUpdated(.init(source: source, destination: destination)))
                 }
             }
         }
@@ -255,10 +297,20 @@
         }
     }
 
-    extension HopcroftKarp: VisitorSupporting {
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
+    extension HopcroftKarp.Event: VertexExaminedEvent, EdgeExaminedEvent {
         @inlinable
-        public func withVisitor(_ visitor: Visitor) -> VisitorWrapper<Self, Visitor> {
-            VisitorWrapper(base: self, visitor: visitor)
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
         }
     }
 #endif

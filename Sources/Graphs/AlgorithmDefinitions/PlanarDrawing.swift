@@ -8,7 +8,7 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
     public func planarDrawing(
         using algorithm: some PlanarDrawingAlgorithm<Self>
     ) -> PlanarDrawing<VertexDescriptor>? {
-        algorithm.planarDrawing(in: self, visitor: nil)
+        algorithm.planarDrawing(in: self, observation: nil)
     }
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
@@ -24,34 +24,34 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
 }
 
 /// A protocol for algorithms that compute a straight-line planar drawing of a graph.
-public protocol PlanarDrawingAlgorithm<Graph> {
+public protocol PlanarDrawingAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & VertexListGraph & EdgeListGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Computes a straight-line planar drawing of the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to draw.
-    ///   - visitor: An optional visitor to observe the algorithm progress.
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The drawing, or `nil` if the graph is not planar.
     func planarDrawing(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> PlanarDrawing<Graph.VertexDescriptor>?
 }
 
-extension VisitorWrapper: PlanarDrawingAlgorithm
-where Base: PlanarDrawingAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: PlanarDrawingAlgorithm
+where Base: PlanarDrawingAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
     public func planarDrawing(
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> PlanarDrawing<Base.Graph.VertexDescriptor>? {
-        base.planarDrawing(in: graph, visitor: self.visitor.combined(with: visitor))
+        base.planarDrawing(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 

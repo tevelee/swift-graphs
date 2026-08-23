@@ -19,33 +19,101 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe Stoer-Wagner algorithm progress.
-        public struct Visitor {
-            /// Called at the start of each minimum cut phase.
-            public var startPhase: ((Int) -> Void)?
-            /// Called when a vertex is added to the ordering with its connectivity weight.
-            public var addVertex: ((Vertex, Weight) -> Void)?
-            /// Called when a phase completes with its cut-of-the-phase weight.
-            public var phaseComplete: ((Int, Weight) -> Void)?
-            /// Called when two vertices are merged (contracted).
-            public var mergeVertices: ((Vertex, Vertex) -> Void)?
-            /// Called when a new best minimum cut is found.
-            public var newMinimumCut: ((Weight) -> Void)?
+        /// Details about adding a vertex to a maximum-adjacency phase.
+        public struct VertexAddition {
+            /// The vertex added to the phase ordering.
+            public let vertex: Vertex
+            /// The vertex's accumulated adjacency weight when it was added.
+            public let weight: Weight
 
-            /// Creates a new visitor.
+            /// Creates vertex-addition details.
             @inlinable
-            public init(
-                startPhase: ((Int) -> Void)? = nil,
-                addVertex: ((Vertex, Weight) -> Void)? = nil,
-                phaseComplete: ((Int, Weight) -> Void)? = nil,
-                mergeVertices: ((Vertex, Vertex) -> Void)? = nil,
-                newMinimumCut: ((Weight) -> Void)? = nil
-            ) {
-                self.startPhase = startPhase
-                self.addVertex = addVertex
-                self.phaseComplete = phaseComplete
-                self.mergeVertices = mergeVertices
-                self.newMinimumCut = newMinimumCut
+            public init(vertex: Vertex, weight: Weight) {
+                self.vertex = vertex
+                self.weight = weight
+            }
+        }
+
+        /// Details about a completed minimum-cut phase.
+        public struct PhaseCompletion {
+            /// The zero-based phase index.
+            public let phase: Int
+            /// The cut weight found in the phase.
+            public let cutWeight: Weight
+
+            /// Creates phase-completion details.
+            @inlinable
+            public init(phase: Int, cutWeight: Weight) {
+                self.phase = phase
+                self.cutWeight = cutWeight
+            }
+        }
+
+        /// Details about contracting two vertices.
+        public struct VertexMerge {
+            /// The vertex retained after contraction.
+            public let retained: Vertex
+            /// The vertex removed by contraction.
+            public let removed: Vertex
+
+            /// Creates vertex-merge details.
+            @inlinable
+            public init(retained: Vertex, removed: Vertex) {
+                self.retained = retained
+                self.removed = removed
+            }
+        }
+
+        /// An event emitted synchronously while Stoer-Wagner advances.
+        public enum Event {
+            /// A minimum-cut phase started.
+            case phaseStarted(Int)
+            /// A vertex was added to the phase ordering.
+            case vertexAdded(VertexAddition)
+            /// A minimum-cut phase completed.
+            case phaseCompleted(PhaseCompletion)
+            /// Two contracted vertices were merged.
+            case verticesMerged(VertexMerge)
+            /// The best known minimum cut improved.
+            case minimumCutImproved(Weight)
+        }
+
+        /// Typed selectors for Stoer-Wagner events.
+        public enum EventCases {
+            /// Selects phase starts.
+            public static var phaseStarted: AlgorithmEventCase<Event, Int> {
+                .init {
+                    guard case .phaseStarted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects vertices added to the phase ordering.
+            public static var vertexAdded: AlgorithmEventCase<Event, VertexAddition> {
+                .init {
+                    guard case .vertexAdded(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects completed phases.
+            public static var phaseCompleted: AlgorithmEventCase<Event, PhaseCompletion> {
+                .init {
+                    guard case .phaseCompleted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects contracted vertex merges.
+            public static var verticesMerged: AlgorithmEventCase<Event, VertexMerge> {
+                .init {
+                    guard case .verticesMerged(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects improvements to the best known minimum cut.
+            public static var minimumCutImproved: AlgorithmEventCase<Event, Weight> {
+                .init {
+                    guard case .minimumCutImproved(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -86,10 +154,10 @@
         ///
         /// - Parameters:
         ///   - graph: The undirected weighted graph
-        ///   - visitor: An optional visitor to observe algorithm progress
+        ///   - observation: An optional observation to observe algorithm progress
         /// - Returns: The minimum cut result, or `nil` if the graph has fewer than 2 vertices
         @inlinable
-        public func minimumCut(on graph: Graph, visitor: Visitor? = nil) -> MinimumCutResult<Vertex, Edge, Weight>? {
+        public func minimumCut(on graph: Graph, observation: AlgorithmObservation<Event>? = nil) -> MinimumCutResult<Vertex, Edge, Weight>? {
             let allVertices = Array(graph.vertices())
             guard allVertices.count >= 2 else { return nil }
 
@@ -101,22 +169,22 @@
 
             var phase = 0
             while contracted.activeVertices.count > 1 {
-                visitor?.startPhase?(phase)
+                observation?.receive(.phaseStarted(phase))
 
-                let (s, t, cutOfPhaseWeight) = minimumCutPhase(contracted: &contracted, visitor: visitor)
+                let (s, t, cutOfPhaseWeight) = minimumCutPhase(contracted: &contracted, observation: observation)
 
-                visitor?.phaseComplete?(phase, cutOfPhaseWeight)
+                observation?.receive(.phaseCompleted(.init(phase: phase, cutWeight: cutOfPhaseWeight)))
 
                 // Track the best (minimum) cut
                 if bestCutWeight == nil || cutOfPhaseWeight < bestCutWeight! {
                     bestCutWeight = cutOfPhaseWeight
                     bestPartition = contracted.members[t]
-                    visitor?.newMinimumCut?(cutOfPhaseWeight)
+                    observation?.receive(.minimumCutImproved(cutOfPhaseWeight))
                 }
 
                 // Merge t into s
                 mergeVertices(s: s, t: t, in: &contracted)
-                visitor?.mergeVertices?(s, t)
+                observation?.receive(.verticesMerged(.init(retained: s, removed: t)))
 
                 phase += 1
             }
@@ -169,14 +237,17 @@
         ///
         /// Returns the last two vertices (s, t) in the ordering and the cut-of-the-phase weight.
         @inlinable
-        func minimumCutPhase(contracted: inout ContractedGraph, visitor: Visitor?) -> (s: Vertex, t: Vertex, cutWeight: Weight) {
+        func minimumCutPhase(
+            contracted: inout ContractedGraph,
+            observation: AlgorithmObservation<Event>?
+        ) -> (s: Vertex, t: Vertex, cutWeight: Weight) {
             let active = contracted.activeVertices
             var inOrdering = Set<Vertex>()
 
             // Start with an arbitrary vertex
             let current = active.first!
             inOrdering.insert(current)
-            visitor?.addVertex?(current, Weight.zero)
+            observation?.receive(.vertexAdded(.init(vertex: current, weight: Weight.zero)))
 
             // Track connectivity of each vertex to the already-ordered set
             var connectivity: [Vertex: Weight] = [:]
@@ -208,7 +279,7 @@
 
                 inOrdering.insert(next)
                 connectivity[next] = nil
-                visitor?.addVertex?(next, bestWeight)
+                observation?.receive(.vertexAdded(.init(vertex: next, weight: bestWeight)))
 
                 // Update connectivity for remaining vertices
                 if let neighbors = contracted.adjacency[next] {
@@ -269,5 +340,4 @@
         }
     }
 
-    extension StoerWagner: VisitorSupporting {}
 #endif

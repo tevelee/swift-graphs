@@ -222,7 +222,7 @@
             let d = graph.findVertex(labeled: "D")!
 
             let algorithm = BacktrackingDijkstra(on: graph, edgeWeight: .property(\.weight))
-            let result = algorithm.findAllShortestPaths(from: a, to: d, visitor: nil)
+            let result = algorithm.findAllShortestPaths(from: a, to: d, observation: nil)
 
             #expect(result.paths.count == 2)
             #expect(result.optimalCost == 3.0)
@@ -432,7 +432,7 @@
                 until: { vertex in
                     graph[vertex].label == "D"
                 },
-                visitor: nil
+                observation: nil
             )
 
             #expect(result.paths.count == 2)
@@ -526,12 +526,12 @@
             #endif
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        /// `BacktrackingDijkstra.Visitor` fires `pathFound` once per complete shortest path discovered,
-        /// and `examineVertex` once per vertex examined during the search.
-        /// Two composed visitors must each receive the same events.
-        @Test func composedVisitorsReceiveAllEvents() {
+        /// Backtracking Dijkstra emits `pathFound` once per complete shortest path discovered,
+        /// and `vertexExamined` once per vertex examined during the search.
+        /// Two composed observations must receive the same events in attachment order.
+        @Test func composedObservationsReceiveAllEventsInOrder() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -547,25 +547,34 @@
             var pathsFound2 = 0
             var examined1 = 0
             var examined2 = 0
+            var pathObservationOrder: [Int] = []
 
-            var v1 = BacktrackingDijkstra<AdjacencyList, Double>.Visitor()
-            v1.pathFound = { _, _ in pathsFound1 += 1 }
-            v1.examineVertex = { _ in examined1 += 1 }
-
-            var v2 = BacktrackingDijkstra<AdjacencyList, Double>.Visitor()
-            v2.pathFound = { _, _ in pathsFound2 += 1 }
-            v2.examineVertex = { _ in examined2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            let algorithm = BacktrackingDijkstra(on: graph, edgeWeight: .property(\.weight))
-            _ = algorithm.findAllShortestPaths(from: a, until: { $0 == d }, visitor: combined)
+            let algorithm = BacktrackingDijkstraAllShortestPathsAlgorithm<AdjacencyList, Double>(
+                weight: .property(\.weight)
+            )
+            .observing(BacktrackingDijkstra<AdjacencyList, Double>.EventCases.pathFound) { _ in
+                pathsFound1 += 1
+                pathObservationOrder.append(1)
+            }
+            .observing(BacktrackingDijkstra<AdjacencyList, Double>.EventCases.vertexExamined) { _ in
+                examined1 += 1
+            }
+            .observing(BacktrackingDijkstra<AdjacencyList, Double>.EventCases.pathFound) { _ in
+                pathsFound2 += 1
+                pathObservationOrder.append(2)
+            }
+            .observing(BacktrackingDijkstra<AdjacencyList, Double>.EventCases.vertexExamined) { _ in
+                examined2 += 1
+            }
+            _ = graph.allShortestPaths(from: a, until: { $0 == d }, using: algorithm)
 
             #expect(pathsFound1 == 2, "two equal-cost paths a→b→d and a→c→d must each fire pathFound")
             #expect(pathsFound2 == 2)
             #expect(examined1 >= 1, "at least the source vertex must be examined")
             #expect(examined2 >= 1)
-            #expect(pathsFound1 == pathsFound2, "both composed visitors must see the same paths")
-            #expect(examined1 == examined2, "both composed visitors must see identical examineVertex events")
+            #expect(pathsFound1 == pathsFound2, "both composed observations must see the same paths")
+            #expect(examined1 == examined2, "both composed observations must see identical vertex events")
+            #expect(pathObservationOrder == [1, 2, 1, 2])
         }
     }
 #endif

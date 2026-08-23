@@ -316,9 +316,9 @@
             #expect(graph.edgeCount >= 0)
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        /// Exercises all four ErdosRenyi visitor events through a composed visitor pair.
+        /// Exercises all four Erdos-Renyi events through an ordered observation chain.
         ///
         /// Uses a seeded generator and probability 0.5 on a 4-vertex graph so that some edges
         /// are added (`addEdge`) and some are skipped (`skipEdge`). Both events are deterministic
@@ -327,8 +327,8 @@
         /// - `examineVertexPair` fires for each (u, v) pair evaluated.
         /// - `addEdge` fires when the probability check passes.
         /// - `skipEdge` fires when the probability check fails.
-        @Test("ErdosRenyi composed visitors receive all events")
-        func erdosRenyiComposedVisitorsReceiveAllEvents() {
+        @Test("ErdosRenyi composed observations receive all events")
+        func erdosRenyiComposedObservationsReceiveAllEvents() {
             var addVtx1 = 0
             var addVtx2 = 0
             var examPair1 = 0
@@ -338,24 +338,21 @@
             var skipEdge1 = 0
             var skipEdge2 = 0
 
-            var v1 = ErdosRenyi<AdjacencyList>.Visitor()
-            v1.addVertex = { _ in addVtx1 += 1 }
-            v1.examineVertexPair = { _, _ in examPair1 += 1 }
-            v1.addEdge = { _, _ in addEdge1 += 1 }
-            v1.skipEdge = { _, _, _ in skipEdge1 += 1 }
-
-            var v2 = ErdosRenyi<AdjacencyList>.Visitor()
-            v2.addVertex = { _ in addVtx2 += 1 }
-            v2.examineVertexPair = { _, _ in examPair2 += 1 }
-            v2.addEdge = { _, _ in addEdge2 += 1 }
-            v2.skipEdge = { _, _, _ in skipEdge2 += 1 }
-
-            let combined = v1.combined(with: v2)
+            typealias Cases = ErdosRenyi<AdjacencyList>.EventCases
+            let algorithm = ErdosRenyi<AdjacencyList>(edgeProbability: 1.0)
+                .observing(Cases.vertexAdded) { _ in addVtx1 += 1 }
+                .observing(Cases.vertexPairExamined) { _ in examPair1 += 1 }
+                .observing(Cases.edgeAdded) { _ in addEdge1 += 1 }
+                .observing(Cases.edgeSkipped) { _ in skipEdge1 += 1 }
+                .observing(Cases.vertexAdded) { _ in addVtx2 += 1 }
+                .observing(Cases.vertexPairExamined) { _ in examPair2 += 1 }
+                .observing(Cases.edgeAdded) { _ in addEdge2 += 1 }
+                .observing(Cases.edgeSkipped) { _ in skipEdge2 += 1 }
             // p=1.0 ensures addEdge fires for every pair; use a second run with p=0.0 for skipEdge
             _ = AdjacencyList.randomGraph(
                 vertexCount: 4,
-                using: (.erdosRenyi(edgeProbability: 1.0) as ErdosRenyi<AdjacencyList>)
-                    .withVisitor(combined)
+                using:
+                    algorithm
                     .withGenerator(SeededRandomNumberGenerator(seed: 1))
             )
 
@@ -375,31 +372,29 @@
             // Second run with p=0.0 to trigger skipEdge
             var skipOnly1 = 0
             var skipOnly2 = 0
-            var sv1 = ErdosRenyi<AdjacencyList>.Visitor()
-            sv1.skipEdge = { _, _, _ in skipOnly1 += 1 }
-            var sv2 = ErdosRenyi<AdjacencyList>.Visitor()
-            sv2.skipEdge = { _, _, _ in skipOnly2 += 1 }
-            let skipCombined = sv1.combined(with: sv2)
+            let skipAlgorithm = ErdosRenyi<AdjacencyList>(edgeProbability: 0.0)
+                .observing(Cases.edgeSkipped) { _ in skipOnly1 += 1 }
+                .observing(Cases.edgeSkipped) { _ in skipOnly2 += 1 }
             _ = AdjacencyList.randomGraph(
                 vertexCount: 4,
-                using: (.erdosRenyi(edgeProbability: 0.0) as ErdosRenyi<AdjacencyList>)
-                    .withVisitor(skipCombined)
+                using:
+                    skipAlgorithm
                     .withGenerator(SeededRandomNumberGenerator(seed: 1))
             )
             #expect(skipOnly1 >= 1, "skipEdge fires when probability check fails (p=0.0)")
             #expect(skipOnly2 >= 1)
-            #expect(skipOnly1 == skipOnly2, "both composed visitors see the same skipEdge events")
+            #expect(skipOnly1 == skipOnly2, "both composed observations see the same edgeSkipped events")
         }
 
-        /// Exercises all four BarabasiAlbert visitor events through a composed visitor pair.
+        /// Exercises all four Barabasi-Albert events through an ordered observation chain.
         ///
         /// Generates a preferential-attachment graph with 6 vertices and averageDegree=2.
         /// - `addVertex` fires for each vertex added.
         /// - `selectTarget` fires when preferential attachment selects a target vertex.
         /// - `addEdge` fires for each edge added by the algorithm.
         /// - `updateDegree` fires when a vertex's degree changes.
-        @Test("BarabasiAlbert composed visitors receive all events")
-        func barabasiAlbertComposedVisitorsReceiveAllEvents() {
+        @Test("BarabasiAlbert composed observations receive all events")
+        func barabasiAlbertComposedObservationsReceiveAllEvents() {
             var addVtx1 = 0
             var addVtx2 = 0
             var select1 = 0
@@ -409,23 +404,20 @@
             var updDeg1 = 0
             var updDeg2 = 0
 
-            var v1 = BarabasiAlbert<AdjacencyList>.Visitor()
-            v1.addVertex = { _ in addVtx1 += 1 }
-            v1.selectTarget = { _, _ in select1 += 1 }
-            v1.addEdge = { _, _ in addEdge1 += 1 }
-            v1.updateDegree = { _, _ in updDeg1 += 1 }
-
-            var v2 = BarabasiAlbert<AdjacencyList>.Visitor()
-            v2.addVertex = { _ in addVtx2 += 1 }
-            v2.selectTarget = { _, _ in select2 += 1 }
-            v2.addEdge = { _, _ in addEdge2 += 1 }
-            v2.updateDegree = { _, _ in updDeg2 += 1 }
-
-            let combined = v1.combined(with: v2)
+            typealias Cases = BarabasiAlbert<AdjacencyList>.EventCases
+            let algorithm = BarabasiAlbert<AdjacencyList>(averageDegree: 2.0)
+                .observing(Cases.vertexAdded) { _ in addVtx1 += 1 }
+                .observing(Cases.targetSelected) { _ in select1 += 1 }
+                .observing(Cases.edgeAdded) { _ in addEdge1 += 1 }
+                .observing(Cases.degreeUpdated) { _ in updDeg1 += 1 }
+                .observing(Cases.vertexAdded) { _ in addVtx2 += 1 }
+                .observing(Cases.targetSelected) { _ in select2 += 1 }
+                .observing(Cases.edgeAdded) { _ in addEdge2 += 1 }
+                .observing(Cases.degreeUpdated) { _ in updDeg2 += 1 }
             _ = AdjacencyList.randomGraph(
                 vertexCount: 6,
-                using: (.barabasiAlbert(averageDegree: 2.0) as BarabasiAlbert<AdjacencyList>)
-                    .withVisitor(combined)
+                using:
+                    algorithm
                     .withGenerator(SeededRandomNumberGenerator(seed: 42))
             )
 
@@ -437,14 +429,14 @@
             #expect(addEdge2 >= 1)
             #expect(updDeg1 >= 1, "updateDegree fires when a vertex's degree changes")
             #expect(updDeg2 >= 1)
-            // Both composed visitors must see identical event counts
+            // Both ordered observation groups must see identical event counts.
             #expect(addVtx1 == addVtx2)
             #expect(select1 == select2)
             #expect(addEdge1 == addEdge2)
             #expect(updDeg1 == updDeg2)
         }
 
-        /// Exercises WattsStrogatz visitor events through a composed visitor pair.
+        /// Exercises Watts-Strogatz events through an ordered observation chain.
         ///
         /// Generates a small-world graph with rewiringProbability=1.0 to ensure `rewireEdge` fires
         /// for every eligible edge. With `rewiringProbability=0.0`, `skipRewiring` fires instead.
@@ -453,10 +445,8 @@
         /// - `rewireEdge` fires when an edge is rewired (p=1.0 test).
         /// - `skipRewiring` fires when rewiring is skipped (p=0.0 test).
         ///
-        /// Note: `addEdge` is defined in the visitor struct but is not currently called by
-        /// the WattsStrogatz implementation.
-        @Test("WattsStrogatz composed visitors receive all events")
-        func wattsStrogatzComposedVisitorsReceiveAllEvents() {
+        @Test("WattsStrogatz composed observations receive all events")
+        func wattsStrogatzComposedObservationsReceiveAllEvents() {
             var addVtx1 = 0
             var addVtx2 = 0
             var lattice1 = 0
@@ -464,22 +454,19 @@
             var rewire1 = 0
             var rewire2 = 0
 
-            var v1 = WattsStrogatz<AdjacencyList>.Visitor()
-            v1.addVertex = { _ in addVtx1 += 1 }
-            v1.createRingLattice = { _, _ in lattice1 += 1 }
-            v1.rewireEdge = { _, _, _ in rewire1 += 1 }
-
-            var v2 = WattsStrogatz<AdjacencyList>.Visitor()
-            v2.addVertex = { _ in addVtx2 += 1 }
-            v2.createRingLattice = { _, _ in lattice2 += 1 }
-            v2.rewireEdge = { _, _, _ in rewire2 += 1 }
-
-            let combined = v1.combined(with: v2)
+            typealias Cases = WattsStrogatz<AdjacencyList>.EventCases
+            let algorithm = WattsStrogatz<AdjacencyList>(averageDegree: 2.0, rewiringProbability: 1.0)
+                .observing(Cases.vertexAdded) { _ in addVtx1 += 1 }
+                .observing(Cases.ringEdgeCreated) { _ in lattice1 += 1 }
+                .observing(Cases.edgeRewired) { _ in rewire1 += 1 }
+                .observing(Cases.vertexAdded) { _ in addVtx2 += 1 }
+                .observing(Cases.ringEdgeCreated) { _ in lattice2 += 1 }
+                .observing(Cases.edgeRewired) { _ in rewire2 += 1 }
             // rewiringProbability=1.0 ensures rewireEdge fires for every eligible edge
             _ = AdjacencyList.randomGraph(
                 vertexCount: 8,
-                using: (.wattsStrogatz(averageDegree: 2.0, rewiringProbability: 1.0) as WattsStrogatz<AdjacencyList>)
-                    .withVisitor(combined)
+                using:
+                    algorithm
                     .withGenerator(SeededRandomNumberGenerator(seed: 7))
             )
 
@@ -496,20 +483,18 @@
             // Separate run with p=0.0 to trigger skipRewiring
             var skip1 = 0
             var skip2 = 0
-            var sv1 = WattsStrogatz<AdjacencyList>.Visitor()
-            sv1.skipRewiring = { _, _, _ in skip1 += 1 }
-            var sv2 = WattsStrogatz<AdjacencyList>.Visitor()
-            sv2.skipRewiring = { _, _, _ in skip2 += 1 }
-            let skipCombined = sv1.combined(with: sv2)
+            let skipAlgorithm = WattsStrogatz<AdjacencyList>(averageDegree: 2.0, rewiringProbability: 0.0)
+                .observing(Cases.rewiringSkipped) { _ in skip1 += 1 }
+                .observing(Cases.rewiringSkipped) { _ in skip2 += 1 }
             _ = AdjacencyList.randomGraph(
                 vertexCount: 8,
-                using: (.wattsStrogatz(averageDegree: 2.0, rewiringProbability: 0.0) as WattsStrogatz<AdjacencyList>)
-                    .withVisitor(skipCombined)
+                using:
+                    skipAlgorithm
                     .withGenerator(SeededRandomNumberGenerator(seed: 7))
             )
             #expect(skip1 >= 1, "skipRewiring fires when rewiring probability check fails (p=0.0)")
             #expect(skip2 >= 1)
-            #expect(skip1 == skip2, "both composed visitors see the same skipRewiring events")
+            #expect(skip1 == skip2, "both composed observations see the same rewiringSkipped events")
         }
 
         // MARK: - Convenience factory methods

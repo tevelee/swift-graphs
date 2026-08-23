@@ -20,8 +20,8 @@
     where
         Graph.VertexDescriptor: Hashable
     {
-        /// The visitor type for this algorithm.
-        public typealias Visitor = FloydWarshall<Graph, Weight>.Visitor
+        /// The event type for this algorithm.
+        public typealias Event = FloydWarshall<Graph, Weight>.Event
 
         /// The cost definition for edge weights.
         public let weight: CostDefinition<Graph, Weight>
@@ -38,15 +38,17 @@
         ///
         /// - Parameters:
         ///   - graph: The graph to compute shortest paths for.
-        ///   - visitor: An optional visitor to observe the algorithm's progress.
+        ///   - observation: An optional observation to observe the algorithm's progress.
         /// - Returns: The shortest paths between all pairs of vertices.
         @inlinable
-        public func shortestPathsForAllPairs(in graph: Graph, visitor: Visitor?) -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>
-        {
+        public func shortestPathsForAllPairs(
+            in graph: Graph,
+            observation: AlgorithmObservation<Event>?
+        ) -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
             let floydWarshall = FloydWarshall(on: graph, edgeWeight: weight)
-            return floydWarshall.shortestPathsForAllPairs(visitor: visitor)
+            return floydWarshall.shortestPathsForAllPairs(observation: observation)
         }
     }
 
-    extension FloydWarshallAllPairs: VisitorSupporting {}
+    extension FloydWarshallAllPairs: AlgorithmObserving {}
 #endif

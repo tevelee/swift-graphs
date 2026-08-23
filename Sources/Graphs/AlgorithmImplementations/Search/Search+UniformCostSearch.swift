@@ -26,8 +26,7 @@
         Graph.VertexDescriptor: Hashable,
         Weight.Magnitude == Weight
     {
-        /// The visitor type for observing search progress.
-        public typealias Visitor = UniformCostSearch<Graph, Weight>.Visitor
+        public typealias Event = UniformCostSearch<Graph, Weight>.Event
 
         /// The cost definition for edge weights.
         public let edgeWeight: CostDefinition<Graph, Weight>
@@ -45,17 +44,18 @@
         /// - Parameters:
         ///   - source: The vertex to start search from.
         ///   - graph: The graph to search in.
-        ///   - visitor: An optional visitor to observe the search progress.
+        ///   - observation: An optional observation of the search progress.
         /// - Returns: A uniform cost search algorithm instance.
         @inlinable
         public func search(
             from source: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
-        ) -> UniformCostSearch<Graph, Weight> {
+            observation: AlgorithmObservation<Event>?
+        ) -> ObservedAlgorithm<UniformCostSearch<Graph, Weight>> {
             UniformCostSearch(on: graph, from: source, edgeWeight: edgeWeight)
+                .observing { event in observation?.receive(event) }
         }
     }
 
-    extension UniformCostSearchAlgorithm: VisitorSupporting {}
+    extension UniformCostSearchAlgorithm: AlgorithmObserving {}
 #endif

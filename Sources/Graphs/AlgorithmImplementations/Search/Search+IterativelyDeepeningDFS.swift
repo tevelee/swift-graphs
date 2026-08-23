@@ -16,11 +16,12 @@ extension SearchAlgorithm {
 ///
 /// - Complexity: O(b^d) where b is the branching factor and d is the depth
 public struct IterativelyDeepeningDFSSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
-    /// The visitor type for observing search progress.
-    public typealias Visitor = DepthFirstSearch<Graph>.Visitor
+    public typealias Event = DepthFirstSearch<Graph>.Event
 
     /// The maximum depth to search, or nil for unlimited.
     public let maxDepth: UInt?
+    @usableFromInline
+    let shouldTraverse: ((DepthFirstSearch<Graph>.TraversalCandidate) -> Bool)?
 
     /// Creates a new iteratively deepening DFS search algorithm.
     ///
@@ -28,6 +29,22 @@ public struct IterativelyDeepeningDFSSearch<Graph: IncidenceGraph>: SearchAlgori
     @inlinable
     public init(maxDepth: UInt? = nil) {
         self.maxDepth = maxDepth
+        self.shouldTraverse = nil
+    }
+
+    @inlinable
+    init(maxDepth: UInt?, shouldTraverse: ((DepthFirstSearch<Graph>.TraversalCandidate) -> Bool)?) {
+        self.maxDepth = maxDepth
+        self.shouldTraverse = shouldTraverse
+    }
+
+    /// Adds a policy that decides whether candidate tree edges may be traversed.
+    @inlinable
+    public func allowingTraversal(_ predicate: @escaping (DepthFirstSearch<Graph>.TraversalCandidate) -> Bool) -> Self {
+        let earlier = shouldTraverse
+        return .init(maxDepth: maxDepth) { candidate in
+            (earlier?(candidate) ?? true) && predicate(candidate)
+        }
     }
 
     /// Performs an iteratively deepening DFS search from the source vertex.
@@ -35,18 +52,19 @@ public struct IterativelyDeepeningDFSSearch<Graph: IncidenceGraph>: SearchAlgori
     /// - Parameters:
     ///   - source: The vertex to start search from.
     ///   - graph: The graph to search in.
-    ///   - visitor: An optional visitor to observe the search progress.
+    ///   - observation: An optional observation of the search progress.
     /// - Returns: An iteratively deepening DFS search iterator.
     @inlinable
     public func search(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> IterativelyDeepeningDFSSearchIterator<Graph> {
         IterativelyDeepeningDFSSearchIterator(
             graph: graph,
             source: source,
-            visitor: visitor,
+            observation: observation,
+            shouldTraverse: shouldTraverse,
             maxDepth: maxDepth
         )
     }
@@ -55,13 +73,16 @@ public struct IterativelyDeepeningDFSSearch<Graph: IncidenceGraph>: SearchAlgori
 /// An iterator for iteratively deepening DFS search results.
 public struct IterativelyDeepeningDFSSearchIterator<Graph: IncidenceGraph>: Sequence where Graph.VertexDescriptor: Hashable {
     public typealias Iterator = IterativelyDeepeningDFSIterator<Graph>
+    public typealias Event = DepthFirstSearch<Graph>.Event
 
     @usableFromInline
     let graph: Graph
     @usableFromInline
     let source: Graph.VertexDescriptor
     @usableFromInline
-    let visitor: DepthFirstSearch<Graph>.Visitor?
+    let observation: AlgorithmObservation<Event>?
+    @usableFromInline
+    let shouldTraverse: ((DepthFirstSearch<Graph>.TraversalCandidate) -> Bool)?
     @usableFromInline
     let maxDepth: UInt?
 
@@ -69,12 +90,14 @@ public struct IterativelyDeepeningDFSSearchIterator<Graph: IncidenceGraph>: Sequ
     public init(
         graph: Graph,
         source: Graph.VertexDescriptor,
-        visitor: DepthFirstSearch<Graph>.Visitor?,
+        observation: AlgorithmObservation<Event>? = nil,
+        shouldTraverse: ((DepthFirstSearch<Graph>.TraversalCandidate) -> Bool)?,
         maxDepth: UInt?
     ) {
         self.graph = graph
         self.source = source
-        self.visitor = visitor
+        self.observation = observation
+        self.shouldTraverse = shouldTraverse
         self.maxDepth = maxDepth
     }
 
@@ -83,21 +106,22 @@ public struct IterativelyDeepeningDFSSearchIterator<Graph: IncidenceGraph>: Sequ
         Iterator(
             graph: graph,
             source: source,
-            visitor: visitor,
+            observation: observation,
+            shouldTraverse: shouldTraverse,
             maxDepth: maxDepth
         )
     }
 }
 
-extension IterativelyDeepeningDFSSearchIterator: VisitorSupportingSequence {
-    public typealias Visitor = DepthFirstSearch<Graph>.Visitor
-
+extension IterativelyDeepeningDFSSearchIterator: AlgorithmObservationSequence {
     @inlinable
-    public func makeIterator(visitor: Visitor?) -> Iterator {
-        Iterator(
+    public func makeIterator(observation: AlgorithmObservation<Event>?) -> Iterator {
+        let combined = self.observation.map { $0.followed(by: observation) } ?? observation
+        return Iterator(
             graph: graph,
             source: source,
-            visitor: visitor,
+            observation: combined,
+            shouldTraverse: shouldTraverse,
             maxDepth: maxDepth
         )
     }
@@ -112,7 +136,9 @@ public struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorPr
     @usableFromInline
     let source: Graph.VertexDescriptor
     @usableFromInline
-    let visitor: DepthFirstSearch<Graph>.Visitor?
+    let observation: AlgorithmObservation<DepthFirstSearch<Graph>.Event>?
+    @usableFromInline
+    let shouldTraverse: ((DepthFirstSearch<Graph>.TraversalCandidate) -> Bool)?
     @usableFromInline
     let maxDepth: UInt?
 
@@ -129,12 +155,14 @@ public struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorPr
     public init(
         graph: Graph,
         source: Graph.VertexDescriptor,
-        visitor: DepthFirstSearch<Graph>.Visitor?,
+        observation: AlgorithmObservation<DepthFirstSearch<Graph>.Event>? = nil,
+        shouldTraverse: ((DepthFirstSearch<Graph>.TraversalCandidate) -> Bool)?,
         maxDepth: UInt?
     ) {
         self.graph = graph
         self.source = source
-        self.visitor = visitor
+        self.observation = observation
+        self.shouldTraverse = shouldTraverse
         self.maxDepth = maxDepth
     }
 
@@ -149,18 +177,20 @@ public struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorPr
                     return nil
                 }
 
-                // Create a visitor that respects the depth limit and tracks visited vertices
+                // Create a policy that respects the depth limit.
                 let currentDepthLimit = self.currentDepth
-                let visitor = self.visitor
-                let depthVisitor = DepthFirstSearch<Graph>.Visitor(
-                    shouldTraverse: { args in
-                        guard let currentDepth = args.context.depth(of: args.from) else { return true }
-                        return currentDepth < currentDepthLimit
-                    }
-                )
+                let callerPolicy = shouldTraverse
+                let depthPolicy: (DepthFirstSearch<Graph>.TraversalCandidate) -> Bool = { candidate in
+                    let currentDepth = candidate.context.depth(of: candidate.from) ?? 0
+                    return currentDepth < currentDepthLimit && (callerPolicy?(candidate) ?? true)
+                }
 
-                currentIterator = DepthFirstSearch(on: graph, from: source).makeIterator(
-                    visitor: depthVisitor.combined(with: visitor)
+                currentIterator = DepthFirstSearch(
+                    on: graph,
+                    from: source,
+                    shouldTraverse: depthPolicy
+                ).makeIterator(
+                    observation: observation
                 )
             }
 
@@ -191,4 +221,4 @@ public struct IterativelyDeepeningDFSIterator<Graph: IncidenceGraph>: IteratorPr
     }
 }
 
-extension IterativelyDeepeningDFSSearch: VisitorSupporting {}
+extension IterativelyDeepeningDFSSearch: AlgorithmObserving {}

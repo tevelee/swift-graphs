@@ -4,37 +4,30 @@ public struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
     public typealias Vertex = Graph.VertexDescriptor
     public typealias Edge = Graph.EdgeDescriptor
 
-    /// A visitor that can be used to observe the Euler formula algorithm progress.
-    public struct Visitor {
-        /// Called when checking Euler's formula.
-        public var checkEulerFormula: ((Int, Int, Int) -> Void)?
-        /// Called when examining a vertex.
-        public var examineVertex: ((Vertex) -> Void)?
-        /// Called when examining an edge.
-        public var examineEdge: ((Edge) -> Void)?
-        /// Called when checking Kuratowski's theorem.
-        public var checkKuratowski: (() -> Void)?
-        /// Called when a Kuratowski violation is detected.
-        public var kuratowskiViolation: ((String) -> Void)?
-        /// Called when Euler's formula is violated.
-        public var eulerFormulaViolation: ((Int, Int, Int) -> Void)?
+    /// An event emitted by the Euler-formula planarity checks.
+    public enum Event {
+        /// The graph exceeded the planar edge bound.
+        case eulerBoundViolated(vertices: Int, edges: Int, maximumEdges: Int)
+        /// A Kuratowski obstruction was found.
+        case kuratowskiObstructionFound(String)
+    }
 
-        /// Creates a new visitor.
-        @inlinable
-        public init(
-            checkEulerFormula: ((Int, Int, Int) -> Void)? = nil,
-            examineVertex: ((Vertex) -> Void)? = nil,
-            examineEdge: ((Edge) -> Void)? = nil,
-            checkKuratowski: (() -> Void)? = nil,
-            kuratowskiViolation: ((String) -> Void)? = nil,
-            eulerFormulaViolation: ((Int, Int, Int) -> Void)? = nil
-        ) {
-            self.checkEulerFormula = checkEulerFormula
-            self.examineVertex = examineVertex
-            self.examineEdge = examineEdge
-            self.checkKuratowski = checkKuratowski
-            self.kuratowskiViolation = kuratowskiViolation
-            self.eulerFormulaViolation = eulerFormulaViolation
+    /// Typed selectors for Euler-formula planarity events.
+    public enum EventCases {
+        /// Selects Euler-bound violations.
+        public static var eulerBoundViolated: AlgorithmEventCase<Event, (vertices: Int, edges: Int, maximumEdges: Int)> {
+            .init {
+                guard case .eulerBoundViolated(let vertices, let edges, let maximumEdges) = $0 else { return nil }
+                return (vertices, edges, maximumEdges)
+            }
+        }
+
+        /// Selects Kuratowski obstructions.
+        public static var kuratowskiObstructionFound: AlgorithmEventCase<Event, String> {
+            .init {
+                guard case .kuratowskiObstructionFound(let reason) = $0 else { return nil }
+                return reason
+            }
         }
     }
 
@@ -46,12 +39,12 @@ public struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
     ///
     /// - Parameters:
     ///   - graph: The graph to check
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional observation of algorithm progress.
     /// - Returns: `true` if the graph is planar, `false` otherwise
     @inlinable
     public func isPlanar(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Bool {
         // Handle empty graphs and single vertex graphs
         guard graph.vertexCount > 0 else {
@@ -69,15 +62,15 @@ public struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
         // For a connected planar graph: |E| ≤ 3|V| - 6
         // For a planar graph with |V| ≥ 3: |E| ≤ 3|V| - 6
         if vertices >= 3 && edges > 3 * vertices - 6 {
-            visitor?.eulerFormulaViolation?(vertices, edges, 3 * vertices - 6)
+            observation?.receive(.eulerBoundViolated(vertices: vertices, edges: edges, maximumEdges: 3 * vertices - 6))
             return false
         }
 
         // Check for K₅ (complete graph on 5 vertices) - 10 edges
         // Only check for small graphs to avoid exponential explosion
         if vertices >= 5 && vertices <= 8 && edges >= 10 {
-            if checkForK5(in: graph, visitor: visitor) {
-                visitor?.kuratowskiViolation?("Contains K₅ subdivision")
+            if checkForK5(in: graph) {
+                observation?.receive(.kuratowskiObstructionFound("Contains K₅ subdivision"))
                 return false
             }
         }
@@ -85,15 +78,15 @@ public struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
         // Check for K₃,₃ (complete bipartite graph) - 9 edges
         // Only check for small graphs to avoid exponential explosion
         if vertices >= 6 && vertices <= 8 && edges >= 9 {
-            if checkForK33(in: graph, visitor: visitor) {
-                visitor?.kuratowskiViolation?("Contains K₃,₃ subdivision")
+            if checkForK33(in: graph) {
+                observation?.receive(.kuratowskiObstructionFound("Contains K₃,₃ subdivision"))
                 return false
             }
         }
 
         // For small graphs, use a more detailed check
         if vertices <= 6 {
-            return checkSmallGraphPlanarity(in: graph, visitor: visitor)
+            return checkSmallGraphPlanarity(in: graph)
         }
 
         // If we get here, the graph passes the basic checks
@@ -104,7 +97,7 @@ public struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
     }
 
     @usableFromInline
-    func checkForK5(in graph: Graph, visitor: Visitor?) -> Bool {
+    func checkForK5(in graph: Graph) -> Bool {
         let vertices = Array(graph.vertices())
 
         // Check all combinations of 5 vertices
@@ -126,7 +119,7 @@ public struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
     }
 
     @usableFromInline
-    func checkForK33(in graph: Graph, visitor: Visitor?) -> Bool {
+    func checkForK33(in graph: Graph) -> Bool {
         let vertices = Array(graph.vertices())
 
         // Check all combinations of 6 vertices for K₃,₃ structure
@@ -243,7 +236,7 @@ public struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
     }
 
     @usableFromInline
-    func checkSmallGraphPlanarity(in graph: Graph, visitor: Visitor?) -> Bool {
+    func checkSmallGraphPlanarity(in graph: Graph) -> Bool {
         let vertices = graph.vertexCount
         let edges = graph.edgeCount
 
@@ -270,42 +263,3 @@ public struct EulerFormulaPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
         return true
     }
 }
-
-/// Extension providing composition support for Euler formula planar property algorithm visitors.
-extension EulerFormulaPlanarPropertyAlgorithm.Visitor: Composable {
-    /// Combines this visitor with another visitor.
-    ///
-    /// - Parameter other: The other visitor to combine with.
-    /// - Returns: A new visitor that calls both visitors' callbacks.
-    @inlinable
-    public func combined(with other: Self) -> Self {
-        .init(
-            checkEulerFormula: { vertices, edges, faces in
-                self.checkEulerFormula?(vertices, edges, faces)
-                other.checkEulerFormula?(vertices, edges, faces)
-            },
-            examineVertex: { vertex in
-                self.examineVertex?(vertex)
-                other.examineVertex?(vertex)
-            },
-            examineEdge: { edge in
-                self.examineEdge?(edge)
-                other.examineEdge?(edge)
-            },
-            checkKuratowski: {
-                self.checkKuratowski?()
-                other.checkKuratowski?()
-            },
-            kuratowskiViolation: { reason in
-                self.kuratowskiViolation?(reason)
-                other.kuratowskiViolation?(reason)
-            },
-            eulerFormulaViolation: { vertices, edges, faces in
-                self.eulerFormulaViolation?(vertices, edges, faces)
-                other.eulerFormulaViolation?(vertices, edges, faces)
-            }
-        )
-    }
-}
-
-extension EulerFormulaPlanarPropertyAlgorithm: VisitorSupporting {}

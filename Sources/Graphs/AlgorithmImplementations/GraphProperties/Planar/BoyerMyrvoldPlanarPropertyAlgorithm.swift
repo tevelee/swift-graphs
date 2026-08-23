@@ -4,45 +4,50 @@ public struct BoyerMyrvoldPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
     public typealias Vertex = Graph.VertexDescriptor
     public typealias Edge = Graph.EdgeDescriptor
 
-    /// A visitor that can be used to observe the Boyer-Myrvold algorithm progress.
-    public struct Visitor {
-        /// Called when starting the embedding process.
-        public var startEmbedding: (() -> Void)?
-        /// Called when examining a vertex.
-        public var examineVertex: ((Vertex, Int) -> Void)?
-        /// Called when examining an edge.
-        public var examineEdge: ((Edge, EdgeType) -> Void)?
-        /// Called when adding a vertex to the embedding.
-        public var addToEmbedding: ((Vertex, [Vertex]) -> Void)?
-        /// Called when checking biconnected components.
-        public var checkBiconnected: (() -> Void)?
-        /// Called when an embedding conflict is detected.
-        public var embeddingConflict: ((Edge, Edge) -> Void)?
-        /// Called when embedding succeeds.
-        public var embeddingSuccess: (() -> Void)?
-        /// Called when embedding fails.
-        public var embeddingFailure: (() -> Void)?
+    /// An event emitted by the Boyer-Myrvold planarity check.
+    public enum Event {
+        /// Embedding computation started.
+        case embeddingStarted
+        /// The biconnected-component check started.
+        case biconnectednessCheckStarted
+        /// Embedding succeeded.
+        case embeddingSucceeded
+        /// Embedding failed.
+        case embeddingFailed
+    }
 
-        /// Creates a new visitor.
-        @inlinable
-        public init(
-            startEmbedding: (() -> Void)? = nil,
-            examineVertex: ((Vertex, Int) -> Void)? = nil,
-            examineEdge: ((Edge, EdgeType) -> Void)? = nil,
-            addToEmbedding: ((Vertex, [Vertex]) -> Void)? = nil,
-            checkBiconnected: (() -> Void)? = nil,
-            embeddingConflict: ((Edge, Edge) -> Void)? = nil,
-            embeddingSuccess: (() -> Void)? = nil,
-            embeddingFailure: (() -> Void)? = nil
-        ) {
-            self.startEmbedding = startEmbedding
-            self.examineVertex = examineVertex
-            self.examineEdge = examineEdge
-            self.addToEmbedding = addToEmbedding
-            self.checkBiconnected = checkBiconnected
-            self.embeddingConflict = embeddingConflict
-            self.embeddingSuccess = embeddingSuccess
-            self.embeddingFailure = embeddingFailure
+    /// Typed selectors for Boyer-Myrvold events.
+    public enum EventCases {
+        /// Selects embedding starts.
+        public static var embeddingStarted: AlgorithmEventCase<Event, Void> {
+            .init {
+                guard case .embeddingStarted = $0 else { return nil }
+                return ()
+            }
+        }
+
+        /// Selects biconnectedness-check starts.
+        public static var biconnectednessCheckStarted: AlgorithmEventCase<Event, Void> {
+            .init {
+                guard case .biconnectednessCheckStarted = $0 else { return nil }
+                return ()
+            }
+        }
+
+        /// Selects successful embeddings.
+        public static var embeddingSucceeded: AlgorithmEventCase<Event, Void> {
+            .init {
+                guard case .embeddingSucceeded = $0 else { return nil }
+                return ()
+            }
+        }
+
+        /// Selects failed embeddings.
+        public static var embeddingFailed: AlgorithmEventCase<Event, Void> {
+            .init {
+                guard case .embeddingFailed = $0 else { return nil }
+                return ()
+            }
         }
     }
 
@@ -65,28 +70,28 @@ public struct BoyerMyrvoldPlanarPropertyAlgorithm<Graph: IncidenceGraph & Vertex
     /// Checks if the graph is planar.
     ///
     /// The decision is delegated to the shared, correct `PlanarityCore` (Left-Right) engine;
-    /// the visitor's embedding events are emitted around the decision.
+    /// observation events are emitted around the decision.
     ///
     /// - Parameters:
     ///   - graph: The graph to check
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional observation of algorithm progress.
     /// - Returns: `true` if the graph is planar, `false` otherwise
     public func isPlanar(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Bool {
-        // Graphs on four or fewer vertices are always planar; the visitor's embedding
+        // Graphs on four or fewer vertices are always planar; embedding
         // events only fire once the real test runs (matching prior observable behavior).
         guard graph.vertexCount > 4 else {
             return PlanarityCore.isPlanar(graph)
         }
-        visitor?.startEmbedding?()
-        visitor?.checkBiconnected?()
+        observation?.receive(.embeddingStarted)
+        observation?.receive(.biconnectednessCheckStarted)
         let planar = PlanarityCore.isPlanar(graph)
         if planar {
-            visitor?.embeddingSuccess?()
+            observation?.receive(.embeddingSucceeded)
         } else {
-            visitor?.embeddingFailure?()
+            observation?.receive(.embeddingFailed)
         }
         return planar
     }

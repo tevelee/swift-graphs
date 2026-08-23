@@ -11,33 +11,50 @@
         /// The vertex type of the graph.
         public typealias Vertex = Graph.VertexDescriptor
 
-        /// A visitor that can be used to observe the Watts-Strogatz algorithm progress.
-        public struct Visitor {
-            /// Called when adding a vertex.
-            public var addVertex: ((Vertex) -> Void)?
-            /// Called when adding an edge.
-            public var addEdge: ((Vertex, Vertex) -> Void)?
-            /// Called when rewiring an edge.
-            public var rewireEdge: ((Vertex, Vertex, Vertex) -> Void)?
-            /// Called when skipping rewiring.
-            public var skipRewiring: ((Vertex, Vertex, String) -> Void)?
-            /// Called when creating ring lattice edges.
-            public var createRingLattice: ((Vertex, Vertex) -> Void)?
+        /// An event emitted while generating a Watts-Strogatz graph.
+        public enum Event {
+            /// A vertex was added.
+            case vertexAdded(Vertex)
+            /// A ring-lattice edge was created.
+            case ringEdgeCreated(source: Vertex, destination: Vertex)
+            /// An edge was rewired to a new destination.
+            case edgeRewired(source: Vertex, oldDestination: Vertex, newDestination: Vertex)
+            /// Rewiring an edge was skipped.
+            case rewiringSkipped(source: Vertex, destination: Vertex, reason: String)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                addVertex: ((Vertex) -> Void)? = nil,
-                addEdge: ((Vertex, Vertex) -> Void)? = nil,
-                rewireEdge: ((Vertex, Vertex, Vertex) -> Void)? = nil,
-                skipRewiring: ((Vertex, Vertex, String) -> Void)? = nil,
-                createRingLattice: ((Vertex, Vertex) -> Void)? = nil
-            ) {
-                self.addVertex = addVertex
-                self.addEdge = addEdge
-                self.rewireEdge = rewireEdge
-                self.skipRewiring = skipRewiring
-                self.createRingLattice = createRingLattice
+        /// Typed selectors for Watts-Strogatz events.
+        public enum EventCases {
+            /// Selects added vertices.
+            public static var vertexAdded: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexAdded(let vertex) = $0 else { return nil }
+                    return vertex
+                }
+            }
+
+            /// Selects ring-lattice edges.
+            public static var ringEdgeCreated: AlgorithmEventCase<Event, (source: Vertex, destination: Vertex)> {
+                .init {
+                    guard case .ringEdgeCreated(let source, let destination) = $0 else { return nil }
+                    return (source, destination)
+                }
+            }
+
+            /// Selects rewired edges.
+            public static var edgeRewired: AlgorithmEventCase<Event, (source: Vertex, oldDestination: Vertex, newDestination: Vertex)> {
+                .init {
+                    guard case .edgeRewired(let source, let oldDestination, let newDestination) = $0 else { return nil }
+                    return (source, oldDestination, newDestination)
+                }
+            }
+
+            /// Selects skipped rewiring attempts.
+            public static var rewiringSkipped: AlgorithmEventCase<Event, (source: Vertex, destination: Vertex, reason: String)> {
+                .init {
+                    guard case .rewiringSkipped(let source, let destination, let reason) = $0 else { return nil }
+                    return (source, destination, reason)
+                }
             }
         }
 
@@ -80,13 +97,13 @@
         ///   - graph: The graph to append to (modified in place)
         ///   - vertexCount: The number of vertices to add
         ///   - generator: The random number generator to use
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation of algorithm progress.
         @inlinable
         public func appendRandomGraph<RNG: RandomNumberGenerator>(
             into graph: inout Graph,
             vertexCount: Int,
             using generator: inout RNG,
-            visitor: Visitor? = nil
+            observation: AlgorithmObservation<Event>? = nil
         ) {
             guard vertexCount > 0 else { return }
 
@@ -94,7 +111,7 @@
             var vertices: [Vertex] = []
             for _ in 0 ..< vertexCount {
                 let vertex = graph.addVertex()
-                visitor?.addVertex?(vertex)
+                observation?.receive(.vertexAdded(vertex))
                 vertices.append(vertex)
             }
 
@@ -107,7 +124,7 @@
                     let source = vertices[i]
                     let target = vertices[targetIndex]
                     if let edgeDescriptor = graph.addEdge(from: source, to: target) {
-                        visitor?.createRingLattice?(source, target)
+                        observation?.receive(.ringEdgeCreated(source: source, destination: target))
                         initialEdges.append((edgeDescriptor: edgeDescriptor, source: source, target: target))
                     }
                 }
@@ -120,16 +137,21 @@
                     if let randomTarget = vertices.randomElement(using: &generator), randomTarget != source {
                         graph.remove(edge: initialEdge.edgeDescriptor)
                         graph.addEdge(from: source, to: randomTarget)
-                        visitor?.rewireEdge?(source, initialEdge.target, randomTarget)
+                        observation?.receive(
+                            .edgeRewired(source: source, oldDestination: initialEdge.target, newDestination: randomTarget)
+                        )
                     } else {
-                        visitor?.skipRewiring?(source, initialEdge.target, "Self-loop avoided or no target")
+                        observation?.receive(
+                            .rewiringSkipped(source: source, destination: initialEdge.target, reason: "Self-loop avoided or no target")
+                        )
                     }
                 } else {
-                    visitor?.skipRewiring?(initialEdge.source, initialEdge.target, "Probability check failed")
+                    observation?.receive(
+                        .rewiringSkipped(source: initialEdge.source, destination: initialEdge.target, reason: "Probability check failed")
+                    )
                 }
             }
         }
     }
 
-    extension WattsStrogatz: VisitorSupporting {}
 #endif

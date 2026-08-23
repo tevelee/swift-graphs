@@ -14,7 +14,7 @@
     /// - Complexity: O(k × (V + E)) where k is the number of iterations until convergence
     public struct EigenvectorCentralityAlgorithm<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph>: CentralityAlgorithm
     where Graph.VertexDescriptor: Hashable {
-        public typealias Visitor = EigenvectorCentrality<Graph>.Visitor
+        public typealias Event = EigenvectorCentrality<Graph>.Event
 
         /// The maximum number of iterations.
         ///
@@ -38,33 +38,66 @@
         }
 
         @inlinable
-        public func centrality(in graph: Graph, visitor: Visitor?) -> CentralityResult<Graph.VertexDescriptor> {
+        public func centrality(
+            in graph: Graph,
+            observation: AlgorithmObservation<Event>?
+        ) -> CentralityResult<Graph.VertexDescriptor> {
             let eigenvector = EigenvectorCentrality(on: graph, maxIterations: maxIterations, tolerance: tolerance)
-            return eigenvector.compute(visitor: visitor)
+            return eigenvector.compute(observation: observation)
         }
     }
 
     /// Eigenvector centrality computation implementation using power iteration.
     public struct EigenvectorCentrality<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph> where Graph.VertexDescriptor: Hashable {
-        /// A visitor that can be used to observe eigenvector centrality computation progress.
-        public struct Visitor {
-            /// Called at the start of each iteration.
-            public var startIteration: ((Int) -> Void)?
-            /// Called at the end of each iteration with the current centrality values.
-            public var endIteration: ((Int, [Graph.VertexDescriptor: Double]) -> Void)?
-            /// Called when convergence is achieved.
-            public var converge: ((Int, [Graph.VertexDescriptor: Double]) -> Void)?
+        /// A completed power-iteration step.
+        public struct IterationSnapshot {
+            /// The zero-based iteration index.
+            public let iteration: Int
+            /// Centrality values produced by the iteration.
+            public let values: [Graph.VertexDescriptor: Double]
 
-            /// Creates a new visitor.
+            /// Creates an iteration snapshot.
             @inlinable
-            public init(
-                startIteration: ((Int) -> Void)? = nil,
-                endIteration: ((Int, [Graph.VertexDescriptor: Double]) -> Void)? = nil,
-                converge: ((Int, [Graph.VertexDescriptor: Double]) -> Void)? = nil
-            ) {
-                self.startIteration = startIteration
-                self.endIteration = endIteration
-                self.converge = converge
+            public init(iteration: Int, values: [Graph.VertexDescriptor: Double]) {
+                self.iteration = iteration
+                self.values = values
+            }
+        }
+
+        /// An event emitted while eigenvector centrality is computed.
+        public enum Event {
+            /// An iteration is about to start.
+            case iterationStarted(Int)
+            /// An iteration completed with new values.
+            case iterationFinished(IterationSnapshot)
+            /// The computation converged.
+            case converged(IterationSnapshot)
+        }
+
+        /// Typed selectors for eigenvector-centrality events.
+        public enum EventCases {
+            /// Selects iteration starts.
+            public static var iterationStarted: AlgorithmEventCase<Event, Int> {
+                .init {
+                    guard case .iterationStarted(let iteration) = $0 else { return nil }
+                    return iteration
+                }
+            }
+
+            /// Selects completed iterations.
+            public static var iterationFinished: AlgorithmEventCase<Event, IterationSnapshot> {
+                .init {
+                    guard case .iterationFinished(let snapshot) = $0 else { return nil }
+                    return snapshot
+                }
+            }
+
+            /// Selects convergence.
+            public static var converged: AlgorithmEventCase<Event, IterationSnapshot> {
+                .init {
+                    guard case .converged(let snapshot) = $0 else { return nil }
+                    return snapshot
+                }
             }
         }
 
@@ -83,7 +116,9 @@
         }
 
         @inlinable
-        public func compute(visitor: Visitor?) -> CentralityResult<Graph.VertexDescriptor> {
+        public func compute(
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> CentralityResult<Graph.VertexDescriptor> {
             let vertices = Array(graph.vertices())
 
             // Handle empty graph
@@ -102,7 +137,7 @@
             var newCentrality: [Graph.VertexDescriptor: Double] = [:]
 
             for iteration in 0 ..< maxIterations {
-                visitor?.startIteration?(iteration)
+                observation?.receive(.iterationStarted(iteration))
 
                 // Initialize new centrality
                 for vertex in vertices {
@@ -128,7 +163,8 @@
                     }
                 }
 
-                visitor?.endIteration?(iteration, newCentrality)
+                let snapshot = IterationSnapshot(iteration: iteration, values: newCentrality)
+                observation?.receive(.iterationFinished(snapshot))
 
                 // Check for convergence
                 var maxDiff = 0.0
@@ -140,7 +176,7 @@
                 }
 
                 if maxDiff < tolerance {
-                    visitor?.converge?(iteration, newCentrality)
+                    observation?.receive(.converged(snapshot))
                     return CentralityResult(values: newCentrality)
                 }
 
@@ -152,5 +188,4 @@
         }
     }
 
-    extension EigenvectorCentralityAlgorithm: VisitorSupporting {}
 #endif

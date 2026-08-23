@@ -17,32 +17,8 @@
         public typealias Vertex = Graph.VertexDescriptor
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
-
-        /// A visitor that can be used to observe Prim's algorithm progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when adding an edge to the MST.
-            public var addEdge: ((Edge, Weight) -> Void)?
-            /// Called when skipping an edge.
-            public var skipEdge: ((Edge, String) -> Void)?
-
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                examineVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                addEdge: ((Edge, Weight) -> Void)? = nil,
-                skipEdge: ((Edge, String) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.addEdge = addEdge
-                self.skipEdge = skipEdge
-            }
-        }
+        /// The event type published by Prim's algorithm.
+        public typealias Event = MinimumSpanningTreeEvent<Vertex, Edge, Weight>
 
         /// The result of Prim's algorithm.
         @usableFromInline
@@ -108,10 +84,13 @@
         ///
         /// - Parameters:
         ///   - graph: The graph to find the MST for
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation of algorithm progress.
         /// - Returns: The minimum spanning tree result
         @inlinable
-        public func minimumSpanningTree(on graph: Graph, visitor: Visitor? = nil) -> MinimumSpanningTree<Vertex, Edge, Weight> {
+        public func minimumSpanningTree(
+            on graph: Graph,
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> MinimumSpanningTree<Vertex, Edge, Weight> {
             var priorityQueue = PriorityQueue<PriorityItem>()
             var inMST: Set<Vertex> = []
             var mstEdges: [Edge] = []
@@ -122,11 +101,11 @@
                 return MinimumSpanningTree(edges: [], totalWeight: Weight.zero, vertices: [])
             }
             inMST.insert(startVertex)
-            visitor?.examineVertex?(startVertex)
+            observation?.receive(.vertexExamined(startVertex))
 
             for edge in graph.outgoingEdges(of: startVertex) {
                 if let destination = graph.destination(of: edge) {
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
                     let currentEdgeWeight = edgeWeight.costToExplore(edge, graph)
                     priorityQueue.enqueue(
                         PriorityItem(
@@ -142,10 +121,10 @@
             while !priorityQueue.isEmpty && inMST.count < graph.vertexCount {
                 guard let currentItem = priorityQueue.dequeue() else { break }
 
-                visitor?.examineEdge?(currentItem.edge)
+                observation?.receive(.edgeExamined(currentItem.edge))
 
                 if inMST.contains(currentItem.destination) {
-                    visitor?.skipEdge?(currentItem.edge, "Destination already in MST")
+                    observation?.receive(.edgeSkipped(currentItem.edge, reason: "Destination already in MST"))
                     continue
                 }
 
@@ -157,14 +136,14 @@
                 mstEdges.append(currentItem.edge)
                 totalWeight += currentItem.weight
                 inMST.insert(currentItem.destination)
-                visitor?.addEdge?(currentItem.edge, currentItem.weight)
-                visitor?.examineVertex?(currentItem.destination)
+                observation?.receive(.edgeAdded(currentItem.edge, weight: currentItem.weight))
+                observation?.receive(.vertexExamined(currentItem.destination))
 
                 for newEdge in graph.outgoingEdges(of: currentItem.destination) {
                     if let newDestination = graph.destination(of: newEdge),
                         !inMST.contains(newDestination)
                     {
-                        visitor?.examineEdge?(newEdge)
+                        observation?.receive(.edgeExamined(newEdge))
                         let newEdgeWeight = edgeWeight.costToExplore(newEdge, graph)
                         priorityQueue.enqueue(
                             PriorityItem(
@@ -185,8 +164,6 @@
             )
         }
     }
-
-    extension Prim: VisitorSupporting {}
 
     extension Prim.PriorityItem: Comparable {
         @usableFromInline

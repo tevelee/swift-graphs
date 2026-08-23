@@ -96,7 +96,7 @@ struct IterativelyDeepeningDFSTests {
         #expect(result.edges.isEmpty)
     }
 
-    @Test func iterativelyDeepeningDFS_WithVisitor_CallsCorrectly() {
+    @Test func iterativelyDeepeningDFS_WithObservation_CallsCorrectly() {
         var graph = AdjacencyList()
         let root = graph.addVertex()
         let a = graph.addVertex()
@@ -108,16 +108,15 @@ struct IterativelyDeepeningDFSTests {
         var discoveredVertices: [AdjacencyList.VertexDescriptor] = []
         var examinedEdges: [AdjacencyList.EdgeDescriptor] = []
 
-        let visitor = DepthFirstSearch<AdjacencyList>.Visitor(
-            discoverVertex: { vertex in
+        let algorithm = IterativelyDeepeningDFSTraversal<AdjacencyList>()
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.vertexDiscovered) { vertex in
                 discoveredVertices.append(vertex)
-            },
-            examineEdge: { edge in
+            }
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.edgeExamined) { edge in
                 examinedEdges.append(edge)
             }
-        )
 
-        _ = graph.traverse(from: root, using: .iterativelyDeepeningDFS().withVisitor(visitor))
+        _ = graph.traverse(from: root, using: algorithm)
 
         #expect(discoveredVertices.count == 3)
         #expect(examinedEdges.count == 6)  // IDDFS examines edges multiple times at different depths
@@ -169,7 +168,7 @@ struct IterativelyDeepeningDFSTests {
         #expect(!searchResults.contains(c))
     }
 
-    @Test func iterativelyDeepeningDFSSearch_WithVisitor_CallsCorrectly() {
+    @Test func iterativelyDeepeningDFSSearch_WithObservation_CallsCorrectly() {
         var graph = AdjacencyList()
         let root = graph.addVertex()
         let a = graph.addVertex()
@@ -179,17 +178,13 @@ struct IterativelyDeepeningDFSTests {
         var discoveredVertices: [AdjacencyList.VertexDescriptor] = []
         var examinedEdges: [AdjacencyList.EdgeDescriptor] = []
 
-        let visitor = DepthFirstSearch<AdjacencyList>.Visitor(
-            discoverVertex: { vertex in
-                discoveredVertices.append(vertex)
-            },
-            examineEdge: { edge in
-                examinedEdges.append(edge)
-            }
-        )
-
         graph.search(from: root, using: .iterativelyDeepeningDFS())
-            .withVisitor { visitor }
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.vertexDiscovered) {
+                discoveredVertices.append($0)
+            }
+            .observing(DepthFirstSearch<AdjacencyList>.EventCases.edgeExamined) {
+                examinedEdges.append($0)
+            }
             .forEach { _ in }
 
         // IDDFS search explores vertices multiple times at different depths

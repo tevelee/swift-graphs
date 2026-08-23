@@ -12,36 +12,49 @@
     ///
     /// - Complexity: O(V × (V + E)) for unweighted graphs
     public struct ClosenessCentralityAlgorithm<Graph: IncidenceGraph & VertexListGraph>: CentralityAlgorithm where Graph.VertexDescriptor: Hashable {
-        public typealias Visitor = ClosenessCentrality<Graph>.Visitor
+        public typealias Event = ClosenessCentrality<Graph>.Event
 
         /// Creates a new closeness centrality algorithm.
         @inlinable
         public init() {}
 
         @inlinable
-        public func centrality(in graph: Graph, visitor: Visitor?) -> CentralityResult<Graph.VertexDescriptor> {
+        public func centrality(
+            in graph: Graph,
+            observation: AlgorithmObservation<Event>?
+        ) -> CentralityResult<Graph.VertexDescriptor> {
             let closeness = ClosenessCentrality(on: graph)
-            return closeness.compute(visitor: visitor)
+            return closeness.compute(observation: observation)
         }
     }
 
     /// Closeness centrality computation implementation.
     public struct ClosenessCentrality<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-        /// A visitor that can be used to observe closeness centrality computation progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-            /// Called when computing distance from one vertex to another.
-            public var computeDistance: ((Graph.VertexDescriptor, Graph.VertexDescriptor, Int) -> Void)?
+        /// An event emitted while closeness centrality is computed.
+        public enum Event {
+            /// A source vertex is about to be examined.
+            case vertexExamined(Graph.VertexDescriptor)
+            /// A shortest-path distance was computed.
+            case distanceComputed(source: Graph.VertexDescriptor, destination: Graph.VertexDescriptor, distance: Int)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
-                computeDistance: ((Graph.VertexDescriptor, Graph.VertexDescriptor, Int) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.computeDistance = computeDistance
+        /// Typed selectors for closeness-centrality events.
+        public enum EventCases {
+            /// Selects examined source vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Graph.VertexDescriptor> {
+                .init {
+                    guard case .vertexExamined(let vertex) = $0 else { return nil }
+                    return vertex
+                }
+            }
+
+            /// Selects computed distances.
+            public static var distanceComputed: AlgorithmEventCase<Event, (source: Graph.VertexDescriptor, destination: Graph.VertexDescriptor, distance: Int)>
+            {
+                .init {
+                    guard case .distanceComputed(let source, let destination, let distance) = $0 else { return nil }
+                    return (source, destination, distance)
+                }
             }
         }
 
@@ -54,7 +67,9 @@
         }
 
         @inlinable
-        public func compute(visitor: Visitor?) -> CentralityResult<Graph.VertexDescriptor> {
+        public func compute(
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> CentralityResult<Graph.VertexDescriptor> {
             let vertices = Array(graph.vertices())
 
             // Handle empty graph
@@ -72,7 +87,7 @@
             let n = Double(vertices.count)
 
             for vertex in vertices {
-                visitor?.examineVertex?(vertex)
+                observation?.receive(.vertexExamined(vertex))
 
                 // BFS to compute distances from this vertex
                 var distances: [Graph.VertexDescriptor: Int] = [:]
@@ -90,7 +105,7 @@
                             let wDistance = vDistance + 1
                             distances[w] = wDistance
                             queue.append(w)
-                            visitor?.computeDistance?(vertex, w, wDistance)
+                            observation?.receive(.distanceComputed(source: vertex, destination: w, distance: wDistance))
                         }
                     }
                 }
@@ -116,5 +131,14 @@
         }
     }
 
-    extension ClosenessCentralityAlgorithm: VisitorSupporting {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
+    extension ClosenessCentrality.Event: VertexExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+    }
 #endif

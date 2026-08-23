@@ -1,25 +1,25 @@
 /// A protocol for vertex ordering algorithms.
-public protocol VertexOrderingAlgorithm<Graph> {
+public protocol VertexOrderingAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Orders the vertices of a graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to order vertices for
-    ///   - visitor: Optional visitor for algorithm events
+    ///   - observation: An optional algorithm observation
     /// - Returns: An array of vertex descriptors in the computed order
-    func orderVertices(in graph: Graph, visitor: Visitor?) -> [Graph.VertexDescriptor]
+    func orderVertices(in graph: Graph, observation: AlgorithmObservation<Event>?) -> [Graph.VertexDescriptor]
 }
 
-extension VisitorWrapper: VertexOrderingAlgorithm where Base: VertexOrderingAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: VertexOrderingAlgorithm where Base: VertexOrderingAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
-    public func orderVertices(in graph: Base.Graph, visitor: Base.Visitor?) -> [Base.Graph.VertexDescriptor] {
-        base.orderVertices(in: graph, visitor: self.visitor.combined(with: visitor))
+    public func orderVertices(in graph: Base.Graph, observation: AlgorithmObservation<Base.Event>?) -> [Base.Graph.VertexDescriptor] {
+        base.orderVertices(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 
@@ -70,7 +70,7 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
     public func orderVertices<Algorithm: VertexOrderingAlgorithm>(
         using algorithm: Algorithm
     ) -> VertexOrdering<VertexDescriptor> where Algorithm.Graph == Self {
-        let orderedVertices = algorithm.orderVertices(in: self, visitor: nil)
+        let orderedVertices = algorithm.orderVertices(in: self, observation: nil)
         return VertexOrdering(orderedVertices: orderedVertices)
     }
 }

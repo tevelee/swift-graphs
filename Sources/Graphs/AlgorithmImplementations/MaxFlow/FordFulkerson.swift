@@ -19,29 +19,107 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe Ford-Fulkerson algorithm progress.
-        public struct Visitor {
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge, Flow) -> Void)?
-            /// Called when augmenting a path.
-            public var augmentPath: (([Edge], Flow) -> Void)?
-            /// Called when updating flow on an edge.
-            public var updateFlow: ((Edge, Flow) -> Void)?
-            /// Called when finding a path.
-            public var findPath: ((Vertex, Vertex) -> Void)?
+        /// Details about an edge examination in the residual graph.
+        public struct EdgeExamination {
+            /// The edge being examined.
+            public let edge: Edge
+            /// The edge's residual capacity at examination time.
+            public let residualCapacity: Flow
 
-            /// Creates a new visitor.
+            /// Creates edge-examination details.
             @inlinable
-            public init(
-                examineEdge: ((Edge, Flow) -> Void)? = nil,
-                augmentPath: (([Edge], Flow) -> Void)? = nil,
-                updateFlow: ((Edge, Flow) -> Void)? = nil,
-                findPath: ((Vertex, Vertex) -> Void)? = nil
-            ) {
-                self.examineEdge = examineEdge
-                self.augmentPath = augmentPath
-                self.updateFlow = updateFlow
-                self.findPath = findPath
+            public init(edge: Edge, residualCapacity: Flow) {
+                self.edge = edge
+                self.residualCapacity = residualCapacity
+            }
+        }
+
+        /// Details about an augmenting path before flow is pushed through it.
+        public struct PathAugmentation {
+            /// The edges in the augmenting path.
+            public let edges: [Edge]
+            /// The flow to push through the path.
+            public let flow: Flow
+
+            /// Creates path-augmentation details.
+            @inlinable
+            public init(edges: [Edge], flow: Flow) {
+                self.edges = edges
+                self.flow = flow
+            }
+        }
+
+        /// Details about an edge flow update.
+        public struct FlowUpdate {
+            /// The updated edge.
+            public let edge: Edge
+            /// The edge's new flow.
+            public let flow: Flow
+
+            /// Creates flow-update details.
+            @inlinable
+            public init(edge: Edge, flow: Flow) {
+                self.edge = edge
+                self.flow = flow
+            }
+        }
+
+        /// Details about an augmenting-path search.
+        public struct PathSearch {
+            /// The search source.
+            public let source: Vertex
+            /// The search sink.
+            public let sink: Vertex
+
+            /// Creates path-search details.
+            @inlinable
+            public init(source: Vertex, sink: Vertex) {
+                self.source = source
+                self.sink = sink
+            }
+        }
+
+        /// An event emitted synchronously while Ford-Fulkerson advances.
+        public enum Event {
+            /// A residual edge was examined.
+            case edgeExamined(EdgeExamination)
+            /// Flow augmentation along a path started.
+            case pathAugmentationStarted(PathAugmentation)
+            /// Flow was updated on an edge.
+            case flowUpdated(FlowUpdate)
+            /// An augmenting-path search started.
+            case pathSearchStarted(PathSearch)
+        }
+
+        /// Typed selectors for Ford-Fulkerson events.
+        public enum EventCases {
+            /// Selects examined edges and their residual capacities.
+            public static var edgeExamined: AlgorithmEventCase<Event, EdgeExamination> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects path augmentations as they start.
+            public static var pathAugmentationStarted: AlgorithmEventCase<Event, PathAugmentation> {
+                .init {
+                    guard case .pathAugmentationStarted(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects edge flow updates.
+            public static var flowUpdated: AlgorithmEventCase<Event, FlowUpdate> {
+                .init {
+                    guard case .flowUpdated(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects augmenting-path searches as they start.
+            public static var pathSearchStarted: AlgorithmEventCase<Event, PathSearch> {
+                .init {
+                    guard case .pathSearchStarted(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -63,14 +141,14 @@
         ///   - source: The source vertex
         ///   - sink: The sink vertex
         ///   - graph: The flow network graph
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional algorithm observation
         /// - Returns: The maximum flow result
         @inlinable
         public func maximumFlow(
             from source: Vertex,
             to sink: Vertex,
             in graph: Graph,
-            visitor: Visitor? = nil
+            observation: AlgorithmObservation<Event>? = nil
         ) -> MaxFlowResult<Vertex, Edge, Flow> {
             // Initialize flow and residual capacity maps
             var edgeFlows: [Edge: Flow] = [:]
@@ -91,12 +169,12 @@
                 to: sink,
                 in: graph,
                 residualCapacities: residualCapacities,
-                visitor: visitor
+                observation: observation
             ) {
                 let pathFlow = augmentingPath.bottleneck
                 totalFlow += pathFlow
 
-                visitor?.augmentPath?(augmentingPath.edges, pathFlow)
+                observation?.receive(.pathAugmentationStarted(.init(edges: augmentingPath.edges, flow: pathFlow)))
 
                 // Update flows and residual capacities along the path
                 for edge in augmentingPath.edges {
@@ -114,7 +192,7 @@
                         residualCapacities[reverseEdge] = reverseResidual + pathFlow
                     }
 
-                    visitor?.updateFlow?(edge, newFlow)
+                    observation?.receive(.flowUpdated(.init(edge: edge, flow: newFlow)))
                 }
             }
 
@@ -142,9 +220,9 @@
             to sink: Vertex,
             in graph: Graph,
             residualCapacities: [Edge: Flow],
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> AugmentingPath? {
-            visitor?.findPath?(source, sink)
+            observation?.receive(.pathSearchStarted(.init(source: source, sink: sink)))
 
             var visited: Set<Vertex> = []
             var parent: [Vertex: Vertex] = [:]
@@ -184,7 +262,7 @@
                         parent[destination] = current
                         parentEdge[destination] = edge
                         queue.append(destination)
-                        visitor?.examineEdge?(edge, residual)
+                        observation?.receive(.edgeExamined(.init(edge: edge, residualCapacity: residual)))
                     }
                 }
             }
@@ -259,5 +337,14 @@
         }
     }
 
-    extension FordFulkerson: VisitorSupporting {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_OPTIMIZATION
+    extension FordFulkerson.Event: EdgeExaminedEvent {
+        @inlinable
+        public static func examinedEdge(from event: Self) -> FordFulkerson.EdgeExamination? {
+            guard case .edgeExamined(let examination) = event else { return nil }
+            return examination
+        }
+    }
 #endif

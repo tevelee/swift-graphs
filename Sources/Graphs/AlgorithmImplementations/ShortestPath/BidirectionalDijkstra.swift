@@ -19,33 +19,95 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe the bidirectional Dijkstra algorithm's progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Vertex, Direction) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge, Direction) -> Void)?
-            /// Called when an edge is relaxed.
-            public var edgeRelaxed: ((Edge, Direction) -> Void)?
-            /// Called when an edge is not relaxed.
-            public var edgeNotRelaxed: ((Edge, Direction) -> Void)?
-            /// Called when a meeting point is found.
-            public var meetingFound: ((Vertex, Cost<Weight>) -> Void)?
+        public struct DirectedVertex {
+            public let vertex: Vertex
+            public let direction: Direction
 
-            /// Creates a new visitor.
             @inlinable
-            public init(
-                examineVertex: ((Vertex, Direction) -> Void)? = nil,
-                examineEdge: ((Edge, Direction) -> Void)? = nil,
-                edgeRelaxed: ((Edge, Direction) -> Void)? = nil,
-                edgeNotRelaxed: ((Edge, Direction) -> Void)? = nil,
-                meetingFound: ((Vertex, Cost<Weight>) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.edgeRelaxed = edgeRelaxed
-                self.edgeNotRelaxed = edgeNotRelaxed
-                self.meetingFound = meetingFound
+            public init(vertex: Vertex, direction: Direction) {
+                self.vertex = vertex
+                self.direction = direction
+            }
+        }
+
+        public struct DirectedEdge {
+            public let edge: Edge
+            public let direction: Direction
+
+            @inlinable
+            public init(edge: Edge, direction: Direction) {
+                self.edge = edge
+                self.direction = direction
+            }
+        }
+
+        /// Details about a successful directional edge relaxation.
+        public struct Relaxation {
+            /// The relaxed edge.
+            public let edge: Edge
+            /// The search frontier that relaxed the edge.
+            public let direction: Direction
+            /// The edge destination's new cost in that search frontier.
+            public let newCost: Weight
+
+            /// Creates directional edge-relaxation details.
+            @inlinable
+            public init(edge: Edge, direction: Direction, newCost: Weight) {
+                self.edge = edge
+                self.direction = direction
+                self.newCost = newCost
+            }
+        }
+
+        public struct Meeting {
+            public let vertex: Vertex
+            public let distance: Cost<Weight>
+
+            @inlinable
+            public init(vertex: Vertex, distance: Cost<Weight>) {
+                self.vertex = vertex
+                self.distance = distance
+            }
+        }
+
+        public enum Event {
+            case vertexExamined(DirectedVertex)
+            case edgeExamined(DirectedEdge)
+            case edgeRelaxed(Relaxation)
+            case edgeNotRelaxed(DirectedEdge)
+            case meetingFound(Meeting)
+        }
+
+        public enum EventCases {
+            public static var vertexExamined: AlgorithmEventCase<Event, DirectedVertex> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeExamined: AlgorithmEventCase<Event, DirectedEdge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeRelaxed: AlgorithmEventCase<Event, Relaxation> {
+                .init {
+                    guard case .edgeRelaxed(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeNotRelaxed: AlgorithmEventCase<Event, DirectedEdge> {
+                .init {
+                    guard case .edgeNotRelaxed(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var meetingFound: AlgorithmEventCase<Event, Meeting> {
+                .init {
+                    guard case .meetingFound(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -117,10 +179,10 @@
         /// - Parameters:
         ///   - source: The source vertex.
         ///   - destination: The destination vertex.
-        ///   - visitor: An optional visitor to observe the algorithm's progress.
+        ///   - observation: An optional observation of the algorithm's progress.
         /// - Returns: The shortest path result.
         @inlinable
-        public func shortestPath(from source: Vertex, to destination: Vertex, visitor: Visitor? = nil) -> Result {
+        public func shortestPath(from source: Vertex, to destination: Vertex, observation: AlgorithmObservation<Event>? = nil) -> Result {
             var forwardDistances: [Vertex: Cost<Weight>] = [:]
             var backwardDistances: [Vertex: Cost<Weight>] = [:]
             var forwardPredecessors: [Vertex: Edge?] = [:]
@@ -159,7 +221,7 @@
                     backwardVisited.insert(currentVertex)
                 }
 
-                visitor?.examineVertex?(currentVertex, direction)
+                observation?.receive(.vertexExamined(.init(vertex: currentVertex, direction: direction)))
 
                 if direction == .forward && backwardVisited.contains(currentVertex) {
                     let backwardCost = backwardDistances[currentVertex] ?? .infinite
@@ -171,12 +233,12 @@
                             if totalCost < bestWeight {
                                 bestDistance = .finite(totalCost)
                                 meetingVertex = currentVertex
-                                visitor?.meetingFound?(currentVertex, bestDistance)
+                                observation?.receive(.meetingFound(.init(vertex: currentVertex, distance: bestDistance)))
                             }
                         } else {
                             bestDistance = .finite(totalCost)
                             meetingVertex = currentVertex
-                            visitor?.meetingFound?(currentVertex, bestDistance)
+                            observation?.receive(.meetingFound(.init(vertex: currentVertex, distance: bestDistance)))
                         }
                     }
                 } else if direction == .backward && forwardVisited.contains(currentVertex) {
@@ -189,12 +251,12 @@
                             if totalCost < bestWeight {
                                 bestDistance = .finite(totalCost)
                                 meetingVertex = currentVertex
-                                visitor?.meetingFound?(currentVertex, bestDistance)
+                                observation?.receive(.meetingFound(.init(vertex: currentVertex, distance: bestDistance)))
                             }
                         } else {
                             bestDistance = .finite(totalCost)
                             meetingVertex = currentVertex
-                            visitor?.meetingFound?(currentVertex, bestDistance)
+                            observation?.receive(.meetingFound(.init(vertex: currentVertex, distance: bestDistance)))
                         }
                     }
                 }
@@ -206,7 +268,7 @@
                         distances: &forwardDistances,
                         predecessors: &forwardPredecessors,
                         queue: &queue,
-                        visitor: visitor
+                        observation: observation
                     )
                 } else {
                     exploreBackward(
@@ -215,7 +277,7 @@
                         distances: &backwardDistances,
                         predecessors: &backwardPredecessors,
                         queue: &queue,
-                        visitor: visitor
+                        observation: observation
                     )
                 }
             }
@@ -245,7 +307,7 @@
         ///   - distances: The distances dictionary to update.
         ///   - predecessors: The predecessors dictionary to update.
         ///   - queue: The priority queue to add new items to.
-        ///   - visitor: An optional visitor.
+        ///   - observation: An optional algorithm observation.
         @usableFromInline
         func exploreForward(
             from currentVertex: Vertex,
@@ -253,24 +315,29 @@
             distances: inout [Vertex: Cost<Weight>],
             predecessors: inout [Vertex: Edge?],
             queue: inout PriorityQueue<PriorityItem>,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) {
             for edge in graph.outgoingEdges(of: currentVertex) {
                 guard let neighbor = graph.destination(of: edge) else { continue }
 
-                visitor?.examineEdge?(edge, .forward)
+                observation?.receive(.edgeExamined(.init(edge: edge, direction: .forward)))
 
                 let weight = edgeWeight.costToExplore(edge, graph)
                 let newCost = currentCost + weight
 
                 let currentBestCost = distances[neighbor] ?? .infinite
                 if newCost < currentBestCost {
+                    guard case .finite(let relaxedCost) = newCost else {
+                        preconditionFailure("An improved bidirectional Dijkstra cost must be finite")
+                    }
                     distances[neighbor] = newCost
                     predecessors[neighbor] = edge
                     queue.enqueue(PriorityItem(vertex: neighbor, cost: newCost, direction: .forward))
-                    visitor?.edgeRelaxed?(edge, .forward)
+                    observation?.receive(
+                        .edgeRelaxed(.init(edge: edge, direction: .forward, newCost: relaxedCost))
+                    )
                 } else {
-                    visitor?.edgeNotRelaxed?(edge, .forward)
+                    observation?.receive(.edgeNotRelaxed(.init(edge: edge, direction: .forward)))
                 }
             }
         }
@@ -283,7 +350,7 @@
         ///   - distances: The distances dictionary to update.
         ///   - predecessors: The predecessors dictionary to update.
         ///   - queue: The priority queue to add new items to.
-        ///   - visitor: An optional visitor.
+        ///   - observation: An optional algorithm observation.
         @usableFromInline
         func exploreBackward(
             from currentVertex: Vertex,
@@ -291,24 +358,29 @@
             distances: inout [Vertex: Cost<Weight>],
             predecessors: inout [Vertex: Edge?],
             queue: inout PriorityQueue<PriorityItem>,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) {
             for edge in graph.incomingEdges(of: currentVertex) {
                 guard let neighbor = graph.source(of: edge) else { continue }
 
-                visitor?.examineEdge?(edge, .backward)
+                observation?.receive(.edgeExamined(.init(edge: edge, direction: .backward)))
 
                 let weight = edgeWeight.costToExplore(edge, graph)
                 let newCost = currentCost + weight
 
                 let currentBestCost = distances[neighbor] ?? .infinite
                 if newCost < currentBestCost {
+                    guard case .finite(let relaxedCost) = newCost else {
+                        preconditionFailure("An improved bidirectional Dijkstra cost must be finite")
+                    }
                     distances[neighbor] = newCost
                     predecessors[neighbor] = edge
                     queue.enqueue(PriorityItem(vertex: neighbor, cost: newCost, direction: .backward))
-                    visitor?.edgeRelaxed?(edge, .backward)
+                    observation?.receive(
+                        .edgeRelaxed(.init(edge: edge, direction: .backward, newCost: relaxedCost))
+                    )
                 } else {
-                    visitor?.edgeNotRelaxed?(edge, .backward)
+                    observation?.receive(.edgeNotRelaxed(.init(edge: edge, direction: .backward)))
                 }
             }
         }
@@ -372,9 +444,9 @@
             from source: Vertex,
             to destination: Vertex,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Path<Vertex, Edge>? {
-            shortestPath(from: source, to: destination, visitor: visitor).path
+            shortestPath(from: source, to: destination, observation: observation).path
         }
     }
 
@@ -392,5 +464,28 @@
         }
     }
 
-    extension BidirectionalDijkstra: VisitorSupporting {}
+    extension BidirectionalDijkstra: AlgorithmObserving {}
+
+    extension BidirectionalDijkstra.Event: VertexExaminedEvent, EdgeExaminedEvent, EdgeRelaxedEvent {
+        /// Returns the examined directional vertex carried by the event.
+        @inlinable
+        public static func examinedVertex(from event: Self) -> BidirectionalDijkstra.DirectedVertex? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        /// Returns the examined directional edge carried by the event.
+        @inlinable
+        public static func examinedEdge(from event: Self) -> BidirectionalDijkstra.DirectedEdge? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+
+        /// Returns successful directional edge-relaxation details carried by the event.
+        @inlinable
+        public static func relaxation(from event: Self) -> BidirectionalDijkstra.Relaxation? {
+            guard case .edgeRelaxed(let relaxation) = event else { return nil }
+            return relaxation
+        }
+    }
 #endif

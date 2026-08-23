@@ -26,8 +26,8 @@
     where
         Graph.VertexDescriptor: Hashable
     {
-        /// The visitor type for observing algorithm progress.
-        public typealias Visitor = SPFA<Graph, Weight>.Visitor
+        /// The event type for observing algorithm progress.
+        public typealias Event = SPFA<Graph, Weight>.Event
 
         /// The cost definition for edge weights.
         public let weight: CostDefinition<Graph, Weight>
@@ -45,16 +45,16 @@
         /// - Parameters:
         ///   - source: The source vertex
         ///   - graph: The graph to search in
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation to observe the algorithm progress
         /// - Returns: The result containing distances, predecessors, and negative cycle information
         @inlinable
         public func shortestPaths(
             from source: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> SingleSourceShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
             let spfa = SPFA(on: graph, edgeWeight: weight)
-            let result = spfa.shortestPathsFromSource(source, visitor: visitor)
+            let result = spfa.shortestPathsFromSource(source, observation: observation)
             return SingleSourceShortestPaths(
                 distances: result.distances,
                 predecessors: result.predecessors,
@@ -63,5 +63,5 @@
         }
     }
 
-    extension SPFAShortestPath: VisitorSupporting {}
+    extension SPFAShortestPath: AlgorithmObserving {}
 #endif

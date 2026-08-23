@@ -20,49 +20,31 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
         case reachable(depth: UInt)
     }
 
-    /// A visitor that can be used to observe the breadth-first search algorithm's progress.
-    public struct Visitor {
-        /// Called when discovering a new vertex.
-        public var discoverVertex: ((Vertex) -> Void)?
-        /// Called when examining a vertex.
-        public var examineVertex: ((Vertex) -> Void)?
-        /// Called when examining an edge.
-        public var examineEdge: ((Edge) -> Void)?
-        /// Called when traversing a tree edge.
-        public var treeEdge: ((Edge) -> Void)?
-        /// Called when traversing a non-tree edge.
-        public var nonTreeEdge: ((Edge) -> Void)?
-        /// Called when traversing an edge to a gray vertex.
-        public var grayTargetEdge: ((Edge) -> Void)?
-        /// Called when traversing an edge to a black vertex.
-        public var blackTargetEdge: ((Edge) -> Void)?
-        /// Called when finishing a vertex.
-        public var finishVertex: ((Vertex) -> Void)?
-        /// Called to determine if an edge should be traversed.
-        public var shouldTraverse: (((from: Vertex, to: Vertex, via: Edge, context: Result)) -> Bool)?
+    /// An event emitted synchronously while breadth-first search advances.
+    public enum Event {
+        case vertexDiscovered(Vertex)
+        case vertexExamined(Vertex)
+        case edgeExamined(Edge)
+        case treeEdgeTraversed(Edge)
+        case nonTreeEdgeTraversed(Edge)
+        case grayTargetEdgeTraversed(Edge)
+        case blackTargetEdgeTraversed(Edge)
+        case vertexFinished(Vertex)
+    }
 
-        /// Creates a new visitor.
+    /// A candidate tree edge presented to a traversal policy.
+    public struct TraversalCandidate {
+        public let from: Vertex
+        public let to: Vertex
+        public let via: Edge
+        public let context: Result
+
         @inlinable
-        public init(
-            discoverVertex: ((Vertex) -> Void)? = nil,
-            examineVertex: ((Vertex) -> Void)? = nil,
-            examineEdge: ((Edge) -> Void)? = nil,
-            treeEdge: ((Edge) -> Void)? = nil,
-            nonTreeEdge: ((Edge) -> Void)? = nil,
-            grayTargetEdge: ((Edge) -> Void)? = nil,
-            blackTargetEdge: ((Edge) -> Void)? = nil,
-            finishVertex: ((Vertex) -> Void)? = nil,
-            shouldTraverse: (((from: Vertex, to: Vertex, via: Edge, context: Result)) -> Bool)? = nil
-        ) {
-            self.discoverVertex = discoverVertex
-            self.examineVertex = examineVertex
-            self.examineEdge = examineEdge
-            self.treeEdge = treeEdge
-            self.nonTreeEdge = nonTreeEdge
-            self.grayTargetEdge = grayTargetEdge
-            self.blackTargetEdge = blackTargetEdge
-            self.finishVertex = finishVertex
-            self.shouldTraverse = shouldTraverse
+        public init(from: Vertex, to: Vertex, via: Edge, context: Result) {
+            self.from = from
+            self.to = to
+            self.via = via
+            self.context = context
         }
     }
 
@@ -123,6 +105,10 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
     let graph: Graph
     @usableFromInline
     let source: Vertex
+    @usableFromInline
+    let observation: AlgorithmObservation<Event>?
+    @usableFromInline
+    let shouldTraverse: ((TraversalCandidate) -> Bool)?
 
     /// Creates a new breadth-first search algorithm instance.
     ///
@@ -136,15 +122,50 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
     ) {
         self.graph = graph
         self.source = source
+        self.observation = nil
+        self.shouldTraverse = nil
+    }
+
+    @inlinable
+    init(
+        on graph: Graph,
+        from source: Vertex,
+        observation: AlgorithmObservation<Event>? = nil,
+        shouldTraverse: ((TraversalCandidate) -> Bool)? = nil
+    ) {
+        self.graph = graph
+        self.source = source
+        self.observation = observation
+        self.shouldTraverse = shouldTraverse
+    }
+
+    /// Adds a policy that decides whether candidate tree edges may be traversed.
+    ///
+    /// Repeated policies are evaluated in attachment order and short-circuit on
+    /// the first rejection.
+    @inlinable
+    public func allowingTraversal(
+        _ predicate: @escaping (TraversalCandidate) -> Bool
+    ) -> Self {
+        let earlier = shouldTraverse
+        return .init(
+            on: graph,
+            from: source,
+            observation: observation,
+            shouldTraverse: { candidate in
+                (earlier?(candidate) ?? true) && predicate(candidate)
+            }
+        )
     }
 
     /// Creates an iterator for the breadth-first search.
     ///
-    /// - Parameter visitor: An optional visitor to observe the algorithm's progress.
+    /// - Parameter observation: An optional observation of the algorithm's progress.
     /// - Returns: An iterator for the search.
     @inlinable
-    public func makeIterator(visitor: Visitor?) -> Iterator {
-        Iterator(graph: graph, source: source, visitor: visitor)
+    public func makeIterator(observation: AlgorithmObservation<Event>?) -> Iterator {
+        let combined = self.observation.map { $0.followed(by: observation) } ?? observation
+        return Iterator(graph: graph, source: source, observation: combined, shouldTraverse: shouldTraverse)
     }
 
     /// An iterator for breadth-first search.
@@ -154,7 +175,9 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
         @usableFromInline
         let source: Vertex
         @usableFromInline
-        let visitor: Visitor?
+        let observation: AlgorithmObservation<Event>?
+        @usableFromInline
+        let shouldTraverse: ((TraversalCandidate) -> Bool)?
         @usableFromInline
         var queue: Deque<Vertex> = []
 
@@ -172,21 +195,25 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
         /// - Parameters:
         ///   - graph: The graph to search in.
         ///   - source: The source vertex.
-        ///   - visitor: An optional visitor.
+        ///   - observation: An optional observation.
+        ///   - shouldTraverse: An optional policy for candidate tree edges.
         @inlinable
         public init(
             graph: Graph,
             source: Vertex,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>? = nil,
+            shouldTraverse: ((TraversalCandidate) -> Bool)? = nil
         ) {
             self.graph = graph
             self.source = source
-            self.visitor = visitor
+            self.observation = observation
+            self.shouldTraverse = shouldTraverse
             self.propertyMap = graph.makeVertexPropertyMap()
 
             propertyMap[source][colorProperty] = .gray
             propertyMap[source][distanceProperty] = .reachable(depth: 0)
             self.queue.enqueue(source)
+            observation?.receive(.vertexDiscovered(source))
         }
 
         /// Gets the next result from the search.
@@ -198,10 +225,10 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
                 return nil
             }
 
-            visitor?.examineVertex?(current)
+            observation?.receive(.vertexExamined(current))
 
             for edge in graph.outgoingEdges(of: current) {
-                visitor?.examineEdge?(edge)
+                observation?.receive(.edgeExamined(edge))
 
                 guard let destination = graph.destination(of: edge) else { continue }
 
@@ -217,26 +244,30 @@ public struct BreadthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescri
                             predecessorEdgeProperty: predecessorEdgeProperty,
                             propertyMap: propertyMap
                         )
-                        if let veto = visitor?.shouldTraverse, veto((from: current, to: destination, via: edge, context: context)) == false { continue }
+                        if let shouldTraverse,
+                            !shouldTraverse(.init(from: current, to: destination, via: edge, context: context))
+                        {
+                            continue
+                        }
                         propertyMap[destination][colorProperty] = .gray
                         propertyMap[destination][distanceProperty] = propertyMap[current][distanceProperty] + 1
                         propertyMap[destination][predecessorEdgeProperty] = edge
-                        visitor?.discoverVertex?(destination)
+                        observation?.receive(.vertexDiscovered(destination))
                         queue.enqueue(destination)
-                        visitor?.treeEdge?(edge)
+                        observation?.receive(.treeEdgeTraversed(edge))
                     case .gray:
                         // Non-tree edge to an in-progress vertex
-                        visitor?.grayTargetEdge?(edge)
-                        visitor?.nonTreeEdge?(edge)
+                        observation?.receive(.grayTargetEdgeTraversed(edge))
+                        observation?.receive(.nonTreeEdgeTraversed(edge))
                     case .black:
                         // Non-tree edge to a finished vertex
-                        visitor?.blackTargetEdge?(edge)
-                        visitor?.nonTreeEdge?(edge)
+                        observation?.receive(.blackTargetEdgeTraversed(edge))
+                        observation?.receive(.nonTreeEdgeTraversed(edge))
                 }
             }
 
             propertyMap[current][colorProperty] = .black
-            visitor?.finishVertex?(current)
+            observation?.receive(.vertexFinished(current))
 
             return Result(
                 source: source,
@@ -254,7 +285,7 @@ extension BreadthFirstSearch.Iterator: IteratorProtocol {}
 extension BreadthFirstSearch: Sequence {
     @inlinable
     public func makeIterator() -> Iterator {
-        makeIterator(visitor: nil)
+        makeIterator(observation: nil)
     }
 }
 
@@ -455,4 +486,47 @@ extension BreadthFirstSearch.Distance: ExpressibleByNilLiteral {
     }
 }
 
-extension BreadthFirstSearch: VisitorSupportingSequence {}
+extension BreadthFirstSearch: AlgorithmObservationSequence {}
+
+extension BreadthFirstSearch.Event: VertexDiscoveredEvent, VertexExaminedEvent, EdgeExaminedEvent {
+    /// Returns a discovered vertex carried by the event.
+    @inlinable
+    public static func discoveredVertex(from event: Self) -> Graph.VertexDescriptor? {
+        guard case .vertexDiscovered(let vertex) = event else { return nil }
+        return vertex
+    }
+
+    /// Returns an examined vertex carried by the event.
+    @inlinable
+    public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+        guard case .vertexExamined(let vertex) = event else { return nil }
+        return vertex
+    }
+
+    /// Returns an examined edge carried by the event.
+    @inlinable
+    public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+        guard case .edgeExamined(let edge) = event else { return nil }
+        return edge
+    }
+}
+
+extension BreadthFirstSearch {
+    /// Named selectors for breadth-first-search events.
+    public enum EventCases {
+        public static var vertexDiscovered: AlgorithmEventCase<Event, Vertex> { .init { if case .vertexDiscovered(let value) = $0 { value } else { nil } } }
+        public static var vertexExamined: AlgorithmEventCase<Event, Vertex> { .init { if case .vertexExamined(let value) = $0 { value } else { nil } } }
+        public static var edgeExamined: AlgorithmEventCase<Event, Edge> { .init { if case .edgeExamined(let value) = $0 { value } else { nil } } }
+        public static var treeEdgeTraversed: AlgorithmEventCase<Event, Edge> { .init { if case .treeEdgeTraversed(let value) = $0 { value } else { nil } } }
+        public static var nonTreeEdgeTraversed: AlgorithmEventCase<Event, Edge> {
+            .init { if case .nonTreeEdgeTraversed(let value) = $0 { value } else { nil } }
+        }
+        public static var grayTargetEdgeTraversed: AlgorithmEventCase<Event, Edge> {
+            .init { if case .grayTargetEdgeTraversed(let value) = $0 { value } else { nil } }
+        }
+        public static var blackTargetEdgeTraversed: AlgorithmEventCase<Event, Edge> {
+            .init { if case .blackTargetEdgeTraversed(let value) = $0 { value } else { nil } }
+        }
+        public static var vertexFinished: AlgorithmEventCase<Event, Vertex> { .init { if case .vertexFinished(let value) = $0 { value } else { nil } } }
+    }
+}

@@ -425,9 +425,9 @@
             #expect(result.flow(through: bt) == 0.0)
         }
 
-        // MARK: - Visitor pattern
+        // MARK: - Observation
 
-        @Test func visitorReceivesAllEvents() {
+        @Test func observationReceivesAllEvents() {
             // s→a→t, one augmenting path, demand satisfied in one iteration.
             var graph = AdjacencyList()
             let s = graph.addVertex { $0.label = "s" }
@@ -447,29 +447,30 @@
             var updateFlowCount = 0
             var iterationCount = 0
 
-            var visitor = SuccessiveShortestPaths<AdjacencyList, Double>.Visitor()
-            visitor.findPath = { _, _ in findPathCount += 1 }
-            visitor.augmentPath = { _, _ in augmentPathCount += 1 }
-            visitor.updateFlow = { _, _ in updateFlowCount += 1 }
-            visitor.iterationCompleted = { _, _ in iterationCount += 1 }
+            typealias Cases = SuccessiveShortestPaths<AdjacencyList, Double>.EventCases
+            let algorithm = SuccessiveShortestPaths<AdjacencyList, Double>(
+                capacity: .property(\.weight),
+                unitCost: .property(\.unitCost)
+            )
+            .observing(Cases.pathSearchStarted) { _ in findPathCount += 1 }
+            .observing(Cases.pathAugmentationStarted) { _ in augmentPathCount += 1 }
+            .observing(Cases.flowUpdated) { _ in updateFlowCount += 1 }
+            .observing(Cases.iterationCompleted) { _ in iterationCount += 1 }
 
             _ = graph.minimumCostFlow(
                 from: s,
                 to: t,
                 demand: nil,
-                using: .successiveShortestPaths(
-                    capacity: .property(\.weight),
-                    unitCost: .property(\.unitCost)
-                ).withVisitor(visitor)
+                using: algorithm
             )
 
-            #expect(findPathCount >= 1, "findPath fires at least once per iteration")
-            #expect(augmentPathCount >= 1, "augmentPath fires when a path is found")
-            #expect(updateFlowCount >= 1, "updateFlow fires for each edge whose flow changes")
+            #expect(findPathCount >= 1, "pathSearchStarted fires at least once per iteration")
+            #expect(augmentPathCount >= 1, "pathAugmentationStarted fires when a path is found")
+            #expect(updateFlowCount >= 1, "flowUpdated fires for each edge whose flow changes")
             #expect(iterationCount >= 1, "iterationCompleted fires after each augmentation")
         }
 
-        @Test func composedVisitorsBothReceiveEvents() {
+        @Test func composedObservationsBothReceiveEvents() {
             var graph = AdjacencyList()
             let s = graph.addVertex { $0.label = "s" }
             let t = graph.addVertex { $0.label = "t" }
@@ -481,25 +482,24 @@
             var count1 = 0
             var count2 = 0
 
-            var vis1 = SuccessiveShortestPaths<AdjacencyList, Double>.Visitor()
-            vis1.iterationCompleted = { _, _ in count1 += 1 }
-
-            var vis2 = SuccessiveShortestPaths<AdjacencyList, Double>.Visitor()
-            vis2.iterationCompleted = { _, _ in count2 += 1 }
+            typealias Cases = SuccessiveShortestPaths<AdjacencyList, Double>.EventCases
+            let algorithm = SuccessiveShortestPaths<AdjacencyList, Double>(
+                capacity: .property(\.weight),
+                unitCost: .property(\.unitCost)
+            )
+            .observing(Cases.iterationCompleted) { _ in count1 += 1 }
+            .observing(Cases.iterationCompleted) { _ in count2 += 1 }
 
             _ = graph.minimumCostFlow(
                 from: s,
                 to: t,
                 demand: nil,
-                using: .successiveShortestPaths(
-                    capacity: .property(\.weight),
-                    unitCost: .property(\.unitCost)
-                ).withVisitor(vis1.combined(with: vis2))
+                using: algorithm
             )
 
             #expect(count1 >= 1)
             #expect(count2 >= 1)
-            #expect(count1 == count2, "Both composed visitors must receive identical event counts")
+            #expect(count1 == count2, "Both composed observations must receive identical event counts")
         }
 
         @Test func iterationCompletedReportsRunningTotals() {
@@ -529,17 +529,20 @@
             }
 
             var snapshots: [(Double, Double)] = []
-            var visitor = SuccessiveShortestPaths<AdjacencyList, Double>.Visitor()
-            visitor.iterationCompleted = { flow, cost in snapshots.append((flow, cost)) }
+            typealias Cases = SuccessiveShortestPaths<AdjacencyList, Double>.EventCases
+            let algorithm = SuccessiveShortestPaths<AdjacencyList, Double>(
+                capacity: .property(\.weight),
+                unitCost: .property(\.unitCost)
+            )
+            .observing(Cases.iterationCompleted) { completion in
+                snapshots.append((completion.totalFlow, completion.totalCost))
+            }
 
             _ = graph.minimumCostFlow(
                 from: s,
                 to: t,
                 demand: nil,
-                using: .successiveShortestPaths(
-                    capacity: .property(\.weight),
-                    unitCost: .property(\.unitCost)
-                ).withVisitor(visitor)
+                using: algorithm
             )
 
             #expect(snapshots.count >= 2, "Two distinct augmenting paths → at least two iterations")

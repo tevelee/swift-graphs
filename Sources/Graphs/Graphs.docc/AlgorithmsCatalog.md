@@ -1469,6 +1469,5 @@ let ordering2 = graph.orderVertices(using: .reverseCuthillMcKee())
 ## See Also
 
 - <doc:AlgorithmInterfaces>
-- <doc:VisitorPattern>
+- <doc:ObservingAlgorithms>
 - <doc:Architecture>
-

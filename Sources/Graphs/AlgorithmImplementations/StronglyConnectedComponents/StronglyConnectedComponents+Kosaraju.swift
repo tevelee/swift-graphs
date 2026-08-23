@@ -8,7 +8,7 @@
         public func stronglyConnectedComponents(
             using algorithm: KosarajuStronglyConnectedComponentsAlgorithm<Self>
         ) -> StronglyConnectedComponentsResult<VertexDescriptor> {
-            algorithm.stronglyConnectedComponents(in: self, visitor: nil as Kosaraju<Self>.Visitor?)
+            algorithm.stronglyConnectedComponents(in: self, observation: nil)
         }
     }
 #endif

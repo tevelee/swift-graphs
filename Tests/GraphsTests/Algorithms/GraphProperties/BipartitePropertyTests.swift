@@ -186,54 +186,52 @@ struct BipartitePropertyTests {
         }
     }
 
-    // MARK: - Visitor Support
+    // MARK: - Observation Support
 
-    @Test func bfsVisitorPattern() {
+    @Test func bfsObservationPattern() {
         let graph = createBipartiteGraph()
         var colorAssignments: [(String, Int)] = []
         var colorConflicts: [(String, String, Int)] = []
 
-        let visitor = BFSBipartiteProperty<AdjacencyList>.Visitor(
-            assignColor: { vertex, color in
+        typealias Cases = BFSBipartitePropertyAlgorithm<AdjacencyList>.EventCases
+        let algorithm = BFSBipartitePropertyAlgorithm<AdjacencyList>()
+            .observing(Cases.colorAssigned) { assignment in
                 // Get vertex label by finding the vertex in the graph
-                for v in graph.vertices() where v == vertex {
-                    colorAssignments.append(("Vertex", color))
+                for vertex in graph.vertices() where vertex == assignment.vertex {
+                    colorAssignments.append(("Vertex", assignment.color))
                     break
                 }
-            },
-            colorConflict: { _, _, color in
-                colorConflicts.append(("Vertex1", "Vertex2", color))
             }
-        )
+            .observing(Cases.colorConflictDetected) { conflict in
+                colorConflicts.append(("Vertex1", "Vertex2", conflict.color))
+            }
 
-        let algorithm = BFSBipartitePropertyAlgorithm<AdjacencyList>()
-        let result = algorithm.isBipartite(in: graph, visitor: visitor)
+        let result = graph.isBipartite(using: algorithm)
 
         #expect(result == true)
         #expect(colorConflicts.isEmpty)
         #expect(!colorAssignments.isEmpty)
     }
 
-    @Test func dfsVisitorPattern() {
+    @Test func dfsObservationPattern() {
         let graph = createNonBipartiteGraph()
         var colorAssignments: [(String, Int)] = []
         var colorConflicts: [(String, String, Int)] = []
 
-        let visitor = DFSBipartiteProperty<AdjacencyList>.Visitor(
-            assignColor: { vertex, color in
+        typealias Cases = DFSBipartitePropertyAlgorithm<AdjacencyList>.EventCases
+        let algorithm = DFSBipartitePropertyAlgorithm<AdjacencyList>()
+            .observing(Cases.colorAssigned) { assignment in
                 // Get vertex label by finding the vertex in the graph
-                for v in graph.vertices() where v == vertex {
-                    colorAssignments.append(("Vertex", color))
+                for vertex in graph.vertices() where vertex == assignment.vertex {
+                    colorAssignments.append(("Vertex", assignment.color))
                     break
                 }
-            },
-            colorConflict: { _, _, color in
-                colorConflicts.append(("Vertex1", "Vertex2", color))
             }
-        )
+            .observing(Cases.colorConflictDetected) { conflict in
+                colorConflicts.append(("Vertex1", "Vertex2", conflict.color))
+            }
 
-        let algorithm = DFSBipartitePropertyAlgorithm<AdjacencyList>()
-        let result = algorithm.isBipartite(in: graph, visitor: visitor)
+        let result = graph.isBipartite(using: algorithm)
 
         #expect(result == false)
         #expect(!colorConflicts.isEmpty)
@@ -269,12 +267,12 @@ struct BipartitePropertyTests {
 
     // MARK: - Composition
 
-    /// Exercises all four `BFSBipartiteProperty.Visitor` events through a composed visitor pair.
+    /// Exercises all four BFS bipartite events through two composed observation groups.
     ///
-    /// Graph: undirected triangle A−B−C (non-bipartite) triggers `colorConflict`.
-    /// Both composed visitors must see identical event counts.
-    @Test func bfsComposedVisitorsReceiveAllEvents() {
-        let graph = createNonBipartiteGraph()  // triangle: always fires colorConflict
+    /// Graph: undirected triangle A−B−C (non-bipartite) emits `colorConflictDetected`.
+    /// Both composed observation groups must see identical event counts.
+    @Test func bfsComposedObservationsReceiveAllEvents() {
+        let graph = createNonBipartiteGraph()  // triangle always emits colorConflictDetected
 
         var assign1 = 0
         var assign2 = 0
@@ -285,30 +283,26 @@ struct BipartitePropertyTests {
         var conflict1 = 0
         var conflict2 = 0
 
-        var v1 = BFSBipartiteProperty<AdjacencyList>.Visitor()
-        v1.assignColor = { _, _ in assign1 += 1 }
-        v1.examineVertex = { _ in examVtx1 += 1 }
-        v1.examineEdge = { _ in examEdge1 += 1 }
-        v1.colorConflict = { _, _, _ in conflict1 += 1 }
-
-        var v2 = BFSBipartiteProperty<AdjacencyList>.Visitor()
-        v2.assignColor = { _, _ in assign2 += 1 }
-        v2.examineVertex = { _ in examVtx2 += 1 }
-        v2.examineEdge = { _ in examEdge2 += 1 }
-        v2.colorConflict = { _, _, _ in conflict2 += 1 }
-
-        let combined = v1.combined(with: v2)
-        let algorithm = BFSBipartitePropertyAlgorithm<AdjacencyList>()
-        let result = algorithm.isBipartite(in: graph, visitor: combined)
+        typealias Cases = BFSBipartitePropertyAlgorithm<AdjacencyList>.EventCases
+        let observed = BFSBipartitePropertyAlgorithm<AdjacencyList>()
+            .observing(Cases.colorAssigned) { _ in assign1 += 1 }
+            .observing(Cases.vertexExamined) { _ in examVtx1 += 1 }
+            .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+            .observing(Cases.colorConflictDetected) { _ in conflict1 += 1 }
+            .observing(Cases.colorAssigned) { _ in assign2 += 1 }
+            .observing(Cases.vertexExamined) { _ in examVtx2 += 1 }
+            .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+            .observing(Cases.colorConflictDetected) { _ in conflict2 += 1 }
+        let result = graph.isBipartite(using: observed)
 
         #expect(!result, "triangle is not bipartite")
-        #expect(assign1 >= 1, "assignColor fires for each colored vertex")
+        #expect(assign1 >= 1, "colorAssigned fires for each colored vertex")
         #expect(assign2 >= 1)
-        #expect(examVtx1 >= 1, "examineVertex fires for each dequeued vertex")
+        #expect(examVtx1 >= 1, "vertexExamined fires for each dequeued vertex")
         #expect(examVtx2 >= 1)
-        #expect(examEdge1 >= 1, "examineEdge fires for each edge examined")
+        #expect(examEdge1 >= 1, "edgeExamined fires for each examined edge")
         #expect(examEdge2 >= 1)
-        #expect(conflict1 >= 1, "colorConflict fires when the odd cycle is detected")
+        #expect(conflict1 >= 1, "colorConflictDetected fires when the odd cycle is detected")
         #expect(conflict2 >= 1)
         #expect(assign1 == assign2)
         #expect(examVtx1 == examVtx2)
@@ -316,8 +310,8 @@ struct BipartitePropertyTests {
         #expect(conflict1 == conflict2)
     }
 
-    /// Exercises all four `DFSBipartiteProperty.Visitor` events through a composed visitor pair.
-    @Test func dfsComposedVisitorsReceiveAllEvents() {
+    /// Exercises all four DFS bipartite events through two composed observation groups.
+    @Test func dfsComposedObservationsReceiveAllEvents() {
         let graph = createNonBipartiteGraph()
 
         var assign1 = 0
@@ -329,21 +323,17 @@ struct BipartitePropertyTests {
         var conflict1 = 0
         var conflict2 = 0
 
-        var v1 = DFSBipartiteProperty<AdjacencyList>.Visitor()
-        v1.assignColor = { _, _ in assign1 += 1 }
-        v1.examineVertex = { _ in examVtx1 += 1 }
-        v1.examineEdge = { _ in examEdge1 += 1 }
-        v1.colorConflict = { _, _, _ in conflict1 += 1 }
-
-        var v2 = DFSBipartiteProperty<AdjacencyList>.Visitor()
-        v2.assignColor = { _, _ in assign2 += 1 }
-        v2.examineVertex = { _ in examVtx2 += 1 }
-        v2.examineEdge = { _ in examEdge2 += 1 }
-        v2.colorConflict = { _, _, _ in conflict2 += 1 }
-
-        let combined = v1.combined(with: v2)
-        let algorithm = DFSBipartitePropertyAlgorithm<AdjacencyList>()
-        let result = algorithm.isBipartite(in: graph, visitor: combined)
+        typealias Cases = DFSBipartitePropertyAlgorithm<AdjacencyList>.EventCases
+        let observed = DFSBipartitePropertyAlgorithm<AdjacencyList>()
+            .observing(Cases.colorAssigned) { _ in assign1 += 1 }
+            .observing(Cases.vertexExamined) { _ in examVtx1 += 1 }
+            .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+            .observing(Cases.colorConflictDetected) { _ in conflict1 += 1 }
+            .observing(Cases.colorAssigned) { _ in assign2 += 1 }
+            .observing(Cases.vertexExamined) { _ in examVtx2 += 1 }
+            .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+            .observing(Cases.colorConflictDetected) { _ in conflict2 += 1 }
+        let result = graph.isBipartite(using: observed)
 
         #expect(!result, "triangle is not bipartite")
         #expect(assign1 >= 1)

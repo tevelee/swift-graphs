@@ -26,8 +26,7 @@
     where
         Graph.VertexDescriptor: Hashable
     {
-        /// The visitor type for observing traversal progress.
-        public typealias Visitor = AStar<Graph, Int, HScore, HScore>.Visitor
+        public typealias Event = AStar<Graph, Int, HScore, HScore>.Event
 
         /// The heuristic function used to guide the traversal.
         public let heuristic: Heuristic<Graph, HScore>
@@ -45,42 +44,37 @@
         /// - Parameters:
         ///   - source: The vertex to start traversal from.
         ///   - graph: The graph to traverse.
-        ///   - visitor: An optional visitor to observe the traversal progress.
+        ///   - observation: An optional observation of the traversal progress.
         /// - Returns: The traversal result containing vertices and edges.
         @inlinable
         public func traverse(
             from source: Graph.VertexDescriptor,
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
             var vertices: [Graph.VertexDescriptor] = []
             var edges: [Graph.EdgeDescriptor] = []
 
-            AStar(
+            let collector = AlgorithmObservation<Event> { event in
+                switch event {
+                    case .vertexExamined(let vertex): vertices.append(vertex)
+                    case .edgeRelaxed(let relaxation): edges.append(relaxation.edge)
+                    default: break
+                }
+            }
+            var iterator = AStar(
                 on: graph,
                 from: source,
                 edgeWeight: .uniform(0),
                 heuristic: heuristic,
                 calculateTotalCost: { $1 }
             )
-            .withVisitor {
-                .init(
-                    examineVertex: { vertex in
-                        vertices.append(vertex)
-                    },
-                    edgeRelaxed: { edge in
-                        edges.append(edge)
-                    }
-                )
-            }
-            .withVisitor {
-                visitor
-            }
-            .forEach { _ in }
+            .makeIterator(observation: collector.followed(by: observation))
+            while iterator.next() != nil {}
 
             return TraversalResult(vertices: vertices, edges: edges)
         }
     }
 
-    extension BestFirstTraversal: VisitorSupporting {}
+    extension BestFirstTraversal: AlgorithmObserving {}
 #endif

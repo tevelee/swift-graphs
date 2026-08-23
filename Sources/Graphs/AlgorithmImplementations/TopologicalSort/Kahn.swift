@@ -15,29 +15,37 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe Kahn's algorithm progress.
-        public struct Visitor {
-            /// Called when discovering a vertex.
-            public var discoverVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when finishing a vertex.
-            public var finishVertex: ((Vertex) -> Void)?
-            /// Called when detecting a cycle.
-            public var detectCycle: (([Vertex]) -> Void)?
+        public enum Event {
+            case vertexDiscovered(Vertex)
+            case edgeExamined(Edge)
+            case vertexFinished(Vertex)
+            case cycleDetected([Vertex])
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                discoverVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                finishVertex: ((Vertex) -> Void)? = nil,
-                detectCycle: (([Vertex]) -> Void)? = nil
-            ) {
-                self.discoverVertex = discoverVertex
-                self.examineEdge = examineEdge
-                self.finishVertex = finishVertex
-                self.detectCycle = detectCycle
+        public enum EventCases {
+            public static var vertexDiscovered: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexDiscovered(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var vertexFinished: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexFinished(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var cycleDetected: AlgorithmEventCase<Event, [Vertex]> {
+                .init {
+                    guard case .cycleDetected(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -49,12 +57,12 @@
         ///
         /// - Parameters:
         ///   - graph: The graph to sort topologically.
-        ///   - visitor: An optional visitor to observe the algorithm progress.
+        ///   - observation: An optional observation of the algorithm progress.
         /// - Returns: The topological sort result.
         @inlinable
         public func topologicalSort(
             in graph: Graph,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> TopologicalSortResult<Graph.VertexDescriptor> {
             var inDegree: OrderedDictionary<Vertex, Int> = [:]
             var sortedVertices: [Vertex] = []
@@ -67,7 +75,7 @@
 
             for vertex in graph.vertices() {
                 for edge in graph.outgoingEdges(of: vertex) {
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
                     guard let destination = graph.destination(of: edge) else { continue }
                     inDegree[destination, default: 0] += 1
                 }
@@ -82,13 +90,13 @@
             while !queue.isEmpty {
                 guard let current = queue.dequeue() else { break }
 
-                visitor?.discoverVertex?(current)
+                observation?.receive(.vertexDiscovered(current))
                 sortedVertices.append(current)
-                visitor?.finishVertex?(current)
+                observation?.receive(.vertexFinished(current))
 
                 // Remove this vertex and update in-degrees of its neighbors
                 for edge in graph.outgoingEdges(of: current) {
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
                     guard let destination = graph.destination(of: edge) else { continue }
 
                     inDegree[destination, default: 0] -= 1
@@ -103,7 +111,7 @@
             let cycleVertices = hasCycle ? Array(inDegree.keys.filter { inDegree[$0, default: 0] > 0 }) : []
 
             if hasCycle {
-                visitor?.detectCycle?(cycleVertices)
+                observation?.receive(.cycleDetected(cycleVertices))
             }
 
             return TopologicalSortResult(
@@ -114,5 +122,20 @@
         }
     }
 
-    extension Kahn: VisitorSupporting {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
+    extension Kahn.Event: VertexDiscoveredEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func discoveredVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexDiscovered(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+    }
 #endif

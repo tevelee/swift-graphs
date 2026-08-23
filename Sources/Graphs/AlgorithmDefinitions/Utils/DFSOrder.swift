@@ -5,11 +5,13 @@
 /// traversal strategies like preorder, postorder, and inorder.
 public struct DFSOrder<Graph: IncidenceGraph> where Graph.VertexDescriptor: Hashable {
     @usableFromInline
-    let makeVisitor: (Graph, SharedBuffer<Graph.VertexDescriptor>) -> DepthFirstSearch<Graph>.Visitor
+    let makeObservation: (Graph, SharedBuffer<Graph.VertexDescriptor>) -> AlgorithmObservation<DepthFirstSearch<Graph>.Event>
 
     @inlinable
-    public init(makeVisitor: @escaping (Graph, SharedBuffer<Graph.VertexDescriptor>) -> DepthFirstSearch<Graph>.Visitor) {
-        self.makeVisitor = makeVisitor
+    public init(
+        makeObservation: @escaping (Graph, SharedBuffer<Graph.VertexDescriptor>) -> AlgorithmObservation<DepthFirstSearch<Graph>.Event>
+    ) {
+        self.makeObservation = makeObservation
     }
 }
 
@@ -28,22 +30,22 @@ extension DFSOrder {
     @inlinable
     public static var preorder: DFSOrder {
         DFSOrder { _, buffer in
-            .init(
-                discoverVertex: { vertex in
+            .init { event in
+                if case .vertexDiscovered(let vertex) = event {
                     buffer.append(vertex)
                 }
-            )
+            }
         }
     }
 
     @inlinable
     public static var postorder: DFSOrder {
         DFSOrder { _, buffer in
-            .init(
-                finishVertex: { vertex in
+            .init { event in
+                if case .vertexFinished(let vertex) = event {
                     buffer.append(vertex)
                 }
-            )
+            }
         }
     }
 }
@@ -61,26 +63,29 @@ extension DFSOrder where Graph: BinaryIncidenceGraph {
                 }
             }
 
-            return .init(
-                discoverVertex: { v in
-                    if graph.leftNeighbor(of: v) == nil {
-                        emit(v)
-                    }
-                },
-                treeEdge: { e in
-                    if let p = graph.source(of: e), let c = graph.destination(of: e) {
-                        parent[c] = p
-                    }
-                },
-                finishVertex: { u in
-                    if let p = parent[u],
-                        let leftChild = graph.leftNeighbor(of: p),
-                        leftChild == u
-                    {
-                        emit(p)
-                    }
+            return .init { event in
+                switch event {
+                    case .vertexDiscovered(let vertex):
+                        if graph.leftNeighbor(of: vertex) == nil {
+                            emit(vertex)
+                        }
+                    case .treeEdgeTraversed(let edge):
+                        if let parentVertex = graph.source(of: edge),
+                            let child = graph.destination(of: edge)
+                        {
+                            parent[child] = parentVertex
+                        }
+                    case .vertexFinished(let vertex):
+                        if let parentVertex = parent[vertex],
+                            let leftChild = graph.leftNeighbor(of: parentVertex),
+                            leftChild == vertex
+                        {
+                            emit(parentVertex)
+                        }
+                    default:
+                        break
                 }
-            )
+            }
         }
     }
 }

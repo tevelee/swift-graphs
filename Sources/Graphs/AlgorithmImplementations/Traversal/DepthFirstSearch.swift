@@ -23,48 +23,31 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
         case finished(UInt)
     }
 
-    /// A visitor that can be used to observe the depth-first search algorithm's progress.
-    public struct Visitor {
-        /// Called when discovering a new vertex.
-        public var discoverVertex: ((Vertex) -> Void)?
-        /// Called when examining a vertex.
-        public var examineVertex: ((Vertex) -> Void)?
-        /// Called when examining an edge.
-        public var examineEdge: ((Edge) -> Void)?
-        /// Called when traversing a tree edge.
-        public var treeEdge: ((Edge) -> Void)?
-        /// Called when traversing a back edge.
-        public var backEdge: ((Edge) -> Void)?
-        /// Called when traversing a forward edge.
-        public var forwardEdge: ((Edge) -> Void)?
-        /// Called when traversing a cross edge.
-        public var crossEdge: ((Edge) -> Void)?
-        /// Called when finishing a vertex.
-        public var finishVertex: ((Vertex) -> Void)?
-        /// Called to determine if an edge should be traversed.
-        public var shouldTraverse: (((from: Vertex, to: Vertex, via: Edge, context: Result)) -> Bool)?
+    /// An event emitted synchronously while depth-first search advances.
+    public enum Event {
+        case vertexDiscovered(Vertex)
+        case vertexExamined(Vertex)
+        case edgeExamined(Edge)
+        case treeEdgeTraversed(Edge)
+        case backEdgeTraversed(Edge)
+        case forwardEdgeTraversed(Edge)
+        case crossEdgeTraversed(Edge)
+        case vertexFinished(Vertex)
+    }
+
+    /// A candidate tree edge presented to a traversal policy.
+    public struct TraversalCandidate {
+        public let from: Vertex
+        public let to: Vertex
+        public let via: Edge
+        public let context: Result
 
         @inlinable
-        public init(
-            discoverVertex: ((Vertex) -> Void)? = nil,
-            examineVertex: ((Vertex) -> Void)? = nil,
-            examineEdge: ((Edge) -> Void)? = nil,
-            treeEdge: ((Edge) -> Void)? = nil,
-            backEdge: ((Edge) -> Void)? = nil,
-            forwardEdge: ((Edge) -> Void)? = nil,
-            crossEdge: ((Edge) -> Void)? = nil,
-            finishVertex: ((Vertex) -> Void)? = nil,
-            shouldTraverse: (((from: Vertex, to: Vertex, via: Edge, context: Result)) -> Bool)? = nil
-        ) {
-            self.discoverVertex = discoverVertex
-            self.examineVertex = examineVertex
-            self.examineEdge = examineEdge
-            self.treeEdge = treeEdge
-            self.backEdge = backEdge
-            self.forwardEdge = forwardEdge
-            self.crossEdge = crossEdge
-            self.finishVertex = finishVertex
-            self.shouldTraverse = shouldTraverse
+        public init(from: Vertex, to: Vertex, via: Edge, context: Result) {
+            self.from = from
+            self.to = to
+            self.via = via
+            self.context = context
         }
     }
 
@@ -168,6 +151,10 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
     /// The source vertex.
     @usableFromInline
     let source: Vertex
+    @usableFromInline
+    let observation: AlgorithmObservation<Event>?
+    @usableFromInline
+    let shouldTraverse: ((TraversalCandidate) -> Bool)?
 
     /// Creates a new depth-first search algorithm instance.
     ///
@@ -181,15 +168,45 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
     ) {
         self.graph = graph
         self.source = source
+        self.observation = nil
+        self.shouldTraverse = nil
+    }
+
+    @inlinable
+    init(
+        on graph: Graph,
+        from source: Vertex,
+        observation: AlgorithmObservation<Event>? = nil,
+        shouldTraverse: ((TraversalCandidate) -> Bool)? = nil
+    ) {
+        self.graph = graph
+        self.source = source
+        self.observation = observation
+        self.shouldTraverse = shouldTraverse
+    }
+
+    /// Adds a policy that decides whether candidate tree edges may be traversed.
+    @inlinable
+    public func allowingTraversal(_ predicate: @escaping (TraversalCandidate) -> Bool) -> Self {
+        let earlier = shouldTraverse
+        return .init(
+            on: graph,
+            from: source,
+            observation: observation,
+            shouldTraverse: { candidate in
+                (earlier?(candidate) ?? true) && predicate(candidate)
+            }
+        )
     }
 
     /// Creates an iterator for the depth-first search.
     ///
-    /// - Parameter visitor: An optional visitor to observe the algorithm's progress.
+    /// - Parameter observation: An optional observation of the algorithm's progress.
     /// - Returns: An iterator for the search.
     @inlinable
-    public func makeIterator(visitor: Visitor?) -> Iterator {
-        Iterator(graph: graph, source: source, visitor: visitor)
+    public func makeIterator(observation: AlgorithmObservation<Event>?) -> Iterator {
+        let combined = self.observation.map { $0.followed(by: observation) } ?? observation
+        return Iterator(graph: graph, source: source, observation: combined, shouldTraverse: shouldTraverse)
     }
 
     /// An iterator for depth-first search.
@@ -200,9 +217,11 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
         /// The source vertex.
         @usableFromInline
         let source: Vertex
-        /// An optional visitor.
+        /// An optional observation.
         @usableFromInline
-        let visitor: Visitor?
+        let observation: AlgorithmObservation<Event>?
+        @usableFromInline
+        let shouldTraverse: ((TraversalCandidate) -> Bool)?
         // The DFS stack
         @usableFromInline
         var stack: [DFSFrame] = []
@@ -228,16 +247,19 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
         /// - Parameters:
         ///   - graph: The graph to search in.
         ///   - source: The source vertex.
-        ///   - visitor: An optional visitor.
+        ///   - observation: An optional observation.
+        ///   - shouldTraverse: An optional policy for candidate tree edges.
         @inlinable
         public init(
             graph: Graph,
             source: Vertex,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>? = nil,
+            shouldTraverse: ((TraversalCandidate) -> Bool)? = nil
         ) {
             self.graph = graph
             self.source = source
-            self.visitor = visitor
+            self.observation = observation
+            self.shouldTraverse = shouldTraverse
             self.propertyMap = graph.makeVertexPropertyMap()
 
             self.stack.push(DFSFrame(vertex: source, isFirstVisit: true, depth: 0))
@@ -256,7 +278,7 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
                     time += 1
                     propertyMap[vertex][colorProperty] = .black
                     propertyMap[vertex][finishTimeProperty] = .finished(time)
-                    visitor?.finishVertex?(vertex)
+                    observation?.receive(.vertexFinished(vertex))
 
                     return Result(
                         source: source,
@@ -277,8 +299,8 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
                 propertyMap[vertex][discoveryTimeProperty] = .discovered(time)
                 propertyMap[vertex][depthProperty] = frame.depth
 
-                visitor?.discoverVertex?(vertex)
-                visitor?.examineVertex?(vertex)
+                observation?.receive(.vertexDiscovered(vertex))
+                observation?.receive(.vertexExamined(vertex))
 
                 stack.push(DFSFrame(vertex: vertex, isFirstVisit: false, depth: frame.depth))
 
@@ -287,7 +309,7 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
                 // parallel edges to the same vertex don't fire treeEdge multiple times.
                 var pendingWhite: Set<Vertex> = []
                 for edge in graph.outgoingEdges(of: vertex) {
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
 
                     guard let destination = graph.destination(of: edge) else { continue }
 
@@ -295,11 +317,11 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
 
                     switch destinationColor {
                         case .white:
-                            // Only build the (expensive) Result context if the visitor
-                            // actually has a `shouldTraverse` hook. The Result captures
+                            // Only build the (expensive) Result context if a traversal
+                            // policy is attached. The Result captures
                             // the existential property map, costing a retain on every
                             // edge — was happening for *all* edges of *every* vertex.
-                            if let veto = visitor?.shouldTraverse {
+                            if let shouldTraverse {
                                 let context = Result(
                                     source: source,
                                     currentVertex: vertex,
@@ -309,17 +331,17 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
                                     depthProperty: depthProperty,
                                     propertyMap: propertyMap
                                 )
-                                if veto((from: vertex, to: destination, via: edge, context: context)) == false { continue }
+                                if !shouldTraverse(.init(from: vertex, to: destination, via: edge, context: context)) { continue }
                             }
                             // Skip parallel edges to a destination already claimed this batch.
                             // Checked after the veto so a vetoed first parallel edge doesn't
                             // block subsequent parallel edges from being presented to shouldTraverse.
                             guard pendingWhite.insert(destination).inserted else { continue }
                             propertyMap[destination][predecessorEdgeProperty] = edge
-                            visitor?.treeEdge?(edge)
+                            observation?.receive(.treeEdgeTraversed(edge))
                             whiteNeighbors.append(destination)
                         case .gray:
-                            visitor?.backEdge?(edge)
+                            observation?.receive(.backEdgeTraversed(edge))
                         case .black:
                             let sourceDiscoveryTime = propertyMap[vertex][discoveryTimeProperty]
                             let destinationDiscoveryTime = propertyMap[destination][discoveryTimeProperty]
@@ -328,9 +350,9 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
                                 case .discovered(let destTime) = destinationDiscoveryTime,
                                 sourceTime < destTime
                             {
-                                visitor?.forwardEdge?(edge)
+                                observation?.receive(.forwardEdgeTraversed(edge))
                             } else {
-                                visitor?.crossEdge?(edge)
+                                observation?.receive(.crossEdgeTraversed(edge))
                             }
                     }
                 }
@@ -345,12 +367,32 @@ public struct DepthFirstSearch<Graph: IncidenceGraph> where Graph.VertexDescript
     }
 }
 
+extension DepthFirstSearch.Event: VertexDiscoveredEvent, VertexExaminedEvent, EdgeExaminedEvent {
+    @inlinable
+    public static func discoveredVertex(from event: Self) -> Graph.VertexDescriptor? {
+        guard case .vertexDiscovered(let vertex) = event else { return nil }
+        return vertex
+    }
+
+    @inlinable
+    public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+        guard case .vertexExamined(let vertex) = event else { return nil }
+        return vertex
+    }
+
+    @inlinable
+    public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+        guard case .edgeExamined(let edge) = event else { return nil }
+        return edge
+    }
+}
+
 extension DepthFirstSearch.Iterator: IteratorProtocol {}
 
 extension DepthFirstSearch: Sequence {
     @inlinable
     public func makeIterator() -> Iterator {
-        makeIterator(visitor: nil)
+        makeIterator(observation: nil)
     }
 }
 
@@ -483,4 +525,20 @@ extension DepthFirstSearch.Time: ExpressibleByNilLiteral {
     }
 }
 
-extension DepthFirstSearch: VisitorSupportingSequence {}
+extension DepthFirstSearch: AlgorithmObservationSequence {}
+
+extension DepthFirstSearch {
+    /// Named selectors for depth-first-search events.
+    public enum EventCases {
+        public static var vertexDiscovered: AlgorithmEventCase<Event, Vertex> { .init { if case .vertexDiscovered(let value) = $0 { value } else { nil } } }
+        public static var vertexExamined: AlgorithmEventCase<Event, Vertex> { .init { if case .vertexExamined(let value) = $0 { value } else { nil } } }
+        public static var edgeExamined: AlgorithmEventCase<Event, Edge> { .init { if case .edgeExamined(let value) = $0 { value } else { nil } } }
+        public static var treeEdgeTraversed: AlgorithmEventCase<Event, Edge> { .init { if case .treeEdgeTraversed(let value) = $0 { value } else { nil } } }
+        public static var backEdgeTraversed: AlgorithmEventCase<Event, Edge> { .init { if case .backEdgeTraversed(let value) = $0 { value } else { nil } } }
+        public static var forwardEdgeTraversed: AlgorithmEventCase<Event, Edge> {
+            .init { if case .forwardEdgeTraversed(let value) = $0 { value } else { nil } }
+        }
+        public static var crossEdgeTraversed: AlgorithmEventCase<Event, Edge> { .init { if case .crossEdgeTraversed(let value) = $0 { value } else { nil } } }
+        public static var vertexFinished: AlgorithmEventCase<Event, Vertex> { .init { if case .vertexFinished(let value) = $0 { value } else { nil } } }
+    }
+}

@@ -7,7 +7,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     public func isConnected(
         using algorithm: some ConnectedPropertyAlgorithm<Self>
     ) -> Bool {
-        algorithm.isConnected(in: self, visitor: nil)
+        algorithm.isConnected(in: self, observation: nil)
     }
 }
 
@@ -25,31 +25,31 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 }
 
 /// A protocol for connected property algorithms.
-public protocol ConnectedPropertyAlgorithm<Graph> {
+public protocol ConnectedPropertyAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Checks if the graph is connected.
     ///
     /// - Parameters:
     ///   - graph: The graph to check
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: `true` if the graph is connected, `false` otherwise
     @inlinable
     func isConnected(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Bool
 }
 
-extension VisitorWrapper: ConnectedPropertyAlgorithm
-where Base: ConnectedPropertyAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: ConnectedPropertyAlgorithm
+where Base: ConnectedPropertyAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
-    public func isConnected(in graph: Base.Graph, visitor: Base.Visitor?) -> Bool {
-        base.isConnected(in: graph, visitor: self.visitor.combined(with: visitor))
+    public func isConnected(in graph: Base.Graph, observation: AlgorithmObservation<Base.Event>?) -> Bool {
+        base.isConnected(in: graph, observation: self.observation.followed(by: observation))
     }
 }

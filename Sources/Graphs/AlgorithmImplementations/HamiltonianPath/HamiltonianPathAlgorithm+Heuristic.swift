@@ -14,12 +14,12 @@
     extension HeuristicHamiltonian: HamiltonianPathAlgorithm {
         @inlinable
         public func hamiltonianPath(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-            hamiltonianPath(in: graph, visitor: nil)
+            hamiltonianPath(in: graph, observation: nil)
         }
 
         @inlinable
         public func hamiltonianPath(from source: Graph.VertexDescriptor, in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-            hamiltonianPath(from: source, in: graph, visitor: nil)
+            hamiltonianPath(from: source, in: graph, observation: nil)
         }
 
         @inlinable
@@ -28,7 +28,7 @@
             to destination: Graph.VertexDescriptor,
             in graph: Graph
         ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-            hamiltonianPath(from: source, to: destination, in: graph, visitor: nil)
+            hamiltonianPath(from: source, to: destination, in: graph, observation: nil)
         }
     }
 #endif

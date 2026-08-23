@@ -19,33 +19,71 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe the algorithm's progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when an edge is identified as part of a shortest path.
-            public var edgeOnShortestPath: ((Edge) -> Void)?
-            /// Called when a vertex is finished (all outgoing edges processed).
-            public var finishVertex: ((Vertex) -> Void)?
-            /// Called when a complete path is found.
-            public var pathFound: (([Vertex], [Edge]) -> Void)?
+        /// A shortest path reported during backtracking.
+        public struct FoundPath {
+            /// The vertices in path order.
+            public let vertices: [Vertex]
+            /// The edges in path order.
+            public let edges: [Edge]
 
-            /// Creates a new visitor.
+            /// Creates a found-path payload.
             @inlinable
-            public init(
-                examineVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                edgeOnShortestPath: ((Edge) -> Void)? = nil,
-                finishVertex: ((Vertex) -> Void)? = nil,
-                pathFound: (([Vertex], [Edge]) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.edgeOnShortestPath = edgeOnShortestPath
-                self.finishVertex = finishVertex
-                self.pathFound = pathFound
+            public init(vertices: [Vertex], edges: [Edge]) {
+                self.vertices = vertices
+                self.edges = edges
+            }
+        }
+
+        /// An event emitted while backtracking Dijkstra runs.
+        public enum Event {
+            /// A vertex was examined.
+            case vertexExamined(Vertex)
+            /// An edge was examined.
+            case edgeExamined(Edge)
+            /// An edge was found to belong to a shortest path.
+            case edgeFoundOnShortestPath(Edge)
+            /// A vertex was finished.
+            case vertexFinished(Vertex)
+            /// A complete shortest path was found.
+            case pathFound(FoundPath)
+        }
+
+        /// Selectors for backtracking Dijkstra events.
+        public enum EventCases {
+            /// Selects examined vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects examined edges.
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects edges found on shortest paths.
+            public static var edgeFoundOnShortestPath: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeFoundOnShortestPath(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects finished vertices.
+            public static var vertexFinished: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexFinished(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            /// Selects found paths.
+            public static var pathFound: AlgorithmEventCase<Event, FoundPath> {
+                .init {
+                    guard case .pathFound(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -94,13 +132,13 @@
         /// - Parameters:
         ///   - source: The starting vertex
         ///   - condition: A closure that determines when to stop searching
-        ///   - visitor: Optional visitor for algorithm events
+        ///   - observation: Optional algorithm observation
         /// - Returns: A result containing all paths with the minimum cost
         @inlinable
         public func findAllShortestPaths(
             from source: Vertex,
             until condition: @escaping (Vertex) -> Bool,
-            visitor: Visitor? = nil
+            observation: AlgorithmObservation<Event>? = nil
         ) -> Result {
             // First, run a standard Dijkstra to find if any vertex satisfying the condition exists and get optimal cost
             let dijkstra = Dijkstra(
@@ -120,7 +158,7 @@
             let (costs, predecessors) = computeAllShortestPredecessors(
                 from: source,
                 until: condition,
-                visitor: visitor
+                observation: observation
             )
 
             // Verify we found at least one vertex satisfying the condition
@@ -141,7 +179,7 @@
                 to: destination,
                 costs: costs,
                 predecessors: predecessors,
-                visitor: visitor
+                observation: observation
             )
 
             return Result(source: source, destination: destination, paths: paths, optimalCost: optimalCost)
@@ -152,13 +190,13 @@
         /// - Parameters:
         ///   - source: The starting vertex
         ///   - destination: The target vertex
-        ///   - visitor: Optional visitor for algorithm events
+        ///   - observation: Optional algorithm observation
         /// - Returns: A result containing all paths with the minimum cost
         @inlinable
         public func findAllShortestPaths(
             from source: Vertex,
             to destination: Vertex,
-            visitor: Visitor? = nil
+            observation: AlgorithmObservation<Event>? = nil
         ) -> Result {
             // First, run a standard Dijkstra to find if a path exists and get optimal cost
             let dijkstra = Dijkstra(
@@ -177,7 +215,7 @@
             let (costs, predecessors) = computeAllShortestPredecessors(
                 from: source,
                 destination: destination,
-                visitor: visitor
+                observation: observation
             )
 
             // Verify we found the destination
@@ -198,7 +236,7 @@
                 to: destination,
                 costs: costs,
                 predecessors: predecessors,
-                visitor: visitor
+                observation: observation
             )
 
             return Result(source: source, destination: destination, paths: paths, optimalCost: optimalCost)
@@ -221,7 +259,7 @@
         func computeAllShortestPredecessors(
             from source: Vertex,
             until condition: @escaping (Vertex) -> Bool,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> (costs: [Vertex: Weight], predecessors: [Vertex: [Edge]]) {
             var queue = PriorityQueue<PriorityItem>()
             queue.enqueue(PriorityItem(vertex: source, cost: .finite(.zero)))
@@ -239,7 +277,7 @@
                 }
 
                 visited.insert(currentVertex)
-                visitor?.examineVertex?(currentVertex)
+                observation?.receive(.vertexExamined(currentVertex))
 
                 // Early termination if we've reached a vertex satisfying the condition
                 if condition(currentVertex) {
@@ -252,7 +290,7 @@
                 for edge in graph.outgoingEdges(of: currentVertex) {
                     guard let neighbor = graph.destination(of: edge) else { continue }
 
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
 
                     let edgeCost = edgeWeight.costToExplore(edge, graph)
                     let newCost = currentCost + edgeCost
@@ -263,11 +301,11 @@
                             costs[neighbor] = newCost
                             predecessors[neighbor] = [edge]
                             queue.enqueue(PriorityItem(vertex: neighbor, cost: .finite(newCost)))
-                            visitor?.edgeOnShortestPath?(edge)
+                            observation?.receive(.edgeFoundOnShortestPath(edge))
                         } else if newCost == existingCost {
                             // Found another equally optimal path - add to predecessors
                             predecessors[neighbor, default: []].append(edge)
-                            visitor?.edgeOnShortestPath?(edge)
+                            observation?.receive(.edgeFoundOnShortestPath(edge))
                         }
                         // If newCost > existingCost, ignore (not on a shortest path)
                     } else {
@@ -275,11 +313,11 @@
                         costs[neighbor] = newCost
                         predecessors[neighbor] = [edge]
                         queue.enqueue(PriorityItem(vertex: neighbor, cost: .finite(newCost)))
-                        visitor?.edgeOnShortestPath?(edge)
+                        observation?.receive(.edgeFoundOnShortestPath(edge))
                     }
                 }
 
-                visitor?.finishVertex?(currentVertex)
+                observation?.receive(.vertexFinished(currentVertex))
             }
 
             return (costs, predecessors)
@@ -290,7 +328,7 @@
         func computeAllShortestPredecessors(
             from source: Vertex,
             destination: Vertex,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> (costs: [Vertex: Weight], predecessors: [Vertex: [Edge]]) {
             var queue = PriorityQueue<PriorityItem>()
             queue.enqueue(PriorityItem(vertex: source, cost: .finite(.zero)))
@@ -308,7 +346,7 @@
                 }
 
                 visited.insert(currentVertex)
-                visitor?.examineVertex?(currentVertex)
+                observation?.receive(.vertexExamined(currentVertex))
 
                 // Early termination if we've reached the destination
                 if currentVertex == destination {
@@ -321,7 +359,7 @@
                 for edge in graph.outgoingEdges(of: currentVertex) {
                     guard let neighbor = graph.destination(of: edge) else { continue }
 
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
 
                     let edgeCost = edgeWeight.costToExplore(edge, graph)
                     let newCost = currentCost + edgeCost
@@ -332,11 +370,11 @@
                             costs[neighbor] = newCost
                             predecessors[neighbor] = [edge]
                             queue.enqueue(PriorityItem(vertex: neighbor, cost: .finite(newCost)))
-                            visitor?.edgeOnShortestPath?(edge)
+                            observation?.receive(.edgeFoundOnShortestPath(edge))
                         } else if newCost == existingCost {
                             // Found another equally optimal path - add to predecessors
                             predecessors[neighbor, default: []].append(edge)
-                            visitor?.edgeOnShortestPath?(edge)
+                            observation?.receive(.edgeFoundOnShortestPath(edge))
                         }
                         // If newCost > existingCost, ignore (not on a shortest path)
                     } else {
@@ -344,11 +382,11 @@
                         costs[neighbor] = newCost
                         predecessors[neighbor] = [edge]
                         queue.enqueue(PriorityItem(vertex: neighbor, cost: .finite(newCost)))
-                        visitor?.edgeOnShortestPath?(edge)
+                        observation?.receive(.edgeFoundOnShortestPath(edge))
                     }
                 }
 
-                visitor?.finishVertex?(currentVertex)
+                observation?.receive(.vertexFinished(currentVertex))
             }
 
             return (costs, predecessors)
@@ -361,7 +399,7 @@
             to destination: Vertex,
             costs: [Vertex: Weight],
             predecessors: [Vertex: [Edge]],
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> [Path<Vertex, Edge>] {
             var result: [Path<Vertex, Edge>] = []
             var stack: [([Vertex], [Edge])] = [([destination], [])]
@@ -380,7 +418,7 @@
                         edges: Array(edges)
                     )
                     result.append(path)
-                    visitor?.pathFound?(Array(vertices), Array(edges))
+                    observation?.receive(.pathFound(.init(vertices: Array(vertices), edges: Array(edges))))
                 } else {
                     // Continue backtracking
                     guard let incomingEdges = predecessors[currentVertex],
@@ -424,6 +462,24 @@
         @inlinable
         public static func < (lhs: Self, rhs: Self) -> Bool {
             lhs.cost < rhs.cost
+        }
+    }
+
+    extension BacktrackingDijkstra: AlgorithmObserving {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_PATHFINDING
+    extension BacktrackingDijkstra.Event: VertexExaminedEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
         }
     }
 #endif

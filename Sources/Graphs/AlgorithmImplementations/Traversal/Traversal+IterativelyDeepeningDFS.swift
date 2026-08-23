@@ -18,11 +18,12 @@ extension TraversalAlgorithm {
 ///
 /// - Complexity: O(b^d) where b is the branching factor and d is the depth
 public struct IterativelyDeepeningDFSTraversal<Graph: IncidenceGraph>: TraversalAlgorithm where Graph.VertexDescriptor: Hashable {
-    /// The visitor type for observing traversal progress.
-    public typealias Visitor = DepthFirstSearch<Graph>.Visitor
+    public typealias Event = DepthFirstSearch<Graph>.Event
 
     /// The maximum depth to traverse, or nil for unlimited.
     public let maxDepth: UInt?
+    @usableFromInline
+    let shouldTraverse: ((DepthFirstSearch<Graph>.TraversalCandidate) -> Bool)?
 
     /// Creates a new iteratively deepening DFS traversal algorithm.
     ///
@@ -30,6 +31,22 @@ public struct IterativelyDeepeningDFSTraversal<Graph: IncidenceGraph>: Traversal
     @inlinable
     public init(maxDepth: UInt? = nil) {
         self.maxDepth = maxDepth
+        self.shouldTraverse = nil
+    }
+
+    @inlinable
+    init(maxDepth: UInt?, shouldTraverse: ((DepthFirstSearch<Graph>.TraversalCandidate) -> Bool)?) {
+        self.maxDepth = maxDepth
+        self.shouldTraverse = shouldTraverse
+    }
+
+    /// Adds a policy that decides whether candidate tree edges may be traversed.
+    @inlinable
+    public func allowingTraversal(_ predicate: @escaping (DepthFirstSearch<Graph>.TraversalCandidate) -> Bool) -> Self {
+        let earlier = shouldTraverse
+        return .init(maxDepth: maxDepth) { candidate in
+            (earlier?(candidate) ?? true) && predicate(candidate)
+        }
     }
 
     /// Performs an iteratively deepening DFS traversal from the source vertex.
@@ -37,18 +54,18 @@ public struct IterativelyDeepeningDFSTraversal<Graph: IncidenceGraph>: Traversal
     /// - Parameters:
     ///   - source: The vertex to start traversal from.
     ///   - graph: The graph to traverse.
-    ///   - visitor: An optional visitor to observe the traversal progress.
+    ///   - observation: An optional observation of the traversal progress.
     /// - Returns: The traversal result containing vertices and edges.
     @inlinable
     public func traverse(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
         var allVertices: [Graph.VertexDescriptor] = []
         var allEdges: [Graph.EdgeDescriptor] = []
         var visitedVertices = Set<Graph.VertexDescriptor>()
-        var visitorCalledVertices = Set<Graph.VertexDescriptor>()
+        var observedVertices = Set<Graph.VertexDescriptor>()
 
         // Perform IDDFS by increasing depth limit
         var depth = 0
@@ -61,52 +78,32 @@ public struct IterativelyDeepeningDFSTraversal<Graph: IncidenceGraph>: Traversal
             var depthVertices: [Graph.VertexDescriptor] = []
             var depthEdges: [Graph.EdgeDescriptor] = []
 
-            // Create a visitor that collects vertices and edges for this depth
-            let depthVisitor = DepthFirstSearch<Graph>.Visitor(
-                discoverVertex: { vertex in
-                    if !visitedVertices.contains(vertex) {
-                        depthVertices.append(vertex)
-                    }
-                    // Only call visitor once per vertex
-                    if !visitorCalledVertices.contains(vertex) {
-                        visitorCalledVertices.insert(vertex)
-                        visitor?.discoverVertex?(vertex)
-                    }
-                },
-                examineVertex: { vertex in
-                    visitor?.examineVertex?(vertex)
-                },
-                examineEdge: { edge in
-                    visitor?.examineEdge?(edge)
-                },
-                treeEdge: { edge in
-                    depthEdges.append(edge)
-                    visitor?.treeEdge?(edge)
-                },
-                backEdge: { edge in
-                    visitor?.backEdge?(edge)
-                },
-                forwardEdge: { edge in
-                    visitor?.forwardEdge?(edge)
-                },
-                crossEdge: { edge in
-                    visitor?.crossEdge?(edge)
-                },
-                finishVertex: { vertex in
-                    visitor?.finishVertex?(vertex)
-                },
-                shouldTraverse: { args in
-                    guard let currentDepth = args.context.depth(of: args.from) else { return true }
-                    let shouldTraverse = currentDepth < depth
-                    let visitorShouldTraverse = visitor?.shouldTraverse?(args) ?? true
-                    return shouldTraverse && visitorShouldTraverse
+            let depthObservation = AlgorithmObservation<Event> { event in
+                switch event {
+                    case .vertexDiscovered(let vertex):
+                        if !visitedVertices.contains(vertex) {
+                            depthVertices.append(vertex)
+                        }
+                        if observedVertices.insert(vertex).inserted {
+                            observation?.receive(event)
+                        }
+                    case .treeEdgeTraversed(let edge):
+                        depthEdges.append(edge)
+                        observation?.receive(event)
+                    default:
+                        observation?.receive(event)
                 }
-            )
+            }
+            let callerPolicy = shouldTraverse
+            let depthPolicy: (DepthFirstSearch<Graph>.TraversalCandidate) -> Bool = { candidate in
+                let currentDepth = candidate.context.depth(of: candidate.from) ?? 0
+                return currentDepth < depth && (callerPolicy?(candidate) ?? true)
+            }
 
             // Perform DFS with current depth limit
-            DepthFirstSearch(on: graph, from: source)
-                .withVisitor { depthVisitor }
-                .forEach { _ in }
+            var iterator = DepthFirstSearch(on: graph, from: source, shouldTraverse: depthPolicy)
+                .makeIterator(observation: depthObservation)
+            while iterator.next() != nil {}
 
             // Add newly discovered vertices to the result
             for vertex in depthVertices where visitedVertices.insert(vertex).inserted {
@@ -127,4 +124,4 @@ public struct IterativelyDeepeningDFSTraversal<Graph: IncidenceGraph>: Traversal
 
 }
 
-extension IterativelyDeepeningDFSTraversal: VisitorSupporting {}
+extension IterativelyDeepeningDFSTraversal: AlgorithmObserving {}

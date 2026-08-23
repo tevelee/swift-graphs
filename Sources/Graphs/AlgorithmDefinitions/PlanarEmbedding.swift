@@ -8,7 +8,7 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
     public func planarEmbedding(
         using algorithm: some PlanarEmbeddingAlgorithm<Self>
     ) -> PlanarEmbeddingResult<VertexDescriptor> {
-        algorithm.planarEmbedding(in: self, visitor: nil)
+        algorithm.planarEmbedding(in: self, observation: nil)
     }
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
@@ -24,34 +24,34 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
 }
 
 /// A protocol for algorithms that compute a planar embedding of a graph.
-public protocol PlanarEmbeddingAlgorithm<Graph> {
+public protocol PlanarEmbeddingAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & VertexListGraph & EdgeListGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Computes a planar embedding of the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to embed.
-    ///   - visitor: An optional visitor to observe the algorithm progress.
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The planar embedding result.
     func planarEmbedding(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> PlanarEmbeddingResult<Graph.VertexDescriptor>
 }
 
-extension VisitorWrapper: PlanarEmbeddingAlgorithm
-where Base: PlanarEmbeddingAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: PlanarEmbeddingAlgorithm
+where Base: PlanarEmbeddingAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
     public func planarEmbedding(
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> PlanarEmbeddingResult<Base.Graph.VertexDescriptor> {
-        base.planarEmbedding(in: graph, visitor: self.visitor.combined(with: visitor))
+        base.planarEmbedding(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 

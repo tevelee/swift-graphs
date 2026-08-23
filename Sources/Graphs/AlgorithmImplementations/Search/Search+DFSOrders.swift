@@ -16,8 +16,12 @@ extension SearchAlgorithm {
 ///
 /// - Complexity: O(V + E) where V is the number of vertices and E is the number of edges
 public struct DFSOrderedSearch<Graph: IncidenceGraph>: SearchAlgorithm where Graph.VertexDescriptor: Hashable {
+    public typealias Event = DepthFirstSearch<Graph>.Event
+
     /// The DFS order to use for traversal.
     public let order: DFSOrder<Graph>
+    @usableFromInline
+    let shouldTraverse: ((DepthFirstSearch<Graph>.TraversalCandidate) -> Bool)?
 
     /// Creates a new DFS ordered search algorithm.
     ///
@@ -25,6 +29,22 @@ public struct DFSOrderedSearch<Graph: IncidenceGraph>: SearchAlgorithm where Gra
     @inlinable
     public init(order: DFSOrder<Graph>) {
         self.order = order
+        self.shouldTraverse = nil
+    }
+
+    @inlinable
+    init(order: DFSOrder<Graph>, shouldTraverse: ((DepthFirstSearch<Graph>.TraversalCandidate) -> Bool)?) {
+        self.order = order
+        self.shouldTraverse = shouldTraverse
+    }
+
+    /// Adds a policy that decides whether candidate tree edges may be traversed.
+    @inlinable
+    public func allowingTraversal(_ predicate: @escaping (DepthFirstSearch<Graph>.TraversalCandidate) -> Bool) -> Self {
+        let earlier = shouldTraverse
+        return .init(order: order) { candidate in
+            (earlier?(candidate) ?? true) && predicate(candidate)
+        }
     }
 
     /// Performs a depth-first search with specific ordering from the source vertex.
@@ -32,18 +52,21 @@ public struct DFSOrderedSearch<Graph: IncidenceGraph>: SearchAlgorithm where Gra
     /// - Parameters:
     ///   - source: The vertex to start search from.
     ///   - graph: The graph to search in.
-    ///   - visitor: An optional visitor to observe the search progress.
+    ///   - observation: An optional observation of the search progress.
     /// - Returns: A sequence of vertices in the specified order.
     @inlinable
     public func search(
         from source: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: DepthFirstSearch<Graph>.Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> AnySequence<Graph.VertexDescriptor> {
-        let base = DepthFirstSearch(on: graph, from: source)
         return AnySequence {
             let buffer = SharedBuffer<Graph.VertexDescriptor>()
-            var iterator = base.makeIterator(visitor: order.makeVisitor(graph, buffer).combined(with: visitor))
+            var iterator = DepthFirstSearch(
+                on: graph,
+                from: source,
+                shouldTraverse: shouldTraverse
+            ).makeIterator(observation: order.makeObservation(graph, buffer).followed(by: observation))
             return AnyIterator {
                 if !buffer.elements.isEmpty {
                     return buffer.elements.removeFirst()
@@ -58,3 +81,5 @@ public struct DFSOrderedSearch<Graph: IncidenceGraph>: SearchAlgorithm where Gra
         }
     }
 }
+
+extension DFSOrderedSearch: AlgorithmObserving {}

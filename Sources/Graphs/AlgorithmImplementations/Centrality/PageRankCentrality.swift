@@ -14,7 +14,7 @@
     /// - Complexity: O(k × (V + E)) where k is the number of iterations until convergence
     public struct PageRankCentralityAlgorithm<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph>: CentralityAlgorithm
     where Graph.VertexDescriptor: Hashable {
-        public typealias Visitor = PageRankCentrality<Graph>.Visitor
+        public typealias Event = PageRankCentrality<Graph>.Event
 
         /// The damping factor (typically 0.85).
         ///
@@ -48,33 +48,66 @@
         }
 
         @inlinable
-        public func centrality(in graph: Graph, visitor: Visitor?) -> CentralityResult<Graph.VertexDescriptor> {
+        public func centrality(
+            in graph: Graph,
+            observation: AlgorithmObservation<Event>?
+        ) -> CentralityResult<Graph.VertexDescriptor> {
             let pagerank = PageRankCentrality(on: graph, dampingFactor: dampingFactor, maxIterations: maxIterations, tolerance: tolerance)
-            return pagerank.compute(visitor: visitor)
+            return pagerank.compute(observation: observation)
         }
     }
 
     /// PageRank computation implementation.
     public struct PageRankCentrality<Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph> where Graph.VertexDescriptor: Hashable {
-        /// A visitor that can be used to observe PageRank computation progress.
-        public struct Visitor {
-            /// Called at the start of each iteration.
-            public var startIteration: ((Int) -> Void)?
-            /// Called at the end of each iteration with the current rank values.
-            public var endIteration: ((Int, [Graph.VertexDescriptor: Double]) -> Void)?
-            /// Called when convergence is achieved.
-            public var converge: ((Int, [Graph.VertexDescriptor: Double]) -> Void)?
+        /// A completed PageRank iteration.
+        public struct IterationSnapshot {
+            /// The zero-based iteration index.
+            public let iteration: Int
+            /// Rank values produced by the iteration.
+            public let values: [Graph.VertexDescriptor: Double]
 
-            /// Creates a new visitor.
+            /// Creates an iteration snapshot.
             @inlinable
-            public init(
-                startIteration: ((Int) -> Void)? = nil,
-                endIteration: ((Int, [Graph.VertexDescriptor: Double]) -> Void)? = nil,
-                converge: ((Int, [Graph.VertexDescriptor: Double]) -> Void)? = nil
-            ) {
-                self.startIteration = startIteration
-                self.endIteration = endIteration
-                self.converge = converge
+            public init(iteration: Int, values: [Graph.VertexDescriptor: Double]) {
+                self.iteration = iteration
+                self.values = values
+            }
+        }
+
+        /// An event emitted while PageRank is computed.
+        public enum Event {
+            /// An iteration is about to start.
+            case iterationStarted(Int)
+            /// An iteration completed with new ranks.
+            case iterationFinished(IterationSnapshot)
+            /// The computation converged.
+            case converged(IterationSnapshot)
+        }
+
+        /// Typed selectors for PageRank events.
+        public enum EventCases {
+            /// Selects iteration starts.
+            public static var iterationStarted: AlgorithmEventCase<Event, Int> {
+                .init {
+                    guard case .iterationStarted(let iteration) = $0 else { return nil }
+                    return iteration
+                }
+            }
+
+            /// Selects completed iterations.
+            public static var iterationFinished: AlgorithmEventCase<Event, IterationSnapshot> {
+                .init {
+                    guard case .iterationFinished(let snapshot) = $0 else { return nil }
+                    return snapshot
+                }
+            }
+
+            /// Selects convergence.
+            public static var converged: AlgorithmEventCase<Event, IterationSnapshot> {
+                .init {
+                    guard case .converged(let snapshot) = $0 else { return nil }
+                    return snapshot
+                }
             }
         }
 
@@ -96,7 +129,9 @@
         }
 
         @inlinable
-        public func compute(visitor: Visitor?) -> CentralityResult<Graph.VertexDescriptor> {
+        public func compute(
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> CentralityResult<Graph.VertexDescriptor> {
             let vertices = Array(graph.vertices())
 
             // Handle empty graph
@@ -125,7 +160,7 @@
             }
 
             for iteration in 0 ..< maxIterations {
-                visitor?.startIteration?(iteration)
+                observation?.receive(.iterationStarted(iteration))
 
                 // Initialize new rank with damping factor (random jump probability)
                 let randomJump = (1.0 - dampingFactor) / n
@@ -157,7 +192,8 @@
                     }
                 }
 
-                visitor?.endIteration?(iteration, newRank)
+                let snapshot = IterationSnapshot(iteration: iteration, values: newRank)
+                observation?.receive(.iterationFinished(snapshot))
 
                 // Check for convergence
                 var maxDiff = 0.0
@@ -169,7 +205,7 @@
                 }
 
                 if maxDiff < tolerance {
-                    visitor?.converge?(iteration, newRank)
+                    observation?.receive(.converged(snapshot))
                     return CentralityResult(values: newRank)
                 }
 
@@ -181,5 +217,4 @@
         }
     }
 
-    extension PageRankCentralityAlgorithm: VisitorSupporting {}
 #endif

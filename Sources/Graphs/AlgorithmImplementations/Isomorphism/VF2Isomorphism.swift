@@ -10,33 +10,55 @@
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
 
-        /// A visitor that can be used to observe the VF2 algorithm progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when trying a vertex mapping.
-            public var tryMapping: ((Vertex, Vertex) -> Void)?
-            /// Called when a mapping is found.
-            public var mappingFound: (([Vertex: Vertex]) -> Void)?
-            /// Called when backtracking.
-            public var backtrack: ((Vertex, Vertex) -> Void)?
+        public struct VertexPair {
+            public let first: Vertex
+            public let second: Vertex
 
-            /// Creates a new visitor.
             @inlinable
-            public init(
-                examineVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                tryMapping: ((Vertex, Vertex) -> Void)? = nil,
-                mappingFound: (([Vertex: Vertex]) -> Void)? = nil,
-                backtrack: ((Vertex, Vertex) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.tryMapping = tryMapping
-                self.mappingFound = mappingFound
-                self.backtrack = backtrack
+            public init(first: Vertex, second: Vertex) {
+                self.first = first
+                self.second = second
+            }
+        }
+
+        public enum Event {
+            case vertexExamined(Vertex)
+            case edgeExamined(Edge)
+            case mappingTried(VertexPair)
+            case mappingFound([Vertex: Vertex])
+            case mappingBacktracked(VertexPair)
+        }
+
+        public enum EventCases {
+            public static var vertexExamined: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var mappingTried: AlgorithmEventCase<Event, VertexPair> {
+                .init {
+                    guard case .mappingTried(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var mappingFound: AlgorithmEventCase<Event, [Vertex: Vertex]> {
+                .init {
+                    guard case .mappingFound(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+            public static var mappingBacktracked: AlgorithmEventCase<Event, VertexPair> {
+                .init {
+                    guard case .mappingBacktracked(let value) = $0 else { return nil }
+                    return value
+                }
             }
         }
 
@@ -49,11 +71,11 @@
         /// - Parameters:
         ///   - graph1: The first graph
         ///   - graph2: The second graph
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation to observe the algorithm progress
         /// - Returns: True if the graphs are isomorphic, false otherwise
         @inlinable
-        public func areIsomorphic(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> Bool {
-            return findIsomorphism(graph1, graph2, visitor: visitor) != nil
+        public func areIsomorphic(_ graph1: Graph, _ graph2: Graph, observation: AlgorithmObservation<Event>? = nil) -> Bool {
+            return findIsomorphism(graph1, graph2, observation: observation) != nil
         }
 
         /// Finds an isomorphism mapping between two graphs using VF2 algorithm.
@@ -61,10 +83,10 @@
         /// - Parameters:
         ///   - graph1: The first graph
         ///   - graph2: The second graph
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation to observe the algorithm progress
         /// - Returns: A mapping from vertices of graph1 to vertices of graph2, or nil if not isomorphic
         @inlinable
-        public func findIsomorphism(_ graph1: Graph, _ graph2: Graph, visitor: Visitor? = nil) -> [Vertex: Vertex]? {
+        public func findIsomorphism(_ graph1: Graph, _ graph2: Graph, observation: AlgorithmObservation<Event>? = nil) -> [Vertex: Vertex]? {
             // Quick checks for basic isomorphism requirements
             guard graph1.vertexCount == graph2.vertexCount else { return nil }
             guard graph1.edgeCount == graph2.edgeCount else { return nil }
@@ -84,9 +106,9 @@
                 mapping: &mapping,
                 reverseMapping: &reverseMapping,
                 index1: 0,
-                visitor: visitor
+                observation: observation
             ) {
-                visitor?.mappingFound?(mapping)
+                observation?.receive(.mappingFound(mapping))
                 return mapping
             }
 
@@ -102,7 +124,7 @@
             mapping: inout [Vertex: Vertex],
             reverseMapping: inout [Vertex: Vertex],
             index1: Int,
-            visitor: Visitor?
+            observation: AlgorithmObservation<Event>?
         ) -> Bool {
             // If we've mapped all vertices, we found an isomorphism
             if index1 >= vertices1.count {
@@ -110,7 +132,7 @@
             }
 
             let vertex1 = vertices1[index1]
-            visitor?.examineVertex?(vertex1)
+            observation?.receive(.vertexExamined(vertex1))
 
             // Try mapping vertex1 to each unmapped vertex in graph2
             for vertex2 in vertices2 {
@@ -119,7 +141,7 @@
                     continue
                 }
 
-                visitor?.tryMapping?(vertex1, vertex2)
+                observation?.receive(.mappingTried(.init(first: vertex1, second: vertex2)))
 
                 // Check if this mapping is feasible
                 if isFeasible(
@@ -143,13 +165,13 @@
                         mapping: &mapping,
                         reverseMapping: &reverseMapping,
                         index1: index1 + 1,
-                        visitor: visitor
+                        observation: observation
                     ) {
                         return true
                     }
 
                     // Backtrack: remove the mapping
-                    visitor?.backtrack?(vertex1, vertex2)
+                    observation?.receive(.mappingBacktracked(.init(first: vertex1, second: vertex2)))
                     mapping.removeValue(forKey: vertex1)
                     reverseMapping.removeValue(forKey: vertex2)
                 }
@@ -236,5 +258,21 @@
         }
     }
 
-    extension VF2Isomorphism: VisitorSupporting {}
+    extension VF2Isomorphism: AlgorithmObserving {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_ADVANCED
+    extension VF2Isomorphism.Event: VertexExaminedEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+    }
 #endif

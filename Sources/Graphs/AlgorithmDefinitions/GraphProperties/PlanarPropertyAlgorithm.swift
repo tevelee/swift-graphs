@@ -7,7 +7,7 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
     public func isPlanar(
         using algorithm: some PlanarPropertyAlgorithm<Self>
     ) -> Bool {
-        algorithm.isPlanar(in: self, visitor: nil)
+        algorithm.isPlanar(in: self, observation: nil)
     }
 }
 
@@ -25,30 +25,30 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
 }
 
 /// A protocol for planar property algorithms.
-public protocol PlanarPropertyAlgorithm<Graph> {
+public protocol PlanarPropertyAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph & EdgeListGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Checks if the graph is planar.
     ///
     /// - Parameters:
     ///   - graph: The graph to check
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: `true` if the graph is planar, `false` otherwise
     @inlinable
     func isPlanar(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Bool
 }
 
-extension VisitorWrapper: PlanarPropertyAlgorithm where Base: PlanarPropertyAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: PlanarPropertyAlgorithm where Base: PlanarPropertyAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
-    public func isPlanar(in graph: Base.Graph, visitor: Base.Visitor?) -> Bool {
-        base.isPlanar(in: graph, visitor: self.visitor.combined(with: visitor))
+    public func isPlanar(in graph: Base.Graph, observation: AlgorithmObservation<Base.Event>?) -> Bool {
+        base.isPlanar(in: graph, observation: self.observation.followed(by: observation))
     }
 }

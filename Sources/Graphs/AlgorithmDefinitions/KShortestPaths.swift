@@ -1,11 +1,11 @@
 /// A protocol for algorithms that find k shortest paths.
-public protocol KShortestPathsAlgorithm<Graph, Weight> {
+public protocol KShortestPathsAlgorithm<Graph, Weight>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph
     /// The weight type for edge costs.
     associatedtype Weight: AdditiveArithmetic & Comparable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Finds the k shortest paths from source to destination.
     ///
@@ -14,14 +14,14 @@ public protocol KShortestPathsAlgorithm<Graph, Weight> {
     ///   - destination: The destination vertex
     ///   - k: The number of shortest paths to find
     ///   - graph: The graph to search in
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: An array of the k shortest paths, ordered by cost
     func kShortestPaths(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         k: Int,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>]
 }
 
@@ -32,7 +32,7 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
         k: Int,
         using algorithm: some KShortestPathsAlgorithm<Self, Weight>
     ) -> [Path<VertexDescriptor, EdgeDescriptor>] {
-        algorithm.kShortestPaths(from: source, to: destination, k: k, in: self, visitor: nil)
+        algorithm.kShortestPaths(from: source, to: destination, k: k, in: self, observation: nil)
     }
 }
 
@@ -53,7 +53,7 @@ extension IncidenceGraph where VertexDescriptor: Equatable {
     }
 #endif
 
-extension VisitorWrapper: KShortestPathsAlgorithm where Base: KShortestPathsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: KShortestPathsAlgorithm where Base: KShortestPathsAlgorithm {
     public typealias Graph = Base.Graph
     public typealias Weight = Base.Weight
 
@@ -63,8 +63,8 @@ extension VisitorWrapper: KShortestPathsAlgorithm where Base: KShortestPathsAlgo
         to destination: Base.Graph.VertexDescriptor,
         k: Int,
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> [Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>] {
-        base.kShortestPaths(from: source, to: destination, k: k, in: graph, visitor: self.visitor.combined(with: visitor))
+        base.kShortestPaths(from: source, to: destination, k: k, in: graph, observation: self.observation.followed(by: observation))
     }
 }

@@ -12,7 +12,7 @@ extension IncidenceGraph {
         until condition: @escaping (VertexDescriptor) -> Bool,
         using algorithm: some ShortestPathUntilAlgorithm<Self>
     ) -> Path<VertexDescriptor, EdgeDescriptor>? {
-        algorithm.shortestPath(from: source, until: condition, in: self, visitor: nil)
+        algorithm.shortestPath(from: source, until: condition, in: self, observation: nil)
     }
 }
 
@@ -53,13 +53,13 @@ public protocol ShortestPathUntilAlgorithm<Graph>: ShortestPathAlgorithm {
     ///   - source: The starting vertex
     ///   - condition: A closure that determines when to stop searching
     ///   - graph: The graph to search
-    ///   - visitor: Optional visitor for algorithm events
+    ///   - observation: An optional algorithm observation
     /// - Returns: The shortest path to the first vertex satisfying the condition, or `nil` if none exists
     func shortestPath(
         from source: Graph.VertexDescriptor,
         until condition: @escaping (Graph.VertexDescriptor) -> Bool,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>?
 }
 
@@ -71,28 +71,28 @@ extension ShortestPathUntilAlgorithm where Graph.VertexDescriptor: Equatable {
     ///   - source: The starting vertex
     ///   - destination: The target vertex
     ///   - graph: The graph to search
-    ///   - visitor: Optional visitor for algorithm events
+    ///   - observation: An optional algorithm observation
     /// - Returns: The shortest path, or `nil` if no path exists
     @inlinable
     public func shortestPath(
         from source: Graph.VertexDescriptor,
         to destination: Graph.VertexDescriptor,
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>? = nil
     ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-        shortestPath(from: source, until: { $0 == destination }, in: graph, visitor: visitor)
+        shortestPath(from: source, until: { $0 == destination }, in: graph, observation: observation)
     }
 }
 
-extension VisitorWrapper: ShortestPathUntilAlgorithm
-where Base: ShortestPathUntilAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: ShortestPathUntilAlgorithm
+where Base: ShortestPathUntilAlgorithm {
     @inlinable
     public func shortestPath(
         from source: Base.Graph.VertexDescriptor,
         until condition: @escaping (Base.Graph.VertexDescriptor) -> Bool,
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> Path<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor>? {
-        base.shortestPath(from: source, until: condition, in: graph, visitor: self.visitor.combined(with: visitor))
+        base.shortestPath(from: source, until: condition, in: graph, observation: self.observation.followed(by: observation))
     }
 }

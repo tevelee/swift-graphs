@@ -143,9 +143,9 @@ struct ConnectedPropertyTests {
         #expect(!graph.isConnected(using: .bfs()))
     }
 
-    // MARK: - Visitor Support
+    // MARK: - Observation Support
 
-    @Test func visitorCallbacks() {
+    @Test func observationReceivesEvents() {
         var graph = AdjacencyList()
         let v1 = graph.addVertex { $0.label = "1" }
         let v2 = graph.addVertex { $0.label = "2" }
@@ -157,12 +157,13 @@ struct ConnectedPropertyTests {
         var examineVertexCount = 0
         var examineEdgeCount = 0
 
-        var visitor = DFSTraversal<AdjacencyList>.Visitor()
-        visitor.discoverVertex = { _ in discoverVertexCount += 1 }
-        visitor.examineVertex = { _ in examineVertexCount += 1 }
-        visitor.examineEdge = { _ in examineEdgeCount += 1 }
+        typealias Cases = DepthFirstSearch<AdjacencyList>.EventCases
+        let observed = TraversalBasedConnectedPropertyAlgorithm<AdjacencyList, DFSTraversal<AdjacencyList>>.dfs()
+            .observing(Cases.vertexDiscovered) { _ in discoverVertexCount += 1 }
+            .observing(Cases.vertexExamined) { _ in examineVertexCount += 1 }
+            .observing(Cases.edgeExamined) { _ in examineEdgeCount += 1 }
 
-        let result = graph.isConnected(using: .dfs().withVisitor(visitor))
+        let result = graph.isConnected(using: observed)
 
         #expect(result)
         #expect(discoverVertexCount == 3)  // All 3 vertices discovered

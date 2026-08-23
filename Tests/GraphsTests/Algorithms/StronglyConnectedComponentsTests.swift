@@ -19,7 +19,7 @@
             graph.addEdge(from: c, to: a)
 
             let tarjan = Tarjan(on: graph)
-            let result = tarjan.stronglyConnectedComponents(visitor: nil)
+            let result = tarjan.stronglyConnectedComponents(observation: nil)
 
             // Should have one SCC containing all three vertices
             #expect(result.componentCount == 1)
@@ -39,7 +39,7 @@
             graph.addEdge(from: c, to: a)
 
             let kosaraju = Kosaraju(on: graph)
-            let result = kosaraju.stronglyConnectedComponents(visitor: nil)
+            let result = kosaraju.stronglyConnectedComponents(observation: nil)
 
             // Should have one SCC containing all three vertices
             #expect(result.componentCount == 1)
@@ -55,7 +55,7 @@
 
             // No edges - each vertex is its own SCC
             let tarjan = Tarjan(on: graph)
-            let result = tarjan.stronglyConnectedComponents(visitor: nil)
+            let result = tarjan.stronglyConnectedComponents(observation: nil)
 
             // Each vertex should be its own SCC
             #expect(result.componentCount == 3)
@@ -74,7 +74,7 @@
 
             // No edges - each vertex is its own SCC
             let kosaraju = Kosaraju(on: graph)
-            let result = kosaraju.stronglyConnectedComponents(visitor: nil)
+            let result = kosaraju.stronglyConnectedComponents(observation: nil)
 
             // Each vertex should be its own SCC
             #expect(result.componentCount == 3)
@@ -111,7 +111,7 @@
             graph.addEdge(from: c, to: f)
 
             let tarjan = Tarjan(on: graph)
-            let result = tarjan.stronglyConnectedComponents(visitor: nil)
+            let result = tarjan.stronglyConnectedComponents(observation: nil)
 
             // Should have three SCCs
             #expect(result.componentCount == 3)
@@ -154,7 +154,7 @@
             graph.addEdge(from: c, to: f)
 
             let kosaraju = Kosaraju(on: graph)
-            let result = kosaraju.stronglyConnectedComponents(visitor: nil)
+            let result = kosaraju.stronglyConnectedComponents(observation: nil)
 
             // Should have three SCCs
             #expect(result.componentCount == 3)
@@ -206,19 +206,19 @@
             #endif
         }
 
-        // MARK: - Visitor Support
+        // MARK: - Observation Support
 
-        /// Exercises all seven Tarjan visitor events through a composed visitor pair.
+        /// Exercises all seven Tarjan events through two composed observation groups.
         ///
         /// Graph: a→c, c→d, d→c, a→b, b→c — three SCCs: {c,d}, {b}, {a}.
-        /// - `discoverVertex` fires for each of the 4 vertices.
-        /// - `examineEdge` fires for each of the 5 edges.
-        /// - `backEdge` fires for d→c (c is a DFS ancestor of d still on the stack).
-        /// - `crossEdge` fires for b→c (c's SCC is already complete when b is processed).
-        /// - `finishVertex` fires for each of the 4 vertices.
-        /// - `startComponent` fires once per SCC (3 times).
-        /// - `finishComponent` fires once per SCC (3 times).
-        @Test func tarjanComposedVisitorsReceiveAllEvents() {
+        /// - `vertexDiscovered` fires for each of the 4 vertices.
+        /// - `edgeExamined` fires for each of the 5 edges.
+        /// - `backEdgeEncountered` fires for d→c (c is a DFS ancestor of d still on the stack).
+        /// - `crossEdgeEncountered` fires for b→c (c's SCC is already complete when b is processed).
+        /// - `vertexFinished` fires for each of the 4 vertices.
+        /// - `componentStarted` fires once per SCC (3 times).
+        /// - `componentFinished` fires once per SCC (3 times).
+        @Test func tarjanComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -246,42 +246,39 @@
             var completed1 = 0
             var completed2 = 0
 
-            var v1 = Tarjan<AdjacencyList>.Visitor()
-            v1.discoverVertex = { _ in discovered1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.backEdge = { _ in back1 += 1 }
-            v1.crossEdge = { _ in cross1 += 1 }
-            v1.finishVertex = { _ in finished1 += 1 }
-            v1.startComponent = { _ in started1 += 1 }
-            v1.finishComponent = { _ in completed1 += 1 }
+            typealias Cases = Tarjan<AdjacencyList>.EventCases
+            let observed = TarjanStronglyConnectedComponentsAlgorithm<AdjacencyList>()
+                .observing(Cases.vertexDiscovered) { _ in discovered1 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+                .observing(Cases.backEdgeEncountered) { _ in back1 += 1 }
+                .observing(Cases.crossEdgeEncountered) { _ in cross1 += 1 }
+                .observing(Cases.vertexFinished) { _ in finished1 += 1 }
+                .observing(Cases.componentStarted) { _ in started1 += 1 }
+                .observing(Cases.componentFinished) { _ in completed1 += 1 }
+                .observing(Cases.vertexDiscovered) { _ in discovered2 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+                .observing(Cases.backEdgeEncountered) { _ in back2 += 1 }
+                .observing(Cases.crossEdgeEncountered) { _ in cross2 += 1 }
+                .observing(Cases.vertexFinished) { _ in finished2 += 1 }
+                .observing(Cases.componentStarted) { _ in started2 += 1 }
+                .observing(Cases.componentFinished) { _ in completed2 += 1 }
+            _ = graph.stronglyConnectedComponents(using: observed)
 
-            var v2 = Tarjan<AdjacencyList>.Visitor()
-            v2.discoverVertex = { _ in discovered2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.backEdge = { _ in back2 += 1 }
-            v2.crossEdge = { _ in cross2 += 1 }
-            v2.finishVertex = { _ in finished2 += 1 }
-            v2.startComponent = { _ in started2 += 1 }
-            v2.finishComponent = { _ in completed2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = Tarjan(on: graph).stronglyConnectedComponents(visitor: combined)
-
-            #expect(discovered1 == 4, "discoverVertex fires for all 4 vertices")
+            #expect(discovered1 == 4, "vertexDiscovered fires for all 4 vertices")
             #expect(discovered2 == 4)
-            #expect(examEdge1 == 5, "examineEdge fires for all 5 edges")
+            #expect(examEdge1 == 5, "edgeExamined fires for all 5 edges")
             #expect(examEdge2 == 5)
             #expect(back1 >= 1, "d→c is a back edge within the c↔d cycle")
             #expect(back2 >= 1)
             #expect(cross1 >= 1, "b→c is a cross edge (c already in finished SCC)")
             #expect(cross2 >= 1)
-            #expect(finished1 == 4, "finishVertex fires for all 4 vertices")
+            #expect(finished1 == 4, "vertexFinished fires for all 4 vertices")
             #expect(finished2 == 4)
-            #expect(started1 == 3, "startComponent fires once per SCC: {c,d}, {b}, {a}")
+            #expect(started1 == 3, "componentStarted fires once per SCC: {c,d}, {b}, {a}")
             #expect(started2 == 3)
-            #expect(completed1 == 3, "finishComponent fires once per SCC")
+            #expect(completed1 == 3, "componentFinished fires once per SCC")
             #expect(completed2 == 3)
-            // Both composed visitors must see identical event counts
+            // Both composed observation groups must see identical event counts.
             #expect(discovered1 == discovered2)
             #expect(examEdge1 == examEdge2)
             #expect(back1 == back2)
@@ -291,15 +288,15 @@
             #expect(completed1 == completed2)
         }
 
-        /// Exercises all five Kosaraju visitor events through a composed visitor pair.
+        /// Exercises all five Kosaraju events through two composed observation groups.
         ///
         /// Graph: a→b→c→a (one 3-vertex SCC).
-        /// - `discoverVertex` fires once per vertex per DFS pass (3 vertices × 2 passes = 6).
-        /// - `examineEdge` fires for each edge traversal across both passes.
-        /// - `finishVertex` fires for each vertex in each DFS pass.
-        /// - `startComponent` fires once (one SCC).
-        /// - `finishComponent` fires once (one SCC).
-        @Test func kosarajuComposedVisitorsReceiveAllEvents() {
+        /// - `vertexDiscovered` fires once per vertex per DFS pass (3 vertices × 2 passes = 6).
+        /// - `edgeExamined` fires for each edge traversal across both passes.
+        /// - `vertexFinished` fires for each vertex in each DFS pass.
+        /// - `componentStarted` fires once (one SCC).
+        /// - `componentFinished` fires once (one SCC).
+        @Test func kosarajuComposedObservationsReceiveAllEvents() {
             var graph = AdjacencyList()
             let a = graph.addVertex { $0.label = "A" }
             let b = graph.addVertex { $0.label = "B" }
@@ -319,36 +316,33 @@
             var completed1 = 0
             var completed2 = 0
 
-            var v1 = Kosaraju<AdjacencyList>.Visitor()
-            v1.discoverVertex = { _ in discovered1 += 1 }
-            v1.examineEdge = { _ in examEdge1 += 1 }
-            v1.finishVertex = { _ in finished1 += 1 }
-            v1.startComponent = { _ in started1 += 1 }
-            v1.finishComponent = { _ in completed1 += 1 }
+            typealias Cases = Kosaraju<AdjacencyList>.EventCases
+            let observed = KosarajuStronglyConnectedComponentsAlgorithm<AdjacencyList>()
+                .observing(Cases.vertexDiscovered) { _ in discovered1 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+                .observing(Cases.vertexFinished) { _ in finished1 += 1 }
+                .observing(Cases.componentStarted) { _ in started1 += 1 }
+                .observing(Cases.componentFinished) { _ in completed1 += 1 }
+                .observing(Cases.vertexDiscovered) { _ in discovered2 += 1 }
+                .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+                .observing(Cases.vertexFinished) { _ in finished2 += 1 }
+                .observing(Cases.componentStarted) { _ in started2 += 1 }
+                .observing(Cases.componentFinished) { _ in completed2 += 1 }
+            _ = graph.stronglyConnectedComponents(using: observed)
 
-            var v2 = Kosaraju<AdjacencyList>.Visitor()
-            v2.discoverVertex = { _ in discovered2 += 1 }
-            v2.examineEdge = { _ in examEdge2 += 1 }
-            v2.finishVertex = { _ in finished2 += 1 }
-            v2.startComponent = { _ in started2 += 1 }
-            v2.finishComponent = { _ in completed2 += 1 }
-
-            let combined = v1.combined(with: v2)
-            _ = Kosaraju(on: graph).stronglyConnectedComponents(visitor: combined)
-
-            // Kosaraju resets vertex colors between its two DFS passes, so discoverVertex
+            // Kosaraju resets vertex colors between its two DFS passes, so vertexDiscovered
             // fires once per vertex in pass 1 and once more per vertex in pass 2 → 3+3=6
-            #expect(discovered1 == 6, "discoverVertex fires 3 times per DFS pass × 2 passes")
+            #expect(discovered1 == 6, "vertexDiscovered fires 3 times per DFS pass × 2 passes")
             #expect(discovered2 == 6)
-            #expect(examEdge1 >= 3, "examineEdge fires for at least all 3 edges")
+            #expect(examEdge1 >= 3, "edgeExamined fires for at least all 3 edges")
             #expect(examEdge2 >= 3)
-            #expect(finished1 >= 3, "finishVertex fires for all vertices in DFS pass")
+            #expect(finished1 >= 3, "vertexFinished fires for all vertices in DFS pass")
             #expect(finished2 >= 3)
-            #expect(started1 == 1, "startComponent fires once for the single SCC {a,b,c}")
+            #expect(started1 == 1, "componentStarted fires once for the single SCC {a,b,c}")
             #expect(started2 == 1)
-            #expect(completed1 == 1, "finishComponent fires once for the single SCC")
+            #expect(completed1 == 1, "componentFinished fires once for the single SCC")
             #expect(completed2 == 1)
-            // Both composed visitors must see identical event counts
+            // Both composed observation groups must see identical event counts.
             #expect(discovered1 == discovered2)
             #expect(examEdge1 == examEdge2)
             #expect(finished1 == finished2)

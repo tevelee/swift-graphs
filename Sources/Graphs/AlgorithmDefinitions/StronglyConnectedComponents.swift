@@ -7,7 +7,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     public func stronglyConnectedComponents(
         using algorithm: some StronglyConnectedComponentsAlgorithm<Self>
     ) -> StronglyConnectedComponentsResult<VertexDescriptor> {
-        algorithm.stronglyConnectedComponents(in: self, visitor: nil)
+        algorithm.stronglyConnectedComponents(in: self, observation: nil)
     }
 }
 
@@ -20,7 +20,7 @@ extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hash
     public func stronglyConnectedComponents(
         using algorithm: some StronglyConnectedComponentsAlgorithm<Self>
     ) -> StronglyConnectedComponentsResult<VertexDescriptor> {
-        algorithm.stronglyConnectedComponents(in: self, visitor: nil)
+        algorithm.stronglyConnectedComponents(in: self, observation: nil)
     }
 }
 
@@ -40,34 +40,34 @@ extension BidirectionalGraph where Self: VertexListGraph, VertexDescriptor: Hash
 #endif
 
 /// A protocol for strongly connected components algorithms.
-public protocol StronglyConnectedComponentsAlgorithm<Graph> {
+public protocol StronglyConnectedComponentsAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Finds strongly connected components in the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to find SCCs in
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The strongly connected components result
     func stronglyConnectedComponents(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> StronglyConnectedComponentsResult<Graph.VertexDescriptor>
 }
 
-extension VisitorWrapper: StronglyConnectedComponentsAlgorithm
-where Base: StronglyConnectedComponentsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: StronglyConnectedComponentsAlgorithm
+where Base: StronglyConnectedComponentsAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
     public func stronglyConnectedComponents(
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> StronglyConnectedComponentsResult<Base.Graph.VertexDescriptor> {
-        base.stronglyConnectedComponents(in: graph, visitor: self.visitor.combined(with: visitor))
+        base.stronglyConnectedComponents(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 

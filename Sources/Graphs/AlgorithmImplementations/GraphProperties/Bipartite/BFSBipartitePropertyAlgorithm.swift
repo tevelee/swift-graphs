@@ -1,6 +1,63 @@
 /// BFS-based algorithm for checking if a graph is bipartite.
 public struct BFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    public typealias Visitor = BFSBipartiteProperty<Graph>.Visitor
+    public typealias Vertex = Graph.VertexDescriptor
+    public typealias Edge = Graph.EdgeDescriptor
+
+    public struct ColorAssignment {
+        public let vertex: Vertex
+        public let color: Int
+
+        public init(vertex: Vertex, color: Int) {
+            self.vertex = vertex
+            self.color = color
+        }
+    }
+
+    public struct ColorConflict {
+        public let first: Vertex
+        public let second: Vertex
+        public let color: Int
+
+        public init(first: Vertex, second: Vertex, color: Int) {
+            self.first = first
+            self.second = second
+            self.color = color
+        }
+    }
+
+    public enum Event {
+        case colorAssigned(ColorAssignment)
+        case vertexExamined(Vertex)
+        case edgeExamined(Edge)
+        case colorConflictDetected(ColorConflict)
+    }
+
+    public enum EventCases {
+        public static var colorAssigned: AlgorithmEventCase<Event, ColorAssignment> {
+            .init {
+                guard case .colorAssigned(let value) = $0 else { return nil }
+                return value
+            }
+        }
+        public static var vertexExamined: AlgorithmEventCase<Event, Vertex> {
+            .init {
+                guard case .vertexExamined(let value) = $0 else { return nil }
+                return value
+            }
+        }
+        public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+            .init {
+                guard case .edgeExamined(let value) = $0 else { return nil }
+                return value
+            }
+        }
+        public static var colorConflictDetected: AlgorithmEventCase<Event, ColorConflict> {
+            .init {
+                guard case .colorConflictDetected(let value) = $0 else { return nil }
+                return value
+            }
+        }
+    }
 
     /// Creates a new BFS-based bipartite property algorithm.
     @inlinable
@@ -10,12 +67,12 @@ public struct BFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGr
     ///
     /// - Parameters:
     ///   - graph: The graph to check
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional observation of the algorithm progress
     /// - Returns: `true` if the graph is bipartite, `false` otherwise
     @inlinable
     public func isBipartite(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> Bool {
         // Handle empty graphs and single vertex graphs
         guard graph.vertexCount > 0 else {
@@ -35,31 +92,31 @@ public struct BFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGr
             // Start BFS from this unvisited vertex
             var queue: [Graph.VertexDescriptor] = [vertex]
             color[vertex] = 1  // Assign first color
-            visitor?.assignColor?(vertex, 1)
+            observation?.receive(.colorAssigned(.init(vertex: vertex, color: 1)))
 
             while !queue.isEmpty && isBipartite {
                 let currentVertex = queue.removeFirst()
                 guard let currentColor = color[currentVertex] else { continue }
                 let nextColor = currentColor == 1 ? 2 : 1
 
-                visitor?.examineVertex?(currentVertex)
+                observation?.receive(.vertexExamined(currentVertex))
 
                 // Check all neighbors
                 for edge in graph.outgoingEdges(of: currentVertex) {
                     guard let neighbor = graph.destination(of: edge) else { continue }
 
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
 
                     if color[neighbor] == nil {
                         // Neighbor is uncolored, assign opposite color
                         color[neighbor] = nextColor
-                        visitor?.assignColor?(neighbor, nextColor)
+                        observation?.receive(.colorAssigned(.init(vertex: neighbor, color: nextColor)))
                         queue.append(neighbor)
                     } else if color[neighbor] == currentColor {
                         // Neighbor has same color as current vertex
                         // This violates bipartite property
                         isBipartite = false
-                        visitor?.colorConflict?(currentVertex, neighbor, currentColor)
+                        observation?.receive(.colorConflictDetected(.init(first: currentVertex, second: neighbor, color: currentColor)))
                         break
                     }
                 }
@@ -70,54 +127,16 @@ public struct BFSBipartitePropertyAlgorithm<Graph: IncidenceGraph & VertexListGr
     }
 }
 
-// MARK: - Visitor Support
-
-public struct BFSBipartiteProperty<Graph: IncidenceGraph & VertexListGraph> where Graph.VertexDescriptor: Hashable {
-    public typealias Vertex = Graph.VertexDescriptor
-    public typealias Edge = Graph.EdgeDescriptor
-
-    public struct Visitor {
-        public var assignColor: ((Vertex, Int) -> Void)?
-        public var examineVertex: ((Vertex) -> Void)?
-        public var examineEdge: ((Edge) -> Void)?
-        public var colorConflict: ((Vertex, Vertex, Int) -> Void)?
-
-        public init(
-            assignColor: ((Vertex, Int) -> Void)? = nil,
-            examineVertex: ((Vertex) -> Void)? = nil,
-            examineEdge: ((Edge) -> Void)? = nil,
-            colorConflict: ((Vertex, Vertex, Int) -> Void)? = nil
-        ) {
-            self.assignColor = assignColor
-            self.examineVertex = examineVertex
-            self.examineEdge = examineEdge
-            self.colorConflict = colorConflict
-        }
-    }
-}
-
-extension BFSBipartiteProperty.Visitor: Composable {
+extension BFSBipartitePropertyAlgorithm.Event: VertexExaminedEvent, EdgeExaminedEvent {
     @inlinable
-    public func combined(with other: Self) -> Self {
-        .init(
-            assignColor: { vertex, color in
-                self.assignColor?(vertex, color)
-                other.assignColor?(vertex, color)
-            },
-            examineVertex: { vertex in
-                self.examineVertex?(vertex)
-                other.examineVertex?(vertex)
-            },
-            examineEdge: { edge in
-                self.examineEdge?(edge)
-                other.examineEdge?(edge)
-            },
-            colorConflict: { vertex1, vertex2, color in
-                self.colorConflict?(vertex1, vertex2, color)
-                other.colorConflict?(vertex1, vertex2, color)
-            }
-        )
+    public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+        guard case .vertexExamined(let vertex) = event else { return nil }
+        return vertex
+    }
+
+    @inlinable
+    public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+        guard case .edgeExamined(let edge) = event else { return nil }
+        return edge
     }
 }
-
-extension BFSBipartitePropertyAlgorithm: VisitorSupporting {}

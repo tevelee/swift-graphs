@@ -7,7 +7,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     public func connectedComponents(
         using algorithm: some ConnectedComponentsAlgorithm<Self>
     ) -> ConnectedComponentsResult<VertexDescriptor> {
-        algorithm.connectedComponents(in: self, visitor: nil)
+        algorithm.connectedComponents(in: self, observation: nil)
     }
 }
 
@@ -27,34 +27,34 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 #endif
 
 /// A protocol for connected components algorithms.
-public protocol ConnectedComponentsAlgorithm<Graph> {
+public protocol ConnectedComponentsAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Finds connected components in the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to find connected components in
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The connected components result
     func connectedComponents(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> ConnectedComponentsResult<Graph.VertexDescriptor>
 }
 
-extension VisitorWrapper: ConnectedComponentsAlgorithm
-where Base: ConnectedComponentsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: ConnectedComponentsAlgorithm
+where Base: ConnectedComponentsAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
     public func connectedComponents(
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> ConnectedComponentsResult<Base.Graph.VertexDescriptor> {
-        base.connectedComponents(in: graph, visitor: self.visitor.combined(with: visitor))
+        base.connectedComponents(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 

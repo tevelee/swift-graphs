@@ -99,12 +99,12 @@ struct DepthLimitedSearchTests {
         #endif
     }
 
-    // MARK: - Visitor Support
+    // MARK: - Observation Support
 
-    /// `DepthLimitedDFSTraversal` delegates to DFS internally and forwards its visitor.
-    /// Two composed visitors must each receive `discoverVertex` for every vertex reached
-    /// within the depth limit and `treeEdge` for every tree edge traversed.
-    @Test func composedVisitorsReceiveAllEvents() {
+    /// `DepthLimitedDFSTraversal` delegates to DFS internally and forwards its observation.
+    /// Two composed observation groups must each receive `vertexDiscovered` for every vertex
+    /// reached within the depth limit and `treeEdgeTraversed` for every tree edge traversed.
+    @Test func composedObservationsReceiveAllEvents() {
         var graph = AdjacencyList()
         let root = graph.addVertex { $0.label = "root" }
         let a = graph.addVertex { $0.label = "a" }
@@ -117,23 +117,19 @@ struct DepthLimitedSearchTests {
         var treeEdges1 = 0
         var treeEdges2 = 0
 
-        var v1 = DepthLimitedDFSTraversal<AdjacencyList>.Visitor()
-        v1.discoverVertex = { _ in discovered1 += 1 }
-        v1.treeEdge = { _ in treeEdges1 += 1 }
-
-        var v2 = DepthLimitedDFSTraversal<AdjacencyList>.Visitor()
-        v2.discoverVertex = { _ in discovered2 += 1 }
-        v2.treeEdge = { _ in treeEdges2 += 1 }
-
-        let combined = v1.combined(with: v2)
-        _ = DepthLimitedDFSTraversal<AdjacencyList>(maxDepth: 10)
-            .traverse(from: root, in: graph, visitor: combined)
+        typealias Cases = DepthFirstSearch<AdjacencyList>.EventCases
+        let observed = DepthLimitedDFSTraversal<AdjacencyList>(maxDepth: 10)
+            .observing(Cases.vertexDiscovered) { _ in discovered1 += 1 }
+            .observing(Cases.treeEdgeTraversed) { _ in treeEdges1 += 1 }
+            .observing(Cases.vertexDiscovered) { _ in discovered2 += 1 }
+            .observing(Cases.treeEdgeTraversed) { _ in treeEdges2 += 1 }
+        _ = observed.traverse(from: root, in: graph, observation: nil)
 
         #expect(discovered1 == 3, "all 3 vertices in chain root→a→b must be discovered")
         #expect(discovered2 == 3)
         #expect(treeEdges1 == 2, "chain root→a→b has exactly 2 tree edges")
         #expect(treeEdges2 == 2)
-        #expect(discovered1 == discovered2, "both composed visitors must receive identical discoverVertex events")
-        #expect(treeEdges1 == treeEdges2, "both composed visitors must receive identical treeEdge events")
+        #expect(discovered1 == discovered2, "both observation groups receive identical vertexDiscovered events")
+        #expect(treeEdges1 == treeEdges2, "both observation groups receive identical treeEdgeTraversed events")
     }
 }

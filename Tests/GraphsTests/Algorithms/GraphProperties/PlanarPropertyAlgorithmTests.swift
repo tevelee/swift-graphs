@@ -215,9 +215,9 @@ struct PlanarPropertyAlgorithmTests {
         #expect(!graph.isPlanar(using: .boyerMyrvold()))
     }
 
-    // MARK: - Visitor Support
+    // MARK: - Observation Support
 
-    @Test func boyerMyrvoldComposedVisitorsReceiveAllEvents() {
+    @Test func boyerMyrvoldComposedObservationsReceiveAllEvents() {
         // Need 5+ vertices to bypass the early-return optimization for tiny graphs
         // A pentagon (5 vertices in a cycle) is planar
         var graph = AdjacencyList()
@@ -237,17 +237,13 @@ struct PlanarPropertyAlgorithmTests {
         var success1 = 0
         var success2 = 0
 
-        var v1 = BoyerMyrvoldPlanarPropertyAlgorithm<AdjacencyList>.Visitor()
-        v1.startEmbedding = { started1 += 1 }
-        v1.embeddingSuccess = { success1 += 1 }
-
-        var v2 = BoyerMyrvoldPlanarPropertyAlgorithm<AdjacencyList>.Visitor()
-        v2.startEmbedding = { started2 += 1 }
-        v2.embeddingSuccess = { success2 += 1 }
-
-        let combined = v1.combined(with: v2)
-        _ = BoyerMyrvoldPlanarPropertyAlgorithm<AdjacencyList>()
-            .isPlanar(in: graph, visitor: combined)
+        typealias Cases = BoyerMyrvoldPlanarPropertyAlgorithm<AdjacencyList>.EventCases
+        let observed = BoyerMyrvoldPlanarPropertyAlgorithm<AdjacencyList>()
+            .observing(Cases.embeddingStarted) { started1 += 1 }
+            .observing(Cases.embeddingSucceeded) { success1 += 1 }
+            .observing(Cases.embeddingStarted) { started2 += 1 }
+            .observing(Cases.embeddingSucceeded) { success2 += 1 }
+        _ = graph.isPlanar(using: observed)
 
         #expect(started1 == 1)  // embedding started once
         #expect(started2 == 1)
@@ -257,7 +253,7 @@ struct PlanarPropertyAlgorithmTests {
         #expect(success1 == success2)
     }
 
-    @Test func hopcroftTarjanComposedVisitorsReceiveAllEvents() {
+    @Test func hopcroftTarjanComposedObservationsReceiveAllEvents() {
         // Need 5+ vertices to bypass the early-return optimization for tiny graphs
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
@@ -276,17 +272,13 @@ struct PlanarPropertyAlgorithmTests {
         var success1 = 0
         var success2 = 0
 
-        var v1 = HopcroftTarjanPlanarPropertyAlgorithm<AdjacencyList>.Visitor()
-        v1.startDFS = { started1 += 1 }
-        v1.planaritySuccess = { success1 += 1 }
-
-        var v2 = HopcroftTarjanPlanarPropertyAlgorithm<AdjacencyList>.Visitor()
-        v2.startDFS = { started2 += 1 }
-        v2.planaritySuccess = { success2 += 1 }
-
-        let combined = v1.combined(with: v2)
-        _ = HopcroftTarjanPlanarPropertyAlgorithm<AdjacencyList>()
-            .isPlanar(in: graph, visitor: combined)
+        typealias Cases = HopcroftTarjanPlanarPropertyAlgorithm<AdjacencyList>.EventCases
+        let observed = HopcroftTarjanPlanarPropertyAlgorithm<AdjacencyList>()
+            .observing(Cases.depthFirstSearchStarted) { started1 += 1 }
+            .observing(Cases.planaritySucceeded) { success1 += 1 }
+            .observing(Cases.depthFirstSearchStarted) { started2 += 1 }
+            .observing(Cases.planaritySucceeded) { success2 += 1 }
+        _ = graph.isPlanar(using: observed)
 
         #expect(started1 == 1)
         #expect(started2 == 1)
@@ -296,7 +288,7 @@ struct PlanarPropertyAlgorithmTests {
         #expect(success1 == success2)
     }
 
-    @Test func leftRightComposedVisitorsReceiveAllEvents() {
+    @Test func leftRightComposedObservationsReceiveAllEvents() {
         // Need 5+ vertices to bypass the early-return optimization for tiny graphs
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
@@ -315,17 +307,13 @@ struct PlanarPropertyAlgorithmTests {
         var success1 = 0
         var success2 = 0
 
-        var v1 = LeftRightPlanarPropertyAlgorithm<AdjacencyList>.Visitor()
-        v1.startEmbedding = { started1 += 1 }
-        v1.embeddingSuccess = { success1 += 1 }
-
-        var v2 = LeftRightPlanarPropertyAlgorithm<AdjacencyList>.Visitor()
-        v2.startEmbedding = { started2 += 1 }
-        v2.embeddingSuccess = { success2 += 1 }
-
-        let combined = v1.combined(with: v2)
-        _ = LeftRightPlanarPropertyAlgorithm<AdjacencyList>()
-            .isPlanar(in: graph, visitor: combined)
+        typealias Cases = LeftRightPlanarPropertyAlgorithm<AdjacencyList>.EventCases
+        let observed = LeftRightPlanarPropertyAlgorithm<AdjacencyList>()
+            .observing(Cases.embeddingStarted) { started1 += 1 }
+            .observing(Cases.embeddingSucceeded) { success1 += 1 }
+            .observing(Cases.embeddingStarted) { started2 += 1 }
+            .observing(Cases.embeddingSucceeded) { success2 += 1 }
+        _ = graph.isPlanar(using: observed)
 
         #expect(started1 == 1)
         #expect(started2 == 1)

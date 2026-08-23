@@ -17,34 +17,59 @@
         public typealias Vertex = Graph.VertexDescriptor
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
+        /// Details about an edge that improved its destination's distance.
+        public typealias Relaxation = EdgeRelaxation<Edge, Weight>
 
-        /// A visitor that can be used to observe Dijkstra's algorithm progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when an edge is relaxed (distance updated).
-            public var edgeRelaxed: ((Edge) -> Void)?
-            /// Called when an edge is not relaxed (no distance improvement).
-            public var edgeNotRelaxed: ((Edge) -> Void)?
-            /// Called when a vertex is finished (all outgoing edges processed).
-            public var finishVertex: ((Vertex) -> Void)?
+        /// An event emitted while Dijkstra's algorithm runs.
+        public enum Event {
+            /// A vertex was removed from the priority queue for examination.
+            case vertexExamined(Vertex)
+            /// An outgoing edge was examined.
+            case edgeExamined(Edge)
+            /// An edge improved its destination's distance.
+            case edgeRelaxed(Relaxation)
+            /// An edge did not improve its destination's distance.
+            case edgeNotRelaxed(Edge)
+            /// A vertex and all of its outgoing edges were finished.
+            case vertexFinished(Vertex)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                examineVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                edgeRelaxed: ((Edge) -> Void)? = nil,
-                edgeNotRelaxed: ((Edge) -> Void)? = nil,
-                finishVertex: ((Vertex) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.edgeRelaxed = edgeRelaxed
-                self.edgeNotRelaxed = edgeNotRelaxed
-                self.finishVertex = finishVertex
+        /// Selectors for Dijkstra events.
+        public enum EventCases {
+            /// Selects examined vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexExamined(let vertex) = $0 else { return nil }
+                    return vertex
+                }
+            }
+            /// Selects examined edges.
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let edge) = $0 else { return nil }
+                    return edge
+                }
+            }
+            /// Selects successful edge relaxations.
+            public static var edgeRelaxed: AlgorithmEventCase<Event, Relaxation> {
+                .init {
+                    guard case .edgeRelaxed(let relaxation) = $0 else { return nil }
+                    return relaxation
+                }
+            }
+            /// Selects edges that were not relaxed.
+            public static var edgeNotRelaxed: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeNotRelaxed(let edge) = $0 else { return nil }
+                    return edge
+                }
+            }
+            /// Selects finished vertices.
+            public static var vertexFinished: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexFinished(let vertex) = $0 else { return nil }
+                    return vertex
+                }
             }
         }
 
@@ -113,12 +138,12 @@
         }
 
         @inlinable
-        public func makeIterator(visitor: Visitor?) -> Iterator {
+        public func makeIterator(observation: AlgorithmObservation<Event>?) -> Iterator {
             Iterator(
                 graph: graph,
                 source: source,
                 edgeWeight: edgeWeight,
-                visitor: visitor
+                observation: observation
             )
         }
 
@@ -130,7 +155,7 @@
             @usableFromInline
             let edgeWeight: CostDefinition<Graph, Weight>
             @usableFromInline
-            let visitor: Visitor?
+            let observation: AlgorithmObservation<Event>?
             @usableFromInline
             var queue = PriorityQueue<PriorityItem>()
             @usableFromInline
@@ -148,12 +173,12 @@
                 graph: Graph,
                 source: Vertex,
                 edgeWeight: CostDefinition<Graph, Weight>,
-                visitor: Visitor?
+                observation: AlgorithmObservation<Event>? = nil
             ) {
                 self.graph = graph
                 self.source = source
                 self.edgeWeight = edgeWeight
-                self.visitor = visitor
+                self.observation = observation
                 self.propertyMap = graph.makeVertexPropertyMap()
 
                 propertyMap[source][distanceProperty] = .finite(.zero)
@@ -177,26 +202,29 @@
                 let currentDistance = currentVertex.cost
                 propertyMap[currentVertex.vertex][distanceProperty] = currentDistance
 
-                visitor?.examineVertex?(currentVertex.vertex)
+                observation?.receive(.vertexExamined(currentVertex.vertex))
 
                 for edge in graph.outgoingEdges(of: currentVertex.vertex) {
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
                     guard let destination = graph.destination(of: edge) else { continue }
                     let edgeWeight = self.edgeWeight.costToExplore(edge, graph)
                     let newDistance = currentDistance + edgeWeight
 
                     if newDistance < propertyMap[destination][distanceProperty] {
+                        guard case .finite(let newCost) = newDistance else {
+                            preconditionFailure("An improved Dijkstra distance must be finite")
+                        }
                         propertyMap[destination][distanceProperty] = newDistance
                         propertyMap[destination][predecessorEdgeProperty] = edge
                         queue.enqueue(Dijkstra.PriorityItem(vertex: destination, cost: newDistance))
-                        visitor?.edgeRelaxed?(edge)
+                        observation?.receive(.edgeRelaxed(.init(edge: edge, newCost: newCost)))
                     } else {
-                        visitor?.edgeNotRelaxed?(edge)
+                        observation?.receive(.edgeNotRelaxed(edge))
                     }
                 }
 
                 visited.insert(currentVertex.vertex)
-                visitor?.finishVertex?(currentVertex.vertex)
+                observation?.receive(.vertexFinished(currentVertex.vertex))
 
                 return Dijkstra.Result(
                     source: source,
@@ -213,7 +241,7 @@
     extension Dijkstra: Sequence {
         @inlinable
         public func makeIterator() -> Iterator {
-            makeIterator(visitor: nil)
+            makeIterator(observation: nil)
         }
     }
 
@@ -317,7 +345,30 @@
         }
     }
 
-    extension Dijkstra: VisitorSupportingSequence {}
+    extension Dijkstra: AlgorithmObservationSequence {}
+
+    extension Dijkstra.Event: VertexExaminedEvent, EdgeExaminedEvent, EdgeRelaxedEvent {
+        /// Returns an examined vertex carried by the event.
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        /// Returns an examined edge carried by the event.
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+
+        /// Returns a successful edge relaxation carried by the event.
+        @inlinable
+        public static func relaxation(from event: Self) -> Dijkstra.Relaxation? {
+            guard case .edgeRelaxed(let relaxation) = event else { return nil }
+            return relaxation
+        }
+    }
 
     extension Dijkstra.Result: ShortestPathResult {}
 #endif

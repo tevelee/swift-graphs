@@ -10,25 +10,40 @@
         Graph: IncidenceGraph & VertexListGraph & BidirectionalGraph
     > where Graph.VertexDescriptor: Hashable {
 
-        /// A visitor that can be used to observe the Smallest Last Vertex algorithm progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-            /// Called when removing a vertex.
-            public var removeVertex: ((Graph.VertexDescriptor, Int) -> Void)?
-            /// Called when updating a vertex's degree.
-            public var updateDegree: ((Graph.VertexDescriptor, Int, Int) -> Void)?
+        /// An event emitted while smallest-last vertex ordering advances.
+        public enum Event {
+            /// A vertex was examined.
+            case vertexExamined(Graph.VertexDescriptor)
+            /// A vertex was removed with its current degree.
+            case vertexRemoved(vertex: Graph.VertexDescriptor, degree: Int)
+            /// A vertex's degree was updated.
+            case degreeUpdated(vertex: Graph.VertexDescriptor, oldDegree: Int, newDegree: Int)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
-                removeVertex: ((Graph.VertexDescriptor, Int) -> Void)? = nil,
-                updateDegree: ((Graph.VertexDescriptor, Int, Int) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.removeVertex = removeVertex
-                self.updateDegree = updateDegree
+        /// Typed selectors for smallest-last ordering events.
+        public enum EventCases {
+            /// Selects examined vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Graph.VertexDescriptor> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+
+            /// Selects removed vertices and their degrees.
+            public static var vertexRemoved: AlgorithmEventCase<Event, (vertex: Graph.VertexDescriptor, degree: Int)> {
+                .init {
+                    guard case .vertexRemoved(let vertex, let degree) = $0 else { return nil }
+                    return (vertex, degree)
+                }
+            }
+
+            /// Selects vertex-degree updates.
+            public static var degreeUpdated: AlgorithmEventCase<Event, (vertex: Graph.VertexDescriptor, oldDegree: Int, newDegree: Int)> {
+                .init {
+                    guard case .degreeUpdated(let vertex, let oldDegree, let newDegree) = $0 else { return nil }
+                    return (vertex, oldDegree, newDegree)
+                }
             }
         }
 
@@ -40,10 +55,13 @@
         ///
         /// - Parameters:
         ///   - graph: The graph to order vertices for
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional algorithm observation.
         /// - Returns: An array of vertex descriptors in the computed order
         @inlinable
-        public func orderVertices(in graph: Graph, visitor: Visitor? = nil) -> [Graph.VertexDescriptor] {
+        public func orderVertices(
+            in graph: Graph,
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> [Graph.VertexDescriptor] {
             var remainingVertices = Set(graph.vertices())
             var degrees: [Graph.VertexDescriptor: Int] = [:]
             var ordering: [Graph.VertexDescriptor] = []
@@ -65,8 +83,8 @@
                     preconditionFailure("minDegreeVertices should not be empty - there should always be vertices with minimum degree")
                 }
 
-                visitor?.examineVertex?(vertexToRemove)
-                visitor?.removeVertex?(vertexToRemove, minDegree)
+                observation?.receive(.vertexExamined(vertexToRemove))
+                observation?.receive(.vertexRemoved(vertex: vertexToRemove, degree: minDegree))
 
                 // Remove vertex from remaining set
                 remainingVertices.remove(vertexToRemove)
@@ -80,7 +98,7 @@
                     let oldDegree = degrees[neighbor] ?? 0
                     let newDegree = oldDegree - 1
                     degrees[neighbor] = newDegree
-                    visitor?.updateDegree?(neighbor, oldDegree, newDegree)
+                    observation?.receive(.degreeUpdated(vertex: neighbor, oldDegree: oldDegree, newDegree: newDegree))
                 }
             }
 
@@ -89,5 +107,14 @@
         }
     }
 
-    extension SmallestLastVertexOrderingAlgorithm: VisitorSupporting {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
+    extension SmallestLastVertexOrderingAlgorithm.Event: VertexExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+    }
 #endif

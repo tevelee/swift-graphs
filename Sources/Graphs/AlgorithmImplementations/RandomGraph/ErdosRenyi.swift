@@ -11,29 +11,50 @@
         /// The vertex type of the graph.
         public typealias Vertex = Graph.VertexDescriptor
 
-        /// A visitor that can be used to observe the Erdos-Renyi algorithm progress.
-        public struct Visitor {
-            /// Called when adding a vertex.
-            public var addVertex: ((Vertex) -> Void)?
-            /// Called when adding an edge.
-            public var addEdge: ((Vertex, Vertex) -> Void)?
-            /// Called when skipping an edge.
-            public var skipEdge: ((Vertex, Vertex, String) -> Void)?
-            /// Called when examining a vertex pair.
-            public var examineVertexPair: ((Vertex, Vertex) -> Void)?
+        /// An event emitted while generating an Erdos-Renyi graph.
+        public enum Event {
+            /// A vertex was added.
+            case vertexAdded(Vertex)
+            /// An edge was added between two vertices.
+            case edgeAdded(source: Vertex, destination: Vertex)
+            /// A possible edge was skipped.
+            case edgeSkipped(source: Vertex, destination: Vertex, reason: String)
+            /// A possible edge is about to be considered.
+            case vertexPairExamined(Vertex, Vertex)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                addVertex: ((Vertex) -> Void)? = nil,
-                addEdge: ((Vertex, Vertex) -> Void)? = nil,
-                skipEdge: ((Vertex, Vertex, String) -> Void)? = nil,
-                examineVertexPair: ((Vertex, Vertex) -> Void)? = nil
-            ) {
-                self.addVertex = addVertex
-                self.addEdge = addEdge
-                self.skipEdge = skipEdge
-                self.examineVertexPair = examineVertexPair
+        /// Typed selectors for Erdos-Renyi events.
+        public enum EventCases {
+            /// Selects added vertices.
+            public static var vertexAdded: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexAdded(let vertex) = $0 else { return nil }
+                    return vertex
+                }
+            }
+
+            /// Selects added edges.
+            public static var edgeAdded: AlgorithmEventCase<Event, (source: Vertex, destination: Vertex)> {
+                .init {
+                    guard case .edgeAdded(let source, let destination) = $0 else { return nil }
+                    return (source, destination)
+                }
+            }
+
+            /// Selects skipped edges.
+            public static var edgeSkipped: AlgorithmEventCase<Event, (source: Vertex, destination: Vertex, reason: String)> {
+                .init {
+                    guard case .edgeSkipped(let source, let destination, let reason) = $0 else { return nil }
+                    return (source, destination, reason)
+                }
+            }
+
+            /// Selects examined vertex pairs.
+            public static var vertexPairExamined: AlgorithmEventCase<Event, (Vertex, Vertex)> {
+                .init {
+                    guard case .vertexPairExamined(let first, let second) = $0 else { return nil }
+                    return (first, second)
+                }
             }
         }
 
@@ -68,13 +89,13 @@
         ///   - graph: The graph to append to (modified in place)
         ///   - vertexCount: The number of vertices to add
         ///   - generator: The random number generator to use
-        ///   - visitor: An optional visitor to observe the algorithm progress
+        ///   - observation: An optional observation of algorithm progress.
         @inlinable
         public func appendRandomGraph<RNG: RandomNumberGenerator>(
             into graph: inout Graph,
             vertexCount: Int,
             using generator: inout RNG,
-            visitor: Visitor? = nil
+            observation: AlgorithmObservation<Event>? = nil
         ) {
             guard vertexCount > 0 else { return }
 
@@ -82,24 +103,25 @@
             var newVertices: [Vertex] = []
             for _ in 0 ..< vertexCount {
                 let v = graph.addVertex()
-                visitor?.addVertex?(v)
+                observation?.receive(.vertexAdded(v))
                 newVertices.append(v)
             }
 
             // Add edges with probability p among the newly added vertices
             for i in 0 ..< newVertices.count {
                 for j in (i + 1) ..< newVertices.count {
-                    visitor?.examineVertexPair?(newVertices[i], newVertices[j])
+                    observation?.receive(.vertexPairExamined(newVertices[i], newVertices[j]))
                     if Double.random(in: 0 ... 1, using: &generator) < edgeProbability {
                         graph.addEdge(from: newVertices[i], to: newVertices[j])
-                        visitor?.addEdge?(newVertices[i], newVertices[j])
+                        observation?.receive(.edgeAdded(source: newVertices[i], destination: newVertices[j]))
                     } else {
-                        visitor?.skipEdge?(newVertices[i], newVertices[j], "Probability check failed")
+                        observation?.receive(
+                            .edgeSkipped(source: newVertices[i], destination: newVertices[j], reason: "Probability check failed")
+                        )
                     }
                 }
             }
         }
     }
 
-    extension ErdosRenyi: VisitorSupporting {}
 #endif

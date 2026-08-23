@@ -10,29 +10,50 @@
         Color: IntegerBasedColor
     > where Graph.VertexDescriptor: Hashable {
 
-        /// A visitor that can be used to observe Welsh-Powell coloring progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Graph.VertexDescriptor) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Graph.EdgeDescriptor) -> Void)?
-            /// Called when assigning a color to a vertex.
-            public var assignColor: ((Graph.VertexDescriptor, Color) -> Void)?
-            /// Called when skipping a vertex.
-            public var skipVertex: ((Graph.VertexDescriptor, String) -> Void)?
+        /// An event emitted while Welsh-Powell coloring advances.
+        public enum Event {
+            /// A vertex was examined.
+            case vertexExamined(Graph.VertexDescriptor)
+            /// An edge was examined.
+            case edgeExamined(Graph.EdgeDescriptor)
+            /// A color was assigned to a vertex.
+            case colorAssigned(vertex: Graph.VertexDescriptor, color: Color)
+            /// A vertex was skipped for the given reason.
+            case vertexSkipped(vertex: Graph.VertexDescriptor, reason: String)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                examineVertex: ((Graph.VertexDescriptor) -> Void)? = nil,
-                examineEdge: ((Graph.EdgeDescriptor) -> Void)? = nil,
-                assignColor: ((Graph.VertexDescriptor, Color) -> Void)? = nil,
-                skipVertex: ((Graph.VertexDescriptor, String) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.assignColor = assignColor
-                self.skipVertex = skipVertex
+        /// Typed selectors for Welsh-Powell-coloring events.
+        public enum EventCases {
+            /// Selects examined vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Graph.VertexDescriptor> {
+                .init {
+                    guard case .vertexExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+
+            /// Selects examined edges.
+            public static var edgeExamined: AlgorithmEventCase<Event, Graph.EdgeDescriptor> {
+                .init {
+                    guard case .edgeExamined(let value) = $0 else { return nil }
+                    return value
+                }
+            }
+
+            /// Selects assigned colors.
+            public static var colorAssigned: AlgorithmEventCase<Event, (vertex: Graph.VertexDescriptor, color: Color)> {
+                .init {
+                    guard case .colorAssigned(let vertex, let color) = $0 else { return nil }
+                    return (vertex, color)
+                }
+            }
+
+            /// Selects skipped vertices and their reasons.
+            public static var vertexSkipped: AlgorithmEventCase<Event, (vertex: Graph.VertexDescriptor, reason: String)> {
+                .init {
+                    guard case .vertexSkipped(let vertex, let reason) = $0 else { return nil }
+                    return (vertex, reason)
+                }
             }
         }
 
@@ -44,10 +65,13 @@
         ///
         /// - Parameters:
         ///   - graph: The graph to color.
-        ///   - visitor: An optional visitor to observe the algorithm progress.
+        ///   - observation: An optional algorithm observation.
         /// - Returns: The graph coloring result.
         @inlinable
-        public func color(graph: Graph, visitor: Visitor? = nil) -> GraphColoring<Graph.VertexDescriptor, Color> {
+        public func color(
+            graph: Graph,
+            observation: AlgorithmObservation<Event>? = nil
+        ) -> GraphColoring<Graph.VertexDescriptor, Color> {
             var vertexColors: [Graph.VertexDescriptor: Color] = [:]
 
             // Get all vertices
@@ -60,8 +84,8 @@
 
             // Sort vertices by degree in descending order
             let sortedVertices = vertices.sorted { v1, v2 in
-                visitor?.examineVertex?(v1)
-                visitor?.examineVertex?(v2)
+                observation?.receive(.vertexExamined(v1))
+                observation?.receive(.vertexExamined(v2))
                 return graph.outDegree(of: v1) > graph.outDegree(of: v2)
             }
 
@@ -71,15 +95,15 @@
             for vertex in sortedVertices {
                 // Skip if already colored
                 if vertexColors[vertex] != nil {
-                    visitor?.skipVertex?(vertex, "Already colored")
+                    observation?.receive(.vertexSkipped(vertex: vertex, reason: "Already colored"))
                     continue
                 }
 
-                visitor?.examineVertex?(vertex)
+                observation?.receive(.vertexExamined(vertex))
 
                 // Color this vertex with current color
                 vertexColors[vertex] = currentColor
-                visitor?.assignColor?(vertex, currentColor)
+                observation?.receive(.colorAssigned(vertex: vertex, color: currentColor))
 
                 // Try to color as many uncolored vertices as possible with the same color
                 for otherVertex in sortedVertices {
@@ -88,14 +112,14 @@
                         continue
                     }
 
-                    visitor?.examineVertex?(otherVertex)
+                    observation?.receive(.vertexExamined(otherVertex))
 
                     // Check if this vertex can be colored with the current color
                     let neighbors = Set(graph.successors(of: otherVertex))
 
                     // Examine edges to neighbors
                     for edge in graph.outgoingEdges(of: otherVertex) {
-                        visitor?.examineEdge?(edge)
+                        observation?.receive(.edgeExamined(edge))
                     }
 
                     let canUseCurrentColor = !neighbors.contains { neighbor in
@@ -107,7 +131,7 @@
 
                     if canUseCurrentColor {
                         vertexColors[otherVertex] = currentColor
-                        visitor?.assignColor?(otherVertex, currentColor)
+                        observation?.receive(.colorAssigned(vertex: otherVertex, color: currentColor))
                     }
                 }
 
@@ -141,5 +165,20 @@
         }
     }
 
-    extension WelshPowellColoringAlgorithm: VisitorSupporting {}
+#endif
+
+#if !GRAPHS_USES_TRAITS || GRAPHS_ANALYSIS
+    extension WelshPowellColoringAlgorithm.Event: VertexExaminedEvent, EdgeExaminedEvent {
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+    }
 #endif

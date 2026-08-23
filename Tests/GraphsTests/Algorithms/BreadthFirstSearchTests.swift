@@ -106,7 +106,7 @@ struct BreadthFirstSearchTests {
         #expect(result?.vertices(to: d, in: graph) == [root, c, d])
     }
 
-    @Test func visitorReportsDiscoveryThenExaminationInBFSOrder() {
+    @Test func observationReportsDiscoveryThenExaminationInBFSOrder() {
         let graph = createComplexTreeGraph()
 
         let root = graph.findVertex(labeled: "root")!
@@ -115,15 +115,15 @@ struct BreadthFirstSearchTests {
         var examined: [Any] = []
 
         BreadthFirstSearch(on: graph, from: root)
-            .withVisitor {
-                .init(
-                    discoverVertex: { discovered.append($0) },
-                    examineVertex: { examined.append($0) }
-                )
+            .observing(BreadthFirstSearch<AdjacencyList>.EventCases.vertexDiscovered) {
+                discovered.append($0)
+            }
+            .observing(BreadthFirstSearch<AdjacencyList>.EventCases.vertexExamined) {
+                examined.append($0)
             }
             .forEach { _ in }
 
-        #expect(discovered.count == 7)
+        #expect(discovered.count == 8)
         #expect(examined.count == 8)
     }
 
@@ -229,23 +229,23 @@ struct BreadthFirstSearchTests {
         #endif
     }
 
-    // MARK: - Visitor Support
+    // MARK: - Observation Support
 
-    /// Exercises all six BFS visitor events through a composed visitor pair.
+    /// Exercises all six BFS events through two composed observation groups.
     ///
-    /// Graph: a→b, a→c, b→c — b→c triggers `nonTreeEdge` because c is already discovered.
-    /// - `discoverVertex` fires for b and c (NOT the source a, which starts pre-discovered).
-    /// - `examineVertex` fires for a, b, c (once each when dequeued).
-    /// - `examineEdge` fires for a→b, a→c, b→c (all 3 edges).
-    /// - `treeEdge` fires for a→b and a→c (both lead to undiscovered vertices).
-    /// - `nonTreeEdge` fires for b→c (c is already in the queue/discovered).
-    /// - `finishVertex` fires for a, b, c once their neighbors are processed.
-    @Test func composedVisitorsReceiveAllEvents() {
+    /// Graph: a→b, a→c, b→c — b→c emits `nonTreeEdgeTraversed` because c is already discovered.
+    /// - `vertexDiscovered` fires for a, b, and c.
+    /// - `vertexExamined` fires for a, b, c (once each when dequeued).
+    /// - `edgeExamined` fires for a→b, a→c, b→c (all 3 edges).
+    /// - `treeEdgeTraversed` fires for a→b and a→c (both lead to undiscovered vertices).
+    /// - `nonTreeEdgeTraversed` fires for b→c (c is already in the queue/discovered).
+    /// - `vertexFinished` fires for a, b, c once their neighbors are processed.
+    @Test func composedObservationsReceiveAllEvents() {
         var graph = AdjacencyList()
         let a = graph.addVertex { $0.label = "A" }
         let b = graph.addVertex { $0.label = "B" }
         let c = graph.addVertex { $0.label = "C" }
-        // a→b and a→c are tree edges; b→c fires nonTreeEdge (c already discovered via a→c)
+        // a→b and a→c are tree edges; b→c emits nonTreeEdgeTraversed (c was discovered via a→c).
         graph.addEdge(from: a, to: b)
         graph.addEdge(from: a, to: c)
         graph.addEdge(from: b, to: c)
@@ -263,41 +263,35 @@ struct BreadthFirstSearchTests {
         var finished1 = 0
         var finished2 = 0
 
-        var v1 = BreadthFirstSearch<AdjacencyList>.Visitor()
-        v1.discoverVertex = { _ in discovered1 += 1 }
-        v1.examineVertex = { _ in examined1 += 1 }
-        v1.examineEdge = { _ in examEdge1 += 1 }
-        v1.treeEdge = { _ in tree1 += 1 }
-        v1.nonTreeEdge = { _ in nonTree1 += 1 }
-        v1.finishVertex = { _ in finished1 += 1 }
-
-        var v2 = BreadthFirstSearch<AdjacencyList>.Visitor()
-        v2.discoverVertex = { _ in discovered2 += 1 }
-        v2.examineVertex = { _ in examined2 += 1 }
-        v2.examineEdge = { _ in examEdge2 += 1 }
-        v2.treeEdge = { _ in tree2 += 1 }
-        v2.nonTreeEdge = { _ in nonTree2 += 1 }
-        v2.finishVertex = { _ in finished2 += 1 }
-
-        let combined = v1.combined(with: v2)
+        typealias Cases = BreadthFirstSearch<AdjacencyList>.EventCases
         BreadthFirstSearch(on: graph, from: a)
-            .withVisitor { combined }
+            .observing(Cases.vertexDiscovered) { _ in discovered1 += 1 }
+            .observing(Cases.vertexExamined) { _ in examined1 += 1 }
+            .observing(Cases.edgeExamined) { _ in examEdge1 += 1 }
+            .observing(Cases.treeEdgeTraversed) { _ in tree1 += 1 }
+            .observing(Cases.nonTreeEdgeTraversed) { _ in nonTree1 += 1 }
+            .observing(Cases.vertexFinished) { _ in finished1 += 1 }
+            .observing(Cases.vertexDiscovered) { _ in discovered2 += 1 }
+            .observing(Cases.vertexExamined) { _ in examined2 += 1 }
+            .observing(Cases.edgeExamined) { _ in examEdge2 += 1 }
+            .observing(Cases.treeEdgeTraversed) { _ in tree2 += 1 }
+            .observing(Cases.nonTreeEdgeTraversed) { _ in nonTree2 += 1 }
+            .observing(Cases.vertexFinished) { _ in finished2 += 1 }
             .forEach { _ in }
 
-        // discoverVertex does NOT fire for source a; fires for b and c
-        #expect(discovered1 == 2, "discoverVertex fires for b and c (not source a)")
-        #expect(discovered2 == 2)
-        #expect(examined1 == 3, "examineVertex fires for a, b, c when dequeued")
+        #expect(discovered1 == 3, "vertexDiscovered fires for source a, b, and c")
+        #expect(discovered2 == 3)
+        #expect(examined1 == 3, "vertexExamined fires for a, b, c when dequeued")
         #expect(examined2 == 3)
-        #expect(examEdge1 == 3, "examineEdge fires for all 3 edges")
+        #expect(examEdge1 == 3, "edgeExamined fires for all 3 edges")
         #expect(examEdge2 == 3)
-        #expect(tree1 == 2, "treeEdge fires for a→b and a→c")
+        #expect(tree1 == 2, "treeEdgeTraversed fires for a→b and a→c")
         #expect(tree2 == 2)
-        #expect(nonTree1 == 1, "nonTreeEdge fires for b→c (c already discovered)")
+        #expect(nonTree1 == 1, "nonTreeEdgeTraversed fires for b→c (c already discovered)")
         #expect(nonTree2 == 1)
-        #expect(finished1 == 3, "finishVertex fires for a, b, c")
+        #expect(finished1 == 3, "vertexFinished fires for a, b, c")
         #expect(finished2 == 3)
-        // Both composed visitors must see identical event counts
+        // Both composed observation groups must see identical event counts.
         #expect(discovered1 == discovered2)
         #expect(examined1 == examined2)
         #expect(examEdge1 == examEdge2)

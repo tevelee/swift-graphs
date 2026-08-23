@@ -9,10 +9,5 @@
         }
     }
 
-    extension Hierholzer: EulerianCycleAlgorithm {
-        @inlinable
-        public func eulerianCycle(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
-            eulerianCycle(in: graph, visitor: nil)
-        }
-    }
+    extension Hierholzer: EulerianCycleAlgorithm {}
 #endif

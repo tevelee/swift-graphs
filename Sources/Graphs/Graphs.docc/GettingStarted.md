@@ -286,7 +286,7 @@ Now that you've created your first graph, explore these topics:
 ### Advanced Topics
 
 - <doc:AlgorithmInterfaces>
-- <doc:VisitorPattern>
+- <doc:ObservingAlgorithms>
 - <doc:PluggableArchitecture>
 
 ## Common Patterns

@@ -17,34 +17,59 @@
         public typealias Vertex = Graph.VertexDescriptor
         /// The edge type of the graph.
         public typealias Edge = Graph.EdgeDescriptor
+        /// Details about a successful edge relaxation.
+        public typealias Relaxation = EdgeRelaxation<Edge, Weight>
 
-        /// A visitor that can be used to observe the uniform cost search algorithm's progress.
-        public struct Visitor {
-            /// Called when examining a vertex.
-            public var examineVertex: ((Vertex) -> Void)?
-            /// Called when examining an edge.
-            public var examineEdge: ((Edge) -> Void)?
-            /// Called when an edge is relaxed.
-            public var edgeRelaxed: ((Edge) -> Void)?
-            /// Called when an edge is not relaxed.
-            public var edgeNotRelaxed: ((Edge) -> Void)?
-            /// Called when finishing a vertex.
-            public var finishVertex: ((Vertex) -> Void)?
+        /// An event emitted while uniform-cost search runs.
+        public enum Event {
+            /// A vertex was removed from the priority queue for examination.
+            case vertexExamined(Vertex)
+            /// An outgoing edge was examined.
+            case edgeExamined(Edge)
+            /// An edge improved its destination's distance.
+            case edgeRelaxed(Relaxation)
+            /// An edge did not improve its destination's distance.
+            case edgeNotRelaxed(Edge)
+            /// A vertex and all of its outgoing edges were finished.
+            case vertexFinished(Vertex)
+        }
 
-            /// Creates a new visitor.
-            @inlinable
-            public init(
-                examineVertex: ((Vertex) -> Void)? = nil,
-                examineEdge: ((Edge) -> Void)? = nil,
-                edgeRelaxed: ((Edge) -> Void)? = nil,
-                edgeNotRelaxed: ((Edge) -> Void)? = nil,
-                finishVertex: ((Vertex) -> Void)? = nil
-            ) {
-                self.examineVertex = examineVertex
-                self.examineEdge = examineEdge
-                self.edgeRelaxed = edgeRelaxed
-                self.edgeNotRelaxed = edgeNotRelaxed
-                self.finishVertex = finishVertex
+        /// Selectors for uniform-cost search events.
+        public enum EventCases {
+            /// Selects examined vertices.
+            public static var vertexExamined: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexExamined(let vertex) = $0 else { return nil }
+                    return vertex
+                }
+            }
+            /// Selects examined edges.
+            public static var edgeExamined: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeExamined(let edge) = $0 else { return nil }
+                    return edge
+                }
+            }
+            /// Selects successful edge relaxations.
+            public static var edgeRelaxed: AlgorithmEventCase<Event, Relaxation> {
+                .init {
+                    guard case .edgeRelaxed(let relaxation) = $0 else { return nil }
+                    return relaxation
+                }
+            }
+            /// Selects edges that were not relaxed.
+            public static var edgeNotRelaxed: AlgorithmEventCase<Event, Edge> {
+                .init {
+                    guard case .edgeNotRelaxed(let edge) = $0 else { return nil }
+                    return edge
+                }
+            }
+            /// Selects finished vertices.
+            public static var vertexFinished: AlgorithmEventCase<Event, Vertex> {
+                .init {
+                    guard case .vertexFinished(let vertex) = $0 else { return nil }
+                    return vertex
+                }
             }
         }
 
@@ -125,15 +150,15 @@
 
         /// Creates an iterator for the uniform cost search.
         ///
-        /// - Parameter visitor: An optional visitor to observe the algorithm's progress.
+        /// - Parameter observation: An optional observation of the algorithm's progress.
         /// - Returns: An iterator for the search.
         @inlinable
-        public func makeIterator(visitor: Visitor?) -> Iterator {
+        public func makeIterator(observation: AlgorithmObservation<Event>?) -> Iterator {
             Iterator(
                 graph: graph,
                 source: source,
                 edgeWeight: edgeWeight,
-                visitor: visitor
+                observation: observation
             )
         }
 
@@ -146,7 +171,7 @@
             @usableFromInline
             let edgeWeight: CostDefinition<Graph, Weight>
             @usableFromInline
-            let visitor: Visitor?
+            let observation: AlgorithmObservation<Event>?
             @usableFromInline
             var queue = PriorityQueue<PriorityItem>()
             @usableFromInline
@@ -165,18 +190,18 @@
             ///   - graph: The graph to search in.
             ///   - source: The source vertex.
             ///   - edgeWeight: The cost definition for edge weights.
-            ///   - visitor: An optional visitor.
+            ///   - observation: An optional algorithm observation.
             @inlinable
             public init(
                 graph: Graph,
                 source: Vertex,
                 edgeWeight: CostDefinition<Graph, Weight>,
-                visitor: Visitor?
+                observation: AlgorithmObservation<Event>? = nil
             ) {
                 self.graph = graph
                 self.source = source
                 self.edgeWeight = edgeWeight
-                self.visitor = visitor
+                self.observation = observation
                 self.propertyMap = graph.makeVertexPropertyMap()
 
                 // UCS only initializes the source node, not all nodes
@@ -200,11 +225,11 @@
 
                 guard let currentVertex else { return nil }
 
-                visitor?.examineVertex?(currentVertex)
+                observation?.receive(.vertexExamined(currentVertex))
 
                 let currentCost = propertyMap[currentVertex][distanceProperty]
                 for edge in graph.outgoingEdges(of: currentVertex) {
-                    visitor?.examineEdge?(edge)
+                    observation?.receive(.edgeExamined(edge))
 
                     guard let destination = graph.destination(of: edge) else { continue }
                     if visited.contains(destination) { continue }
@@ -215,17 +240,20 @@
                     // UCS: Only add to queue if we haven't seen this vertex before or found a better path
                     let destinationCost = propertyMap[destination][distanceProperty]
                     if newCost < destinationCost {
+                        guard case .finite(let relaxedCost) = newCost else {
+                            preconditionFailure("An improved uniform-cost search cost must be finite")
+                        }
                         propertyMap[destination][distanceProperty] = newCost
                         propertyMap[destination][predecessorEdgeProperty] = edge
                         queue.enqueue(.init(vertex: destination, cost: newCost))
-                        visitor?.edgeRelaxed?(edge)
+                        observation?.receive(.edgeRelaxed(.init(edge: edge, newCost: relaxedCost)))
                     } else {
-                        visitor?.edgeNotRelaxed?(edge)
+                        observation?.receive(.edgeNotRelaxed(edge))
                     }
                 }
 
                 visited.insert(currentVertex)
-                visitor?.finishVertex?(currentVertex)
+                observation?.receive(.vertexFinished(currentVertex))
 
                 return Result(
                     source: source,
@@ -244,7 +272,7 @@
     extension UniformCostSearch: Sequence {
         @inlinable
         public func makeIterator() -> Iterator {
-            makeIterator(visitor: nil)
+            makeIterator(observation: nil)
         }
     }
 
@@ -404,7 +432,30 @@
         }
     }
 
-    extension UniformCostSearch: VisitorSupportingSequence {}
+    extension UniformCostSearch: AlgorithmObservationSequence {}
+
+    extension UniformCostSearch.Event: VertexExaminedEvent, EdgeExaminedEvent, EdgeRelaxedEvent {
+        /// Returns the examined vertex carried by the event.
+        @inlinable
+        public static func examinedVertex(from event: Self) -> Graph.VertexDescriptor? {
+            guard case .vertexExamined(let vertex) = event else { return nil }
+            return vertex
+        }
+
+        /// Returns the examined edge carried by the event.
+        @inlinable
+        public static func examinedEdge(from event: Self) -> Graph.EdgeDescriptor? {
+            guard case .edgeExamined(let edge) = event else { return nil }
+            return edge
+        }
+
+        /// Returns successful edge-relaxation details carried by the event.
+        @inlinable
+        public static func relaxation(from event: Self) -> UniformCostSearch.Relaxation? {
+            guard case .edgeRelaxed(let relaxation) = event else { return nil }
+            return relaxation
+        }
+    }
 
     extension UniformCostSearch.Result: ShortestPathResult {}
 

@@ -7,7 +7,7 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
     public func articulationPoints(
         using algorithm: some ArticulationPointsAlgorithm<Self>
     ) -> ArticulationPointsResult<VertexDescriptor, EdgeDescriptor> {
-        algorithm.articulationPoints(in: self, visitor: nil)
+        algorithm.articulationPoints(in: self, observation: nil)
     }
 
     #if !GRAPHS_USES_TRAITS || GRAPHS_CONNECTIVITY
@@ -22,34 +22,34 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
 }
 
 /// A protocol for articulation points algorithms.
-public protocol ArticulationPointsAlgorithm<Graph> {
+public protocol ArticulationPointsAlgorithm<Graph>: AlgorithmObserving {
     /// The graph type that this algorithm operates on.
     associatedtype Graph: IncidenceGraph where Graph.VertexDescriptor: Hashable, Graph.EdgeDescriptor: Hashable
-    /// The visitor type for observing algorithm progress.
-    associatedtype Visitor
+    /// The event type published by the algorithm.
+    associatedtype Event
 
     /// Finds articulation points and bridges in the graph.
     ///
     /// - Parameters:
     ///   - graph: The graph to analyze
-    ///   - visitor: An optional visitor to observe the algorithm progress
+    ///   - observation: An optional algorithm observation.
     /// - Returns: The articulation points result
     func articulationPoints(
         in graph: Graph,
-        visitor: Visitor?
+        observation: AlgorithmObservation<Event>?
     ) -> ArticulationPointsResult<Graph.VertexDescriptor, Graph.EdgeDescriptor>
 }
 
-extension VisitorWrapper: ArticulationPointsAlgorithm
-where Base: ArticulationPointsAlgorithm, Base.Visitor == Visitor, Visitor: Composable, Visitor.Other == Visitor {
+extension ObservedAlgorithm: ArticulationPointsAlgorithm
+where Base: ArticulationPointsAlgorithm {
     public typealias Graph = Base.Graph
 
     @inlinable
     public func articulationPoints(
         in graph: Base.Graph,
-        visitor: Base.Visitor?
+        observation: AlgorithmObservation<Base.Event>?
     ) -> ArticulationPointsResult<Base.Graph.VertexDescriptor, Base.Graph.EdgeDescriptor> {
-        base.articulationPoints(in: graph, visitor: self.visitor.combined(with: visitor))
+        base.articulationPoints(in: graph, observation: self.observation.followed(by: observation))
     }
 }
 
