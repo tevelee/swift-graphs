@@ -144,3 +144,20 @@ extension IncidenceGraph where Self: VertexListGraph & EdgeListGraph, VertexDesc
         }
     }
 #endif
+
+extension IsomorphismAlgorithm {
+    /// Checks graph isomorphism without observing algorithm events.
+    @inlinable
+    public func areIsomorphic(_ graph1: Graph, _ graph2: Graph) -> Bool {
+        areIsomorphic(graph1, graph2, observation: nil)
+    }
+
+    /// Finds an isomorphism without observing algorithm events.
+    @inlinable
+    public func findIsomorphism(
+        _ graph1: Graph,
+        _ graph2: Graph
+    ) -> [Graph.VertexDescriptor: Graph.VertexDescriptor]? {
+        findIsomorphism(graph1, graph2, observation: nil)
+    }
+}

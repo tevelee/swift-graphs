@@ -53,3 +53,11 @@ where Base: ConnectedPropertyAlgorithm {
         base.isConnected(in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension ConnectedPropertyAlgorithm {
+    /// Checks connectivity without observing algorithm events.
+    @inlinable
+    public func isConnected(in graph: Graph) -> Bool {
+        isConnected(in: graph, observation: nil)
+    }
+}

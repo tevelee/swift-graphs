@@ -151,3 +151,13 @@ where Base: ShortestPathsForAllPairsAlgorithm {
         base.shortestPathsForAllPairs(in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension ShortestPathsForAllPairsAlgorithm {
+    /// Computes all-pairs shortest paths without observing algorithm events.
+    @inlinable
+    public func shortestPathsForAllPairs(
+        in graph: Graph
+    ) -> AllPairsShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
+        shortestPathsForAllPairs(in: graph, observation: nil)
+    }
+}

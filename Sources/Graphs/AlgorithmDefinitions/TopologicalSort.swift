@@ -99,3 +99,11 @@ extension TopologicalSortResult: Hashable where Vertex: Hashable {
         hasher.combine(cycleVertices)
     }
 }
+
+extension TopologicalSortAlgorithm {
+    /// Computes a topological order without observing algorithm events.
+    @inlinable
+    public func topologicalSort(in graph: Graph) -> TopologicalSortResult<Graph.VertexDescriptor> {
+        topologicalSort(in: graph, observation: nil)
+    }
+}

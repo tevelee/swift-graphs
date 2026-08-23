@@ -94,3 +94,13 @@ extension ArticulationPointsResult: Equatable where Vertex: Equatable, Edge: Equ
         lhs.cutVertices == rhs.cutVertices && lhs.bridgeSet == rhs.bridgeSet
     }
 }
+
+extension ArticulationPointsAlgorithm {
+    /// Finds articulation points and bridges without observing algorithm events.
+    @inlinable
+    public func articulationPoints(
+        in graph: Graph
+    ) -> ArticulationPointsResult<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
+        articulationPoints(in: graph, observation: nil)
+    }
+}

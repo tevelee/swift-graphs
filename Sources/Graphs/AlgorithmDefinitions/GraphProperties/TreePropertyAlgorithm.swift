@@ -52,3 +52,11 @@ extension ObservedAlgorithm: TreePropertyAlgorithm where Base: TreePropertyAlgor
         base.isTree(in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension TreePropertyAlgorithm {
+    /// Checks whether a graph is a tree without observing algorithm events.
+    @inlinable
+    public func isTree(in graph: Graph) -> Bool {
+        isTree(in: graph, observation: nil)
+    }
+}

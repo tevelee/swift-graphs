@@ -53,3 +53,11 @@ where Base: BipartitePropertyAlgorithm {
         base.isBipartite(in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension BipartitePropertyAlgorithm {
+    /// Checks bipartiteness without observing algorithm events.
+    @inlinable
+    public func isBipartite(in graph: Graph) -> Bool {
+        isBipartite(in: graph, observation: nil)
+    }
+}

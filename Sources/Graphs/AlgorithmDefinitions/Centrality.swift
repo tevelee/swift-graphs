@@ -138,3 +138,11 @@ extension IncidenceGraph where Self: VertexListGraph, VertexDescriptor: Hashable
         }
     }
 #endif
+
+extension CentralityAlgorithm {
+    /// Computes centrality without observing algorithm events.
+    @inlinable
+    public func centrality(in graph: Graph) -> CentralityResult<Graph.VertexDescriptor> {
+        centrality(in: graph, observation: nil)
+    }
+}

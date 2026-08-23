@@ -125,3 +125,13 @@ extension MinimumSpanningTree where Edge: Equatable {
         }
     }
 #endif
+
+extension MinimumSpanningTreeAlgorithm {
+    /// Computes a minimum spanning tree without observing algorithm events.
+    @inlinable
+    public func minimumSpanningTree(
+        in graph: Graph
+    ) -> MinimumSpanningTree<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
+        minimumSpanningTree(in: graph, observation: nil)
+    }
+}

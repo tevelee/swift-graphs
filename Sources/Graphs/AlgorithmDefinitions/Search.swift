@@ -69,3 +69,14 @@ extension ObservedAlgorithm: SearchAlgorithm where Base: SearchAlgorithm {
         base.search(from: source, in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension SearchAlgorithm {
+    /// Creates a search sequence without observing algorithm events.
+    @inlinable
+    public func search(
+        from source: Graph.VertexDescriptor,
+        in graph: Graph
+    ) -> SearchSequence {
+        search(from: source, in: graph, observation: nil)
+    }
+}

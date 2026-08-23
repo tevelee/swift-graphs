@@ -149,3 +149,16 @@ extension IncidenceGraph {
         }
     }
 #endif
+
+extension MinCostFlowAlgorithm {
+    /// Computes minimum-cost flow without observing algorithm events.
+    @inlinable
+    public func minimumCostFlow(
+        from source: Graph.VertexDescriptor,
+        to sink: Graph.VertexDescriptor,
+        demand: Value?,
+        in graph: Graph
+    ) -> MinCostFlowResult<Graph.VertexDescriptor, Graph.EdgeDescriptor, Value> {
+        minimumCostFlow(from: source, to: sink, demand: demand, in: graph, observation: nil)
+    }
+}

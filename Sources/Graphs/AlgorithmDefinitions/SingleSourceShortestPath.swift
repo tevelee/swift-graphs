@@ -121,3 +121,14 @@ where Base: SingleSourceShortestPathAlgorithm {
         base.shortestPaths(from: source, in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension SingleSourceShortestPathAlgorithm {
+    /// Computes single-source shortest paths without observing algorithm events.
+    @inlinable
+    public func shortestPaths(
+        from source: Graph.VertexDescriptor,
+        in graph: Graph
+    ) -> SingleSourceShortestPaths<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight> {
+        shortestPaths(from: source, in: graph, observation: nil)
+    }
+}

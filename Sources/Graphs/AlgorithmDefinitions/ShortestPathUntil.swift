@@ -96,3 +96,15 @@ where Base: ShortestPathUntilAlgorithm {
         base.shortestPath(from: source, until: condition, in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension ShortestPathUntilAlgorithm {
+    /// Finds a shortest path to a matching vertex without observing algorithm events.
+    @inlinable
+    public func shortestPath(
+        from source: Graph.VertexDescriptor,
+        until condition: @escaping (Graph.VertexDescriptor) -> Bool,
+        in graph: Graph
+    ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        shortestPath(from: source, until: condition, in: graph, observation: nil)
+    }
+}

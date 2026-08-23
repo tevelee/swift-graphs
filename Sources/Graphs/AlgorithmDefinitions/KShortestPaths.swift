@@ -68,3 +68,16 @@ extension ObservedAlgorithm: KShortestPathsAlgorithm where Base: KShortestPathsA
         base.kShortestPaths(from: source, to: destination, k: k, in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension KShortestPathsAlgorithm {
+    /// Finds the k shortest paths without observing algorithm events.
+    @inlinable
+    public func kShortestPaths(
+        from source: Graph.VertexDescriptor,
+        to destination: Graph.VertexDescriptor,
+        k: Int,
+        in graph: Graph
+    ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>] {
+        kShortestPaths(from: source, to: destination, k: k, in: graph, observation: nil)
+    }
+}

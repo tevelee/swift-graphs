@@ -115,3 +115,13 @@ extension IncidenceGraph {
         }
     }
 #endif
+
+extension MinimumCutAlgorithm {
+    /// Computes a minimum cut without observing algorithm events.
+    @inlinable
+    public func minimumCut(
+        in graph: Graph
+    ) -> MinimumCutResult<Graph.VertexDescriptor, Graph.EdgeDescriptor, Weight>? {
+        minimumCut(in: graph, observation: nil)
+    }
+}

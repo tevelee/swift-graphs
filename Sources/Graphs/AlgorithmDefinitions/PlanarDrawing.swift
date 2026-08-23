@@ -104,3 +104,11 @@ public struct PlanarDrawing<Vertex: Hashable> {
 }
 
 extension PlanarDrawing: Sendable where Vertex: Sendable {}
+
+extension PlanarDrawingAlgorithm {
+    /// Computes a planar drawing without observing algorithm events.
+    @inlinable
+    public func planarDrawing(in graph: Graph) -> PlanarDrawing<Graph.VertexDescriptor>? {
+        planarDrawing(in: graph, observation: nil)
+    }
+}

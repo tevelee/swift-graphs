@@ -144,3 +144,11 @@ public enum NamedColor: Int, CaseIterable, IntegerBasedColor {
     /// Yellow color.
     case yellow = 3
 }
+
+extension ColoringAlgorithm {
+    /// Colors a graph without observing algorithm events.
+    @inlinable
+    public func color(graph: Graph) -> GraphColoring<Graph.VertexDescriptor, Color> {
+        color(graph: graph, observation: nil)
+    }
+}

@@ -90,3 +90,14 @@ extension ObservedAlgorithm: TraversalAlgorithm where Base: TraversalAlgorithm {
         base.traverse(from: source, in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension TraversalAlgorithm {
+    /// Traverses a graph without observing algorithm events.
+    @inlinable
+    public func traverse(
+        from source: Graph.VertexDescriptor,
+        in graph: Graph
+    ) -> TraversalResult<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
+        traverse(from: source, in: graph, observation: nil)
+    }
+}

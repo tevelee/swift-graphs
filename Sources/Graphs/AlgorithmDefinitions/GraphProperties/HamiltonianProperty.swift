@@ -181,3 +181,19 @@ extension ObservedAlgorithm: OrePropertyAlgorithm where Base: OrePropertyAlgorit
         base.satisfiesOre(in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension DiracPropertyAlgorithm {
+    /// Checks Dirac's condition without observing algorithm events.
+    @inlinable
+    public func satisfiesDirac(in graph: Graph) -> Bool {
+        satisfiesDirac(in: graph, observation: nil)
+    }
+}
+
+extension OrePropertyAlgorithm {
+    /// Checks Ore's condition without observing algorithm events.
+    @inlinable
+    public func satisfiesOre(in graph: Graph) -> Bool {
+        satisfiesOre(in: graph, observation: nil)
+    }
+}

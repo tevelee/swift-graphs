@@ -198,3 +198,38 @@ where Base: HamiltonianCycleAlgorithm {
         base.hamiltonianCycle(in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension HamiltonianPathAlgorithm {
+    /// Finds a Hamiltonian path without observing algorithm events.
+    @inlinable
+    public func hamiltonianPath(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        hamiltonianPath(in: graph, observation: nil)
+    }
+
+    /// Finds a Hamiltonian path from a source without observing algorithm events.
+    @inlinable
+    public func hamiltonianPath(
+        from source: Graph.VertexDescriptor,
+        in graph: Graph
+    ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        hamiltonianPath(from: source, in: graph, observation: nil)
+    }
+
+    /// Finds a Hamiltonian path between two vertices without observing algorithm events.
+    @inlinable
+    public func hamiltonianPath(
+        from source: Graph.VertexDescriptor,
+        to destination: Graph.VertexDescriptor,
+        in graph: Graph
+    ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        hamiltonianPath(from: source, to: destination, in: graph, observation: nil)
+    }
+}
+
+extension HamiltonianCycleAlgorithm {
+    /// Finds a Hamiltonian cycle without observing algorithm events.
+    @inlinable
+    public func hamiltonianCycle(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        hamiltonianCycle(in: graph, observation: nil)
+    }
+}

@@ -52,3 +52,11 @@ extension ObservedAlgorithm: CyclicPropertyAlgorithm where Base: CyclicPropertyA
         base.isCyclic(in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension CyclicPropertyAlgorithm {
+    /// Checks cyclicity without observing algorithm events.
+    @inlinable
+    public func isCyclic(in graph: Graph) -> Bool {
+        isCyclic(in: graph, observation: nil)
+    }
+}

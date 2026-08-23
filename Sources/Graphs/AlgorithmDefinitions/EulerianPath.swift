@@ -150,3 +150,19 @@ extension ObservedAlgorithm: EulerianCycleAlgorithm where Base: EulerianCycleAlg
         base.eulerianCycle(in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension EulerianPathAlgorithm {
+    /// Finds an Eulerian path without observing algorithm events.
+    @inlinable
+    public func eulerianPath(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        eulerianPath(in: graph, observation: nil)
+    }
+}
+
+extension EulerianCycleAlgorithm {
+    /// Finds an Eulerian cycle without observing algorithm events.
+    @inlinable
+    public func eulerianCycle(in graph: Graph) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        eulerianCycle(in: graph, observation: nil)
+    }
+}

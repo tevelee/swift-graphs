@@ -98,3 +98,11 @@ extension IncidenceGraph where Self: VertexListGraph & BidirectionalGraph, Verte
         }
     }
 #endif
+
+extension VertexOrderingAlgorithm {
+    /// Orders graph vertices without observing algorithm events.
+    @inlinable
+    public func orderVertices(in graph: Graph) -> [Graph.VertexDescriptor] {
+        orderVertices(in: graph, observation: nil)
+    }
+}

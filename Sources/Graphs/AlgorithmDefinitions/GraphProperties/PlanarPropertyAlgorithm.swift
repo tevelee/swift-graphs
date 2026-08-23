@@ -52,3 +52,11 @@ extension ObservedAlgorithm: PlanarPropertyAlgorithm where Base: PlanarPropertyA
         base.isPlanar(in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension PlanarPropertyAlgorithm {
+    /// Checks planarity without observing algorithm events.
+    @inlinable
+    public func isPlanar(in graph: Graph) -> Bool {
+        isPlanar(in: graph, observation: nil)
+    }
+}

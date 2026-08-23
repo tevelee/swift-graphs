@@ -183,3 +183,27 @@ where Base: AllShortestPathsAlgorithm {
         base.allShortestPaths(from: source, to: destination, in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension AllShortestPathsAlgorithm {
+    /// Finds all shortest paths without observing algorithm events.
+    @inlinable
+    public func allShortestPaths(
+        from source: Graph.VertexDescriptor,
+        to destination: Graph.VertexDescriptor,
+        in graph: Graph
+    ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>] {
+        allShortestPaths(from: source, to: destination, in: graph, observation: nil)
+    }
+}
+
+extension AllShortestPathsUntilAlgorithm {
+    /// Finds all shortest paths to matching vertices without observing algorithm events.
+    @inlinable
+    public func allShortestPaths(
+        from source: Graph.VertexDescriptor,
+        until condition: @escaping (Graph.VertexDescriptor) -> Bool,
+        in graph: Graph
+    ) -> [Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>] {
+        allShortestPaths(from: source, until: condition, in: graph, observation: nil)
+    }
+}

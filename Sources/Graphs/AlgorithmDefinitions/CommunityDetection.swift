@@ -122,3 +122,11 @@ extension CommunityDetectionResult: Hashable where Vertex: Hashable {
         hasher.combine(modularity)
     }
 }
+
+extension CommunityDetectionAlgorithm {
+    /// Detects communities without observing algorithm events.
+    @inlinable
+    public func detectCommunities(in graph: Graph) -> CommunityDetectionResult<Graph.VertexDescriptor> {
+        detectCommunities(in: graph, observation: nil)
+    }
+}

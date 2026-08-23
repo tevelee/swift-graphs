@@ -154,3 +154,15 @@ extension IncidenceGraph {
         }
     }
 #endif
+
+extension MaxFlowAlgorithm {
+    /// Computes maximum flow without observing algorithm events.
+    @inlinable
+    public func maximumFlow(
+        from source: Graph.VertexDescriptor,
+        to sink: Graph.VertexDescriptor,
+        in graph: Graph
+    ) -> MaxFlowResult<Graph.VertexDescriptor, Graph.EdgeDescriptor, Flow> {
+        maximumFlow(from: source, to: sink, in: graph, observation: nil)
+    }
+}

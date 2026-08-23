@@ -152,3 +152,11 @@ extension BipartiteGraph where Self: IncidenceGraph & VertexListGraph {
         }
     }
 #endif
+
+extension MatchingAlgorithm {
+    /// Finds a maximum matching without observing algorithm events.
+    @inlinable
+    public func maximumMatching(in graph: Graph) -> MatchingResult<Graph.VertexDescriptor, Graph.EdgeDescriptor> {
+        maximumMatching(in: graph, observation: nil)
+    }
+}

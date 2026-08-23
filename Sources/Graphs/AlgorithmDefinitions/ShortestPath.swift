@@ -82,3 +82,15 @@ extension ObservedAlgorithm: ShortestPathAlgorithm where Base: ShortestPathAlgor
         base.shortestPath(from: source, to: destination, in: graph, observation: self.observation.followed(by: observation))
     }
 }
+
+extension ShortestPathAlgorithm {
+    /// Finds a shortest path without observing algorithm events.
+    @inlinable
+    public func shortestPath(
+        from source: Graph.VertexDescriptor,
+        to destination: Graph.VertexDescriptor,
+        in graph: Graph
+    ) -> Path<Graph.VertexDescriptor, Graph.EdgeDescriptor>? {
+        shortestPath(from: source, to: destination, in: graph, observation: nil)
+    }
+}

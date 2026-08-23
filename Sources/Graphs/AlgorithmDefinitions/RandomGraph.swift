@@ -156,3 +156,15 @@ public struct RandomGraphAlgorithmWithGenerator<Algorithm: RandomGraphAlgorithm,
         algorithm.appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &g, observation: observation)
     }
 }
+
+extension RandomGraphAlgorithm {
+    /// Appends a random graph without observing algorithm events.
+    @inlinable
+    public func appendRandomGraph<RNG: RandomNumberGenerator>(
+        into graph: inout Graph,
+        vertexCount: Int,
+        using generator: inout RNG
+    ) {
+        appendRandomGraph(into: &graph, vertexCount: vertexCount, using: &generator, observation: nil)
+    }
+}

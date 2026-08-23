@@ -133,3 +133,13 @@ extension StronglyConnectedComponentsResult: Hashable where Vertex: Hashable {
         hasher.combine(vertexToComponent)
     }
 }
+
+extension StronglyConnectedComponentsAlgorithm {
+    /// Finds strongly connected components without observing algorithm events.
+    @inlinable
+    public func stronglyConnectedComponents(
+        in graph: Graph
+    ) -> StronglyConnectedComponentsResult<Graph.VertexDescriptor> {
+        stronglyConnectedComponents(in: graph, observation: nil)
+    }
+}

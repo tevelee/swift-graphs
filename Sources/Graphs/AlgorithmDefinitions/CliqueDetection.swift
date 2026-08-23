@@ -108,3 +108,11 @@ extension CliqueDetectionResult: Hashable where Vertex: Hashable {
         hasher.combine(Set(cliques.map { Set($0) }))
     }
 }
+
+extension CliqueDetectionAlgorithm {
+    /// Finds maximal cliques without observing algorithm events.
+    @inlinable
+    public func findCliques(in graph: Graph) -> CliqueDetectionResult<Graph.VertexDescriptor> {
+        findCliques(in: graph, observation: nil)
+    }
+}

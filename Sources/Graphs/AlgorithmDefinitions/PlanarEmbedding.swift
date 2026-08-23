@@ -241,3 +241,11 @@ public struct KuratowskiSubgraph<Vertex: Hashable> {
 }
 
 extension KuratowskiSubgraph: Sendable where Vertex: Sendable {}
+
+extension PlanarEmbeddingAlgorithm {
+    /// Computes a planar embedding without observing algorithm events.
+    @inlinable
+    public func planarEmbedding(in graph: Graph) -> PlanarEmbeddingResult<Graph.VertexDescriptor> {
+        planarEmbedding(in: graph, observation: nil)
+    }
+}

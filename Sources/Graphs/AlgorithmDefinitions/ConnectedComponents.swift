@@ -120,3 +120,11 @@ extension ConnectedComponentsResult: Hashable where Vertex: Hashable {
         hasher.combine(vertexToComponent)
     }
 }
+
+extension ConnectedComponentsAlgorithm {
+    /// Finds connected components without observing algorithm events.
+    @inlinable
+    public func connectedComponents(in graph: Graph) -> ConnectedComponentsResult<Graph.VertexDescriptor> {
+        connectedComponents(in: graph, observation: nil)
+    }
+}
